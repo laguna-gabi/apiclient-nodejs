@@ -1,8 +1,8 @@
-import { Field, InputType, ObjectType, OmitType, registerEnumType } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Field, InputType, registerEnumType } from '@nestjs/graphql';
+import { SchemaFactory } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
 import {
   ErrorType,
   Errors,
@@ -11,27 +11,11 @@ import {
   IsFutureDate,
   IsObjectId,
 } from '../common';
-import { Notes } from '.';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
-import { Identifier } from '@argus/hepiusClient';
-
-/**************************************************************************************************
- ******************************* Enum registration for gql methods ********************************
- *************************************************************************************************/
-export enum AppointmentStatus {
-  requested = 'requested',
-  scheduled = 'scheduled',
-  done = 'done',
-}
+import { Appointment, AppointmentMethod, AppointmentStatus } from '@argus/hepiusClient';
 
 registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });
-
-export enum AppointmentMethod {
-  chat = 'chat',
-  phoneCall = 'phoneCall',
-  videoCall = 'videoCall',
-}
 
 registerEnumType(AppointmentMethod, { name: 'AppointmentMethod' });
 
@@ -102,70 +86,6 @@ export class ScheduleAppointmentParams {
   @IsOptional() /* for rest api */
   id?: string;
 }
-
-/**************************************************************************************************
- ********************************* Return params for gql methods **********************************
- *************************************************************************************************/
-@ObjectType()
-@Schema({ versionKey: false, timestamps: true })
-export class Appointment extends Identifier {
-  @Prop({ index: true, type: Types.ObjectId })
-  @Field(() => String)
-  userId: Types.ObjectId;
-
-  @Prop({ index: true, type: Types.ObjectId })
-  @Field(() => String)
-  memberId: Types.ObjectId;
-
-  @Prop({ isNaN: true })
-  @Field(() => Date, { nullable: true })
-  notBefore: Date;
-
-  @Prop({ type: String, enum: AppointmentStatus })
-  @Field(() => AppointmentStatus)
-  status: AppointmentStatus;
-
-  @Prop({ type: String, enum: AppointmentMethod })
-  @Field(() => AppointmentMethod, { nullable: true })
-  method?: AppointmentMethod;
-
-  @Prop()
-  @Field(() => Date, { nullable: true })
-  start?: Date;
-
-  @Prop()
-  @Field(() => Date, { nullable: true })
-  end?: Date;
-
-  @Prop({ isNan: true })
-  @Field(() => Boolean, { nullable: true })
-  noShow?: boolean;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  noShowReason?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => Boolean, { nullable: true })
-  recordingConsent?: boolean;
-
-  @Prop({ type: Types.ObjectId, ref: Notes.name })
-  @Field(() => Notes, { nullable: true })
-  notes?: Notes;
-
-  @Field(() => Date)
-  updatedAt: Date;
-
-  @Field(() => Date)
-  createdAt: Date;
-
-  @Prop()
-  @Field(() => String)
-  link: string;
-}
-
-@ObjectType()
-export class AppointmentData extends OmitType(Appointment, ['userId', 'memberId']) {}
 
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************

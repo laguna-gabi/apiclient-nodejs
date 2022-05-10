@@ -1,4 +1,4 @@
-import { Caregiver } from '@argus/hepiusClient';
+import { Appointment, Caregiver, Notes } from '@argus/hepiusClient';
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -16,10 +16,8 @@ import { Mutations, Queries } from '.';
 import { generateCreateMemberParams, generateCreateUserParams, generateOrgParams } from '..';
 import { AppModule } from '../../src/app.module';
 import {
-  Appointment,
   AppointmentDocument,
   AppointmentDto,
-  Notes,
   NotesDocument,
   NotesDto,
 } from '../../src/appointment';

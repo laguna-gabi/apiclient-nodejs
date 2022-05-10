@@ -3,7 +3,7 @@ import { NotificationType } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { scheduler } from 'config';
 import { addDays, addMinutes, isBefore, subDays, subMinutes } from 'date-fns';
-import { Appointment, AppointmentService, ScheduleAppointmentParams } from '.';
+import { AppointmentService, ScheduleAppointmentParams } from '.';
 import {
   ErrorType,
   Errors,
@@ -16,6 +16,7 @@ import {
 } from '../common';
 import { CommunicationResolver } from '../communication';
 import { Bitly } from '../providers';
+import { Appointment } from '@argus/hepiusClient';
 
 export class AppointmentBase {
   constructor(

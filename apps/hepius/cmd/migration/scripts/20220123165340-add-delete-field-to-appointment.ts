@@ -4,7 +4,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Db } from 'mongodb';
 import { Model } from 'mongoose';
 import { AppModule } from '../../../src/app.module';
-import { Appointment, AppointmentStatus } from '../../../src/appointment';
+import { Appointment, AppointmentStatus } from '@argus/hepiusClient';
 
 const deleted = 'deleted';
 

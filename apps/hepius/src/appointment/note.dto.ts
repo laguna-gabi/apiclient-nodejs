@@ -1,62 +1,11 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { SchemaFactory } from '@nestjs/mongoose';
 import { IsBoolean, IsOptional } from 'class-validator';
 import { Document } from 'mongoose';
 import { ErrorType, Errors, IsNoShowValid, IsObjectId } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
-
-/**************************************************************************************************
- ********************************** Input params for gql methods **********************************
- *************************************************************************************************/
-@InputType('ScoresInput')
-@ObjectType()
-@Schema()
-export class Scores {
-  @Prop({ isNaN: true })
-  @Field(() => Number, { nullable: true })
-  adherence?: number;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  adherenceText?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => Number, { nullable: true })
-  wellbeing?: number;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  wellbeingText?: string;
-}
-
-/**************************************************************************************************
- ********************************* Return params for gql methods **********************************
- *************************************************************************************************/
-@InputType('NotesInput')
-@ObjectType()
-@Schema({ versionKey: false, timestamps: true })
-export class Notes {
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  recap?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  strengths?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  userActionItem?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  memberActionItem?: string;
-
-  @Prop({ isNan: true })
-  @Field(() => Scores, { nullable: true })
-  scores?: Scores;
-}
+import { Notes } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************

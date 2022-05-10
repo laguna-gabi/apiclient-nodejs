@@ -16,7 +16,6 @@ import {
   mockGenerateUser,
   mockProviders,
 } from '..';
-import { AppointmentStatus } from '../../src/appointment';
 import {
   ErrorType,
   Errors,
@@ -36,6 +35,7 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import { ServiceModule } from '../../src/services';
+import { AppointmentStatus } from '@argus/hepiusClient';
 
 describe('CommunicationService', () => {
   let module: TestingModule;

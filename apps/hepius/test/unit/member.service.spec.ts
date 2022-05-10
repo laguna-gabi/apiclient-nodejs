@@ -1,4 +1,4 @@
-import { Caregiver } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, Caregiver } from '@argus/hepiusClient';
 import { AppointmentInternalKey, ChatInternalKey } from '@argus/irisClient';
 import {
   ChangeEventType,
@@ -56,13 +56,7 @@ import {
   mockGenerateQuestionnaireItem,
   mockGenerateTodo,
 } from '..';
-import {
-  Appointment,
-  AppointmentDocument,
-  AppointmentDto,
-  AppointmentModule,
-  AppointmentStatus,
-} from '../../src/appointment';
+import { AppointmentDocument, AppointmentDto, AppointmentModule } from '../../src/appointment';
 import {
   ErrorType,
   Errors,

@@ -1,4 +1,4 @@
-import { Identifier } from '@argus/hepiusClient';
+import { AppointmentStatus, Identifier, Scores } from '@argus/hepiusClient';
 import { ExternalKey } from '@argus/irisClient';
 import { CancelNotificationType, Language, NotificationType } from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
@@ -21,7 +21,6 @@ import { graphql, twilio } from 'config';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 import { ActionItem } from './index';
-import { AppointmentStatus, Scores } from '../appointment';
 import {
   ErrorType,
   Errors,

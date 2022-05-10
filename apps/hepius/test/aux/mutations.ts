@@ -1,12 +1,10 @@
-import { Caregiver, Identifier } from '@argus/hepiusClient';
+import { Appointment, Caregiver, Identifier, Notes } from '@argus/hepiusClient';
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { camelCase } from 'lodash';
 import { isResultValid } from '..';
 import {
-  Appointment,
   EndAppointmentParams,
-  Notes,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
   UpdateNotesParams,

@@ -1,4 +1,10 @@
-import { Caregiver, MemberCommands } from '@argus/hepiusClient';
+import {
+  Appointment,
+  AppointmentMethod,
+  AppointmentStatus,
+  Caregiver,
+  MemberCommands,
+} from '@argus/hepiusClient';
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
 import { GlobalEventType, Language, Platform } from '@argus/pandora';
 import { articlesByDrg, general, hosts } from 'config';
@@ -55,13 +61,7 @@ import {
   submitMockCareWizard,
 } from '..';
 import { buildLHPQuestionnaire } from '../../cmd/static';
-import {
-  Appointment,
-  AppointmentMethod,
-  AppointmentStatus,
-  RequestAppointmentParams,
-  ScheduleAppointmentParams,
-} from '../../src/appointment';
+import { RequestAppointmentParams, ScheduleAppointmentParams } from '../../src/appointment';
 import { CareStatus, CreateCarePlanParams } from '../../src/care';
 import {
   ChangeType,

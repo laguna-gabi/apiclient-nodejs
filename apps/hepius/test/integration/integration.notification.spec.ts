@@ -74,7 +74,6 @@ import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import { datatype, date as fakerDate, internet, lorem } from 'faker';
 import { v4 } from 'uuid';
 import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '..';
-import { Appointment } from '../../src/appointment';
 import {
   ItemType,
   RegisterForNotificationParams,
@@ -118,6 +117,7 @@ import {
   mockGenerateQuestionnaireItem,
 } from '../generators';
 import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
+import { Appointment } from '@argus/hepiusClient';
 
 // mock uuid.v4:
 jest.mock('uuid', () => {

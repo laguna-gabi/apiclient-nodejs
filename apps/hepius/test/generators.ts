@@ -1,4 +1,11 @@
-import { Caregiver, Relationship } from '@argus/hepiusClient';
+import {
+  AppointmentMethod,
+  AppointmentStatus,
+  Caregiver,
+  Notes,
+  Relationship,
+  Scores,
+} from '@argus/hepiusClient';
 import {
   ContentKey,
   ExternalKey,
@@ -35,13 +42,9 @@ import { sign } from 'jsonwebtoken';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
-  AppointmentMethod,
-  AppointmentStatus,
   EndAppointmentParams,
-  Notes,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
-  Scores,
   UpdateNotesParams,
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';

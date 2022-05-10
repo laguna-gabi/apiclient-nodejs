@@ -1,9 +1,8 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsDate, IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
-import { AppointmentMethod } from '../appointment';
 import { ErrorType, Errors, IsObjectId, IsUserIdOrAppointmentId, UserRole } from '../common';
-import { Identifier } from '@argus/hepiusClient';
+import { AppointmentMethod, Identifier } from '@argus/hepiusClient';
 
 export const defaultSlotsParams = {
   duration: 30,

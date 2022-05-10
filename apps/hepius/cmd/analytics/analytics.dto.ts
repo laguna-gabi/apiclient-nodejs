@@ -10,7 +10,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Appointment, AppointmentStatus, Notes } from '../../src/appointment';
 import { RecordingType, UserRole } from '../../src/common';
 import {
   Honorific,
@@ -24,7 +23,7 @@ import {
   Sex,
 } from '../../src/member';
 import { User } from '../../src/user';
-import { Relationship } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, Notes, Relationship } from '@argus/hepiusClient';
 import { BarrierDomain, CareStatus } from '../../src/care';
 
 export const DefaultOutputDir = './outputs';

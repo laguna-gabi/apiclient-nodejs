@@ -17,13 +17,10 @@ import {
   generateUpdateNotesParams,
 } from '..';
 import {
-  Appointment,
   AppointmentController,
-  AppointmentMethod,
   AppointmentModule,
   AppointmentResolver,
   AppointmentService,
-  AppointmentStatus,
   ScheduleAppointmentParams,
 } from '../../src/appointment';
 import {
@@ -35,6 +32,7 @@ import {
   LoggerService,
   UpdatedAppointmentAction,
 } from '../../src/common';
+import { Appointment, AppointmentMethod, AppointmentStatus } from '@argus/hepiusClient';
 
 // mock uuid.v4
 jest.mock('uuid', () => {

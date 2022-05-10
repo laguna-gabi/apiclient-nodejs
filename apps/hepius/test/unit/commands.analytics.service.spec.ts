@@ -34,13 +34,12 @@ import {
   PopulatedAppointment,
   PopulatedMember,
 } from '../../cmd';
-import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import { MemberModule } from '../../src/member';
 import { ProvidersModule } from '../../src/providers';
 import { User, UserDocument, UserModule } from '../../src/user';
 import { QuestionnaireModule, QuestionnaireResponse } from '../../src/questionnaire';
-import { Caregiver } from '@argus/hepiusClient';
+import { AppointmentMethod, AppointmentStatus, Caregiver } from '@argus/hepiusClient';
 import {
   Barrier,
   BarrierType,
