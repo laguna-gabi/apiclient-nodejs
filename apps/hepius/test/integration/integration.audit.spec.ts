@@ -1,4 +1,4 @@
-import { Appointment, Caregiver, User } from '@argus/hepiusClient';
+import { Appointment, Caregiver, User, UserRole } from '@argus/hepiusClient';
 import { general } from 'config';
 import { addDays, addHours } from 'date-fns';
 import { date as fakerDate, lorem } from 'faker';
@@ -42,7 +42,7 @@ import {
   CreateCarePlanParams,
   RedFlagDocument,
 } from '../../src/care';
-import { UserRole, delay, reformatDate } from '../../src/common';
+import { delay, reformatDate } from '../../src/common';
 import { Communication, CommunicationDocument } from '../../src/communication';
 import { DailyReport, DailyReportCategoryTypes } from '../../src/dailyReport';
 import {

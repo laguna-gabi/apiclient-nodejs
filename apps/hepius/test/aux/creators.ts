@@ -11,11 +11,10 @@ import {
   generateRequestHeaders,
 } from '..';
 import { EndAppointmentParams } from '../../src/appointment';
-import { UserRole } from '../../src/common';
 import { CreateTaskParams, Member, defaultMemberParams } from '../../src/member';
 import { Org } from '../../src/org';
 import { CreateUserParams } from '../../src/user';
-import { Appointment, AppointmentStatus, User } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, User, UserRole } from '@argus/hepiusClient';
 
 export class Creators {
   constructor(

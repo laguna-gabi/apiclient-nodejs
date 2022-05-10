@@ -37,9 +37,8 @@ import {
   IEventOnUpdateUserConfig,
   IEventOnUpdatedUserAppointments,
   LoggerService,
-  UserRole,
 } from '../common';
-import { User } from '@argus/hepiusClient';
+import { User, UserRole } from '@argus/hepiusClient';
 
 @Injectable()
 export class UserService extends BaseService {

@@ -1,3 +1,4 @@
+import { MemberRole, UserRole } from '@argus/hepiusClient';
 import { Platform, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -19,9 +20,7 @@ import {
   Errors,
   EventType,
   LoggerService,
-  MemberRole,
   UpdatedAppointmentAction,
-  UserRole,
 } from '../../src/common';
 import {
   CommunicationModule,

@@ -17,11 +17,10 @@ import {
   IsValidObjectId,
   LoggingInterceptor,
   Roles,
-  UserRole,
 } from '../common';
 import { camelCase } from 'lodash';
 import { SubmitCareWizardParams } from './wizard.dto';
-import { Barrier, BarrierType, CarePlan, CarePlanType } from '@argus/hepiusClient';
+import { Barrier, BarrierType, CarePlan, CarePlanType, UserRole } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()

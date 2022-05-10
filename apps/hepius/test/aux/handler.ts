@@ -8,6 +8,7 @@ import {
   Caregiver,
   Notes,
   User,
+  UserRole,
 } from '@argus/hepiusClient';
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
@@ -53,7 +54,6 @@ import {
   EventType,
   IEventOnNewUser,
   LoggerService,
-  UserRole,
   defaultAuditDbValues,
   requestContextMiddleware,
 } from '../../src/common';

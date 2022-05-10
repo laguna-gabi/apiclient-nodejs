@@ -1,7 +1,8 @@
+import { UserRole } from '@argus/hepiusClient';
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { ErrorType, Errors, IsObjectId, UserRole } from '../common';
+import { ErrorType, Errors, IsObjectId } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 

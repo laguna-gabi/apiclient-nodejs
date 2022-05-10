@@ -1,3 +1,4 @@
+import { MemberRole, UserRole } from '@argus/hepiusClient';
 import { AlertInternalKey, ExternalKey, generateDispatchId } from '@argus/irisClient';
 import {
   GlobalEventType,
@@ -64,10 +65,8 @@ import {
   IEventOnReceivedChatMessage,
   IEventOnUpdatedMemberPlatform,
   LoggerService,
-  MemberRole,
   PhoneType,
   RegisterForNotificationParams,
-  UserRole,
   delay,
 } from '../../src/common';
 import {

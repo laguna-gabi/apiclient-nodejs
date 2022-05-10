@@ -2,8 +2,8 @@ import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import { CreateOrgParams, Org, OrgService } from '.';
-import { ErrorType, Errors, IsValidObjectId, LoggingInterceptor, Roles, UserRole } from '../common';
-import { Identifier } from '@argus/hepiusClient';
+import { ErrorType, Errors, IsValidObjectId, LoggingInterceptor, Roles } from '../common';
+import { Identifier, UserRole } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Org)

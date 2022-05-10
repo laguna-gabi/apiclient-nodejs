@@ -1,10 +1,11 @@
+import { MemberRole } from '@argus/hepiusClient';
 import { LogInternalKey, generateDispatchId } from '@argus/irisClient';
 import { NotificationType, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
 import { dbDisconnect, defaultModules, generateId } from '..';
-import { EventType, LoggerService, MemberRole } from '../../src/common';
+import { EventType, LoggerService } from '../../src/common';
 import {
   DailyReport,
   DailyReportCategoriesInput,

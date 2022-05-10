@@ -4,10 +4,13 @@ import {
   BarrierDomain,
   CareStatus,
   Caregiver,
+  MemberRole,
   Notes,
   Relationship,
+  RoleTypes,
   Scores,
   User,
+  UserRole,
   defaultUserParams,
 } from '@argus/hepiusClient';
 import {
@@ -67,15 +70,7 @@ import {
   CreateRedFlagParamsWizard,
   SubmitCareWizardParams,
 } from '../src/care/wizard.dto';
-import {
-  ChangeType,
-  ItemType,
-  MemberRole,
-  RoleTypes,
-  UserRole,
-  momentFormats,
-  reformatDate,
-} from '../src/common';
+import { ChangeType, ItemType, momentFormats, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {

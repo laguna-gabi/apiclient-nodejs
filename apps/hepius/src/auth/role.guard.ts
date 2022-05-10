@@ -1,7 +1,7 @@
+import { UserRole } from '@argus/hepiusClient';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
-import { UserRole } from '../common';
 
 @Injectable()
 export class RolesGuard implements CanActivate {

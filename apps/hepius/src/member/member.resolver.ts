@@ -1,4 +1,11 @@
-import { AppointmentStatus, Caregiver, Identifier, User } from '@argus/hepiusClient';
+import {
+  AppointmentStatus,
+  Caregiver,
+  Identifier,
+  MemberRole,
+  User,
+  UserRole,
+} from '@argus/hepiusClient';
 import {
   AlertInternalKey,
   ChatInternalKey,
@@ -56,11 +63,9 @@ import {
   LoggingInterceptor,
   MemberIdParam,
   MemberIdParamType,
-  MemberRole,
   MemberUserRouteInterceptor,
   RegisterForNotificationParams,
   Roles,
-  UserRole,
   generatePath,
   getCorrelationId,
 } from '../common';

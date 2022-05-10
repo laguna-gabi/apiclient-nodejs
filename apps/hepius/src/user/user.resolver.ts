@@ -1,4 +1,4 @@
-import { User } from '@argus/hepiusClient';
+import { MemberRole, User, UserRole } from '@argus/hepiusClient';
 import { IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
 import { ClientCategory, GlobalEventType, QueueType, formatEx } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
@@ -25,9 +25,7 @@ import {
   IsValidObjectId,
   LoggerService,
   LoggingInterceptor,
-  MemberRole,
   Roles,
-  UserRole,
 } from '../common';
 import { CognitoService } from '../providers';
 

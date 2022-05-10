@@ -6,6 +6,7 @@ import {
   Caregiver,
   MemberCommands,
   User,
+  UserRole,
 } from '@argus/hepiusClient';
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
 import { GlobalEventType, Language, Platform } from '@argus/pandora';
@@ -73,7 +74,6 @@ import {
   IEventOnUpdatedUser,
   Identifiers,
   ItemType,
-  UserRole,
   delay,
   reformatDate,
 } from '../../src/common';

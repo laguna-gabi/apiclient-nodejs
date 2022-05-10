@@ -1,4 +1,4 @@
-import { User } from '@argus/hepiusClient';
+import { User, UserRole } from '@argus/hepiusClient';
 import { Language } from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { SchemaFactory } from '@nestjs/mongoose';
@@ -8,7 +8,6 @@ import {
   ErrorType,
   Errors,
   IsObjectIds,
-  UserRole,
   maxLength,
   minLength,
   validPhoneExamples,

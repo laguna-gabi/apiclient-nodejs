@@ -4,6 +4,7 @@ export * from './customValidators';
 export * from './interfaces.dto';
 export * from './decorators';
 export * from './constants';
+export * from './roles';
 export * from './exception.filter';
 export * from './log.service';
 export * from './loggingInterceptor';

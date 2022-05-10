@@ -23,14 +23,12 @@ import {
   IEventOnUpdatedUserCommunication,
   LoggerService,
   LoggingInterceptor,
-  MemberRole,
   Roles,
   UpdatedAppointmentAction,
-  UserRole,
 } from '../common';
 import { UserService } from '../user';
 import { formatEx } from '@argus/pandora';
-import { AppointmentStatus } from '@argus/hepiusClient';
+import { AppointmentStatus, MemberRole, UserRole } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => CommunicationInfo)
