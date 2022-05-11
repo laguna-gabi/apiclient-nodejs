@@ -382,13 +382,21 @@ export class WoundCare extends BaseCategory {
 @InputType('DietaryInput')
 @Schema({ versionKey: false, timestamps: true })
 export class Dietary extends BaseCategory {
+  @Prop({ type: String, enum: DietaryCategory, isNan: true })
+  @Field(() => DietaryCategory, { nullable: true })
+  category?: DietaryCategory;
+
+  @Prop({ type: String, enum: DietaryName, isNan: true })
+  @Field(() => DietaryName, { nullable: true })
+  name?: DietaryName;
+
   @Prop({ isNan: true })
-  @Field(() => String, { nullable: true })
-  text?: string;
+  @Field({ nullable: true })
+  date?: string;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
-  bmi?: string;
+  notes?: string;
 }
 
 /**************************************************************************************************
@@ -523,6 +531,7 @@ export class ChangeMemberDnaParams {
 
   @Field(() => ChangeAdmissionDietaryParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
+  @IsOnlyDateInSub('date', { message: Errors.get(ErrorType.admissionDietaryDate) })
   dietary?: ChangeAdmissionDietaryParams;
 }
 

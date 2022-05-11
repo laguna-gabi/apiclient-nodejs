@@ -267,7 +267,7 @@ describe(AdmissionService.name, () => {
     ${AdmissionCategory.externalAppointments} | ${'date'}
     ${AdmissionCategory.activities}           | ${'text'}
     ${AdmissionCategory.woundCares}           | ${'text'}
-    ${AdmissionCategory.dietaries}            | ${'text'}
+    ${AdmissionCategory.dietaries}            | ${'notes'}
   `(
     `should remove null fields from create $admissionCategory params`,
     async ({ admissionCategory, key }) => {
@@ -280,7 +280,7 @@ describe(AdmissionService.name, () => {
       const result = await change(field, changeParams, memberId);
 
       const categoryRes = await model.findById(new Types.ObjectId(result[admissionCategory][0].id));
-      expect(categoryRes.text).not.toBeDefined();
+      expect(categoryRes[key]).not.toBeDefined();
     },
   );
 
@@ -292,7 +292,7 @@ describe(AdmissionService.name, () => {
     ${AdmissionCategory.externalAppointments} | ${'date'}
     ${AdmissionCategory.activities}           | ${'text'}
     ${AdmissionCategory.woundCares}           | ${'text'}
-    ${AdmissionCategory.dietaries}            | ${'text'}
+    ${AdmissionCategory.dietaries}            | ${'notes'}
   `(
     `should remove null fields from update $admissionCategory params`,
     async ({ admissionCategory, key }) => {
@@ -494,7 +494,7 @@ describe(AdmissionService.name, () => {
       expect.objectContaining({ text: expect.any(String) }),
     ]);
     expect(result[AdmissionCategory.dietaries]).toEqual([
-      expect.objectContaining({ text: expect.any(String) }),
+      expect.objectContaining({ notes: expect.any(String) }),
     ]);
   };
 

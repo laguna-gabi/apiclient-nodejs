@@ -206,8 +206,10 @@ export const FRAGMENT_ADMISSION = gql`
     }
     dietaries {
       id
-      text
-      bmi
+      category
+      name
+      date
+      notes
     }
   }
 `;

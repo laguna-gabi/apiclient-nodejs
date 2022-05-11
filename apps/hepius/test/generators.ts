@@ -96,6 +96,8 @@ import {
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
   DiagnosisSeverity,
+  DietaryCategory,
+  DietaryName,
   DischargeDocumentType,
   DischargeTo,
   GetMemberUploadJournalAudioLinkParams,
@@ -1525,8 +1527,10 @@ export const generateAdmissionDietaryParams = ({
   return {
     changeType,
     ...attachIdParam,
-    text: lorem.sentence(),
-    bmi: lorem.word(),
+    category: DietaryCategory.other,
+    name: DietaryName.fasting,
+    date: generateDateOnly(fakerDate.future(1)),
+    notes: lorem.sentence(),
   };
 };
 

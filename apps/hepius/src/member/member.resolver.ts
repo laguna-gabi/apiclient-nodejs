@@ -1441,6 +1441,7 @@ export class MemberResolver extends MemberBase {
     @Args(camelCase(ChangeMemberDnaParams.name))
     changeMemberDnaParams: ChangeMemberDnaParams,
   ): Promise<Admission> {
+    this.dietaryMatcher.validate(changeMemberDnaParams.dietary);
     return this.admissionService.change(changeMemberDnaParams);
   }
 

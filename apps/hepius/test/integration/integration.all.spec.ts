@@ -2620,7 +2620,7 @@ describe('Integration tests: all', () => {
       ]),
       activities: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       woundCares: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
-      dietaries: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
+      dietaries: expect.arrayContaining([expect.objectContaining({ notes: expect.any(String) })]),
       admitDate: expect.any(String),
       admitType: expect.any(String),
       admitSource: expect.any(String),

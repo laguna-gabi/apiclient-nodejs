@@ -175,6 +175,8 @@ export enum ErrorType {
   admissionDiagnosisOnsetStart = 10610,
   admissionDiagnosisOnsetEnd = 10611,
   admissionProcedureDate = 10612,
+  admissionDietaryCategoryNameMismatch = 10613,
+  admissionDietaryDate = 10614,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -422,6 +424,8 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.orgIdInvalid.valueOf(), `orgId ${objectIdFormat}`],
   [ErrorType.redFlagTypeInvalid.valueOf(), 'invalid red flag type'],
   [ErrorType.redFlagTypeNotFound.valueOf(), 'red flag type was not found'],
+  [ErrorType.journeyNotFound.valueOf(), `journey ${notFoundPrefix}`],
+  [ErrorType.journeyForMemberNotFound.valueOf(), `journey for member ${notFoundPrefix}`],
   [ErrorType.admissionDiagnosisIdNotFound.valueOf(), `diagnosis ${notFoundPrefix}`],
   [ErrorType.admissionProcedureIdNotFound.valueOf(), `procedure ${notFoundPrefix}`],
   [ErrorType.admissionMedicationIdNotFound.valueOf(), `medication ${notFoundPrefix}`],
@@ -444,8 +448,12 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.admissionDiagnosisOnsetStart.valueOf(), `diagnosis onsetStart ${dateInstanceFormat}`],
   [ErrorType.admissionDiagnosisOnsetEnd.valueOf(), `diagnosis onsetEnd ${dateInstanceFormat}`],
   [ErrorType.admissionProcedureDate.valueOf(), `procedure date ${dateInstanceFormat}`],
-  [ErrorType.journeyNotFound.valueOf(), `journey ${notFoundPrefix}`],
-  [ErrorType.journeyForMemberNotFound.valueOf(), `journey for member ${notFoundPrefix}`],
+  [
+    ErrorType.admissionDietaryCategoryNameMismatch.valueOf(),
+    // eslint-disable-next-line max-len
+    `dietary category and name dont match, as each category has designated names. please use getAdmissionsDietaryMatcher to get the match between category and name`,
+  ],
+  [ErrorType.admissionDietaryDate.valueOf(), `dietary date ${dateInstanceFormat}`],
 ]);
 
 export const DbErrors = {

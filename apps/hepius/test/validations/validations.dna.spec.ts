@@ -1,6 +1,11 @@
 import { BEFORE_ALL_TIMEOUT, generateId } from '..';
 import { ChangeType, ErrorType, Errors } from '../../src/common';
-import { AdmissionCategory, ChangeMemberDnaParams } from '../../src/member';
+import {
+  AdmissionCategory,
+  ChangeMemberDnaParams,
+  DietaryCategory,
+  DietaryName,
+} from '../../src/member';
 import { AdmissionHelper, AppointmentsIntegrationActions, Creators } from '../aux';
 import { Handler } from '../aux/handler';
 import { lorem } from 'faker';
@@ -77,6 +82,9 @@ describe('Validations - DNA', () => {
       ${AdmissionCategory.procedures} | ${{ date: lorem.word() }}          | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionProcedureDate)] }}
       ${AdmissionCategory.procedures} | ${{ date: '2021-13-1' }}           | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionProcedureDate)] }}
       ${AdmissionCategory.procedures} | ${{ date: new Date() }}            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionProcedureDate)] }}
+      ${AdmissionCategory.dietaries}  | ${{ date: lorem.word() }}          | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
+      ${AdmissionCategory.dietaries}  | ${{ date: '2021-13-1' }}           | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
+      ${AdmissionCategory.dietaries}  | ${{ date: new Date() }}            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
     `(
       `should fail to change ${AdmissionCategory.diagnoses} dna since $input is not valid`,
       async ({ admissionCategory, input, error }) => {
@@ -134,5 +142,21 @@ describe('Validations - DNA', () => {
     /* eslint-enable max-len */
     const changeMemberDnaParams: ChangeMemberDnaParams = { ...input, memberId: generateId() };
     await handler.mutations.changeMemberDna({ changeMemberDnaParams, ...errors });
+  });
+
+  it('should throw error when dietary category and name mismatch', async () => {
+    const { field, method } = admissionHelper.mapper.get(AdmissionCategory.diagnoses);
+    const changeMemberDnaParams: ChangeMemberDnaParams = {
+      memberId: generateId(),
+      [`${field}`]: method({
+        changeType: ChangeType.create,
+        category: DietaryCategory.fiber,
+        name: DietaryName.cantonese,
+      }),
+    };
+    await handler.mutations.changeMemberDna({
+      changeMemberDnaParams,
+      invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryCategoryNameMismatch)],
+    });
   });
 });

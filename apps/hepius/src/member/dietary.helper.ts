@@ -1,4 +1,5 @@
-import { DietaryCategory, DietaryMatcher, DietaryName } from '.';
+import { Dietary, DietaryCategory, DietaryMatcher, DietaryName } from '.';
+import { ErrorType, Errors } from '../common';
 
 export class DietaryHelper {
   private readonly dietaryMap: DietaryMatcher = { map: [] };
@@ -9,6 +10,17 @@ export class DietaryHelper {
 
   get(): DietaryMatcher {
     return this.dietaryMap;
+  }
+
+  validate(dietary: Dietary): boolean {
+    if (!dietary || !dietary.category || !dietary.name) {
+      return true;
+    }
+    const { values } = this.dietaryMap.map.find((item) => item.key === dietary.category);
+
+    if (!values.includes(dietary.name)) {
+      throw new Error(Errors.get(ErrorType.admissionDietaryCategoryNameMismatch));
+    }
   }
 
   private initDietaryMap() {
