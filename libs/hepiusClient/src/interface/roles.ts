@@ -9,6 +9,6 @@ export enum UserRole {
   nurse = 'nurse',
 }
 
-export type RoleTypes = MemberRole | UserRole;
-
 registerEnumType(UserRole, { name: 'UserRole' });
+
+export type RoleTypes = MemberRole | UserRole;
