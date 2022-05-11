@@ -1,18 +1,17 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  Appointment,
   AppointmentController,
   AppointmentDto,
   AppointmentResolver,
   AppointmentService,
-  Notes,
   NotesDto,
 } from '.';
 import { CommonModule } from '../common';
 import { CommunicationModule } from '../communication';
 import { OrgModule } from '../org';
 import { ProvidersModule } from '../providers';
+import { Appointment, Notes } from '@argus/hepiusClient';
 
 @Module({
   imports: [

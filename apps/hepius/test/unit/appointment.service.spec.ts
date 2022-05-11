@@ -18,15 +18,11 @@ import {
   generateUpdateNotesParams,
 } from '..';
 import {
-  Appointment,
   AppointmentDocument,
   AppointmentDto,
-  AppointmentMethod,
   AppointmentModule,
   AppointmentService,
-  AppointmentStatus,
   EndAppointmentParams,
-  Notes,
   NotesDocument,
   NotesDto,
 } from '../../src/appointment';
@@ -41,6 +37,7 @@ import {
   LoggerService,
   defaultTimestampsDbValues,
 } from '../../src/common';
+import { Appointment, AppointmentMethod, AppointmentStatus, Notes } from '@argus/hepiusClient';
 
 describe('AppointmentService', () => {
   let module: TestingModule;

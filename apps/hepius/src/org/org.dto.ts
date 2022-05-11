@@ -31,6 +31,12 @@ export class CreateOrgParams {
 
   @Field()
   zipCode: string;
+
+  @Field(() => String, { nullable: true })
+  code?: string;
+
+  @Field(() => String, { nullable: true })
+  logoUrl?: string;
 }
 
 /**************************************************************************************************
@@ -55,6 +61,13 @@ export class Org extends Identifier {
   @Prop()
   @Field(() => String)
   zipCode: string;
+
+  @Prop({ unique: true })
+  @Field(() => String)
+  code?: string;
+
+  @Field(() => String, { nullable: true })
+  logoUrl?: string;
 }
 
 /**************************************************************************************************

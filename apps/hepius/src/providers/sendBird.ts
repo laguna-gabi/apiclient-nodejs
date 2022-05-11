@@ -2,14 +2,13 @@ import { BaseSendBird, formatEx } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
-import { AppointmentStatus } from '../appointment';
 import { LoggerService } from '../common';
 import {
   CreateSendbirdGroupChannelParams,
   RegisterSendbirdUserParams,
   UpdateSendbirdUserParams,
 } from '../communication';
-import { User } from '../user';
+import { AppointmentStatus, User } from '@argus/hepiusClient';
 
 @Injectable()
 export class SendBird extends BaseSendBird implements OnModuleInit {

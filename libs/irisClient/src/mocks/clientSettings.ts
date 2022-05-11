@@ -1,8 +1,8 @@
-import { Language, Platform, generatePhone } from '@argus/pandora';
+import { ClientCategory, Language, Platform, generatePhone } from '@argus/pandora';
 import { internet, name } from 'faker';
 import { isUndefined, omitBy } from 'lodash';
 import { v4 } from 'uuid';
-import { ClientCategory, IUpdateClientSettings, InnerQueueTypes } from '..';
+import { IUpdateClientSettings, InnerQueueTypes } from '..';
 
 export type UpdateMemberSettingsType = Omit<IUpdateClientSettings, 'avatar'>;
 export type UpdateUserSettingsType = Pick<

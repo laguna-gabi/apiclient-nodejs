@@ -1,3 +1,4 @@
+import { UserRole } from '@argus/hepiusClient';
 import { Environments } from '@argus/pandora';
 import { Injectable, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -8,7 +9,7 @@ import { datatype } from 'faker';
 import { GraphQLClient } from 'graphql-request';
 import { AppModule } from '../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../src/auth';
-import { AppRequestContext, UserRole, requestContextMiddleware } from '../src/common';
+import { AppRequestContext, requestContextMiddleware } from '../src/common';
 import { QueueService } from '../src/providers';
 import { QuestionnaireService } from '../src/questionnaire';
 import { UserResolver, UserService } from '../src/user';

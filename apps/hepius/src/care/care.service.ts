@@ -2,16 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
-  Barrier,
   BarrierDocument,
-  BarrierDomain,
-  BarrierType,
-  CarePlan,
   CarePlanDocument,
-  CarePlanType,
   CarePlanTypeDocument,
   CarePlanTypeInput,
-  CareStatus,
   CreateBarrierParams,
   CreateCarePlanParams,
   CreateRedFlagParams,
@@ -35,6 +29,14 @@ import {
 import { isNil, omitBy } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ISoftDelete } from '../db';
+import {
+  Barrier,
+  BarrierDomain,
+  BarrierType,
+  CarePlan,
+  CarePlanType,
+  CareStatus,
+} from '@argus/hepiusClient';
 
 @Injectable()
 export class CareService extends BaseService {
@@ -322,26 +324,23 @@ export class CareService extends BaseService {
 
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteMemberCareProcess(params: IEventDeleteMember) {
-    await deleteMemberObjects<Model<RedFlagDocument> & ISoftDelete<RedFlagDocument>>(
+    const data = {
       params,
-      this.redFlagModel,
-      this.logger,
-      this.deleteMemberCareProcess.name,
-      CareService.name,
-    );
-    await deleteMemberObjects<Model<BarrierDocument> & ISoftDelete<BarrierDocument>>(
-      params,
-      this.barrierModel,
-      this.logger,
-      this.deleteMemberCareProcess.name,
-      CareService.name,
-    );
-    await deleteMemberObjects<Model<CarePlanDocument> & ISoftDelete<CarePlanDocument>>(
-      params,
-      this.carePlanModel,
-      this.logger,
-      this.deleteMemberCareProcess.name,
-      CareService.name,
-    );
+      logger: this.logger,
+      methodName: this.deleteMemberCareProcess.name,
+      serviceName: CareService.name,
+    };
+    await deleteMemberObjects<Model<RedFlagDocument> & ISoftDelete<RedFlagDocument>>({
+      model: this.redFlagModel,
+      ...data,
+    });
+    await deleteMemberObjects<Model<BarrierDocument> & ISoftDelete<BarrierDocument>>({
+      model: this.barrierModel,
+      ...data,
+    });
+    await deleteMemberObjects<Model<CarePlanDocument> & ISoftDelete<CarePlanDocument>>({
+      model: this.carePlanModel,
+      ...data,
+    });
   }
 }

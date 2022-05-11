@@ -1,5 +1,5 @@
-import { ClientCategory, RegisterInternalKey } from '@argus/irisClient';
-import { Language, NotificationType, Platform, ServiceName } from '@argus/pandora';
+import { RegisterInternalKey } from '@argus/irisClient';
+import { ClientCategory, Language, NotificationType, Platform, ServiceName } from '@argus/pandora';
 import { add } from 'date-fns';
 import { internet, lorem, name } from 'faker';
 import { Types } from 'mongoose';

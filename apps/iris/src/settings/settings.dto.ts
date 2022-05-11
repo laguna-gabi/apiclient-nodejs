@@ -1,5 +1,4 @@
-import { ClientCategory } from '@argus/irisClient';
-import { Language, Platform } from '@argus/pandora';
+import { ClientCategory, Language, Platform } from '@argus/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ISoftDelete } from '../db';
 

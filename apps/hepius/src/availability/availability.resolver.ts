@@ -1,3 +1,4 @@
+import { UserRole } from '@argus/hepiusClient';
 import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Availability, AvailabilityInput, AvailabilityService, AvailabilitySlot } from '.';
@@ -9,7 +10,6 @@ import {
   IsValidObjectId,
   LoggingInterceptor,
   Roles,
-  UserRole,
 } from '../common';
 
 @UseInterceptors(LoggingInterceptor)

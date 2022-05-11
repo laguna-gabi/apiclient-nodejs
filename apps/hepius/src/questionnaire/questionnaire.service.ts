@@ -147,13 +147,13 @@ export class QuestionnaireService extends BaseService {
   async deleteMemberQuestionnaireResponses(params: IEventDeleteMember) {
     await deleteMemberObjects<
       Model<QuestionnaireResponseDocument> & ISoftDelete<QuestionnaireResponseDocument>
-    >(
+    >({
       params,
-      this.questionnaireResponse,
-      this.logger,
-      this.deleteMemberQuestionnaireResponses.name,
-      QuestionnaireService.name,
-    );
+      model: this.questionnaireResponse,
+      logger: this.logger,
+      methodName: this.deleteMemberQuestionnaireResponses.name,
+      serviceName: QuestionnaireService.name,
+    });
   }
 
   async getQuestionnaireResponseById(id: string): Promise<QuestionnaireResponse> {

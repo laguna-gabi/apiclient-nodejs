@@ -114,6 +114,10 @@ export class BaseLogger extends PinoLogger {
     );
   }
 
+  getCorrelationId(): string {
+    return this.logger?.bindings?.().reqId || v4();
+  }
+
   protected logFormat(
     text,
     className: string,

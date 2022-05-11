@@ -1,3 +1,4 @@
+import { MemberRole, UserRole } from '@argus/hepiusClient';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -20,10 +21,8 @@ import {
   LoggingInterceptor,
   MemberIdParam,
   MemberIdParamType,
-  MemberRole,
   MemberUserRouteInterceptor,
   Roles,
-  UserRole,
 } from '../common';
 
 @UseInterceptors(LoggingInterceptor)

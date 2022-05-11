@@ -50,6 +50,8 @@ export enum ErrorType {
   memberUploadAlreadyExistingGeneralDocument = 9231,
   memberHeightNotInRange = 9232,
   memberWeightNotInRange = 9233,
+  memberDeceasedDate = 9234,
+  memberDeceasedDateInTheFuture = 9235,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -80,6 +82,7 @@ export enum ErrorType {
   // Module org errors
   orgAlreadyExists = 9401,
   orgTrialDurationOutOfRange = 9402,
+  orgMissing = 9403,
 
   // Module availability errors
   availabilityNotFound = 9501,
@@ -167,6 +170,11 @@ export enum ErrorType {
   admissionActivityIdNotFound = 10605,
   admissionWoundCareIdNotFound = 10606,
   admissionDietaryIdNotFound = 10607,
+  admissionIdAndChangeTypeAligned = 10608,
+  admissionDataNotProvidedOnChangeDna = 10609,
+  admissionDiagnosisOnsetStart = 10610,
+  admissionDiagnosisOnsetEnd = 10611,
+  admissionProcedureDate = 10612,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -243,6 +251,8 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.memberWeightNotInRange.valueOf(),
     `weight must be between ${weight.min} and ${weight.max} kg`,
   ],
+  [ErrorType.memberDeceasedDate.valueOf(), `deceased date ${dateInstanceFormat}`],
+  [ErrorType.memberDeceasedDateInTheFuture.valueOf(), `deceased date must be in the past`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +
@@ -305,6 +315,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.appointmentIdInvalid.valueOf(), `appointment id ${objectIdFormat}`],
   [ErrorType.orgAlreadyExists.valueOf(), 'organization already exists'],
+  [ErrorType.orgMissing.valueOf(), 'Missing org'],
   [ErrorType.orgTrialDurationOutOfRange.valueOf(), 'trialDuration must not be less than 1'],
   [ErrorType.availabilityNotFound.valueOf(), `availability ${notFoundPrefix}`],
   [ErrorType.availabilityIdInvalid.valueOf(), `availability id ${objectIdFormat}`],
@@ -421,6 +432,18 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.admissionActivityIdNotFound.valueOf(), `activity ${notFoundPrefix}`],
   [ErrorType.admissionWoundCareIdNotFound.valueOf(), `wound care ${notFoundPrefix}`],
   [ErrorType.admissionDietaryIdNotFound.valueOf(), `dietary ${notFoundPrefix}`],
+  [
+    ErrorType.admissionIdAndChangeTypeAligned.valueOf(),
+    `id is not allowed on changeType='create',` +
+      `id is mandatory on changeType='update' or changeType='delete'`,
+  ],
+  [
+    ErrorType.admissionDataNotProvidedOnChangeDna.valueOf(),
+    `nothing to update: only memberId and id was provided`,
+  ],
+  [ErrorType.admissionDiagnosisOnsetStart.valueOf(), `diagnosis onsetStart ${dateInstanceFormat}`],
+  [ErrorType.admissionDiagnosisOnsetEnd.valueOf(), `diagnosis onsetEnd ${dateInstanceFormat}`],
+  [ErrorType.admissionProcedureDate.valueOf(), `procedure date ${dateInstanceFormat}`],
   [ErrorType.journeyNotFound.valueOf(), `journey ${notFoundPrefix}`],
   [ErrorType.journeyForMemberNotFound.valueOf(), `journey for member ${notFoundPrefix}`],
 ]);

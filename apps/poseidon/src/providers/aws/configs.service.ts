@@ -1,6 +1,6 @@
 import { BaseConfigs, BaseExternalConfigs, Environments, ServiceName } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
-import { MongooseModuleOptions } from '@nestjs/mongoose';
+import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 import { aws, db } from 'config';
 
 export const ExternalConfigs = {
@@ -18,7 +18,7 @@ export const ExternalConfigs = {
 };
 
 @Injectable()
-export class ConfigsService extends BaseConfigs {
+export class ConfigsService extends BaseConfigs implements MongooseOptionsFactory {
   constructor() {
     super(aws.region);
   }

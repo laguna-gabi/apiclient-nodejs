@@ -11,6 +11,7 @@ export * from './alert.dto';
 export * from './journey.dto';
 export * from './member.service';
 export * from './admission.service';
+export * from './dietary.helper';
 export * from './journey.service';
 export * from './member.resolver';
 export * from './member.controller';

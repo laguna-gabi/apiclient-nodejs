@@ -231,21 +231,21 @@ export class TodoService extends BaseService {
 
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteMemberTodos(params: IEventDeleteMember) {
-    await deleteMemberObjects<Model<TodoDocument> & ISoftDelete<TodoDocument>>(
+    const data = {
       params,
-      this.todoModel,
-      this.logger,
-      this.deleteMemberTodos.name,
-      TodoService.name,
-    );
+      logger: this.logger,
+      methodName: this.deleteMemberTodos.name,
+      serviceName: TodoService.name,
+    };
+    await deleteMemberObjects<Model<TodoDocument> & ISoftDelete<TodoDocument>>({
+      model: this.todoModel,
+      ...data,
+    });
 
-    await deleteMemberObjects<Model<TodoDoneDocument> & ISoftDelete<TodoDoneDocument>>(
-      params,
-      this.todoDoneModel,
-      this.logger,
-      this.deleteMemberTodos.name,
-      TodoService.name,
-    );
+    await deleteMemberObjects<Model<TodoDoneDocument> & ISoftDelete<TodoDoneDocument>>({
+      model: this.todoDoneModel,
+      ...data,
+    });
   }
 
   /*************************************************************************************************

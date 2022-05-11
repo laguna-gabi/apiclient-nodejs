@@ -1,3 +1,4 @@
+import { User } from '@argus/hepiusClient';
 import { mockProcessWarnings } from '@argus/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -5,7 +6,6 @@ import { Model } from 'mongoose';
 import { dbDisconnect } from '..';
 import { UserSecurityService } from '../../src/auth';
 import { Member } from '../../src/member';
-import { User } from '../../src/user';
 
 describe('UserSecurityService', () => {
   let service: UserSecurityService;

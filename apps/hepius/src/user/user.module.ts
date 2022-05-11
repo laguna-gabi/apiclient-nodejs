@@ -1,8 +1,8 @@
+import { User } from '@argus/hepiusClient';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   SlotService,
-  User,
   UserConfig,
   UserConfigDto,
   UserController,

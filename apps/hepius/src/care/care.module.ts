@@ -1,13 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  Barrier,
   BarrierDto,
-  BarrierType,
   BarrierTypeDto,
-  CarePlan,
   CarePlanDto,
-  CarePlanType,
   CarePlanTypeDto,
   CareResolver,
   CareService,
@@ -17,6 +13,7 @@ import {
   RedFlagTypeDto,
 } from '.';
 import { CommonModule } from '../common';
+import { Barrier, BarrierType, CarePlan, CarePlanType } from '@argus/hepiusClient';
 
 @Module({
   imports: [

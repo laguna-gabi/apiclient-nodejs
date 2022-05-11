@@ -1,4 +1,3 @@
-import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 import { SecretsManager } from 'aws-sdk';
 import { Environments } from '../../interfaces';
 
@@ -6,6 +5,7 @@ export const BaseExternalConfigs = {
   aws: {
     queueNameNotifications: 'aws.sqs.queueNameNotifications',
     queueNameAudit: 'aws.sqs.queueNameAudit',
+    queueNameChangeEvent: 'aws.sqs.queueNameChangeEvent',
     memberBucketName: 'aws.storage.memberBucketName',
   },
   oneSignal: {
@@ -32,12 +32,10 @@ export const BaseExternalConfigs = {
   },
 };
 
-export abstract class BaseConfigs implements MongooseOptionsFactory {
+export class BaseConfigs {
   protected data;
 
   constructor(private awsRegion: string) {}
-
-  abstract createMongooseOptions(): Promise<MongooseModuleOptions>;
 
   async getConfig(configs: string): Promise<string> {
     if (!this.data) {

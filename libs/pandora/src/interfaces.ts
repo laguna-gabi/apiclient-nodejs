@@ -11,8 +11,13 @@ export enum Environments {
 export enum ServiceName {
   hepius = 'hepius',
   iris = 'iris',
-  clinicalEngine = 'clinicalEngine',
+  themis = 'themis',
   poseidon = 'poseidon',
+}
+
+export enum ClientCategory {
+  member = 'member',
+  user = 'user',
 }
 
 export enum Language {
@@ -23,6 +28,8 @@ export enum Language {
 export enum QueueType {
   audit = 'audit',
   notifications = 'notifications',
+  changeEvent = 'changeEvent',
+  transcript = 'transcript',
 }
 
 export enum AuditType {
@@ -63,4 +70,24 @@ export enum CancelNotificationType {
   cancelVideo = 'cancelVideo',
   cancelCall = 'cancelCall',
   cancelText = 'cancelText',
+}
+
+/*******************************************************************************
+ ***************************** Change Events ***********************************
+ ******************************************************************************/
+export enum ChangeEventType {
+  created = 'created',
+  updated = 'updated',
+  deleted = 'deleted',
+}
+
+export enum EntityName {
+  caregiver = 'caregiver',
+}
+
+export interface IChangeEvent {
+  action: ChangeEventType;
+  entity: EntityName;
+  memberId: string;
+  correlationId: string;
 }

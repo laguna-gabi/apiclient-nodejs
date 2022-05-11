@@ -27,6 +27,7 @@ export const FRAGMENT_MEMBER = gql`
       type
       trialDuration
       zipCode
+      code
     }
     primaryUserId
     users {
@@ -101,6 +102,10 @@ export const FRAGMENT_MEMBER = gql`
     maritalStatus
     height
     weight
+    deceased {
+      cause
+      date
+    }
   }
 `;
 
@@ -137,16 +142,32 @@ export const FRAGMENT_APPOINTMENT = gql`
 export const FRAGMENT_ADMISSION = gql`
   fragment admissionFragment on Admission {
     id
+    admitDate
+    admitType
+    admitSource
+    dischargeDate
+    dischargeTo
+    facility
+    specialInstructions
+    reasonForAdmission
+    hospitalCourse
+    warningSigns
     diagnoses {
       id
-      icdCode
+      code
       description
+      primaryType
+      secondaryType
+      clinicalStatus
+      severity
+      onsetStart
+      onsetEnd
     }
     procedures {
       id
       date
       procedureType
-      text
+      description
     }
     medications {
       id
@@ -166,11 +187,13 @@ export const FRAGMENT_ADMISSION = gql`
       id
       isScheduled
       drName
-      instituteOrHospitalName
+      clinic
       date
+      type
+      specialInstructions
+      fullAddress
       phone
-      description
-      address
+      fax
     }
     activities {
       id

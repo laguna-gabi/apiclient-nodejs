@@ -6,7 +6,7 @@ import { ConfigsService, QueueService, StorageService } from './aws';
 @Module({
   imports: [CommonModule],
   providers: [ConfigsService, QueueService, StorageService, RevAI],
-  exports: [ConfigsService],
+  exports: [ConfigsService, RevAI, StorageService],
   controllers: [WebhooksController],
 })
 export class ProvidersModule {}

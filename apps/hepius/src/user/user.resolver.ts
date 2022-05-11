@@ -1,5 +1,6 @@
-import { ClientCategory, IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
-import { GlobalEventType, QueueType, formatEx } from '@argus/pandora';
+import { MemberRole, User, UserRole } from '@argus/hepiusClient';
+import { IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
+import { ClientCategory, GlobalEventType, QueueType, formatEx } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -9,7 +10,6 @@ import {
   GetSlotsParams,
   Slots,
   UpdateUserParams,
-  User,
   UserConfig,
   UserService,
   UserSummary,
@@ -25,9 +25,7 @@ import {
   IsValidObjectId,
   LoggerService,
   LoggingInterceptor,
-  MemberRole,
   Roles,
-  UserRole,
 } from '../common';
 import { CognitoService } from '../providers';
 

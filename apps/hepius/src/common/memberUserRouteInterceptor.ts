@@ -1,8 +1,9 @@
+import { MemberRole, UserRole } from '@argus/hepiusClient';
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
-import { ErrorType, Errors, MemberRole, UserRole } from '.';
+import { ErrorType, Errors } from '.';
 
 /**
  * There are 2 ways to pass params to gql:

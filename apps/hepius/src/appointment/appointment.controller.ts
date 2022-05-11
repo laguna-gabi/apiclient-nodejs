@@ -1,9 +1,10 @@
 import { Body, Controller, NotFoundException, Post, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Appointment, AppointmentBase, AppointmentService, ScheduleAppointmentParams } from '.';
+import { AppointmentBase, AppointmentService, ScheduleAppointmentParams } from '.';
 import { LoggerService, LoggingInterceptor, Public, apiPrefix } from '../common';
 import { CommunicationResolver } from '../communication';
 import { Bitly } from '../providers';
+import { Appointment } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/appointments`)

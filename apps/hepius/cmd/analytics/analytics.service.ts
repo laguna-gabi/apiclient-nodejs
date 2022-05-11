@@ -35,7 +35,6 @@ import {
   SheetOption,
   SummaryFileSuffix,
 } from '.';
-import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import {
   CaregiverDocument,
@@ -51,17 +50,22 @@ import {
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
 } from '../../src/questionnaire';
-import { Caregiver } from '@argus/hepiusClient';
-import { User, UserDocument } from '../../src/user';
 import {
+  AppointmentMethod,
+  AppointmentStatus,
   Barrier,
-  BarrierDocument,
   BarrierType,
-  BarrierTypeDocument,
   BaseCare,
   CarePlan,
-  CarePlanDocument,
   CarePlanType,
+  Caregiver,
+  User,
+} from '@argus/hepiusClient';
+import { UserDocument } from '../../src/user';
+import {
+  BarrierDocument,
+  BarrierTypeDocument,
+  CarePlanDocument,
   CarePlanTypeDocument,
   RedFlag,
   RedFlagDocument,
@@ -479,6 +483,8 @@ export class AnalyticsService {
     const { firstActivationScore, lastActivationScore, firstWellbeingScore, lastWellbeingScore } =
       this.getActivationAndWellbeingStats(member.appointments);
 
+    const { deceased } = member.memberDetails;
+
     return {
       customer_id: member._id.toString(),
       mbr_initials: this.getMemberInitials({
@@ -517,7 +523,10 @@ export class AnalyticsService {
         ? reformatDate(member.memberDetails.dischargeDate, momentFormats.mysqlDate)
         : undefined,
       los: this.calculateLos(member.memberDetails.admitDate, member.memberDetails.dischargeDate),
-      days_since_discharge: daysSinceDischarge,
+      days_since_discharge: differenceInDays(
+        new Date(),
+        Date.parse(member.memberDetails.dischargeDate),
+      ),
       active: daysSinceDischarge < GraduationPeriod,
       graduated: member.memberDetails.isGraduated,
       graduation_date:
@@ -561,6 +570,18 @@ export class AnalyticsService {
       marital_status: member.memberDetails.maritalStatus,
       height: member.memberDetails.height,
       weight: member.memberDetails.weight,
+      deceased_cause: deceased ? deceased.cause : undefined,
+      deceased_date: deceased
+        ? reformatDate(deceased.date.toString(), momentFormats.mysqlDateTime)
+        : undefined,
+      deceased_days_from_dc:
+        deceased && member.memberDetails?.dischargeDate
+          ? differenceInDays(
+              Date.parse(deceased.date),
+              Date.parse(member.memberDetails.dischargeDate),
+            )
+          : undefined,
+      deceased_flag: !!deceased,
     };
   }
 

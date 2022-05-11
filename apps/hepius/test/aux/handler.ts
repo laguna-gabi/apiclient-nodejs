@@ -1,4 +1,15 @@
-import { Caregiver } from '@argus/hepiusClient';
+import {
+  Appointment,
+  Barrier,
+  BarrierDomain,
+  BarrierType,
+  CarePlan,
+  CarePlanType,
+  Caregiver,
+  Notes,
+  User,
+  UserRole,
+} from '@argus/hepiusClient';
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -16,27 +27,20 @@ import { Mutations, Queries } from '.';
 import { generateCreateMemberParams, generateCreateUserParams, generateOrgParams } from '..';
 import { AppModule } from '../../src/app.module';
 import {
-  Appointment,
   AppointmentDocument,
   AppointmentDto,
-  Notes,
   NotesDocument,
   NotesDto,
 } from '../../src/appointment';
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { Availability, AvailabilityDocument, AvailabilityDto } from '../../src/availability';
 import {
-  Barrier,
   BarrierDocument,
-  BarrierDomain,
   BarrierDto,
-  BarrierType,
   BarrierTypeDocument,
   BarrierTypeDto,
-  CarePlan,
   CarePlanDocument,
   CarePlanDto,
-  CarePlanType,
   CarePlanTypeDocument,
   CarePlanTypeDto,
   CareService,
@@ -50,7 +54,6 @@ import {
   EventType,
   IEventOnNewUser,
   LoggerService,
-  UserRole,
   defaultAuditDbValues,
   requestContextMiddleware,
 } from '../../src/common';
@@ -103,7 +106,6 @@ import {
   TodoDto,
 } from '../../src/todo';
 import {
-  User,
   UserConfig,
   UserConfigDocument,
   UserConfigDto,

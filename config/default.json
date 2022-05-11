@@ -39,7 +39,8 @@
       "notification": "NotificationsQ-local",
       "notificationDLQ": "NotificationsDLQ-local",
       "image": "ImageQ-local",
-      "transcript": "TranscriptQ-local"
+      "transcript": "TranscriptQ-local",
+      "changeEvent": "ChangeEventQ-local"
     },
     "cloudMap": {
       "namespace": "LagunaCloudMap-develop"

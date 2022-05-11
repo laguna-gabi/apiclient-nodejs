@@ -1,9 +1,10 @@
+import { User } from '@argus/hepiusClient';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { BaseService } from '../common';
 import { Member, MemberDocument } from '../member';
-import { User, UserDocument } from '../user';
+import { UserDocument } from '../user';
 
 @Injectable()
 export class UserSecurityService extends BaseService {

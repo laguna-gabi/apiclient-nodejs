@@ -1,6 +1,19 @@
-import { Caregiver, Relationship } from '@argus/hepiusClient';
 import {
-  ClientCategory,
+  AppointmentMethod,
+  AppointmentStatus,
+  BarrierDomain,
+  CareStatus,
+  Caregiver,
+  MemberRole,
+  Notes,
+  Relationship,
+  RoleTypes,
+  Scores,
+  User,
+  UserRole,
+  defaultUserParams,
+} from '@argus/hepiusClient';
+import {
   ContentKey,
   ExternalKey,
   IUpdateClientSettings,
@@ -9,6 +22,7 @@ import {
 } from '@argus/irisClient';
 import {
   CancelNotificationType,
+  ClientCategory,
   Language,
   NotificationType,
   Platform,
@@ -17,7 +31,7 @@ import {
   generateZipCode,
 } from '@argus/pandora';
 import { general, graphql, hosts } from 'config';
-import { add, addDays, format, sub } from 'date-fns';
+import { add, addDays, format, sub, subDays } from 'date-fns';
 import {
   company,
   datatype,
@@ -35,21 +49,15 @@ import { sign } from 'jsonwebtoken';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
-  AppointmentMethod,
-  AppointmentStatus,
   EndAppointmentParams,
-  Notes,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
-  Scores,
   UpdateNotesParams,
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';
 import {
-  BarrierDomain,
   BaseCarePlanParams,
   CarePlanTypeInput,
-  CareStatus,
   CreateBarrierParams,
   CreateCarePlanParams,
   CreateRedFlagParams,
@@ -62,19 +70,13 @@ import {
   CreateRedFlagParamsWizard,
   SubmitCareWizardParams,
 } from '../src/care/wizard.dto';
-import {
-  ChangeType,
-  ItemType,
-  MemberRole,
-  RoleTypes,
-  UserRole,
-  momentFormats,
-  reformatDate,
-} from '../src/common';
+import { ChangeType, ItemType, momentFormats, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
   AddCaregiverParams,
+  AdmitSource,
+  AdmitType,
   Alert,
   AlertType,
   AppointmentCompose,
@@ -87,11 +89,15 @@ import {
   ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
   ChangeAdmissionWoundCareParams,
+  ChangeMemberDnaParams,
+  ClinicalStatus,
   CreateMemberParams,
   CreateTaskParams,
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
+  DiagnosisSeverity,
   DischargeDocumentType,
+  DischargeTo,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
   Honorific,
@@ -103,10 +109,12 @@ import {
   MemberConfig,
   NotifyContentParams,
   NotifyParams,
+  PrimaryDiagnosisType,
   ProcedureType,
   ReadmissionRisk,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
+  SecondaryDiagnosisType,
   SetGeneralNotesParams,
   Sex,
   TaskStatus,
@@ -117,6 +125,7 @@ import {
   UpdateRecordingParams,
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
+  WarningSigns,
   defaultMemberParams,
 } from '../src/member';
 import { CreateOrgParams, Org, OrgType } from '../src/org';
@@ -143,13 +152,7 @@ import {
   TodoStatus,
   UpdateTodoParams,
 } from '../src/todo';
-import {
-  CreateUserParams,
-  GetSlotsParams,
-  UpdateUserParams,
-  User,
-  defaultUserParams,
-} from '../src/user';
+import { CreateUserParams, GetSlotsParams, UpdateUserParams } from '../src/user';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
@@ -338,6 +341,9 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
   const firstName = name.firstName();
   const lastName = name.lastName();
   const user = primaryUser || mockGenerateUser();
+  const admitDate = subDays(new Date(), 7);
+  const dischargeDate = addDays(admitDate, 2);
+  const deceasedDate = addDays(admitDate, 3);
   return {
     id: generateId(),
     authId: v4(),
@@ -345,6 +351,8 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     phone: generatePhone(),
     phoneType: 'mobile',
     deviceId: datatype.uuid(),
+    admitDate: generateDateOnly(admitDate),
+    dischargeDate: generateDateOnly(dischargeDate),
     firstName,
     lastName,
     dateOfBirth: generateDateOnly(fakerDate.past()),
@@ -369,6 +377,7 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     nurse_notes: lorem.sentence(),
     general_notes: lorem.sentence(),
     isGraduated: defaultMemberParams.isGraduated,
+    deceased: { cause: lorem.sentence(), date: generateDateOnly(deceasedDate) },
   };
 };
 
@@ -414,6 +423,10 @@ export const generateUpdateMemberParams = ({
   maritalStatus = MaritalStatus.married,
   healthPlan = datatype.string(10),
   preferredGenderPronoun = datatype.string(10),
+  deceased = {
+    cause: lorem.sentence(),
+    date: generateDateOnly(fakerDate.past()),
+  },
 }: Partial<UpdateMemberParams> = {}): UpdateMemberParams => {
   return {
     id,
@@ -437,6 +450,7 @@ export const generateUpdateMemberParams = ({
     healthPlan,
     preferredGenderPronoun,
     maritalStatus,
+    deceased,
   };
 };
 
@@ -616,8 +630,9 @@ export const generateOrgParams = ({
   name = `${lorem.word()}.${v4()}`,
   trialDuration = datatype.number({ min: 1, max: 100 }),
   zipCode = generateZipCode(),
+  code,
 }: Partial<CreateOrgParams> = {}): CreateOrgParams => {
-  return { type, name, trialDuration: trialDuration, zipCode };
+  return { type, name, trialDuration: trialDuration, zipCode, code: code || name };
 };
 
 export const generateAppointmentComposeParams = (): AppointmentCompose => {
@@ -1365,16 +1380,38 @@ export const mockDbRedFlag = () => {
 export const generateAdmissionDiagnosisParams = ({
   changeType,
   id,
+  code,
+  description,
+  primaryType,
+  secondaryType,
+  clinicalStatus,
+  severity,
+  onsetStart,
+  onsetEnd,
 }: {
   changeType: ChangeType;
   id?: string;
+  code?: string;
+  description?: string;
+  primaryType?: PrimaryDiagnosisType;
+  secondaryType?: SecondaryDiagnosisType;
+  clinicalStatus?: ClinicalStatus;
+  severity?: DiagnosisSeverity;
+  onsetStart?: string;
+  onsetEnd?: string;
 }): ChangeAdmissionDiagnosisParams => {
   const attachIdParam = id ? { id } : {};
   return {
     changeType,
     ...attachIdParam,
-    icdCode: datatype.uuid(),
-    description: lorem.sentence(),
+    code: code || datatype.uuid(),
+    description: description || lorem.sentence(),
+    primaryType: primaryType || PrimaryDiagnosisType.self,
+    secondaryType: secondaryType || SecondaryDiagnosisType.radiology,
+    clinicalStatus: clinicalStatus || ClinicalStatus.inactive,
+    severity: severity || DiagnosisSeverity.mild,
+    onsetStart: onsetStart || generateDateOnly(subDays(new Date(), 2)),
+    onsetEnd: onsetEnd || generateDateOnly(subDays(new Date(), 1)),
   };
 };
 
@@ -1389,9 +1426,9 @@ export const generateAdmissionProcedureParams = ({
   return {
     changeType,
     ...attachIdParam,
-    date: new Date(),
+    date: generateDateOnly(new Date()),
     procedureType: ProcedureType.diagnostic,
-    text: lorem.sentence(),
+    description: lorem.sentence(),
   };
 };
 
@@ -1434,11 +1471,13 @@ export const generateAdmissionExternalAppointmentParams = ({
     ...attachIdParam,
     isScheduled: isScheduled !== undefined || Math.random() < 0.5,
     drName: `dr ${name.lastName()}`,
-    instituteOrHospitalName: lorem.word(),
+    clinic: lorem.word(),
     date: new Date(),
+    type: lorem.word(),
+    specialInstructions: lorem.sentences(),
+    fullAddress: lorem.sentence(),
     phone: generatePhone(),
-    description: lorem.sentence(),
-    address: lorem.sentence(),
+    fax: generatePhone(),
   };
 };
 
@@ -1488,6 +1527,46 @@ export const generateAdmissionDietaryParams = ({
     ...attachIdParam,
     text: lorem.sentence(),
     bmi: lorem.word(),
+  };
+};
+
+export const generateChangeMemberDnaParams = ({
+  changeType,
+  memberId,
+  id,
+}: {
+  changeType: ChangeType;
+  memberId: string;
+  id?: string;
+}): ChangeMemberDnaParams => {
+  const createDiagnosis = generateAdmissionDiagnosisParams({ changeType });
+  const createProcedure = generateAdmissionProcedureParams({ changeType });
+  const createMedication = generateAdmissionMedicationParams({ changeType });
+  const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
+  const createActivity = generateAdmissionActivityParams({ changeType });
+  const createWoundCare = generateAdmissionWoundCareParams({ changeType });
+  const createDietary = generateAdmissionDietaryParams({ changeType });
+  const idObject = id ? { id } : {};
+  return {
+    memberId,
+    ...idObject,
+    diagnosis: createDiagnosis,
+    procedure: createProcedure,
+    medication: createMedication,
+    externalAppointment: createExternalAppointment,
+    activity: createActivity,
+    woundCare: createWoundCare,
+    dietary: createDietary,
+    admitDate: generateDateOnly(subDays(new Date(), 5)),
+    admitType: AdmitType.emergency,
+    admitSource: AdmitSource.clinicReferral,
+    dischargeDate: generateDateOnly(subDays(new Date(), 2)),
+    dischargeTo: DischargeTo.snf,
+    facility: lorem.sentence(),
+    specialInstructions: lorem.sentences(),
+    reasonForAdmission: lorem.sentences(),
+    hospitalCourse: lorem.sentences(),
+    warningSigns: WarningSigns.confusion,
   };
 };
 

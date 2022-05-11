@@ -1,4 +1,5 @@
-import { ServiceName, webhooks } from '@argus/pandora';
+import { User } from '@argus/hepiusClient';
+import { GlobalEventType, IChangeEvent, QueueType, ServiceName, webhooks } from '@argus/pandora';
 import { INestApplication } from '@nestjs/common';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -21,7 +22,7 @@ import {
   TwilioService,
 } from '../src/providers';
 import { NotificationService } from '../src/services';
-import { User, UserResolver, UserService } from '../src/user';
+import { UserResolver, UserService } from '../src/user';
 import { Handler, Mutations, Queries } from './aux';
 import {
   generateCarePlanTypeInput,
@@ -47,6 +48,7 @@ export const urls = {
   scheduleAppointments: `/${apiPrefix}/appointments/schedule`,
   slots: `/${apiPrefix}/users/slots`,
   members: `/${apiPrefix}/members/create`,
+  orgs: `/${apiPrefix}/orgs/details`,
   webhooks: `/${apiPrefix}/${webhooks}`,
 };
 
@@ -316,4 +318,21 @@ export const removeChangeType = (changeParams): BaseCategory => {
   const dupParams = { ...changeParams };
   delete dupParams.changeType;
   return dupParams;
+};
+
+export const confirmEmittedChangeSetEvent = (
+  mockEventEmitterEmit: jest.SpyInstance,
+  expectedChangeEvent: IChangeEvent,
+) => {
+  Object.keys(expectedChangeEvent).forEach((key) => {
+    expect(mockEventEmitterEmit).toHaveBeenLastCalledWith(
+      GlobalEventType.notifyQueue,
+      expect.objectContaining({
+        type: QueueType.changeEvent,
+        message: expect.stringContaining(
+          key === 'correlationId' ? key : `"${key}":"${expectedChangeEvent[key]}"`,
+        ),
+      }),
+    );
+  });
 };

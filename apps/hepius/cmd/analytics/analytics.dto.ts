@@ -10,8 +10,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Appointment, AppointmentStatus, Notes } from '../../src/appointment';
-import { RecordingType, UserRole } from '../../src/common';
+import { RecordingType } from '../../src/common';
 import {
   Honorific,
   Journey,
@@ -23,9 +22,16 @@ import {
   Recording,
   Sex,
 } from '../../src/member';
-import { User } from '../../src/user';
-import { Relationship } from '@argus/hepiusClient';
-import { BarrierDomain, CareStatus } from '../../src/care';
+import {
+  Appointment,
+  AppointmentStatus,
+  BarrierDomain,
+  CareStatus,
+  Notes,
+  Relationship,
+  User,
+  UserRole,
+} from '@argus/hepiusClient';
 
 export const DefaultOutputDir = './outputs';
 export const HarmonyLink = hosts.harmony;
@@ -182,6 +188,14 @@ export class MemberData {
   height?: number;
   @Column('float', { nullable: true })
   weight?: number;
+  @Column('varchar', { length: 100, nullable: true })
+  deceased_cause?: string;
+  @Column('date', { nullable: true })
+  deceased_date?: string;
+  @Column('float', { nullable: true })
+  deceased_days_from_dc?: number;
+  @Column('float')
+  deceased_flag: boolean;
 }
 
 @Entity({ name: CoachTable })

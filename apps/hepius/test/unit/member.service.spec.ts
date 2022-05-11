@@ -1,13 +1,17 @@
-import { Caregiver } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, Caregiver, User } from '@argus/hepiusClient';
 import { AppointmentInternalKey, ChatInternalKey } from '@argus/irisClient';
 import {
+  ChangeEventType,
+  EntityName,
   Language,
   Platform,
+  createChangeEvent,
   generatePhone,
   generateZipCode,
   mockLogger,
   mockProcessWarnings,
 } from '@argus/pandora';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { articlesByDrg, queryDaysLimit } from 'config';
 import { add, sub } from 'date-fns';
@@ -52,17 +56,10 @@ import {
   mockGenerateQuestionnaireItem,
   mockGenerateTodo,
 } from '..';
-import {
-  Appointment,
-  AppointmentDocument,
-  AppointmentDto,
-  AppointmentModule,
-  AppointmentStatus,
-} from '../../src/appointment';
+import { AppointmentDocument, AppointmentDto, AppointmentModule } from '../../src/appointment';
 import {
   ErrorType,
   Errors,
-  IEventDeleteMember,
   LoggerService,
   PhoneType,
   RecordingType,
@@ -122,7 +119,8 @@ import {
 } from '../../src/questionnaire';
 import { NotificationService } from '../../src/services';
 import { Todo, TodoDocument, TodoDto } from '../../src/todo';
-import { User, UserDocument, UserDto } from '../../src/user';
+import { UserDocument, UserDto } from '../../src/user';
+import { confirmEmittedChangeSetEvent } from '../common';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -157,6 +155,7 @@ describe('MemberService', () => {
     await i18nService.onModuleInit();
 
     memberModel = model<MemberDocument & defaultTimestampsDbValues>(Member.name, MemberDto);
+
     memberConfigModel = model<MemberConfigDocument>(MemberConfig.name, MemberConfigDto);
     controlMemberModel = model<ControlMemberDocument & defaultTimestampsDbValues>(
       ControlMember.name,
@@ -973,6 +972,19 @@ describe('MemberService', () => {
         createTaskParams: generateCreateTaskParams({ memberId }),
         status: TaskStatus.pending,
       });
+      const params = generateUpdateRecordingParams({ memberId });
+      const params2 = generateUpdateRecordingParams({ memberId });
+      const { id: recordingId } = await service.updateRecording(params, params.userId);
+      await service.updateRecording(params2, params2.userId);
+
+      const { id: caregiverId } = await service.addCaregiver(
+        generateAddCaregiverParams({ memberId }),
+      );
+      await service.addCaregiver(generateAddCaregiverParams({ memberId }));
+
+      const { id: journalId } = await service.createJournal(memberId);
+      const updateJournalTextParams = generateUpdateJournalTextParams({ id: journalId });
+      await service.updateJournal({ ...updateJournalTextParams, memberId });
 
       const result = await service.deleteMember(
         generateDeleteMemberParams({ id: memberId, hard: false }),
@@ -990,7 +1002,19 @@ describe('MemberService', () => {
         memberId: new Types.ObjectId(memberId),
       });
       // @ts-ignore
-      const ActionItemsDeletedResult = await modelActionItem.findWithDeleted({ _id: actionItemId });
+      const actionItemsDeletedResult = await modelActionItem.findWithDeleted({ _id: actionItemId });
+      // @ts-ignore
+      const recordingDeletedResult = await modelRecording.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      // @ts-ignore
+      const caregiverDeletedResult = await modelCaregiver.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      // @ts-ignore
+      const journalDeletedResult = await modelJournal.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
       /* eslint-enable @typescript-eslint/ban-ts-comment */
 
       await checkDelete(memberDeletedResult, { _id: new Types.ObjectId(memberId) }, userId);
@@ -999,7 +1023,10 @@ describe('MemberService', () => {
         { memberId: new Types.ObjectId(memberId) },
         userId,
       );
-      await checkDelete(ActionItemsDeletedResult, { _id: actionItemId }, userId);
+      await checkDelete(actionItemsDeletedResult, { _id: actionItemId }, userId);
+      await checkDelete(recordingDeletedResult, { memberId: new Types.ObjectId(memberId) }, userId);
+      await checkDelete(caregiverDeletedResult, { memberId: new Types.ObjectId(memberId) }, userId);
+      await checkDelete(journalDeletedResult, { memberId: new Types.ObjectId(memberId) }, userId);
 
       const resultHard = await service.deleteMember(
         generateDeleteMemberParams({ id: memberId, hard: true }),
@@ -1017,17 +1044,26 @@ describe('MemberService', () => {
         memberId: new Types.ObjectId(memberId),
       });
       // @ts-ignore
-      const ActionItemsDeletedResultHard = await modelActionItem.findWithDeleted({
+      const actionItemsDeletedResultHard = await modelActionItem.findWithDeleted({
         _id: actionItemId,
       });
+      // @ts-ignore
+      const recordingDeletedResultHard = await modelRecording.findWithDeleted({ id: recordingId });
+      // @ts-ignore
+      const caregiverDeletedResultHard = await modelCaregiver.findWithDeleted({ _id: caregiverId });
+      // @ts-ignore
+      const journalDeletedResultHard = await modelJournal.findWithDeleted({ _id: journalId });
+      /* eslint-enable @typescript-eslint/ban-ts-comment */
       [
         memberDeletedResultHard,
         memberConfigDeletedResultHard,
-        ActionItemsDeletedResultHard,
+        actionItemsDeletedResultHard,
+        recordingDeletedResultHard,
+        caregiverDeletedResultHard,
+        journalDeletedResultHard,
       ].forEach((result) => {
         expect(result).toEqual([]);
       });
-      /* eslint-enable @typescript-eslint/ban-ts-comment */
     });
   });
 
@@ -1520,190 +1556,122 @@ describe('MemberService', () => {
     });
   });
 
-  describe('deleteJournals', () => {
-    test.each([true, false])('should %p delete member journals', async (hard) => {
-      const memberId = generateId();
-      const { id } = await service.createJournal(memberId);
-      const updateJournalTextParams = generateUpdateJournalTextParams({ id });
-
-      await service.updateJournal({ ...updateJournalTextParams, memberId });
-      const journals = await service.getJournals(memberId);
-
-      expect(journals).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            _id: new Types.ObjectId(id),
-            memberId: new Types.ObjectId(memberId),
-            published: false,
-            text: updateJournalTextParams.text,
-            updatedAt: expect.any(Date),
-            createdAt: expect.any(Date),
-            deleted: false,
-          }),
-        ]),
-      );
-
-      await service.deleteMemberJournals({ memberId, deletedBy: memberId, hard });
-
-      const journalsAfterDelete = await service.getJournals(memberId);
-      expect(journalsAfterDelete).toHaveLength(0);
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const deletedJournals = await modelJournal.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
-      if (hard) {
-        expect(deletedJournals).toEqual([]);
-      } else {
-        checkDelete(deletedJournals, { memberId: new Types.ObjectId(memberId) }, memberId);
-      }
-    });
-
-    it('should be able to hard delete after soft delete', async () => {
-      const memberId = generateId();
-      const { id } = await service.createJournal(memberId);
-      const updateJournalTextParams = generateUpdateJournalTextParams({ id });
-
-      await service.updateJournal({ ...updateJournalTextParams, memberId });
-      const journals = await service.getJournals(memberId);
-
-      expect(journals).toHaveLength(1);
-
-      await service.deleteMemberJournals({ memberId, deletedBy: memberId, hard: false });
-
-      const journalsAfterDelete = await service.getJournals(memberId);
-      expect(journalsAfterDelete).toHaveLength(0);
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const deletedJournals = await modelJournal.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
-      expect(deletedJournals).toHaveLength(1);
-
-      await service.deleteMemberJournals({ memberId, deletedBy: memberId, hard: true });
-
-      const journalsAfterHardDelete = await service.getJournals(memberId);
-      expect(journalsAfterHardDelete).toHaveLength(0);
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const deletedJournalsAfterHard = await modelJournal.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
-      expect(deletedJournalsAfterHard).toHaveLength(0);
-    });
-  });
-
   describe('caregivers', () => {
     let caregiverId;
+    let mockEventEmitterEmit: jest.SpyInstance;
 
-    describe('addCaregiver and getCaregiver', () => {
-      it('should add a caregiver', async () => {
-        const memberId = generateId();
+    beforeAll(() => {
+      mockEventEmitterEmit = jest.spyOn(module.get<EventEmitter2>(EventEmitter2), `emit`);
+    });
 
-        // start a session and set member id as client in store
-        loadSessionClient(memberId);
+    afterEach(() => {
+      mockEventEmitterEmit.mockReset();
+    });
 
-        const caregiverParams = generateAddCaregiverParams({ memberId });
-        const { id } = await service.addCaregiver(caregiverParams);
-        caregiverId = id;
-        const caregiver = await service.getCaregiver(id);
+    it('should add a caregiver', async () => {
+      const memberId = generateId();
 
-        expect(caregiver).toEqual(
-          expect.objectContaining({
-            ...pickBy(
-              caregiverParams,
-              (value, key) => ['memberId', 'id', 'createdBy'].indexOf(key) >= 0,
-            ),
-            memberId: new Types.ObjectId(memberId),
-            createdBy: new Types.ObjectId(memberId),
-            updatedBy: new Types.ObjectId(memberId),
-            _id: new Types.ObjectId(id),
-          }),
-        );
-      });
+      // start a session and set member id as client in store
+      loadSessionClient(memberId);
 
-      it('should update a caregiver', async () => {
-        const memberId = generateId();
-        const updateCaregiverParams = generateUpdateCaregiverParams({
-          id: caregiverId,
+      const caregiverParams = generateAddCaregiverParams({ memberId });
+      const { id } = await service.addCaregiver(caregiverParams);
+
+      caregiverId = id;
+
+      confirmEmittedChangeSetEvent(
+        mockEventEmitterEmit,
+        createChangeEvent({
+          action: ChangeEventType.updated,
+          entity: EntityName.caregiver,
           memberId,
-        });
+        }),
+      );
 
-        // start a session and set member id as client in store
-        loadSessionClient(memberId);
+      const caregiver = await service.getCaregiver(id);
 
-        const { id, createdBy } = (await service.updateCaregiver(
-          updateCaregiverParams,
-        )) as Caregiver & Audit;
-
-        const caregiver = await service.getCaregiver(id);
-        expect(caregiver).toEqual(
-          expect.objectContaining({
-            ...pickBy(updateCaregiverParams, (value, key) => key !== 'id' && key !== 'memberId'),
-            memberId: new Types.ObjectId(memberId),
-            updatedBy: new Types.ObjectId(memberId),
-            createdBy,
-            _id: new Types.ObjectId(id),
-          }),
-        );
-      });
-
-      it('should (hard) delete a soft deleted caregiver', async () => {
-        const memberId = generateId();
-        const caregiverParams = generateAddCaregiverParams({ memberId });
-        const { id } = await service.addCaregiver(caregiverParams);
-
-        await service.deleteCaregiver(id, memberId.toString());
-        await service.deleteCaregiver(id, memberId.toString(), true);
-
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const deletedCaregiver = await modelCaregiver.findOneWithDeleted({
-          _id: new Types.ObjectId(id),
-        });
-
-        expect(deletedCaregiver).toBeFalsy();
-      });
-
-      test.each([true, false])('should %p delete member caregivers', async (hard) => {
-        const memberId = generateId();
-        // add 2 caregivers
-        await service.addCaregiver(generateAddCaregiverParams({ memberId }));
-        await service.addCaregiver(generateAddCaregiverParams({ memberId }));
-
-        let caregivers = await service.getCaregiversByMemberId(memberId);
-
-        expect(caregivers).toHaveLength(2);
-
-        await service.deleteMemberCaregivers({ memberId, deletedBy: memberId, hard });
-
-        caregivers = await service.getCaregiversByMemberId(memberId);
-
-        expect(caregivers).toHaveLength(0);
-
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const deletedCaregivers = await modelCaregiver.findWithDeleted({
+      expect(caregiver).toEqual(
+        expect.objectContaining({
+          ...pickBy(
+            caregiverParams,
+            (value, key) => ['memberId', 'id', 'createdBy'].indexOf(key) >= 0,
+          ),
           memberId: new Types.ObjectId(memberId),
-        });
-        if (hard) {
-          expect(deletedCaregivers).toHaveLength(0);
-        } else {
-          checkDelete(deletedCaregivers, { memberId: new Types.ObjectId(memberId) }, memberId);
-        }
+          createdBy: new Types.ObjectId(memberId),
+          updatedBy: new Types.ObjectId(memberId),
+          _id: new Types.ObjectId(id),
+        }),
+      );
+    });
+
+    it('should update a caregiver', async () => {
+      const memberId = generateId();
+      const updateCaregiverParams = generateUpdateCaregiverParams({
+        id: caregiverId,
+        memberId,
       });
 
-      it('should get a caregiver by member id', async () => {
-        const memberId = generateId();
-        const updateCaregiverParams = generateUpdateCaregiverParams({ id: caregiverId, memberId });
+      // start a session and set member id as client in store
+      loadSessionClient(memberId);
 
-        const caregiver = await service.updateCaregiver(updateCaregiverParams);
+      const { id, createdBy } = (await service.updateCaregiver(
+        updateCaregiverParams,
+      )) as Caregiver & Audit;
 
-        expect(await service.getCaregiversByMemberId(memberId)).toEqual([caregiver]);
+      confirmEmittedChangeSetEvent(
+        mockEventEmitterEmit,
+        createChangeEvent({
+          action: ChangeEventType.updated,
+          entity: EntityName.caregiver,
+          memberId,
+        }),
+      );
+
+      const caregiver = await service.getCaregiver(id);
+      expect(caregiver).toEqual(
+        expect.objectContaining({
+          ...pickBy(updateCaregiverParams, (value, key) => key !== 'id' && key !== 'memberId'),
+          memberId: new Types.ObjectId(memberId),
+          updatedBy: new Types.ObjectId(memberId),
+          createdBy,
+          _id: new Types.ObjectId(id),
+        }),
+      );
+    });
+
+    it('should (hard) delete a soft deleted caregiver', async () => {
+      const memberId = generateId();
+      const caregiverParams = generateAddCaregiverParams({ memberId });
+      const { id } = await service.addCaregiver(caregiverParams);
+
+      await service.deleteCaregiver(id, memberId.toString());
+      await service.deleteCaregiver(id, memberId.toString(), true);
+
+      confirmEmittedChangeSetEvent(
+        mockEventEmitterEmit,
+        createChangeEvent({
+          action: ChangeEventType.deleted,
+          entity: EntityName.caregiver,
+          memberId,
+        }),
+      );
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const deletedCaregiver = await modelCaregiver.findOneWithDeleted({
+        _id: new Types.ObjectId(id),
       });
+
+      expect(deletedCaregiver).toBeFalsy();
+    });
+
+    it('should get a caregiver by member id', async () => {
+      const memberId = generateId();
+      const updateCaregiverParams = generateUpdateCaregiverParams({ id: caregiverId, memberId });
+
+      const caregiver = await service.updateCaregiver(updateCaregiverParams);
+
+      expect(await service.getCaregiversByMemberId(memberId)).toEqual([caregiver]);
     });
   });
 
@@ -2578,70 +2546,6 @@ describe('MemberService', () => {
       expect(review.content).toEqual(newParams.content);
       expect(review.updatedAt).toBeInstanceOf(Date);
       expect(review.createdAt).not.toEqual(review.updatedAt);
-    });
-  });
-
-  describe('deleteMemberRecordings', () => {
-    test.each([true, false])('should delete member recordings', async (hard) => {
-      const memberId = await generateMember();
-      const params = generateUpdateRecordingParams({ memberId });
-      const params2 = generateUpdateRecordingParams({ memberId });
-      await service.updateRecording(params, params.userId);
-      await service.updateRecording(params2, params2.userId);
-      const deletedBy = generateId();
-
-      const eventParams: IEventDeleteMember = {
-        memberId,
-        deletedBy,
-        hard,
-      };
-
-      await service.deleteMemberRecordings(eventParams);
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const deletedResult = await modelRecording.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
-
-      if (hard) {
-        expect(deletedResult).toEqual([]);
-      } else {
-        expect(deletedResult.length).toEqual(2);
-        await checkDelete(deletedResult, { memberId: new Types.ObjectId(memberId) }, deletedBy);
-      }
-    });
-
-    it('should be able to hard delete after soft delete', async () => {
-      const memberId = await generateMember();
-      const params = generateUpdateRecordingParams({ memberId });
-      const params2 = generateUpdateRecordingParams({ memberId });
-      await service.updateRecording(params, params.userId);
-      await service.updateRecording(params2, params2.userId);
-      const deletedBy = generateId();
-
-      const eventParams: IEventDeleteMember = {
-        memberId,
-        deletedBy,
-        hard: false,
-      };
-
-      await service.deleteMemberRecordings(eventParams);
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const deletedResult = await modelRecording.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
-
-      expect(deletedResult.length).toEqual(2);
-      await checkDelete(deletedResult, { memberId: new Types.ObjectId(memberId) }, deletedBy);
-
-      await service.deleteMemberRecordings({ ...eventParams, hard: true });
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const deletedResultHard = await modelRecording.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
-      expect(deletedResultHard).toEqual([]);
     });
   });
 

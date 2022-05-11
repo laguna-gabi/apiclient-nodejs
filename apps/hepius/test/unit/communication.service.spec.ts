@@ -16,7 +16,6 @@ import {
   mockGenerateUser,
   mockProviders,
 } from '..';
-import { AppointmentStatus } from '../../src/appointment';
 import {
   ErrorType,
   Errors,
@@ -26,7 +25,6 @@ import {
   IEventOnUpdateUserConfig,
   LoggerService,
   UpdatedAppointmentAction,
-  UserRole,
 } from '../../src/common';
 import {
   Communication,
@@ -36,6 +34,7 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import { ServiceModule } from '../../src/services';
+import { AppointmentStatus, UserRole } from '@argus/hepiusClient';
 
 describe('CommunicationService', () => {
   let module: TestingModule;

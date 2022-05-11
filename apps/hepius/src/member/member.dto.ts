@@ -1,4 +1,4 @@
-import { Identifier } from '@argus/hepiusClient';
+import { AppointmentStatus, Identifier, MemberRole, Scores, User } from '@argus/hepiusClient';
 import { ExternalKey } from '@argus/irisClient';
 import { CancelNotificationType, Language, NotificationType } from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
@@ -21,7 +21,6 @@ import { graphql, twilio } from 'config';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 import { ActionItem } from './index';
-import { AppointmentStatus, Scores } from '../appointment';
 import {
   ErrorType,
   Errors,
@@ -29,9 +28,10 @@ import {
   IsNotChat,
   IsNoteOrNurseNoteProvided,
   IsObjectId,
+  IsOnlyDate,
+  IsPastDate,
   IsTypeMetadataProvided,
   IsValidZipCode,
-  MemberRole,
   PhoneType,
   maxLength,
   minLength,
@@ -41,7 +41,6 @@ import {
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import { Org } from '../org';
 import { HealthPersona } from '../questionnaire';
-import { User } from '../user';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -125,7 +124,7 @@ export const NotNullableMemberKeys = [
   'honorific',
 ];
 
-export const EmbeddedMemberProperties = ['address'];
+export const EmbeddedMemberProperties = ['address', 'deceased'];
 
 @InputType('AddressInput')
 @ObjectType()
@@ -138,6 +137,16 @@ export class Address {
 
   @Field(() => String, { nullable: true })
   state?: string;
+}
+
+@InputType('DeceasedInput')
+@ObjectType()
+export class Deceased {
+  @Field(() => String, { nullable: true })
+  cause?: string;
+
+  @Field(() => String, { nullable: true })
+  date?: string;
 }
 
 /**************************************************************************************************
@@ -164,6 +173,11 @@ export class ExtraMemberParams {
   @IsOptional()
   zipCode?: string;
 
+  /**
+   * will be @deprecated soon
+   * use admission.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   */
   @Field(() => String, { nullable: true })
   @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberDischargeDate) })
   @IsString() /* for rest api */
@@ -314,6 +328,11 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsOptional()
   address?: Address;
 
+  /**
+   * will be @deprecated soon
+   * use admission.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   */
   @Field(() => String, { nullable: true })
   @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberAdmitDate) })
   @IsOptional()
@@ -327,6 +346,12 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @Field(() => String, { nullable: true })
   @IsOptional()
   deviceId?: string;
+
+  @Field(() => Deceased, { nullable: true })
+  @IsOptional()
+  @IsOnlyDate({ message: Errors.get(ErrorType.memberDeceasedDate) })
+  @IsPastDate({ message: Errors.get(ErrorType.memberDeceasedDateInTheFuture) })
+  deceased?: Deceased;
 }
 
 @InputType()
@@ -716,6 +741,10 @@ export class Member extends Identifier {
   @Prop({ type: Number, isNaN: true })
   @Field(() => Number, { nullable: true })
   weight?: number;
+
+  @Prop({ type: Deceased, isNaN: true })
+  @Field(() => Deceased, { nullable: true })
+  deceased?: Deceased;
 }
 
 @ObjectType()

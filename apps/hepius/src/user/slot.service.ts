@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { add, areIntervalsOverlapping, isBefore, isSameDay, startOfDay } from 'date-fns';
-import { Appointment, AppointmentStatus } from '../appointment';
 import { Availability } from '../availability';
+import { Appointment, AppointmentStatus } from '@argus/hepiusClient';
 
 @Injectable()
 export class SlotService {

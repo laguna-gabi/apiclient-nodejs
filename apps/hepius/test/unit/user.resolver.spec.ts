@@ -1,5 +1,7 @@
-import { ClientCategory, IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
+import { UserRole } from '@argus/hepiusClient';
+import { IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
 import {
+  ClientCategory,
   GlobalEventType,
   Language,
   QueueType,
@@ -26,7 +28,6 @@ import {
   IEventNotifyQueue,
   IEventOnNewUser,
   LoggerService,
-  UserRole,
 } from '../../src/common';
 import { CognitoService } from '../../src/providers';
 import {

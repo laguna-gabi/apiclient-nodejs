@@ -11,7 +11,6 @@ import {
   RegisterSendbirdUserParams,
   UpdateSendbirdUserParams,
 } from '.';
-import { AppointmentStatus } from '../appointment';
 import {
   ErrorType,
   Errors,
@@ -21,15 +20,14 @@ import {
   IEventOnUpdateUserConfig,
   LoggerService,
   UpdatedAppointmentAction,
-  UserRole,
   delay,
 } from '../common';
 import { Member } from '../member';
 import { SendBird, TwilioService } from '../providers';
-import { User } from '../user';
 import { Platform, formatEx } from '@argus/pandora';
 import { ISoftDelete } from '../db';
 import { chunk } from 'lodash';
+import { AppointmentStatus, User, UserRole } from '@argus/hepiusClient';
 
 @Injectable()
 export class CommunicationService {

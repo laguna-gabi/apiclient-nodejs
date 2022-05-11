@@ -1,7 +1,6 @@
 import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import * as request from 'supertest';
 import { generateRequestHeaders } from '..';
-import { AppointmentStatus } from '../../src/appointment';
 import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import { BEFORE_ALL_TIMEOUT, compareMembers, urls } from '../common';
@@ -10,6 +9,7 @@ import {
   generateCreateMemberParams,
   generateScheduleAppointmentParams,
 } from '../generators';
+import { AppointmentStatus } from '@argus/hepiusClient';
 
 describe('Integration tests: rest', () => {
   const handler: Handler = new Handler();
@@ -130,5 +130,11 @@ describe('Integration tests: rest', () => {
       body: { id: memberId },
     } = await request(server).post(urls.members).send(memberParams).expect(201);
     expect(memberId).toEqual(expect.any(String));
+  });
+
+  it('org details', async () => {
+    const org = await creators.createAndValidateOrg();
+    const res = await request(server).get(`${urls.orgs}/${org.code}`).expect(200);
+    expect(res.body).toEqual(expect.objectContaining(org));
   });
 });

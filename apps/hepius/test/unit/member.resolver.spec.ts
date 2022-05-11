@@ -1,3 +1,4 @@
+import { MemberRole, UserRole } from '@argus/hepiusClient';
 import { AlertInternalKey, ExternalKey, generateDispatchId } from '@argus/irisClient';
 import {
   GlobalEventType,
@@ -64,10 +65,8 @@ import {
   IEventOnReceivedChatMessage,
   IEventOnUpdatedMemberPlatform,
   LoggerService,
-  MemberRole,
   PhoneType,
   RegisterForNotificationParams,
-  UserRole,
   delay,
 } from '../../src/common';
 import {
@@ -2728,6 +2727,11 @@ describe('MemberResolver', () => {
       await resolver.changeMemberDna([], { memberId });
 
       expect(spyOnServiceChangeMemberDna).toBeCalledWith({ memberId });
+    });
+
+    it('should return dietary matcher', async () => {
+      const result = await resolver.getAdmissionsDietaryMatcher();
+      expect(result.map.length).toEqual(17);
     });
   });
 

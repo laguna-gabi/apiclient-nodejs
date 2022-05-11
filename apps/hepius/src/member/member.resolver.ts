@@ -1,4 +1,11 @@
-import { Caregiver, Identifier } from '@argus/hepiusClient';
+import {
+  AppointmentStatus,
+  Caregiver,
+  Identifier,
+  MemberRole,
+  User,
+  UserRole,
+} from '@argus/hepiusClient';
 import {
   AlertInternalKey,
   ChatInternalKey,
@@ -15,6 +22,7 @@ import {
   generateDispatchId,
 } from '@argus/irisClient';
 import {
+  ClientCategory,
   GlobalEventType,
   IEventNotifySlack,
   NotificationType,
@@ -26,6 +34,7 @@ import {
   StorageType,
   formatEx,
 } from '@argus/pandora';
+import { Transcript, TranscriptStatus } from '@argus/poseidonClient';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -35,7 +44,6 @@ import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { camelCase } from 'lodash';
 import { lookup } from 'zipcode-to-timezone';
-import { AppointmentStatus } from '../appointment';
 import {
   Client,
   ErrorType,
@@ -55,11 +63,9 @@ import {
   LoggingInterceptor,
   MemberIdParam,
   MemberIdParamType,
-  MemberRole,
   MemberUserRouteInterceptor,
   RegisterForNotificationParams,
   Roles,
-  UserRole,
   generatePath,
   getCorrelationId,
 } from '../common';
@@ -73,7 +79,7 @@ import {
   TwilioService,
 } from '../providers';
 import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
-import { User, UserService } from '../user';
+import { UserService } from '../user';
 import {
   AddCaregiverParams,
   Admission,
@@ -90,6 +96,8 @@ import {
   DeleteDischargeDocumentParams,
   DeleteMemberGeneralDocumentParams,
   DeleteMemberParams,
+  DietaryHelper,
+  DietaryMatcher,
   DischargeDocumentsLinks,
   GetMemberUploadGeneralDocumentLinkParams,
   GetMemberUploadJournalAudioLinkParams,
@@ -141,6 +149,7 @@ export class MemberResolver extends MemberBase {
     protected readonly bitly: Bitly,
     readonly featureFlagService: FeatureFlagService,
     readonly journeyService: JourneyService,
+    readonly dietaryMatcher: DietaryHelper,
     readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {
@@ -584,6 +593,21 @@ export class MemberResolver extends MemberBase {
     memberId: string,
   ) {
     return this.memberService.getRecordings(memberId);
+  }
+
+  @Query(() => Transcript)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getTranscript(
+    @Args('recordingId', { type: () => String }) // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    recordingId: string,
+  ) {
+    return {
+      transcriptLink:
+        'https://d1ic17v34w4spl.cloudfront.net/public/dischargeInstructions/transcriptMock.json',
+      conversationPercentage: { speakerA: 34, speakerB: 53, silence: 13 },
+      speakerA: ClientCategory.member,
+      status: TranscriptStatus.done,
+    };
   }
 
   /*************************************************************************************************
@@ -1431,6 +1455,12 @@ export class MemberResolver extends MemberBase {
     memberId: string,
   ) {
     return this.admissionService.get(memberId);
+  }
+
+  @Query(() => DietaryMatcher)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getAdmissionsDietaryMatcher() {
+    return this.dietaryMatcher.get();
   }
 
   /************************************************************************************************

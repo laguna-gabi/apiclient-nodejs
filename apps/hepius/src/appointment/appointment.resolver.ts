@@ -6,12 +6,9 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { add, addDays } from 'date-fns';
 import { camelCase } from 'lodash';
 import {
-  Appointment,
   AppointmentBase,
   AppointmentService,
-  AppointmentStatus,
   EndAppointmentParams,
-  Notes,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
   UpdateNotesParams,
@@ -32,17 +29,16 @@ import {
   LoggingInterceptor,
   MemberIdParam,
   MemberIdParamType,
-  MemberRole,
   MemberUserRouteInterceptor,
   Roles,
   UpdatedAppointmentAction,
-  UserRole,
   generatePath,
   getCorrelationId,
 } from '../common';
 import { CommunicationResolver } from '../communication';
 import { Member } from '../member';
 import { Bitly } from '../providers';
+import { Appointment, AppointmentStatus, MemberRole, Notes, UserRole } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Appointment)

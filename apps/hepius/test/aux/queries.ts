@@ -1,12 +1,13 @@
-import { Caregiver } from '@argus/hepiusClient';
+import { Barrier, BarrierType, CarePlan, CarePlanType, Caregiver } from '@argus/hepiusClient';
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { isResultValid } from '..';
-import { Barrier, BarrierType, CarePlan, CarePlanType, RedFlag, RedFlagType } from '../../src/care';
+import { RedFlag, RedFlagType } from '../../src/care';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
   Admission,
+  DietaryMatcher,
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
@@ -645,6 +646,7 @@ export class Queries {
             type
             zipCode
             trialDuration
+            code
           }
         }
       `,
@@ -672,6 +674,7 @@ export class Queries {
               type
               zipCode
               trialDuration
+              code
             }
           }
         `,
@@ -1366,11 +1369,29 @@ export class Queries {
         requestHeaders,
       )
       .catch((ex) => {
-        console.log({ ex });
         expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
         return;
       });
 
     return result?.getMemberAdmissions;
+  };
+
+  getAdmissionsDietaryMatcher = async (): Promise<DietaryMatcher> => {
+    const { getAdmissionsDietaryMatcher } = await this.client.request(
+      gql`
+        query getAdmissionsDietaryMatcher {
+          getAdmissionsDietaryMatcher {
+            map {
+              key
+              values
+            }
+          }
+        }
+      `,
+      undefined,
+      this.defaultUserRequestHeaders,
+    );
+
+    return getAdmissionsDietaryMatcher;
   };
 }

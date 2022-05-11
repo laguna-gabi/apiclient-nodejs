@@ -47,7 +47,7 @@ import {
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from './index';
-import { Appointment, AppointmentDocument, AppointmentStatus } from '../appointment';
+import { AppointmentDocument } from '../appointment';
 import {
   BaseService,
   DbErrors,
@@ -70,7 +70,7 @@ import { Internationalization, StorageService } from '../providers';
 import { Questionnaire, QuestionnaireAlerts, QuestionnaireService } from '../questionnaire';
 import { NotificationService } from '../services';
 import { Todo, TodoDocument, TodoStatus } from '../todo';
-import { Caregiver, Identifier } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, Caregiver, Identifier } from '@argus/hepiusClient';
 
 @Injectable()
 export class MemberService extends BaseService {
@@ -416,6 +416,7 @@ export class MemberService extends BaseService {
     } else {
       await this.softDeleteMember(member, memberConfig, deletedBy);
     }
+    await this.deleteMemberRelatedData({ memberId: id, deletedBy, hard });
     return { member, memberConfig };
   }
 
@@ -442,6 +443,30 @@ export class MemberService extends BaseService {
         await this.actionItemModel.deleteOne({ _id: actionItem });
       }),
     );
+  }
+
+  private async deleteMemberRelatedData(params: IEventDeleteMember) {
+    const data = {
+      params,
+      logger: this.logger,
+      methodName: this.deleteMemberRelatedData.name,
+      serviceName: MemberService.name,
+    };
+
+    await deleteMemberObjects<Model<RecordingDocument> & ISoftDelete<RecordingDocument>>({
+      model: this.recordingModel,
+      ...data,
+    });
+
+    await deleteMemberObjects<Model<CaregiverDocument> & ISoftDelete<CaregiverDocument>>({
+      model: this.caregiverModel,
+      ...data,
+    });
+
+    await deleteMemberObjects<Model<JournalDocument> & ISoftDelete<JournalDocument>>({
+      model: this.journalModel,
+      ...data,
+    });
   }
   /************************************************************************************************
    ******************************************** Control *******************************************
@@ -762,39 +787,6 @@ export class MemberService extends BaseService {
 
   async getRecordings(memberId: string): Promise<RecordingOutput[]> {
     return this.recordingModel.find({ memberId: new Types.ObjectId(memberId) });
-  }
-
-  @OnEvent(EventType.onDeletedMember, { async: true })
-  async deleteMemberRecordings(params: IEventDeleteMember) {
-    await deleteMemberObjects<Model<RecordingDocument> & ISoftDelete<RecordingDocument>>(
-      params,
-      this.recordingModel,
-      this.logger,
-      this.deleteMemberRecordings.name,
-      MemberService.name,
-    );
-  }
-
-  @OnEvent(EventType.onDeletedMember, { async: true })
-  async deleteMemberCaregivers(params: IEventDeleteMember) {
-    await deleteMemberObjects<Model<CaregiverDocument> & ISoftDelete<CaregiverDocument>>(
-      params,
-      this.caregiverModel,
-      this.logger,
-      this.deleteMemberCaregivers.name,
-      MemberService.name,
-    );
-  }
-
-  @OnEvent(EventType.onDeletedMember, { async: true })
-  async deleteMemberJournals(params: IEventDeleteMember) {
-    await deleteMemberObjects<Model<JournalDocument> & ISoftDelete<JournalDocument>>(
-      params,
-      this.journalModel,
-      this.logger,
-      this.deleteMemberJournals.name,
-      MemberService.name,
-    );
   }
   /************************************************************************************************
    **************************************** Modifications *****************************************

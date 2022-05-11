@@ -1,6 +1,8 @@
-import { Caregiver } from '@argus/hepiusClient';
+import { EntityName } from '@argus/pandora';
+import { Appointment, Caregiver } from '@argus/hepiusClient';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 import {
@@ -18,6 +20,7 @@ import {
   DiagnosisDto,
   Dietary,
   DietaryDto,
+  DietaryHelper,
   DismissedAlert,
   DismissedAlertDto,
   ExternalAppointment,
@@ -43,16 +46,15 @@ import {
   WoundCare,
   WoundCareDto,
 } from '.';
-import { Appointment, AppointmentDto } from '../appointment';
-import { CommonModule } from '../common';
+import { AppointmentDto } from '../appointment';
+import { CommonModule, LoggerService } from '../common';
 import { CommunicationModule } from '../communication';
-import { useFactoryOptions } from '../db';
+import { ChangeEventFactoryProvider, useFactoryOptions } from '../db';
 import { ConfigsService, ProvidersModule } from '../providers';
 import { QuestionnaireModule } from '../questionnaire';
 import { ServiceModule } from '../services';
 import { Todo, TodoDto } from '../todo';
 import { UserModule } from '../user';
-
 @Module({
   imports: [
     CommunicationModule,
@@ -65,7 +67,6 @@ import { UserModule } from '../user';
     MongooseModule.forFeature([
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
-      { name: Caregiver.name, schema: CaregiverDto },
       { name: Journal.name, schema: JournalDto },
       { name: Todo.name, schema: TodoDto },
       { name: ActionItem.name, schema: ActionItemDto },
@@ -99,9 +100,22 @@ import { UserModule } from '../user';
           return MemberRecordingDto.plugin(mongooseDelete, useFactoryOptions);
         },
       },
+      {
+        name: Caregiver.name,
+        imports: [CommonModule],
+        useFactory: ChangeEventFactoryProvider(EntityName.caregiver, CaregiverDto, 'memberId'),
+        inject: [EventEmitter2, LoggerService],
+      },
     ]),
   ],
-  providers: [MemberResolver, MemberService, AdmissionService, ConfigsService, JourneyService],
+  providers: [
+    MemberResolver,
+    MemberService,
+    AdmissionService,
+    ConfigsService,
+    JourneyService,
+    DietaryHelper,
+  ],
   controllers: [MemberController],
   exports: [MemberService, MongooseModule],
 })

@@ -1,23 +1,29 @@
-import { Caregiver, MemberCommands } from '@argus/hepiusClient';
+import {
+  Appointment,
+  AppointmentMethod,
+  AppointmentStatus,
+  CareStatus,
+  Caregiver,
+  MemberCommands,
+  User,
+  UserRole,
+} from '@argus/hepiusClient';
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
 import { GlobalEventType, Language, Platform } from '@argus/pandora';
 import { articlesByDrg, general, hosts } from 'config';
-import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
+import { add, addDays, startOfToday, startOfTomorrow, sub, subDays } from 'date-fns';
 import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
 import {
   BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
   generateAdmissionActivityParams,
-  generateAdmissionDiagnosisParams,
-  generateAdmissionDietaryParams,
-  generateAdmissionExternalAppointmentParams,
   generateAdmissionMedicationParams,
   generateAdmissionProcedureParams,
-  generateAdmissionWoundCareParams,
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCarePlanTypeInput,
+  generateChangeMemberDnaParams,
   generateCreateBarrierParamsWizard,
   generateCreateCarePlanParams,
   generateCreateCarePlanParamsWizard,
@@ -26,6 +32,7 @@ import {
   generateCreateRedFlagParamsWizard,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
+  generateDateOnly,
   generateDeleteMemberParams,
   generateGetTodoDonesParams,
   generateId,
@@ -54,14 +61,8 @@ import {
   submitMockCareWizard,
 } from '..';
 import { buildLHPQuestionnaire } from '../../cmd/static';
-import {
-  Appointment,
-  AppointmentMethod,
-  AppointmentStatus,
-  RequestAppointmentParams,
-  ScheduleAppointmentParams,
-} from '../../src/appointment';
-import { CareStatus, CreateCarePlanParams } from '../../src/care';
+import { RequestAppointmentParams, ScheduleAppointmentParams } from '../../src/appointment';
+import { CreateCarePlanParams } from '../../src/care';
 import {
   ChangeType,
   ErrorType,
@@ -70,16 +71,15 @@ import {
   IEventOnUpdatedUser,
   Identifiers,
   ItemType,
-  UserRole,
   delay,
   reformatDate,
 } from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
-  Admission,
   AlertType,
   ChangeMemberDnaParams,
   CreateTaskParams,
+  DischargeTo,
   Member,
   Recording,
   RecordingOutput,
@@ -102,7 +102,7 @@ import {
   TodoStatus,
   UpdateTodoParams,
 } from '../../src/todo';
-import { User, defaultSlotsParams } from '../../src/user';
+import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 
 describe('Integration tests: all', () => {
@@ -231,9 +231,9 @@ describe('Integration tests: all', () => {
     const orgs = await handler.queries.getOrgs({
       requestHeaders: handler.defaultAdminRequestHeaders,
     });
-
-    expect(createdOrg).toEqual(expect.objectContaining({ ...orgParams, id }));
-    expect(orgs).toEqual(expect.arrayContaining([expect.objectContaining({ ...orgParams, id })]));
+    const expectedOrg = { ...orgParams, id };
+    expect(createdOrg).toEqual(expect.objectContaining(expectedOrg));
+    expect(orgs).toEqual(expect.arrayContaining([expect.objectContaining(expectedOrg)]));
   });
 
   it('should change member org', async () => {
@@ -2595,8 +2595,13 @@ describe('Integration tests: all', () => {
   it('should create 2 member admissions and get them', async () => {
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
-    const { result: result1 } = await changeMemberDna(ChangeType.create, member.id);
-    const { result: result2 } = await changeMemberDna(ChangeType.create, member.id);
+    const changeType = ChangeType.create;
+    const memberId = member.id;
+    const params1 = createChangeMemberDnaParams({ changeType, memberId });
+    const params2 = createChangeMemberDnaParams({ changeType, memberId });
+
+    const result1 = await handler.mutations.changeMemberDna({ changeMemberDnaParams: params1 });
+    const result2 = await handler.mutations.changeMemberDna({ changeMemberDnaParams: params2 });
 
     const memberAdmissions = await handler.queries.getMemberAdmissions({
       memberId: member.id.toString(),
@@ -2606,14 +2611,26 @@ describe('Integration tests: all', () => {
       diagnoses: expect.arrayContaining([
         expect.objectContaining({ description: expect.any(String) }),
       ]),
-      procedures: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
+      procedures: expect.arrayContaining([
+        expect.objectContaining({ description: expect.any(String) }),
+      ]),
       medications: expect.arrayContaining([expect.objectContaining({ name: expect.any(String) })]),
       externalAppointments: expect.arrayContaining([
-        expect.objectContaining({ description: expect.any(String) }),
+        expect.objectContaining({ clinic: expect.any(String) }),
       ]),
       activities: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       woundCares: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       dietaries: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
+      admitDate: expect.any(String),
+      admitType: expect.any(String),
+      admitSource: expect.any(String),
+      dischargeDate: expect.any(String),
+      dischargeTo: expect.any(String),
+      facility: expect.any(String),
+      specialInstructions: expect.any(String),
+      reasonForAdmission: expect.any(String),
+      hospitalCourse: expect.any(String),
+      warningSigns: expect.any(String),
     };
 
     expect(memberAdmissions.length).toEqual(2);
@@ -2627,8 +2644,13 @@ describe('Integration tests: all', () => {
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
     //create all admission params
-    const { changeMemberDnaParams: createMemberDnaParams, result: createResult } =
-      await changeMemberDna(ChangeType.create, member.id);
+    const createMemberDnaParams = createChangeMemberDnaParams({
+      changeType: ChangeType.create,
+      memberId: member.id,
+    });
+    const createResult = await handler.mutations.changeMemberDna({
+      changeMemberDnaParams: createMemberDnaParams,
+    });
 
     const diagnoses = [
       { id: createResult.diagnoses[0].id, ...removeChangeType(createMemberDnaParams.diagnosis) },
@@ -2637,7 +2659,6 @@ describe('Integration tests: all', () => {
       {
         id: createResult.procedures[0].id,
         ...removeChangeType(createMemberDnaParams.procedure),
-        date: createMemberDnaParams.procedure.date.toISOString(),
       },
     ];
     const medications = [
@@ -2664,6 +2685,18 @@ describe('Integration tests: all', () => {
     const dietaries = [
       { id: createResult.dietaries[0].id, ...removeChangeType(createMemberDnaParams.dietary) },
     ];
+    const {
+      admitDate,
+      admitType,
+      admitSource,
+      dischargeDate,
+      dischargeTo,
+      facility,
+      specialInstructions,
+      reasonForAdmission,
+      hospitalCourse,
+      warningSigns,
+    } = createResult;
 
     expect(createResult).toEqual(
       expect.objectContaining({
@@ -2675,8 +2708,20 @@ describe('Integration tests: all', () => {
         activities,
         woundCares,
         dietaries,
+        admitDate,
+        admitType,
+        admitSource,
+        dischargeDate,
+        dischargeTo,
+        facility,
+        specialInstructions,
+        reasonForAdmission,
+        hospitalCourse,
+        warningSigns,
       }),
     );
+
+    const newAdmitDate = generateDateOnly(subDays(new Date(), 1));
 
     //update/delete some admission params
     const changeMemberDnaParams: ChangeMemberDnaParams = {
@@ -2691,13 +2736,22 @@ describe('Integration tests: all', () => {
         id: createResult.medications[0].id,
       }),
       activity: generateAdmissionActivityParams({ changeType: ChangeType.create }),
+      admitDate: newAdmitDate,
+      admitType: null,
+      admitSource: null,
+      dischargeDate: null,
+      dischargeTo: DischargeTo.snf,
+      facility: lorem.sentence(),
+      specialInstructions: lorem.sentences(),
+      reasonForAdmission: lorem.sentences(),
+      hospitalCourse: null,
+      warningSigns: null,
     };
     const changeResult = await handler.mutations.changeMemberDna({ changeMemberDnaParams });
 
     procedures[0] = {
       id: createResult.procedures[0].id,
       ...removeChangeType(changeMemberDnaParams.procedure),
-      date: changeMemberDnaParams.procedure.date.toISOString(),
     };
     activities[1] = {
       id: changeResult.activities[1].id,
@@ -2714,8 +2768,23 @@ describe('Integration tests: all', () => {
         activities,
         woundCares,
         dietaries,
+        admitDate: newAdmitDate,
+        admitType: expect.any(String),
+        admitSource: expect.any(String),
+        dischargeDate: expect.any(String),
+        dischargeTo: changeMemberDnaParams.dischargeTo,
+        facility: changeMemberDnaParams.facility,
+        specialInstructions: changeMemberDnaParams.specialInstructions,
+        reasonForAdmission: changeMemberDnaParams.reasonForAdmission,
+        hospitalCourse: expect.any(String),
+        warningSigns: expect.any(String),
       }),
     );
+  });
+
+  it('should return dietary matcher', async () => {
+    const matcher = await handler.queries.getAdmissionsDietaryMatcher();
+    expect(matcher.map.length).toEqual(17);
   });
 
   /************************************************************************************************
@@ -2809,33 +2878,17 @@ describe('Integration tests: all', () => {
       });
   };
 
-  const changeMemberDna = async (
-    changeType: ChangeType,
-    memberId: string,
-  ): Promise<{ changeMemberDnaParams: ChangeMemberDnaParams; result: Admission }> => {
-    const createDiagnosis = generateAdmissionDiagnosisParams({ changeType });
-    const createProcedure = generateAdmissionProcedureParams({ changeType });
-    const createMedication = generateAdmissionMedicationParams({ changeType });
-    const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
-    const createActivity = generateAdmissionActivityParams({ changeType });
-    const createWoundCare = generateAdmissionWoundCareParams({ changeType });
-    const createDietary = generateAdmissionDietaryParams({ changeType });
-
-    const changeMemberDnaParams: ChangeMemberDnaParams = {
-      memberId,
-      diagnosis: createDiagnosis,
-      procedure: createProcedure,
-      medication: createMedication,
-      externalAppointment: createExternalAppointment,
-      activity: createActivity,
-      woundCare: createWoundCare,
-      dietary: createDietary,
-    };
-
-    const result = await handler.mutations.changeMemberDna({
-      changeMemberDnaParams,
-    });
-
-    return { changeMemberDnaParams, result };
+  const createChangeMemberDnaParams = ({
+    changeType,
+    memberId,
+  }: {
+    changeType: ChangeType;
+    memberId: string;
+  }): ChangeMemberDnaParams => {
+    const params = generateChangeMemberDnaParams({ changeType, memberId });
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+    params.admitSource = 'physicianReferral';
+    return params;
   };
 });
