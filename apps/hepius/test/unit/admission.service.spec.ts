@@ -19,8 +19,10 @@ import {
   dbDisconnect,
   defaultModules,
   generateAdmissionDiagnosisParams,
+  generateChangeMemberDnaParams,
   generateDateOnly,
   generateId,
+  generateObjectId,
   removeChangeType,
 } from '../index';
 import { AdmissionHelper } from '../aux';
@@ -408,6 +410,62 @@ describe(AdmissionService.name, () => {
   it('should return empty result for no admissions per member', async () => {
     const result = await service.get(generateId());
     expect(result).toEqual([]);
+  });
+
+  describe('delete', () => {
+    /**
+     * generating data of :
+     * 1. member1 with 2 admissions:
+     *    - admission1: single items and 1 list items per each category
+     *                  { facility: '...', activity: [{...}], diagnosis: [{...}]}
+     *    - admission2: single items and multiple lists items per each category
+     *                  { facility: '...', activity: [{...}, {...}], diagnosis: [{...},{...}]}
+     * 2. member2 which is a test group member, making sure that once member1 is deleted, member2's data isn't deleted.
+     */
+    test.each([true, false])(
+      'should delete member admissions and related data (hard=%p)',
+      async (hard) => {
+        const memberId = generateId();
+        const memberIdTestGroup = generateId();
+
+        const generate = async ({ memberId, id }: { memberId: string; id?: string }) => {
+          const changeType = ChangeType.create;
+          const changeMemberDnaParams = generateChangeMemberDnaParams({ changeType, memberId, id });
+          return service.change(changeMemberDnaParams);
+        };
+
+        await generate({ memberId });
+        const { id } = await generate({ memberId });
+        await generate({ memberId, id });
+        await generate({ memberId: memberIdTestGroup });
+
+        const admissionsBefore = await service.get(memberId);
+        expect(admissionsBefore.length).toEqual(2);
+
+        await service.deleteAdmissions({ memberId, deletedBy: memberId, hard });
+
+        const admissionsAfter = await service.get(memberId);
+        expect(admissionsAfter.length).toEqual(0);
+
+        const admissionsMemberTestGroup = await service.get(memberIdTestGroup);
+        expect(admissionsMemberTestGroup.length).toEqual(1);
+
+        const checkInternals = async (model, memberId, expectedLength = 0) => {
+          const result = await model.find({ memberId: generateObjectId(memberId) });
+          expect(result.length).toEqual(expectedLength);
+        };
+        await Promise.all(
+          admissionHelper.getSubModels().map(async (model) => {
+            await checkInternals(model, memberId);
+          }),
+        );
+        await Promise.all(
+          admissionHelper.getSubModels().map(async (model) => {
+            await checkInternals(model, memberIdTestGroup, 1);
+          }),
+        );
+      },
+    );
   });
 
   const createAllCategories = async (memberId: string): Promise<Admission> => {

@@ -1,10 +1,19 @@
-import { BaseService, ErrorType, Errors, LoggerService } from '../common';
+import {
+  BaseService,
+  ErrorType,
+  Errors,
+  EventType,
+  IEventDeleteMember,
+  LoggerService,
+  deleteMemberObjects,
+} from '../common';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ISoftDelete } from '../db';
 import { Journey, JourneyDocument } from '.';
 import { Identifier } from '@argus/hepiusClient';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class JourneyService extends BaseService {
@@ -65,5 +74,16 @@ export class JourneyService extends BaseService {
       { $set: { lastLoggedInAt: date } },
       { upsert: false, new: true },
     );
+  }
+
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteJourney(params: IEventDeleteMember) {
+    await deleteMemberObjects<Model<JourneyDocument> & ISoftDelete<JourneyDocument>>({
+      params,
+      model: this.journeyModel,
+      logger: this.logger,
+      methodName: this.deleteJourney.name,
+      serviceName: JourneyService.name,
+    });
   }
 }

@@ -38,13 +38,13 @@ import {
 } from '../generators';
 
 export class AdmissionHelper {
-  diagnosisModel: Model<DiagnosisDocument & defaultTimestampsDbValues>;
-  procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
-  medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
-  externalAppointmentModel: Model<ExternalAppointmentDocument & defaultTimestampsDbValues>;
-  activityModel: Model<ActivityDocument & defaultTimestampsDbValues>;
-  woundCareModel: Model<WoundCareDocument & defaultTimestampsDbValues>;
-  dietaryModel: Model<DietaryDocument & defaultTimestampsDbValues>;
+  private diagnosisModel: Model<DiagnosisDocument & defaultTimestampsDbValues>;
+  private procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
+  private medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
+  private externalAppointmentModel: Model<ExternalAppointmentDocument & defaultTimestampsDbValues>;
+  private activityModel: Model<ActivityDocument & defaultTimestampsDbValues>;
+  private woundCareModel: Model<WoundCareDocument & defaultTimestampsDbValues>;
+  private dietaryModel: Model<DietaryDocument & defaultTimestampsDbValues>;
   admissionModel: Model<AdmissionDocument & defaultTimestampsDbValues>;
 
   mapper: Map<
@@ -57,7 +57,19 @@ export class AdmissionHelper {
     this.initMaps();
   }
 
-  initModels = () => {
+  getSubModels() {
+    return [
+      this.diagnosisModel,
+      this.procedureModel,
+      this.medicationModel,
+      this.externalAppointmentModel,
+      this.activityModel,
+      this.woundCareModel,
+      this.dietaryModel,
+    ];
+  }
+
+  private initModels = () => {
     this.admissionModel = model<AdmissionDocument & defaultTimestampsDbValues>(
       Admission.name,
       AdmissionDto,
@@ -92,7 +104,7 @@ export class AdmissionHelper {
     );
   };
 
-  initMaps = () => {
+  private initMaps = () => {
     this.mapper.set(AdmissionCategory.diagnoses, {
       field: 'diagnosis',
       method: generateAdmissionDiagnosisParams,

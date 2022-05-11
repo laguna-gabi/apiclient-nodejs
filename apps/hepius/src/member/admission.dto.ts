@@ -206,6 +206,9 @@ registerEnumType(AdmissionCategory, { name: 'AdmissionCategory' });
 export class BaseCategory {
   @Field(() => String, { nullable: true })
   id?: string;
+
+  @Prop({ type: Types.ObjectId, index: true })
+  memberId?: Types.ObjectId;
 }
 
 @ObjectType()

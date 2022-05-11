@@ -120,5 +120,8 @@
   "queryDaysLimit": {
     "getMembersAppointments": 14,
     "getAvailabilities": 30
+  },
+  "eventEmitter": {
+    "maxListeners": 50
   }
 }

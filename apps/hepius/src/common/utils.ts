@@ -15,7 +15,20 @@ import { IEventDeleteMember, LoggerService } from '.';
 import { BarrierDocument, CarePlanDocument, RedFlagDocument } from '../care';
 import { DailyReportDocument } from '../dailyReport';
 import { ISoftDelete } from '../db';
-import { CaregiverDocument, JournalDocument, RecordingDocument } from '../member';
+import {
+  ActivityDocument,
+  AdmissionDocument,
+  CaregiverDocument,
+  DiagnosisDocument,
+  DietaryDocument,
+  ExternalAppointmentDocument,
+  JournalDocument,
+  JourneyDocument,
+  MedicationDocument,
+  ProcedureDocument,
+  RecordingDocument,
+  WoundCareDocument,
+} from '../member';
 import { QuestionnaireResponseDocument } from '../questionnaire';
 import { TodoDocument, TodoDoneDocument } from '../todo';
 
@@ -95,7 +108,16 @@ type Entity =
   | QuestionnaireResponseDocument
   | RedFlagDocument
   | BarrierDocument
-  | CarePlanDocument;
+  | CarePlanDocument
+  | JourneyDocument
+  | AdmissionDocument
+  | DiagnosisDocument
+  | ProcedureDocument
+  | MedicationDocument
+  | ExternalAppointmentDocument
+  | ActivityDocument
+  | WoundCareDocument
+  | DietaryDocument;
 
 export async function deleteMemberObjects<T extends Model<Entity> & ISoftDelete<Entity>>({
   params,

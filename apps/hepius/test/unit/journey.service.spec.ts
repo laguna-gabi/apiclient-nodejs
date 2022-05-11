@@ -83,4 +83,29 @@ describe(JourneyService.name, () => {
       expect(journey2.lastLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime2);
     });
   });
+
+  test.each([true, false])('should delete member journeys (hard=%p)', async (hard) => {
+    const memberId = generateId();
+    const memberIdTestGroup = generateId();
+    const { id: journeyId1 } = await service.create({ memberId });
+    const { id: journeyId2 } = await service.create({ memberId });
+    const { id: journeyIdMemberTestGroup } = await service.create({
+      memberId: memberIdTestGroup,
+    });
+
+    const journeysBefore = await service.getAll({ memberId });
+    expect(journeysBefore.length).toEqual(2);
+
+    await service.deleteJourney({ memberId, deletedBy: memberId, hard });
+
+    const journeysAfter = await service.getAll({ memberId });
+    expect(journeysAfter.length).toEqual(0);
+    await expect(service.get(journeyId1)).rejects.toThrow(Errors.get(ErrorType.journeyNotFound));
+    await expect(service.get(journeyId2)).rejects.toThrow(Errors.get(ErrorType.journeyNotFound));
+
+    const journeysMemberTestGroup = await service.getAll({ memberId: memberIdTestGroup });
+    expect(journeysMemberTestGroup.length).toEqual(1);
+    const existingJourney = await service.get(journeyIdMemberTestGroup);
+    expect(existingJourney).not.toBeNull();
+  });
 });

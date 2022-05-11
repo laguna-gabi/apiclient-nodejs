@@ -26,12 +26,22 @@ import {
   WoundCareDocument,
   singleAdmissionItems,
 } from '.';
-import { BaseService, ChangeType, ErrorType, Errors, LoggerService } from '../common';
+import {
+  BaseService,
+  ChangeType,
+  ErrorType,
+  Errors,
+  EventType,
+  IEventDeleteMember,
+  LoggerService,
+  deleteMemberObjects,
+} from '../common';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ISoftDelete } from '../db';
 import { cloneDeep, isEmpty, isNil, omitBy } from 'lodash';
+import { OnEvent } from '@nestjs/event-emitter';
 
 class InternalValue {
   model: typeof Model;
@@ -175,6 +185,57 @@ export class AdmissionService extends BaseService {
     return this.replaceId(this.replaceSubIds(result));
   }
 
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteAdmissions(params: IEventDeleteMember) {
+    const data = {
+      params,
+      logger: this.logger,
+      methodName: this.deleteAdmissions.name,
+      serviceName: AdmissionService.name,
+    };
+    await deleteMemberObjects<Model<AdmissionDocument> & ISoftDelete<AdmissionDocument>>({
+      model: this.admissionModel,
+      ...data,
+    });
+
+    await deleteMemberObjects<Model<DiagnosisDocument> & ISoftDelete<DiagnosisDocument>>({
+      model: this.diagnosisModel,
+      ...data,
+    });
+
+    await deleteMemberObjects<Model<ProcedureDocument> & ISoftDelete<ProcedureDocument>>({
+      model: this.procedureModel,
+      ...data,
+    });
+
+    await deleteMemberObjects<Model<MedicationDocument> & ISoftDelete<MedicationDocument>>({
+      model: this.medicationModel,
+      ...data,
+    });
+
+    await deleteMemberObjects<
+      Model<ExternalAppointmentDocument> & ISoftDelete<ExternalAppointmentDocument>
+    >({
+      model: this.externalAppointmentModel,
+      ...data,
+    });
+
+    await deleteMemberObjects<Model<ActivityDocument> & ISoftDelete<ActivityDocument>>({
+      model: this.activityModel,
+      ...data,
+    });
+
+    await deleteMemberObjects<Model<WoundCareDocument> & ISoftDelete<WoundCareDocument>>({
+      model: this.woundCareModel,
+      ...data,
+    });
+
+    await deleteMemberObjects<Model<DietaryDocument> & ISoftDelete<DietaryDocument>>({
+      model: this.dietaryModel,
+      ...data,
+    });
+  }
+
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
@@ -202,7 +263,10 @@ export class AdmissionService extends BaseService {
     id?: string,
   ): Promise<Admission> {
     const internalValue: InternalValue = this.matchMap[admissionCategory];
-    const { _id } = await internalValue.model.create(omitBy(element, isNil));
+    const { _id } = await internalValue.model.create({
+      ...omitBy(element, isNil),
+      memberId: new Types.ObjectId(memberId),
+    });
     if (id) {
       const result = await this.admissionModel.findByIdAndUpdate(
         new Types.ObjectId(id),
