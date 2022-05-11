@@ -13,13 +13,13 @@ export enum AppointmentStatus {
   done = 'done',
 }
 
+registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });
+
 export enum AppointmentMethod {
   chat = 'chat',
   phoneCall = 'phoneCall',
   videoCall = 'videoCall',
 }
-
-registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });
 registerEnumType(AppointmentMethod, { name: 'AppointmentMethod' });
 
 /**************************************************************************************************
