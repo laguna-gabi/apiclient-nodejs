@@ -78,6 +78,8 @@ import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
   AddCaregiverParams,
+  AdmitSource,
+  AdmitType,
   Alert,
   AlertType,
   AppointmentCompose,
@@ -90,6 +92,7 @@ import {
   ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
   ChangeAdmissionWoundCareParams,
+  ChangeMemberDnaParams,
   ClinicalStatus,
   CreateMemberParams,
   CreateTaskParams,
@@ -97,6 +100,7 @@ import {
   DeleteMemberParams,
   DiagnosisSeverity,
   DischargeDocumentType,
+  DischargeTo,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
   Honorific,
@@ -124,6 +128,7 @@ import {
   UpdateRecordingParams,
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
+  WarningSigns,
   defaultMemberParams,
 } from '../src/member';
 import { CreateOrgParams, Org, OrgType } from '../src/org';
@@ -1531,6 +1536,46 @@ export const generateAdmissionDietaryParams = ({
     ...attachIdParam,
     text: lorem.sentence(),
     bmi: lorem.word(),
+  };
+};
+
+export const generateChangeMemberDnaParams = ({
+  changeType,
+  memberId,
+  id,
+}: {
+  changeType: ChangeType;
+  memberId: string;
+  id?: string;
+}): ChangeMemberDnaParams => {
+  const createDiagnosis = generateAdmissionDiagnosisParams({ changeType });
+  const createProcedure = generateAdmissionProcedureParams({ changeType });
+  const createMedication = generateAdmissionMedicationParams({ changeType });
+  const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
+  const createActivity = generateAdmissionActivityParams({ changeType });
+  const createWoundCare = generateAdmissionWoundCareParams({ changeType });
+  const createDietary = generateAdmissionDietaryParams({ changeType });
+  const idObject = id ? { id } : {};
+  return {
+    memberId,
+    ...idObject,
+    diagnosis: createDiagnosis,
+    procedure: createProcedure,
+    medication: createMedication,
+    externalAppointment: createExternalAppointment,
+    activity: createActivity,
+    woundCare: createWoundCare,
+    dietary: createDietary,
+    admitDate: generateDateOnly(subDays(new Date(), 5)),
+    admitType: AdmitType.emergency,
+    admitSource: AdmitSource.clinicReferral,
+    dischargeDate: generateDateOnly(subDays(new Date(), 2)),
+    dischargeTo: DischargeTo.snf,
+    facility: lorem.sentence(),
+    specialInstructions: lorem.sentences(),
+    reasonForAdmission: lorem.sentences(),
+    hospitalCourse: lorem.sentences(),
+    warningSigns: WarningSigns.confusion,
   };
 };
 

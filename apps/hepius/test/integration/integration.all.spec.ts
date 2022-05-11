@@ -16,15 +16,12 @@ import {
   BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
   generateAdmissionActivityParams,
-  generateAdmissionDiagnosisParams,
-  generateAdmissionDietaryParams,
-  generateAdmissionExternalAppointmentParams,
   generateAdmissionMedicationParams,
   generateAdmissionProcedureParams,
-  generateAdmissionWoundCareParams,
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCarePlanTypeInput,
+  generateChangeMemberDnaParams,
   generateCreateBarrierParamsWizard,
   generateCreateCarePlanParams,
   generateCreateCarePlanParamsWizard,
@@ -78,8 +75,6 @@ import {
 } from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
-  Admission,
-  AdmitType,
   AlertType,
   ChangeMemberDnaParams,
   CreateTaskParams,
@@ -91,7 +86,6 @@ import {
   Task,
   TaskStatus,
   UpdateJournalTextParams,
-  WarningSigns,
   defaultMemberParams,
 } from '../../src/member';
 import { Internationalization } from '../../src/providers';
@@ -2600,8 +2594,13 @@ describe('Integration tests: all', () => {
   it('should create 2 member admissions and get them', async () => {
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
-    const { result: result1 } = await changeMemberDna(ChangeType.create, member.id);
-    const { result: result2 } = await changeMemberDna(ChangeType.create, member.id);
+    const changeType = ChangeType.create;
+    const memberId = member.id;
+    const params1 = createChangeMemberDnaParams({ changeType, memberId });
+    const params2 = createChangeMemberDnaParams({ changeType, memberId });
+
+    const result1 = await handler.mutations.changeMemberDna({ changeMemberDnaParams: params1 });
+    const result2 = await handler.mutations.changeMemberDna({ changeMemberDnaParams: params2 });
 
     const memberAdmissions = await handler.queries.getMemberAdmissions({
       memberId: member.id.toString(),
@@ -2644,8 +2643,13 @@ describe('Integration tests: all', () => {
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
     //create all admission params
-    const { changeMemberDnaParams: createMemberDnaParams, result: createResult } =
-      await changeMemberDna(ChangeType.create, member.id);
+    const createMemberDnaParams = createChangeMemberDnaParams({
+      changeType: ChangeType.create,
+      memberId: member.id,
+    });
+    const createResult = await handler.mutations.changeMemberDna({
+      changeMemberDnaParams: createMemberDnaParams,
+    });
 
     const diagnoses = [
       { id: createResult.diagnoses[0].id, ...removeChangeType(createMemberDnaParams.diagnosis) },
@@ -2873,45 +2877,17 @@ describe('Integration tests: all', () => {
       });
   };
 
-  const changeMemberDna = async (
-    changeType: ChangeType,
-    memberId: string,
-  ): Promise<{ changeMemberDnaParams: ChangeMemberDnaParams; result: Admission }> => {
-    const createDiagnosis = generateAdmissionDiagnosisParams({ changeType });
-    const createProcedure = generateAdmissionProcedureParams({ changeType });
-    const createMedication = generateAdmissionMedicationParams({ changeType });
-    const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
-    const createActivity = generateAdmissionActivityParams({ changeType });
-    const createWoundCare = generateAdmissionWoundCareParams({ changeType });
-    const createDietary = generateAdmissionDietaryParams({ changeType });
-
-    const changeMemberDnaParams: ChangeMemberDnaParams = {
-      memberId,
-      diagnosis: createDiagnosis,
-      procedure: createProcedure,
-      medication: createMedication,
-      externalAppointment: createExternalAppointment,
-      activity: createActivity,
-      woundCare: createWoundCare,
-      dietary: createDietary,
-      admitDate: generateDateOnly(subDays(new Date(), 5)),
-      admitType: AdmitType.emergency,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore
-      admitSource: 'physicianReferral',
-      dischargeDate: generateDateOnly(subDays(new Date(), 2)),
-      dischargeTo: DischargeTo.snf,
-      facility: lorem.sentence(),
-      specialInstructions: lorem.sentences(),
-      reasonForAdmission: lorem.sentences(),
-      hospitalCourse: lorem.sentences(),
-      warningSigns: WarningSigns.confusion,
-    };
-
-    const result = await handler.mutations.changeMemberDna({
-      changeMemberDnaParams,
-    });
-
-    return { changeMemberDnaParams, result };
+  const createChangeMemberDnaParams = ({
+    changeType,
+    memberId,
+  }: {
+    changeType: ChangeType;
+    memberId: string;
+  }): ChangeMemberDnaParams => {
+    const params = generateChangeMemberDnaParams({ changeType, memberId });
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+    params.admitSource = 'physicianReferral';
+    return params;
   };
 });
