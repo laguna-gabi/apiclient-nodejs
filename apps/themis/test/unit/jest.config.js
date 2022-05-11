@@ -1,11 +1,11 @@
 module.exports = {
-  displayName: 'clinicalEngine',
+  displayName: 'themis',
   rootDir: '../unit',
   preset: '../../../../jest.preset.js',
   globalSetup: '../../../../global-setup.ts',
   globals: {
     'ts-jest': {
-      tsconfig: 'apps/clinicalEngine/tsconfig.spec.json',
+      tsconfig: 'apps/themis/tsconfig.spec.json',
     },
   },
   testEnvironment: 'node',
