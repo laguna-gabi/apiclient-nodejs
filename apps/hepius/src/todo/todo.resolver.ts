@@ -30,15 +30,12 @@ import {
   LoggingInterceptor,
   MemberIdParam,
   MemberIdParamType,
-  MemberRole,
   MemberUserRouteInterceptor,
-  RoleTypes,
   Roles,
-  UserRole,
   generatePath,
   getCorrelationId,
 } from '../common';
-import { Identifier } from '@argus/hepiusClient';
+import { Identifier, MemberRole, RoleTypes, UserRole } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Todo)

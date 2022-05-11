@@ -29,18 +29,16 @@ import {
   LoggingInterceptor,
   MemberIdParam,
   MemberIdParamType,
-  MemberRole,
   MemberUserRouteInterceptor,
   Roles,
   UpdatedAppointmentAction,
-  UserRole,
   generatePath,
   getCorrelationId,
 } from '../common';
 import { CommunicationResolver } from '../communication';
 import { Member } from '../member';
 import { Bitly } from '../providers';
-import { Appointment, AppointmentStatus, Notes } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, MemberRole, Notes, UserRole } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Appointment)

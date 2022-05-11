@@ -1,10 +1,11 @@
+import { User } from '@argus/hepiusClient';
 import { Environments } from '@argus/pandora';
 import { sign } from 'jsonwebtoken';
 import { Model, connect, disconnect, model } from 'mongoose';
 import { v4 } from 'uuid';
 import { Member, MemberDocument, MemberDto } from '../src/member';
 import { ConfigsService } from '../src/providers';
-import { User, UserDocument, UserDto } from '../src/user';
+import { UserDocument, UserDto } from '../src/user';
 
 export async function getTokens() {
   const { uri } = await new ConfigsService().createMongooseOptions();

@@ -4,8 +4,7 @@ import { HealthPersona, QuestionnaireType } from '../questionnaire';
 import { UpdatedAppointmentAction } from '.';
 import { AppointmentDocument } from '../appointment';
 import { Member } from '../member';
-import { User } from '../user';
-import { Appointment, AppointmentStatus, Scores } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, Scores, User } from '@argus/hepiusClient';
 
 export enum EventType {
   //member

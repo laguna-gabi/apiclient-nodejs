@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { User } from '@argus/hepiusClient';
 import { NestFactory } from '@nestjs/core';
 import { getModelToken } from '@nestjs/mongoose';
 import { Db } from 'mongodb';
 import { Model } from 'mongoose';
 import { AppModule } from '../../../src/app.module';
-import { User } from '../../../src/user';
 
 // ------------------------------------------------------------------------------------------------
 // Description: migrate `up`

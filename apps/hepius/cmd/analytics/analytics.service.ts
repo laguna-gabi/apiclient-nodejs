@@ -50,15 +50,18 @@ import {
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
 } from '../../src/questionnaire';
-import { AppointmentMethod, AppointmentStatus,
+import {
+  AppointmentMethod,
+  AppointmentStatus,
   Barrier,
   BarrierType,
   BaseCare,
   CarePlan,
   CarePlanType,
   Caregiver,
+  User,
 } from '@argus/hepiusClient';
-import { User, UserDocument } from '../../src/user';
+import { UserDocument } from '../../src/user';
 import {
   BarrierDocument,
   BarrierTypeDocument,

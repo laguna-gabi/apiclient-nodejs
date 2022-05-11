@@ -1,3 +1,4 @@
+import { MemberRole, UserRole } from '@argus/hepiusClient';
 import { LogInternalKey, generateDispatchId } from '@argus/irisClient';
 import { NotificationType } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
@@ -20,10 +21,8 @@ import {
   LoggingInterceptor,
   MemberIdParam,
   MemberIdParamType,
-  MemberRole,
   MemberUserRouteInterceptor,
   Roles,
-  UserRole,
   getCorrelationId,
 } from '../common';
 

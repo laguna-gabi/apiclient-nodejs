@@ -1,3 +1,4 @@
+import { User } from '@argus/hepiusClient';
 import { GlobalEventType, IChangeEvent, QueueType, ServiceName, webhooks } from '@argus/pandora';
 import { INestApplication } from '@nestjs/common';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
@@ -21,7 +22,7 @@ import {
   TwilioService,
 } from '../src/providers';
 import { NotificationService } from '../src/services';
-import { User, UserResolver, UserService } from '../src/user';
+import { UserResolver, UserService } from '../src/user';
 import { Handler, Mutations, Queries } from './aux';
 import {
   generateCarePlanTypeInput,

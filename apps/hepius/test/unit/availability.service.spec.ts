@@ -1,3 +1,4 @@
+import { User } from '@argus/hepiusClient';
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types, model } from 'mongoose';
@@ -20,7 +21,7 @@ import {
 import { ErrorType, Errors, LoggerService, defaultTimestampsDbValues } from '../../src/common';
 import { queryDaysLimit } from 'config';
 
-import { User, UserDocument, UserDto } from '../../src/user';
+import { UserDocument, UserDto } from '../../src/user';
 
 describe('AvailabilityService', () => {
   let module: TestingModule;

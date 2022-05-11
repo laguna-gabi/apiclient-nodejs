@@ -4,9 +4,14 @@ import {
   BarrierDomain,
   CareStatus,
   Caregiver,
+  MemberRole,
   Notes,
   Relationship,
+  RoleTypes,
   Scores,
+  User,
+  UserRole,
+  defaultUserParams,
 } from '@argus/hepiusClient';
 import {
   ContentKey,
@@ -65,15 +70,7 @@ import {
   CreateRedFlagParamsWizard,
   SubmitCareWizardParams,
 } from '../src/care/wizard.dto';
-import {
-  ChangeType,
-  ItemType,
-  MemberRole,
-  RoleTypes,
-  UserRole,
-  momentFormats,
-  reformatDate,
-} from '../src/common';
+import { ChangeType, ItemType, momentFormats, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
@@ -155,13 +152,7 @@ import {
   TodoStatus,
   UpdateTodoParams,
 } from '../src/todo';
-import {
-  CreateUserParams,
-  GetSlotsParams,
-  UpdateUserParams,
-  User,
-  defaultUserParams,
-} from '../src/user';
+import { CreateUserParams, GetSlotsParams, UpdateUserParams } from '../src/user';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],

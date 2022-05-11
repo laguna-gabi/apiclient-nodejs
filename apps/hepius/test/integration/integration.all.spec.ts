@@ -5,6 +5,8 @@ import {
   CareStatus,
   Caregiver,
   MemberCommands,
+  User,
+  UserRole,
 } from '@argus/hepiusClient';
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
 import { GlobalEventType, Language, Platform } from '@argus/pandora';
@@ -69,7 +71,6 @@ import {
   IEventOnUpdatedUser,
   Identifiers,
   ItemType,
-  UserRole,
   delay,
   reformatDate,
 } from '../../src/common';
@@ -101,7 +102,7 @@ import {
   TodoStatus,
   UpdateTodoParams,
 } from '../../src/todo';
-import { User, defaultSlotsParams } from '../../src/user';
+import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 
 describe('Integration tests: all', () => {

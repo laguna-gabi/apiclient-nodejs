@@ -32,21 +32,18 @@ import {
   IEventOnNewAppointment,
   IEventOnUpdatedUserAppointments,
   LoggerService,
-  UserRole,
   defaultTimestampsDbValues,
 } from '../../src/common';
 import {
   GetSlotsParams,
   NotNullableUserKeys,
-  User,
   UserDocument,
   UserDto,
   UserModule,
   UserService,
   defaultSlotsParams,
-  defaultUserParams,
 } from '../../src/user';
-import { Appointment } from '@argus/hepiusClient';
+import { Appointment, User, UserRole, defaultUserParams } from '@argus/hepiusClient';
 
 describe('UserService', () => {
   let module: TestingModule;

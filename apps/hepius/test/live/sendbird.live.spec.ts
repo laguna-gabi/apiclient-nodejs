@@ -5,11 +5,11 @@ import axios from 'axios';
 import { date, image, name } from 'faker';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { v4 } from 'uuid';
-import { LoggerService, UserRole } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import { CreateSendbirdGroupChannelParams } from '../../src/communication';
 import { ConfigsService, SendBird } from '../../src/providers';
 import { generateId } from '../generators';
-import { AppointmentStatus } from '@argus/hepiusClient';
+import { AppointmentStatus, UserRole } from '@argus/hepiusClient';
 
 describe('live: sendbird actions', () => {
   let sendBird: SendBird;
