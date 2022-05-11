@@ -194,7 +194,7 @@ export const buildNPSQuestionnaire = (): CreateQuestionnaireParams => {
         range: { min: { value: 0, label: 'not likely' }, max: { value: 10, label: 'very likely' } },
       },
     ],
-    isAssignableToMember: false,
+    isAssignableToMember: true,
     severityLevels: [
       { min: 0, max: 6, label: 'Detractor' },
       { min: 7, max: 8, label: 'Passive' },
