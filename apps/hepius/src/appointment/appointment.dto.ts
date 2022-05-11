@@ -1,8 +1,10 @@
-import { Field, InputType, registerEnumType } from '@nestjs/graphql';
+import { Appointment, AppointmentMethod } from '@argus/hepiusClient';
+import { Field, InputType } from '@nestjs/graphql';
 import { SchemaFactory } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Document } from 'mongoose';
+import * as mongooseDelete from 'mongoose-delete';
 import {
   ErrorType,
   Errors,
@@ -12,12 +14,6 @@ import {
   IsObjectId,
 } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
-import * as mongooseDelete from 'mongoose-delete';
-import { Appointment, AppointmentMethod, AppointmentStatus } from '@argus/hepiusClient';
-
-registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });
-
-registerEnumType(AppointmentMethod, { name: 'AppointmentMethod' });
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************

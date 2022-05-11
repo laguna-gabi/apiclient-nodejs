@@ -1,7 +1,7 @@
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
-import { Field, ObjectType, OmitType } from '@nestjs/graphql';
+import { Field, ObjectType, OmitType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema } from '@nestjs/mongoose';
 import { Identifier } from './common';
 import { Types } from 'mongoose';
@@ -18,6 +18,9 @@ export enum AppointmentMethod {
   phoneCall = 'phoneCall',
   videoCall = 'videoCall',
 }
+
+registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });
+registerEnumType(AppointmentMethod, { name: 'AppointmentMethod' });
 
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
