@@ -11,7 +11,7 @@ export enum Environments {
 export enum ServiceName {
   hepius = 'hepius',
   iris = 'iris',
-  clinicalEngine = 'clinicalEngine',
+  themis = 'themis',
   poseidon = 'poseidon',
 }
 

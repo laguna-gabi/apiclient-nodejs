@@ -7,7 +7,7 @@
     "hepiusClient": "libs/hepiusClient",
     "poseidon": "apps/poseidon",
     "poseidonClient": "libs/poseidonClient",
-    "clinicalEngine": "apps/clinicalEngine",
+    "themis": "apps/themis",
     "pandora": "libs/pandora",
     "cmd": "libs/cmd"
   }

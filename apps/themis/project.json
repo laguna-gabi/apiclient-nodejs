@@ -1,15 +1,15 @@
 {
-  "root": "apps/clinicalEngine",
-  "sourceRoot": "apps/clinicalEngine/src",
+  "root": "apps/themis",
+  "sourceRoot": "apps/themis/src",
   "projectType": "application",
   "targets": {
     "build": {
       "executor": "@nrwl/node:webpack",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/clinicalEngine",
-        "main": "apps/clinicalEngine/src/main.ts",
-        "tsConfig": "apps/clinicalEngine/tsconfig.app.json",
+        "outputPath": "dist/apps/themis",
+        "main": "apps/themis/src/main.ts",
+        "tsConfig": "apps/themis/tsconfig.app.json",
         "webpackConfig": "./webpackConfig.js",
         "generatePackageJson": true
       },
@@ -24,35 +24,35 @@
     "serve": {
       "executor": "@nrwl/node:node",
       "options": {
-        "buildTarget": "clinicalEngine:build"
+        "buildTarget": "themis:build"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/clinicalEngine/**/*.ts"]
+        "lintFilePatterns": ["apps/themis/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "apps/clinicalEngine/test/unit/jest.config.js",
+        "jestConfig": "apps/themis/test/unit/jest.config.js",
         "passWithNoTests": true
       }
     },
     "test:cov": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/clinicalEngine"],
+      "outputs": ["coverage/apps/themis"],
       "options": {
-        "jestConfig": "apps/clinicalEngine/test/jest.config.js",
+        "jestConfig": "apps/themis/test/jest.config.js",
         "passWithNoTests": true
       }
     },
     "cov-badges": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "jest-coverage-badges input coverage/apps/clinicalEngine/coverage-summary.json output coverage/apps/clinicalEngine"
+        "command": "jest-coverage-badges input coverage/apps/themis/coverage-summary.json output coverage/apps/themis"
       }
     }
   },

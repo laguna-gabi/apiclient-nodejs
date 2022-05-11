@@ -19,7 +19,7 @@ export class LoggerService extends BaseLogger {
     @Inject(PARAMS_PROVIDER_TOKEN) params: Params,
     private readonly eventEmitter: EventEmitter2,
   ) {
-    super(params, ServiceName.clinicalEngine, LoggerService.validKeys);
+    super(params, ServiceName.themis, LoggerService.validKeys);
   }
 
   error(params = {}, className: string, methodName: string, failureReason?: FailureReason): void {

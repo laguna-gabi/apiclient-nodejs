@@ -1,5 +1,5 @@
 module.exports = {
-  displayName: 'clinicalEngine',
+  displayName: 'themis',
   rootDir: '../',
   preset: '../../jest.preset.js',
   globals: {
