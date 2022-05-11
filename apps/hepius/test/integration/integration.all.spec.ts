@@ -236,9 +236,9 @@ describe('Integration tests: all', () => {
     const orgs = await handler.queries.getOrgs({
       requestHeaders: handler.defaultAdminRequestHeaders,
     });
-
-    expect(createdOrg).toEqual(expect.objectContaining({ ...orgParams, id }));
-    expect(orgs).toEqual(expect.arrayContaining([expect.objectContaining({ ...orgParams, id })]));
+    const expectedOrg = { ...orgParams, id };
+    expect(createdOrg).toEqual(expect.objectContaining(expectedOrg));
+    expect(orgs).toEqual(expect.arrayContaining([expect.objectContaining(expectedOrg)]));
   });
 
   it('should change member org', async () => {

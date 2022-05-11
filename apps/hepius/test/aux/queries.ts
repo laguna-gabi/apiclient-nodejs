@@ -646,6 +646,7 @@ export class Queries {
             type
             zipCode
             trialDuration
+            code
           }
         }
       `,
@@ -673,6 +674,7 @@ export class Queries {
               type
               zipCode
               trialDuration
+              code
             }
           }
         `,

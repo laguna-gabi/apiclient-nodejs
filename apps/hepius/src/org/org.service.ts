@@ -30,6 +30,11 @@ export class OrgService extends BaseService {
     return this.replaceId(org);
   }
 
+  async getByCode(code: string): Promise<Org | null> {
+    const org = await this.orgModel.findOne({ code });
+    return org ? this.replaceId(org.toObject()) : null;
+  }
+
   async getOrgs(): Promise<Org[]> {
     return this.orgModel.find();
   }

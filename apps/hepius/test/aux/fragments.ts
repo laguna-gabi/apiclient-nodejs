@@ -27,6 +27,7 @@ export const FRAGMENT_MEMBER = gql`
       type
       trialDuration
       zipCode
+      code
     }
     primaryUserId
     users {

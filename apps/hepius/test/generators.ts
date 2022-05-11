@@ -634,8 +634,9 @@ export const generateOrgParams = ({
   name = `${lorem.word()}.${v4()}`,
   trialDuration = datatype.number({ min: 1, max: 100 }),
   zipCode = generateZipCode(),
+  code,
 }: Partial<CreateOrgParams> = {}): CreateOrgParams => {
-  return { type, name, trialDuration: trialDuration, zipCode };
+  return { type, name, trialDuration: trialDuration, zipCode, code: code || name };
 };
 
 export const generateAppointmentComposeParams = (): AppointmentCompose => {

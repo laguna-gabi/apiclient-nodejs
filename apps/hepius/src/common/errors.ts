@@ -82,6 +82,7 @@ export enum ErrorType {
   // Module org errors
   orgAlreadyExists = 9401,
   orgTrialDurationOutOfRange = 9402,
+  orgMissing = 9403,
 
   // Module availability errors
   availabilityNotFound = 9501,
@@ -314,6 +315,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.appointmentIdInvalid.valueOf(), `appointment id ${objectIdFormat}`],
   [ErrorType.orgAlreadyExists.valueOf(), 'organization already exists'],
+  [ErrorType.orgMissing.valueOf(), 'Missing org'],
   [ErrorType.orgTrialDurationOutOfRange.valueOf(), 'trialDuration must not be less than 1'],
   [ErrorType.availabilityNotFound.valueOf(), `availability ${notFoundPrefix}`],
   [ErrorType.availabilityIdInvalid.valueOf(), `availability id ${objectIdFormat}`],

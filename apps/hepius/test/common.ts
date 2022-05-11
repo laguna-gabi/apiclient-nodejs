@@ -47,6 +47,7 @@ export const urls = {
   scheduleAppointments: `/${apiPrefix}/appointments/schedule`,
   slots: `/${apiPrefix}/users/slots`,
   members: `/${apiPrefix}/members/create`,
+  orgs: `/${apiPrefix}/orgs/details`,
   webhooks: `/${apiPrefix}/${webhooks}`,
 };
 

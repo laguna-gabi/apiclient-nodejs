@@ -131,4 +131,10 @@ describe('Integration tests: rest', () => {
     } = await request(server).post(urls.members).send(memberParams).expect(201);
     expect(memberId).toEqual(expect.any(String));
   });
+
+  it('org details', async () => {
+    const org = await creators.createAndValidateOrg();
+    const res = await request(server).get(`${urls.orgs}/${org.code}`).expect(200);
+    expect(res.body).toEqual(expect.objectContaining(org));
+  });
 });
