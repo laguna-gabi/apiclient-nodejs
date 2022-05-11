@@ -26,7 +26,6 @@ import {
   MedicationDocument,
   ProcedureDocument,
   RecordingDocument,
-  WoundCareDocument,
 } from '../member';
 import { QuestionnaireResponseDocument } from '../questionnaire';
 import { TodoDocument, TodoDoneDocument } from '../todo';
@@ -114,7 +113,6 @@ type Entity =
   | ProcedureDocument
   | MedicationDocument
   | ExternalAppointmentDocument
-  | WoundCareDocument
   | DietaryDocument;
 
 export async function deleteMemberObjects<T extends Model<Entity> & ISoftDelete<Entity>>({

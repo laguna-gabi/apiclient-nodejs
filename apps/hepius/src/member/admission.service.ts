@@ -4,10 +4,10 @@ import {
   AdmissionDocument,
   BaseCategory,
   ChangeAdmissionDiagnosisParams,
+  ChangeAdmissionDietaryParams,
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
-  ChangeAdmissionWoundCareParams,
   ChangeMemberDnaParams,
   Diagnosis,
   DiagnosisDocument,
@@ -19,8 +19,6 @@ import {
   MedicationDocument,
   Procedure,
   ProcedureDocument,
-  WoundCare,
-  WoundCareDocument,
   singleAdmissionItems,
 } from '.';
 import {
@@ -61,8 +59,6 @@ export class AdmissionService extends BaseService {
     @InjectModel(ExternalAppointment.name)
     private readonly externalAppointmentModel: Model<ExternalAppointmentDocument> &
       ISoftDelete<ExternalAppointmentDocument>,
-    @InjectModel(WoundCare.name)
-    private readonly woundCareModel: Model<WoundCareDocument> & ISoftDelete<WoundCareDocument>,
     @InjectModel(Dietary.name)
     private readonly dietaryModel: Model<DietaryDocument> & ISoftDelete<DietaryDocument>,
     readonly logger: LoggerService,
@@ -83,10 +79,6 @@ export class AdmissionService extends BaseService {
     this.matchMap[AdmissionCategory.externalAppointments] = {
       model: this.externalAppointmentModel,
       errorType: ErrorType.admissionExternalAppointmentIdNotFound,
-    };
-    this.matchMap[AdmissionCategory.woundCares] = {
-      model: this.woundCareModel,
-      errorType: ErrorType.admissionWoundCareIdNotFound,
     };
     this.matchMap[AdmissionCategory.dietaries] = {
       model: this.dietaryModel,
@@ -144,14 +136,8 @@ export class AdmissionService extends BaseService {
       );
       id = result._id.toString();
     }
-    if (setParams.woundCare) {
-      const { changeType, ...woundCare }: ChangeAdmissionWoundCareParams = setParams.woundCare;
-      const admissionCategory = AdmissionCategory.woundCares;
-      result = await this.changeInternal(woundCare, changeType, admissionCategory, memberId, id);
-      id = result._id.toString();
-    }
     if (setParams.dietary) {
-      const { changeType, ...dietary }: ChangeAdmissionWoundCareParams = setParams.dietary;
+      const { changeType, ...dietary }: ChangeAdmissionDietaryParams = setParams.dietary;
       const admissionCategory = AdmissionCategory.dietaries;
       result = await this.changeInternal(dietary, changeType, admissionCategory, memberId, id);
     }
@@ -202,11 +188,6 @@ export class AdmissionService extends BaseService {
       Model<ExternalAppointmentDocument> & ISoftDelete<ExternalAppointmentDocument>
     >({
       model: this.externalAppointmentModel,
-      ...data,
-    });
-
-    await deleteMemberObjects<Model<WoundCareDocument> & ISoftDelete<WoundCareDocument>>({
-      model: this.woundCareModel,
       ...data,
     });
 

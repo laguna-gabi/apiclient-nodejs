@@ -20,6 +20,7 @@ import {
   defaultModules,
   generateAdmissionActivityParams,
   generateAdmissionDiagnosisParams,
+  generateAdmissionWoundCareParams,
   generateChangeMemberDnaParams,
   generateDateOnly,
   generateId,
@@ -108,6 +109,7 @@ describe(AdmissionService.name, () => {
     { hospitalCourse: lorem.sentences() },
     { warningSigns: [WarningSigns.confusion, WarningSigns.passingOut] },
     { activity: generateAdmissionActivityParams() },
+    { woundCare: generateAdmissionWoundCareParams() },
     {
       admitDate: generateDateOnly(subDays(new Date(), 5)),
       admitType: AdmitType.urgent,
@@ -120,6 +122,7 @@ describe(AdmissionService.name, () => {
       hospitalCourse: lorem.sentences(),
       warningSigns: [WarningSigns.confusion, WarningSigns.passingOut],
       activity: generateAdmissionActivityParams(),
+      woundCare: generateAdmissionWoundCareParams(),
     },
   ])(`should create a single element in admission`, async (object) => {
     const changeMemberDnaParams: ChangeMemberDnaParams = { ...object, memberId: generateId() };
@@ -131,18 +134,19 @@ describe(AdmissionService.name, () => {
 
   /* eslint-disable max-len */
   test.each`
-    field                    | input1                               | input2
-    ${'admitDate'}           | ${generateDateOnly(date.soon())}     | ${generateDateOnly(date.soon())}
-    ${'admitType'}           | ${AdmitType.snf}                     | ${AdmitType.psych}
-    ${'admitSource'}         | ${AdmitSource.hmoReferral}           | ${AdmitSource.clinicReferral}
-    ${'dischargeDate'}       | ${generateDateOnly(date.soon())}     | ${generateDateOnly(date.soon())}
-    ${'dischargeTo'}         | ${DischargeTo.snf}                   | ${DischargeTo.expired}
-    ${'facility'}            | ${lorem.sentence()}                  | ${lorem.sentence()}
-    ${'specialInstructions'} | ${lorem.sentences()}                 | ${lorem.sentences()}
-    ${'reasonForAdmission'}  | ${lorem.sentences()}                 | ${lorem.sentences()}
-    ${'hospitalCourse'}      | ${lorem.sentences()}                 | ${lorem.sentences()}
-    ${'warningSigns'}        | ${[WarningSigns.severeDizziness]}    | ${[WarningSigns.confusion, WarningSigns.passingOut]}
-    ${'activity'}            | ${generateAdmissionActivityParams()} | ${generateAdmissionActivityParams()}
+    field                    | input1                                | input2
+    ${'admitDate'}           | ${generateDateOnly(date.soon())}      | ${generateDateOnly(date.soon())}
+    ${'admitType'}           | ${AdmitType.snf}                      | ${AdmitType.psych}
+    ${'admitSource'}         | ${AdmitSource.hmoReferral}            | ${AdmitSource.clinicReferral}
+    ${'dischargeDate'}       | ${generateDateOnly(date.soon())}      | ${generateDateOnly(date.soon())}
+    ${'dischargeTo'}         | ${DischargeTo.snf}                    | ${DischargeTo.expired}
+    ${'facility'}            | ${lorem.sentence()}                   | ${lorem.sentence()}
+    ${'specialInstructions'} | ${lorem.sentences()}                  | ${lorem.sentences()}
+    ${'reasonForAdmission'}  | ${lorem.sentences()}                  | ${lorem.sentences()}
+    ${'hospitalCourse'}      | ${lorem.sentences()}                  | ${lorem.sentences()}
+    ${'warningSigns'}        | ${[WarningSigns.severeDizziness]}     | ${[WarningSigns.confusion, WarningSigns.passingOut]}
+    ${'activity'}            | ${generateAdmissionActivityParams()}  | ${generateAdmissionActivityParams()}
+    ${'woundCare'}           | ${generateAdmissionWoundCareParams()} | ${generateAdmissionWoundCareParams()}
   `(
     `should create and update only $field element in admission`,
     async ({ field, input1, input2 }) => {
@@ -269,7 +273,6 @@ describe(AdmissionService.name, () => {
     ${AdmissionCategory.procedures}           | ${'description'}
     ${AdmissionCategory.medications}          | ${'name'}
     ${AdmissionCategory.externalAppointments} | ${'date'}
-    ${AdmissionCategory.woundCares}           | ${'text'}
     ${AdmissionCategory.dietaries}            | ${'notes'}
   `(
     `should remove null fields from create $admissionCategory params`,
@@ -293,7 +296,6 @@ describe(AdmissionService.name, () => {
     ${AdmissionCategory.procedures}           | ${'text'}
     ${AdmissionCategory.medications}          | ${'name'}
     ${AdmissionCategory.externalAppointments} | ${'date'}
-    ${AdmissionCategory.woundCares}           | ${'text'}
     ${AdmissionCategory.dietaries}            | ${'notes'}
   `(
     `should remove null fields from update $admissionCategory params`,

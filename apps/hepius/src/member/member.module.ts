@@ -41,8 +41,6 @@ import {
   Procedure,
   ProcedureDto,
   Recording,
-  WoundCare,
-  WoundCareDto,
 } from '.';
 import { AppointmentDto } from '../appointment';
 import { CommonModule, LoggerService } from '../common';
@@ -73,7 +71,6 @@ import { UserModule } from '../user';
       { name: Procedure.name, schema: ProcedureDto },
       { name: Medication.name, schema: MedicationDto },
       { name: ExternalAppointment.name, schema: ExternalAppointmentDto },
-      { name: WoundCare.name, schema: WoundCareDto },
       { name: Dietary.name, schema: DietaryDto },
       { name: Journey.name, schema: JourneyDto },
       { name: Admission.name, schema: AdmissionDto },

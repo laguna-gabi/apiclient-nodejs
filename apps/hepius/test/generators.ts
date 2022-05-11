@@ -88,7 +88,6 @@ import {
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
-  ChangeAdmissionWoundCareParams,
   ChangeMemberDnaParams,
   ClinicalStatus,
   CreateMemberParams,
@@ -128,6 +127,7 @@ import {
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
   WarningSigns,
+  WoundCare,
   defaultMemberParams,
 } from '../src/member';
 import { CreateOrgParams, Org, OrgType } from '../src/org';
@@ -1483,32 +1483,19 @@ export const generateAdmissionExternalAppointmentParams = ({
   };
 };
 
-export const generateAdmissionActivityParams = (): Activity => {
-  return {
-    general: [lorem.word(), lorem.word()],
-    lifting: [lorem.word(), lorem.word()],
-    showerOrBathing: [lorem.word()],
-    stairs: [lorem.word(), lorem.word()],
-    driving: [lorem.word()],
-    sexualActivity: [lorem.word()],
-    work: [lorem.word()],
-  };
-};
+export const generateAdmissionActivityParams = (): Activity => ({
+  general: [lorem.word(), lorem.word()],
+  lifting: [lorem.word(), lorem.word()],
+  showerOrBathing: [lorem.word()],
+  stairs: [lorem.word(), lorem.word()],
+  driving: [lorem.word()],
+  sexualActivity: [lorem.word()],
+  work: [lorem.word()],
+});
 
-export const generateAdmissionWoundCareParams = ({
-  changeType,
-  id,
-}: {
-  changeType: ChangeType;
-  id?: string;
-}): ChangeAdmissionWoundCareParams => {
-  const attachIdParam = id ? { id } : {};
-  return {
-    changeType,
-    ...attachIdParam,
-    text: lorem.sentence(),
-  };
-};
+export const generateAdmissionWoundCareParams = (): WoundCare => ({
+  general: [lorem.word(), lorem.word()],
+});
 
 export const generateAdmissionDietaryParams = ({
   changeType,
@@ -1541,7 +1528,6 @@ export const generateChangeMemberDnaParams = ({
   const createProcedure = generateAdmissionProcedureParams({ changeType });
   const createMedication = generateAdmissionMedicationParams({ changeType });
   const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
-  const createWoundCare = generateAdmissionWoundCareParams({ changeType });
   const createDietary = generateAdmissionDietaryParams({ changeType });
   const idObject = id ? { id } : {};
   return {
@@ -1551,7 +1537,6 @@ export const generateChangeMemberDnaParams = ({
     procedure: createProcedure,
     medication: createMedication,
     externalAppointment: createExternalAppointment,
-    woundCare: createWoundCare,
     dietary: createDietary,
     admitDate: generateDateOnly(subDays(new Date(), 5)),
     admitType: AdmitType.emergency,
@@ -1564,6 +1549,7 @@ export const generateChangeMemberDnaParams = ({
     hospitalCourse: lorem.sentences(),
     warningSigns: [WarningSigns.confusion],
     activity: generateAdmissionActivityParams(),
+    woundCare: generateAdmissionWoundCareParams(),
   };
 };
 

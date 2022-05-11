@@ -21,6 +21,7 @@ import {
   generateAdmissionDietaryParams,
   generateAdmissionMedicationParams,
   generateAdmissionProcedureParams,
+  generateAdmissionWoundCareParams,
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCarePlanTypeInput,
@@ -2619,7 +2620,6 @@ describe('Integration tests: all', () => {
       externalAppointments: expect.arrayContaining([
         expect.objectContaining({ clinic: expect.any(String) }),
       ]),
-      woundCares: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       dietaries: expect.arrayContaining([expect.objectContaining({ notes: expect.any(String) })]),
       admitDate: expect.any(String),
       admitType: expect.any(String),
@@ -2632,6 +2632,7 @@ describe('Integration tests: all', () => {
       hospitalCourse: expect.any(String),
       warningSigns: expect.any(Array),
       activity: expect.objectContaining({ stairs: expect.any(Array) }),
+      woundCare: expect.objectContaining({ general: expect.any(Array) }),
     };
 
     expect(memberAdmissions.length).toEqual(2);
@@ -2677,9 +2678,6 @@ describe('Integration tests: all', () => {
         date: createMemberDnaParams.externalAppointment.date.toISOString(),
       },
     ];
-    const woundCares = [
-      { id: createResult.woundCares[0].id, ...removeChangeType(createMemberDnaParams.woundCare) },
-    ];
     const dietaries = [
       { id: createResult.dietaries[0].id, ...removeChangeType(createMemberDnaParams.dietary) },
     ];
@@ -2695,6 +2693,7 @@ describe('Integration tests: all', () => {
       hospitalCourse,
       warningSigns,
       activity,
+      woundCare,
     } = createResult;
 
     expect(createResult).toEqual(
@@ -2704,7 +2703,6 @@ describe('Integration tests: all', () => {
         procedures,
         medications,
         externalAppointments,
-        woundCares,
         dietaries,
         admitDate,
         admitType,
@@ -2717,6 +2715,7 @@ describe('Integration tests: all', () => {
         hospitalCourse,
         warningSigns,
         activity,
+        woundCare,
       }),
     );
 
@@ -2735,7 +2734,6 @@ describe('Integration tests: all', () => {
         id: createResult.medications[0].id,
       }),
       dietary: generateAdmissionDietaryParams({ changeType: ChangeType.create }),
-      activity: generateAdmissionActivityParams(),
       admitDate: newAdmitDate,
       admitType: null,
       admitSource: null,
@@ -2746,6 +2744,8 @@ describe('Integration tests: all', () => {
       reasonForAdmission: lorem.sentences(),
       hospitalCourse: null,
       warningSigns: null,
+      activity: generateAdmissionActivityParams(),
+      woundCare: generateAdmissionWoundCareParams(),
     };
     const changeResult = await handler.mutations.changeMemberDna({ changeMemberDnaParams });
 
@@ -2765,7 +2765,6 @@ describe('Integration tests: all', () => {
         procedures,
         medications: [],
         externalAppointments,
-        woundCares,
         dietaries,
         admitDate: newAdmitDate,
         admitType: expect.any(String),
@@ -2778,6 +2777,7 @@ describe('Integration tests: all', () => {
         hospitalCourse: expect.any(String),
         warningSigns: expect.any(Array),
         activity: expect.objectContaining({ stairs: expect.any(Array) }),
+        woundCare: expect.objectContaining({ general: expect.any(Array) }),
       }),
     );
   });

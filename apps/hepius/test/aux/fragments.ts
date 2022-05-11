@@ -161,6 +161,9 @@ export const FRAGMENT_ADMISSION = gql`
       sexualActivity
       work
     }
+    woundCare {
+      general
+    }
     diagnoses {
       id
       code
@@ -203,10 +206,6 @@ export const FRAGMENT_ADMISSION = gql`
       fullAddress
       phone
       fax
-    }
-    woundCares {
-      id
-      text
     }
     dietaries {
       id

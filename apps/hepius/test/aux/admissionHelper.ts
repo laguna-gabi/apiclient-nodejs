@@ -19,9 +19,6 @@ import {
   Procedure,
   ProcedureDocument,
   ProcedureDto,
-  WoundCare,
-  WoundCareDocument,
-  WoundCareDto,
 } from '../../src/member';
 import { ErrorType, defaultTimestampsDbValues } from '../../src/common';
 import {
@@ -30,7 +27,6 @@ import {
   generateAdmissionExternalAppointmentParams,
   generateAdmissionMedicationParams,
   generateAdmissionProcedureParams,
-  generateAdmissionWoundCareParams,
 } from '../generators';
 
 export class AdmissionHelper {
@@ -38,7 +34,6 @@ export class AdmissionHelper {
   private procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
   private medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
   private externalAppointmentModel: Model<ExternalAppointmentDocument & defaultTimestampsDbValues>;
-  private woundCareModel: Model<WoundCareDocument & defaultTimestampsDbValues>;
   private dietaryModel: Model<DietaryDocument & defaultTimestampsDbValues>;
   admissionModel: Model<AdmissionDocument & defaultTimestampsDbValues>;
 
@@ -58,7 +53,6 @@ export class AdmissionHelper {
       this.procedureModel,
       this.medicationModel,
       this.externalAppointmentModel,
-      this.woundCareModel,
       this.dietaryModel,
     ];
   }
@@ -83,10 +77,6 @@ export class AdmissionHelper {
     this.externalAppointmentModel = model<ExternalAppointmentDocument & defaultTimestampsDbValues>(
       ExternalAppointment.name,
       ExternalAppointmentDto,
-    );
-    this.woundCareModel = model<WoundCareDocument & defaultTimestampsDbValues>(
-      WoundCare.name,
-      WoundCareDto,
     );
     this.dietaryModel = model<DietaryDocument & defaultTimestampsDbValues>(
       Dietary.name,
@@ -118,12 +108,6 @@ export class AdmissionHelper {
       method: generateAdmissionExternalAppointmentParams,
       model: this.externalAppointmentModel,
       errorNotFound: ErrorType.admissionExternalAppointmentIdNotFound,
-    });
-    this.mapper.set(AdmissionCategory.woundCares, {
-      field: 'woundCare',
-      method: generateAdmissionWoundCareParams,
-      model: this.woundCareModel,
-      errorNotFound: ErrorType.admissionWoundCareIdNotFound,
     });
     this.mapper.set(AdmissionCategory.dietaries, {
       field: 'dietary',
