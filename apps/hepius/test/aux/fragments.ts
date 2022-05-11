@@ -152,6 +152,15 @@ export const FRAGMENT_ADMISSION = gql`
     reasonForAdmission
     hospitalCourse
     warningSigns
+    activity {
+      general
+      lifting
+      showerOrBathing
+      stairs
+      driving
+      sexualActivity
+      work
+    }
     diagnoses {
       id
       code
@@ -194,11 +203,6 @@ export const FRAGMENT_ADMISSION = gql`
       fullAddress
       phone
       fax
-    }
-    activities {
-      id
-      text
-      isTodo
     }
     woundCares {
       id

@@ -16,7 +16,6 @@ import { BarrierDocument, CarePlanDocument, RedFlagDocument } from '../care';
 import { DailyReportDocument } from '../dailyReport';
 import { ISoftDelete } from '../db';
 import {
-  ActivityDocument,
   AdmissionDocument,
   CaregiverDocument,
   DiagnosisDocument,
@@ -115,7 +114,6 @@ type Entity =
   | ProcedureDocument
   | MedicationDocument
   | ExternalAppointmentDocument
-  | ActivityDocument
   | WoundCareDocument
   | DietaryDocument;
 

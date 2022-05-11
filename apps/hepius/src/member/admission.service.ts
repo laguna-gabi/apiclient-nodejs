@@ -1,11 +1,8 @@
 import {
-  Activity,
-  ActivityDocument,
   Admission,
   AdmissionCategory,
   AdmissionDocument,
   BaseCategory,
-  ChangeAdmissionActivityParams,
   ChangeAdmissionDiagnosisParams,
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
@@ -64,8 +61,6 @@ export class AdmissionService extends BaseService {
     @InjectModel(ExternalAppointment.name)
     private readonly externalAppointmentModel: Model<ExternalAppointmentDocument> &
       ISoftDelete<ExternalAppointmentDocument>,
-    @InjectModel(Activity.name)
-    private readonly activityModel: Model<ActivityDocument> & ISoftDelete<ActivityDocument>,
     @InjectModel(WoundCare.name)
     private readonly woundCareModel: Model<WoundCareDocument> & ISoftDelete<WoundCareDocument>,
     @InjectModel(Dietary.name)
@@ -88,10 +83,6 @@ export class AdmissionService extends BaseService {
     this.matchMap[AdmissionCategory.externalAppointments] = {
       model: this.externalAppointmentModel,
       errorType: ErrorType.admissionExternalAppointmentIdNotFound,
-    };
-    this.matchMap[AdmissionCategory.activities] = {
-      model: this.activityModel,
-      errorType: ErrorType.admissionActivityIdNotFound,
     };
     this.matchMap[AdmissionCategory.woundCares] = {
       model: this.woundCareModel,
@@ -153,12 +144,6 @@ export class AdmissionService extends BaseService {
       );
       id = result._id.toString();
     }
-    if (setParams.activity) {
-      const { changeType, ...activity }: ChangeAdmissionActivityParams = setParams.activity;
-      const admissionCategory = AdmissionCategory.activities;
-      result = await this.changeInternal(activity, changeType, admissionCategory, memberId, id);
-      id = result._id.toString();
-    }
     if (setParams.woundCare) {
       const { changeType, ...woundCare }: ChangeAdmissionWoundCareParams = setParams.woundCare;
       const admissionCategory = AdmissionCategory.woundCares;
@@ -217,11 +202,6 @@ export class AdmissionService extends BaseService {
       Model<ExternalAppointmentDocument> & ISoftDelete<ExternalAppointmentDocument>
     >({
       model: this.externalAppointmentModel,
-      ...data,
-    });
-
-    await deleteMemberObjects<Model<ActivityDocument> & ISoftDelete<ActivityDocument>>({
-      model: this.activityModel,
       ...data,
     });
 

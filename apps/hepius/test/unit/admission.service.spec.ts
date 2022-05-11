@@ -18,6 +18,7 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  generateAdmissionActivityParams,
   generateAdmissionDiagnosisParams,
   generateChangeMemberDnaParams,
   generateDateOnly,
@@ -106,6 +107,7 @@ describe(AdmissionService.name, () => {
     { reasonForAdmission: lorem.sentences() },
     { hospitalCourse: lorem.sentences() },
     { warningSigns: [WarningSigns.confusion, WarningSigns.passingOut] },
+    { activity: generateAdmissionActivityParams() },
     {
       admitDate: generateDateOnly(subDays(new Date(), 5)),
       admitType: AdmitType.urgent,
@@ -117,6 +119,7 @@ describe(AdmissionService.name, () => {
       reasonForAdmission: lorem.sentences(),
       hospitalCourse: lorem.sentences(),
       warningSigns: [WarningSigns.confusion, WarningSigns.passingOut],
+      activity: generateAdmissionActivityParams(),
     },
   ])(`should create a single element in admission`, async (object) => {
     const changeMemberDnaParams: ChangeMemberDnaParams = { ...object, memberId: generateId() };
@@ -128,19 +131,20 @@ describe(AdmissionService.name, () => {
 
   /* eslint-disable max-len */
   test.each`
-    field                    | input1                            | input2
-    ${'admitDate'}           | ${generateDateOnly(date.soon())}  | ${generateDateOnly(date.soon())}
-    ${'admitType'}           | ${AdmitType.snf}                  | ${AdmitType.psych}
-    ${'admitSource'}         | ${AdmitSource.hmoReferral}        | ${AdmitSource.clinicReferral}
-    ${'dischargeDate'}       | ${generateDateOnly(date.soon())}  | ${generateDateOnly(date.soon())}
-    ${'dischargeTo'}         | ${DischargeTo.snf}                | ${DischargeTo.expired}
-    ${'facility'}            | ${lorem.sentence()}               | ${lorem.sentence()}
-    ${'specialInstructions'} | ${lorem.sentences()}              | ${lorem.sentences()}
-    ${'reasonForAdmission'}  | ${lorem.sentences()}              | ${lorem.sentences()}
-    ${'hospitalCourse'}      | ${lorem.sentences()}              | ${lorem.sentences()}
-    ${'warningSigns'}        | ${[WarningSigns.severeDizziness]} | ${[WarningSigns.confusion, WarningSigns.passingOut]}
+    field                    | input1                               | input2
+    ${'admitDate'}           | ${generateDateOnly(date.soon())}     | ${generateDateOnly(date.soon())}
+    ${'admitType'}           | ${AdmitType.snf}                     | ${AdmitType.psych}
+    ${'admitSource'}         | ${AdmitSource.hmoReferral}           | ${AdmitSource.clinicReferral}
+    ${'dischargeDate'}       | ${generateDateOnly(date.soon())}     | ${generateDateOnly(date.soon())}
+    ${'dischargeTo'}         | ${DischargeTo.snf}                   | ${DischargeTo.expired}
+    ${'facility'}            | ${lorem.sentence()}                  | ${lorem.sentence()}
+    ${'specialInstructions'} | ${lorem.sentences()}                 | ${lorem.sentences()}
+    ${'reasonForAdmission'}  | ${lorem.sentences()}                 | ${lorem.sentences()}
+    ${'hospitalCourse'}      | ${lorem.sentences()}                 | ${lorem.sentences()}
+    ${'warningSigns'}        | ${[WarningSigns.severeDizziness]}    | ${[WarningSigns.confusion, WarningSigns.passingOut]}
+    ${'activity'}            | ${generateAdmissionActivityParams()} | ${generateAdmissionActivityParams()}
   `(
-    `should create and update only date $field element in admission`,
+    `should create and update only $field element in admission`,
     async ({ field, input1, input2 }) => {
       /* eslint-enable max-len */
       const memberId = generateId();
@@ -265,7 +269,6 @@ describe(AdmissionService.name, () => {
     ${AdmissionCategory.procedures}           | ${'description'}
     ${AdmissionCategory.medications}          | ${'name'}
     ${AdmissionCategory.externalAppointments} | ${'date'}
-    ${AdmissionCategory.activities}           | ${'text'}
     ${AdmissionCategory.woundCares}           | ${'text'}
     ${AdmissionCategory.dietaries}            | ${'notes'}
   `(
@@ -290,7 +293,6 @@ describe(AdmissionService.name, () => {
     ${AdmissionCategory.procedures}           | ${'text'}
     ${AdmissionCategory.medications}          | ${'name'}
     ${AdmissionCategory.externalAppointments} | ${'date'}
-    ${AdmissionCategory.activities}           | ${'text'}
     ${AdmissionCategory.woundCares}           | ${'text'}
     ${AdmissionCategory.dietaries}            | ${'notes'}
   `(
@@ -332,20 +334,6 @@ describe(AdmissionService.name, () => {
       expect(result[key]).toEqual(defaultValue);
     },
   );
-
-  it('should set activity default isTodo=true when not provided in params', async () => {
-    const memberId = generateId();
-    const admissionCategory = AdmissionCategory.activities;
-    const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
-
-    const activity = method({ changeType: ChangeType.create });
-    delete activity.isTodo;
-
-    await change(field, activity, memberId);
-
-    const { isTodo } = await model.findOne({ text: activity.text }, { isTodo: 1 });
-    expect(isTodo).toBeTruthy();
-  });
 
   it(`should return all populated existing values on ${ChangeType.create}`, async () => {
     const memberId = generateId();
@@ -417,9 +405,9 @@ describe(AdmissionService.name, () => {
      * generating data of :
      * 1. member1 with 2 admissions:
      *    - admission1: single items and 1 list items per each category
-     *                  { facility: '...', activity: [{...}], diagnosis: [{...}]}
+     *                  { facility: '...', dietary: [{...}], diagnosis: [{...}]}
      *    - admission2: single items and multiple lists items per each category
-     *                  { facility: '...', activity: [{...}, {...}], diagnosis: [{...},{...}]}
+     *                  { facility: '...', dietary: [{...}, {...}], diagnosis: [{...},{...}]}
      * 2. member2 which is a test group member, making sure that once member1 is deleted, member2's data isn't deleted.
      */
     test.each([true, false])(
@@ -489,9 +477,6 @@ describe(AdmissionService.name, () => {
     ]);
     expect(result[AdmissionCategory.externalAppointments]).toEqual([
       expect.objectContaining({ date: expect.any(Date) }),
-    ]);
-    expect(result[AdmissionCategory.activities]).toEqual([
-      expect.objectContaining({ text: expect.any(String) }),
     ]);
     expect(result[AdmissionCategory.dietaries]).toEqual([
       expect.objectContaining({ notes: expect.any(String) }),

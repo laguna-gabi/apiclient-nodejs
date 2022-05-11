@@ -74,6 +74,7 @@ import { ChangeType, ItemType, momentFormats, reformatDate } from '../src/common
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
+  Activity,
   AddCaregiverParams,
   AdmitSource,
   AdmitType,
@@ -82,7 +83,6 @@ import {
   AppointmentCompose,
   AudioFormat,
   CancelNotifyParams,
-  ChangeAdmissionActivityParams,
   ChangeAdmissionDiagnosisParams,
   ChangeAdmissionDietaryParams,
   ChangeAdmissionExternalAppointmentParams,
@@ -1483,21 +1483,15 @@ export const generateAdmissionExternalAppointmentParams = ({
   };
 };
 
-export const generateAdmissionActivityParams = ({
-  changeType,
-  id,
-  isTodo,
-}: {
-  changeType: ChangeType;
-  id?: string;
-  isTodo?: boolean;
-}): ChangeAdmissionActivityParams => {
-  const attachIdParam = id ? { id } : {};
+export const generateAdmissionActivityParams = (): Activity => {
   return {
-    changeType,
-    ...attachIdParam,
-    text: lorem.sentence(),
-    isTodo: isTodo !== undefined || Math.random() < 0.5,
+    general: [lorem.word(), lorem.word()],
+    lifting: [lorem.word(), lorem.word()],
+    showerOrBathing: [lorem.word()],
+    stairs: [lorem.word(), lorem.word()],
+    driving: [lorem.word()],
+    sexualActivity: [lorem.word()],
+    work: [lorem.word()],
   };
 };
 
@@ -1547,7 +1541,6 @@ export const generateChangeMemberDnaParams = ({
   const createProcedure = generateAdmissionProcedureParams({ changeType });
   const createMedication = generateAdmissionMedicationParams({ changeType });
   const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
-  const createActivity = generateAdmissionActivityParams({ changeType });
   const createWoundCare = generateAdmissionWoundCareParams({ changeType });
   const createDietary = generateAdmissionDietaryParams({ changeType });
   const idObject = id ? { id } : {};
@@ -1558,7 +1551,6 @@ export const generateChangeMemberDnaParams = ({
     procedure: createProcedure,
     medication: createMedication,
     externalAppointment: createExternalAppointment,
-    activity: createActivity,
     woundCare: createWoundCare,
     dietary: createDietary,
     admitDate: generateDateOnly(subDays(new Date(), 5)),
@@ -1571,6 +1563,7 @@ export const generateChangeMemberDnaParams = ({
     reasonForAdmission: lorem.sentences(),
     hospitalCourse: lorem.sentences(),
     warningSigns: [WarningSigns.confusion],
+    activity: generateAdmissionActivityParams(),
   };
 };
 

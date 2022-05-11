@@ -138,6 +138,7 @@ describe('Validations - DNA', () => {
     ${{ hospitalCourse: 123 }}          | ${{ missingFieldError: stringError }}
     ${{ warningSigns: [lorem.word()] }} | ${{ missingFieldError: 'does not exist in "WarningSigns" enum' }}
     ${{ warningSigns: lorem.word() }}   | ${{ missingFieldError: 'does not exist in "WarningSigns" enum' }}
+    ${{ activity: lorem.word() }}       | ${{ missingFieldError: 'Expected type "ActivityInput" to be an object.' }}
   `(`should fail to change dna since $input is not valid`, async ({ input, errors }) => {
     /* eslint-enable max-len */
     const changeMemberDnaParams: ChangeMemberDnaParams = { ...input, memberId: generateId() };

@@ -8,8 +8,6 @@ import * as mongooseDelete from 'mongoose-delete';
 import {
   ActionItem,
   ActionItemDto,
-  Activity,
-  ActivityDto,
   Admission,
   AdmissionDto,
   AdmissionService,
@@ -75,7 +73,6 @@ import { UserModule } from '../user';
       { name: Procedure.name, schema: ProcedureDto },
       { name: Medication.name, schema: MedicationDto },
       { name: ExternalAppointment.name, schema: ExternalAppointmentDto },
-      { name: Activity.name, schema: ActivityDto },
       { name: WoundCare.name, schema: WoundCareDto },
       { name: Dietary.name, schema: DietaryDto },
       { name: Journey.name, schema: JourneyDto },

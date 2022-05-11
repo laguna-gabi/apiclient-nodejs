@@ -1,8 +1,5 @@
 import { Model, model } from 'mongoose';
 import {
-  Activity,
-  ActivityDocument,
-  ActivityDto,
   Admission,
   AdmissionCategory,
   AdmissionDocument,
@@ -28,7 +25,6 @@ import {
 } from '../../src/member';
 import { ErrorType, defaultTimestampsDbValues } from '../../src/common';
 import {
-  generateAdmissionActivityParams,
   generateAdmissionDiagnosisParams,
   generateAdmissionDietaryParams,
   generateAdmissionExternalAppointmentParams,
@@ -42,7 +38,6 @@ export class AdmissionHelper {
   private procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
   private medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
   private externalAppointmentModel: Model<ExternalAppointmentDocument & defaultTimestampsDbValues>;
-  private activityModel: Model<ActivityDocument & defaultTimestampsDbValues>;
   private woundCareModel: Model<WoundCareDocument & defaultTimestampsDbValues>;
   private dietaryModel: Model<DietaryDocument & defaultTimestampsDbValues>;
   admissionModel: Model<AdmissionDocument & defaultTimestampsDbValues>;
@@ -63,7 +58,6 @@ export class AdmissionHelper {
       this.procedureModel,
       this.medicationModel,
       this.externalAppointmentModel,
-      this.activityModel,
       this.woundCareModel,
       this.dietaryModel,
     ];
@@ -89,10 +83,6 @@ export class AdmissionHelper {
     this.externalAppointmentModel = model<ExternalAppointmentDocument & defaultTimestampsDbValues>(
       ExternalAppointment.name,
       ExternalAppointmentDto,
-    );
-    this.activityModel = model<ActivityDocument & defaultTimestampsDbValues>(
-      Activity.name,
-      ActivityDto,
     );
     this.woundCareModel = model<WoundCareDocument & defaultTimestampsDbValues>(
       WoundCare.name,
@@ -128,12 +118,6 @@ export class AdmissionHelper {
       method: generateAdmissionExternalAppointmentParams,
       model: this.externalAppointmentModel,
       errorNotFound: ErrorType.admissionExternalAppointmentIdNotFound,
-    });
-    this.mapper.set(AdmissionCategory.activities, {
-      field: 'activity',
-      method: generateAdmissionActivityParams,
-      model: this.activityModel,
-      errorNotFound: ErrorType.admissionActivityIdNotFound,
     });
     this.mapper.set(AdmissionCategory.woundCares, {
       field: 'woundCare',

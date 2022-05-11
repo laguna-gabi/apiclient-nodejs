@@ -192,7 +192,6 @@ export enum AdmissionCategory {
   procedures = 'procedures',
   medications = 'medications',
   externalAppointments = 'externalAppointments',
-  activities = 'activities',
   woundCares = 'woundCares',
   dietaries = 'dietaries',
 }
@@ -358,15 +357,27 @@ export class ExternalAppointment extends BaseCategory {
 
 @ObjectType()
 @InputType('ActivityInput')
-@Schema({ versionKey: false, timestamps: true })
 export class Activity extends BaseCategory {
-  @Prop({ isNan: true })
-  @Field(() => String, { nullable: true })
-  text?: string;
+  @Field(() => [String], { nullable: true })
+  general?: string[];
 
-  @Prop({ default: true })
-  @Field(() => Boolean, { nullable: true })
-  isTodo?: boolean;
+  @Field(() => [String], { nullable: true })
+  lifting?: string[];
+
+  @Field(() => [String], { nullable: true })
+  showerOrBathing?: string[];
+
+  @Field(() => [String], { nullable: true })
+  stairs?: string[];
+
+  @Field(() => [String], { nullable: true })
+  driving?: string[];
+
+  @Field(() => [String], { nullable: true })
+  sexualActivity?: string[];
+
+  @Field(() => [String], { nullable: true })
+  work?: string[];
 }
 
 @ObjectType()
@@ -433,12 +444,6 @@ export class ChangeAdmissionExternalAppointmentParams extends ExternalAppointmen
 }
 
 @InputType()
-export class ChangeAdmissionActivityParams extends Activity {
-  @Field(() => ChangeType)
-  changeType: ChangeType;
-}
-
-@InputType()
 export class ChangeAdmissionWoundCareParams extends WoundCare {
   @Field(() => ChangeType)
   changeType: ChangeType;
@@ -499,6 +504,9 @@ export class ChangeMemberDnaParams {
   @Field(() => [WarningSigns], { nullable: true })
   warningSigns?: WarningSigns[];
 
+  @Field(() => Activity, { nullable: true })
+  activity?: Activity;
+
   /**
    * Lists on change admission
    */
@@ -520,10 +528,6 @@ export class ChangeMemberDnaParams {
   @Field(() => ChangeAdmissionExternalAppointmentParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
   externalAppointment?: ChangeAdmissionExternalAppointmentParams;
-
-  @Field(() => ChangeAdmissionActivityParams, { nullable: true })
-  @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
-  activity?: ChangeAdmissionActivityParams;
 
   @Field(() => ChangeAdmissionWoundCareParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
@@ -549,6 +553,7 @@ export const singleAdmissionItems = [
   'reasonForAdmission',
   'hospitalCourse',
   'warningSigns',
+  'activity',
 ];
 
 @ObjectType()
@@ -600,6 +605,10 @@ export class Admission extends Identifier {
   @Field(() => [WarningSigns], { nullable: true })
   warningSigns?: WarningSigns[];
 
+  @Prop({ type: Activity, isNan: true })
+  @Field(() => Activity, { nullable: true })
+  activity?: Activity;
+
   /**
    * Lists on admission
    */
@@ -618,10 +627,6 @@ export class Admission extends Identifier {
   @Prop({ type: [{ type: Types.ObjectId, ref: ExternalAppointment.name }], isNaN: true })
   @Field(() => [ExternalAppointment], { nullable: true })
   externalAppointments?: ExternalAppointment[];
-
-  @Prop({ type: [{ type: Types.ObjectId, ref: Activity.name }], isNaN: true })
-  @Field(() => [Activity], { nullable: true })
-  activities?: Activity[];
 
   @Prop({ type: [{ type: Types.ObjectId, ref: WoundCare.name }], isNaN: true })
   @Field(() => [WoundCare], { nullable: true })
@@ -675,11 +680,6 @@ export type ExternalAppointmentDocument = ExternalAppointment &
   ISoftDelete<ExternalAppointment>;
 export const ExternalAppointmentDto = audit(
   SchemaFactory.createForClass(ExternalAppointment).plugin(mongooseDelete, useFactoryOptions),
-);
-
-export type ActivityDocument = Activity & Document & ISoftDelete<Activity>;
-export const ActivityDto = audit(
-  SchemaFactory.createForClass(Activity).plugin(mongooseDelete, useFactoryOptions),
 );
 
 export type WoundCareDocument = WoundCare & Document & ISoftDelete<WoundCare>;

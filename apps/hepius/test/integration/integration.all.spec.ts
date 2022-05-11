@@ -18,6 +18,7 @@ import {
   BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
   generateAdmissionActivityParams,
+  generateAdmissionDietaryParams,
   generateAdmissionMedicationParams,
   generateAdmissionProcedureParams,
   generateAppointmentLink,
@@ -2618,7 +2619,6 @@ describe('Integration tests: all', () => {
       externalAppointments: expect.arrayContaining([
         expect.objectContaining({ clinic: expect.any(String) }),
       ]),
-      activities: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       woundCares: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       dietaries: expect.arrayContaining([expect.objectContaining({ notes: expect.any(String) })]),
       admitDate: expect.any(String),
@@ -2631,6 +2631,7 @@ describe('Integration tests: all', () => {
       reasonForAdmission: expect.any(String),
       hospitalCourse: expect.any(String),
       warningSigns: expect.any(Array),
+      activity: expect.objectContaining({ stairs: expect.any(Array) }),
     };
 
     expect(memberAdmissions.length).toEqual(2);
@@ -2676,9 +2677,6 @@ describe('Integration tests: all', () => {
         date: createMemberDnaParams.externalAppointment.date.toISOString(),
       },
     ];
-    const activities = [
-      { id: createResult.activities[0].id, ...removeChangeType(createMemberDnaParams.activity) },
-    ];
     const woundCares = [
       { id: createResult.woundCares[0].id, ...removeChangeType(createMemberDnaParams.woundCare) },
     ];
@@ -2696,6 +2694,7 @@ describe('Integration tests: all', () => {
       reasonForAdmission,
       hospitalCourse,
       warningSigns,
+      activity,
     } = createResult;
 
     expect(createResult).toEqual(
@@ -2705,7 +2704,6 @@ describe('Integration tests: all', () => {
         procedures,
         medications,
         externalAppointments,
-        activities,
         woundCares,
         dietaries,
         admitDate,
@@ -2718,6 +2716,7 @@ describe('Integration tests: all', () => {
         reasonForAdmission,
         hospitalCourse,
         warningSigns,
+        activity,
       }),
     );
 
@@ -2735,7 +2734,8 @@ describe('Integration tests: all', () => {
         changeType: ChangeType.delete,
         id: createResult.medications[0].id,
       }),
-      activity: generateAdmissionActivityParams({ changeType: ChangeType.create }),
+      dietary: generateAdmissionDietaryParams({ changeType: ChangeType.create }),
+      activity: generateAdmissionActivityParams(),
       admitDate: newAdmitDate,
       admitType: null,
       admitSource: null,
@@ -2753,9 +2753,9 @@ describe('Integration tests: all', () => {
       id: createResult.procedures[0].id,
       ...removeChangeType(changeMemberDnaParams.procedure),
     };
-    activities[1] = {
-      id: changeResult.activities[1].id,
-      ...removeChangeType(changeMemberDnaParams.activity),
+    dietaries[1] = {
+      id: changeResult.dietaries[1].id,
+      ...removeChangeType(changeMemberDnaParams.dietary),
     };
 
     expect(changeResult).toEqual(
@@ -2765,7 +2765,6 @@ describe('Integration tests: all', () => {
         procedures,
         medications: [],
         externalAppointments,
-        activities,
         woundCares,
         dietaries,
         admitDate: newAdmitDate,
@@ -2778,6 +2777,7 @@ describe('Integration tests: all', () => {
         reasonForAdmission: changeMemberDnaParams.reasonForAdmission,
         hospitalCourse: expect.any(String),
         warningSigns: expect.any(Array),
+        activity: expect.objectContaining({ stairs: expect.any(Array) }),
       }),
     );
   });

@@ -167,7 +167,6 @@ export enum ErrorType {
   admissionProcedureIdNotFound = 10602,
   admissionMedicationIdNotFound = 10603,
   admissionExternalAppointmentIdNotFound = 10604,
-  admissionActivityIdNotFound = 10605,
   admissionWoundCareIdNotFound = 10606,
   admissionDietaryIdNotFound = 10607,
   admissionIdAndChangeTypeAligned = 10608,
@@ -433,7 +432,6 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.admissionExternalAppointmentIdNotFound.valueOf(),
     `external appointment ${notFoundPrefix}`,
   ],
-  [ErrorType.admissionActivityIdNotFound.valueOf(), `activity ${notFoundPrefix}`],
   [ErrorType.admissionWoundCareIdNotFound.valueOf(), `wound care ${notFoundPrefix}`],
   [ErrorType.admissionDietaryIdNotFound.valueOf(), `dietary ${notFoundPrefix}`],
   [
