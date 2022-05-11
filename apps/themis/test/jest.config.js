@@ -4,7 +4,7 @@ module.exports = {
   preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
-      tsconfig: 'apps/clinicalEngine/tsconfig.spec.json',
+      tsconfig: 'apps/themis/tsconfig.spec.json',
     },
   },
   testEnvironment: 'node',

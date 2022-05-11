@@ -5,15 +5,13 @@ import engineFactory, {
   EngineResult,
   RuleProperties,
 } from 'json-rules-engine';
-import { DynamicFact, EngineRule, MemberFacts } from './types';
-import { Callbacks, Priorities, engineRules } from './rules';
+import { DynamicFact, MemberFacts } from './types';
+import { engineRules } from './rules';
 import { LoggerService } from '../common';
 import { dynamicFacts } from './facts';
-import Mutex = require('ts-mutex');
 
 @Injectable()
 export class RulesService implements OnModuleInit {
-  static lock = new Mutex();
   constructor(private logger: LoggerService) {}
 
   private engine: Engine;
@@ -45,17 +43,8 @@ export class RulesService implements OnModuleInit {
    ************************************************************************************************/
 
   private async getRules() {
-    const rules = await this.setupRules(engineRules);
-    const activeRules = rules.filter((rule) => rule.active);
+    const activeRules = engineRules.filter((rule) => rule.active);
     return activeRules as RuleProperties[];
-  }
-
-  private async setupRules(rules: EngineRule[]) {
-    return rules.map((rule) => {
-      rule.onSuccess = rule.onSuccess || Callbacks.get(rule.type);
-      rule.priority = rule.priority || Priorities.get(rule.type);
-      return rule;
-    });
   }
 
   private async loadDynamicFacts(facts: DynamicFact[]) {

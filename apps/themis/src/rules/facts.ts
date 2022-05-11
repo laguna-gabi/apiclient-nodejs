@@ -3,7 +3,6 @@ import { DynamicFact } from './types';
 export enum DynamicFacts {
   caregiversCount = 'caregiversCount',
   barrierTypes = 'barrierTypes',
-  satisfiedBarriers = 'satisfiedBarriers',
 }
 
 export const dynamicFacts: DynamicFact[] = [
@@ -26,9 +25,5 @@ export const dynamicFacts: DynamicFact[] = [
       // @ts-ignore
       return barriers.map((barrier) => barrier.type);
     },
-  },
-  {
-    id: DynamicFacts.satisfiedBarriers,
-    value: [],
   },
 ];
