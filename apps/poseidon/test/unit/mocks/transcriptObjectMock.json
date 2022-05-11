@@ -1,0 +1,849 @@
+{
+  "monologues": [
+    {
+      "speaker": 0,
+      "elements": [
+        {
+          "type": "text",
+          "value": "Hello",
+          "ts": 1.85,
+          "end_ts": 2.2,
+          "confidence": 0.96
+        },
+        {
+          "type": "punct",
+          "value": "?"
+        },
+        {
+          "type": "punct",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "speaker": 1,
+      "elements": [
+        {
+          "type": "text",
+          "value": "Hey",
+          "ts": 3.5,
+          "end_ts": 3.72,
+          "confidence": 0.93
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "Gabby",
+          "ts": 3.72,
+          "end_ts": 3.92,
+          "confidence": 0.9
+        },
+        {
+          "type": "punct",
+          "value": ","
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "how",
+          "ts": 4.18,
+          "end_ts": 4.4,
+          "confidence": 0.99
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "are",
+          "ts": 4.4,
+          "end_ts": 4.52,
+          "confidence": 0.99
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "you",
+          "ts": 4.52,
+          "end_ts": 4.68,
+          "confidence": 0.98
+        },
+        {
+          "type": "punct",
+          "value": "?"
+        },
+        {
+          "type": "punct",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "speaker": 0,
+      "elements": [
+        {
+          "type": "text",
+          "value": "I'm",
+          "ts": 5.74,
+          "end_ts": 5.96,
+          "confidence": 1
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "not",
+          "ts": 5.96,
+          "end_ts": 6.12,
+          "confidence": 1
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "good",
+          "ts": 6.12,
+          "end_ts": 6.36,
+          "confidence": 1
+        },
+        {
+          "type": "punct",
+          "value": "."
+        },
+        {
+          "type": "punct",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "speaker": 1,
+      "elements": [
+        {
+          "type": "text",
+          "value": "I",
+          "ts": 7.68,
+          "end_ts": 7.8,
+          "confidence": 0.98
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "know",
+          "ts": 7.8,
+          "end_ts": 8.08,
+          "confidence": 0.97
+        },
+        {
+          "type": "punct",
+          "value": "."
+        },
+        {
+          "type": "punct",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "speaker": 0,
+      "elements": [
+        {
+          "type": "text",
+          "value": "<laugh>",
+          "ts": 8.88,
+          "end_ts": 8.96,
+          "confidence": 0.82
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "<laugh>",
+          "ts": 9.44,
+          "end_ts": 9.52,
+          "confidence": 0.71
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "I",
+          "ts": 10.48,
+          "end_ts": 10.6,
+          "confidence": 0.99
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "think",
+          "ts": 10.6,
+          "end_ts": 10.8,
+          "confidence": 0.99
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "I",
+          "ts": 11.4,
+          "end_ts": 11.52,
+          "confidence": 0.99
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "want",
+          "ts": 11.52,
+          "end_ts": 11.8,
+          "confidence": 0.86
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "to",
+          "ts": 11.9,
+          "end_ts": 12.12,
+          "confidence": 0.79
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "hurt",
+          "ts": 12.12,
+          "end_ts": 12.36,
+          "confidence": 0.69
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "myself",
+          "ts": 12.5,
+          "end_ts": 12.92,
+          "confidence": 0.85
+        },
+        {
+          "type": "punct",
+          "value": "."
+        },
+        {
+          "type": "punct",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "speaker": 1,
+      "elements": [
+        {
+          "type": "text",
+          "value": "Did",
+          "ts": 15.3,
+          "end_ts": 15.52,
+          "confidence": 0.98
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "you",
+          "ts": 15.52,
+          "end_ts": 15.64,
+          "confidence": 0.99
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "send",
+          "ts": 15.64,
+          "end_ts": 15.92,
+          "confidence": 0.97
+        },
+        {
+          "type": "punct",
+          "value": ","
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "uh",
+          "ts": 16.06,
+          "end_ts": 16.28,
+          "confidence": 0.75
+        },
+        {
+          "type": "punct",
+          "value": ","
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "the",
+          "ts": 18.02,
+          "end_ts": 18.24,
+          "confidence": 0.28
+        },
+        {
+          "type": "punct",
+          "value": ","
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "uh",
+          "ts": 19.06,
+          "end_ts": 19.28,
+          "confidence": 0.7
+        },
+        {
+          "type": "punct",
+          "value": ","
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "special",
+          "ts": 19.31,
+          "end_ts": 19.75,
+          "confidence": 0.99
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "words",
+          "ts": 19.8,
+          "end_ts": 20.15,
+          "confidence": 0.97
+        },
+        {
+          "type": "punct",
+          "value": "?"
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "Keywords",
+          "ts": 20.51,
+          "end_ts": 21.07,
+          "confidence": 0.8
+        },
+        {
+          "type": "punct",
+          "value": "?"
+        },
+        {
+          "type": "punct",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "speaker": 0,
+      "elements": [
+        {
+          "type": "text",
+          "value": "No",
+          "ts": 22.13,
+          "end_ts": 22.35,
+          "confidence": 1
+        },
+        {
+          "type": "punct",
+          "value": ","
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "not",
+          "ts": 22.45,
+          "end_ts": 22.67,
+          "confidence": 1
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "yet",
+          "ts": 22.69,
+          "end_ts": 22.91,
+          "confidence": 1
+        },
+        {
+          "type": "punct",
+          "value": "."
+        },
+        {
+          "type": "punct",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "speaker": 1,
+      "elements": [
+        {
+          "type": "text",
+          "value": "Should",
+          "ts": 23.97,
+          "end_ts": 24.39,
+          "confidence": 1
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "we",
+          "ts": 24.41,
+          "end_ts": 24.63,
+          "confidence": 0.99
+        },
+        {
+          "type": "punct",
+          "value": "?"
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "I",
+          "ts": 25.79,
+          "end_ts": 25.91,
+          "confidence": 0.74
+        },
+        {
+          "type": "punct",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "speaker": 0,
+      "elements": [
+        {
+          "type": "text",
+          "value": "Don't",
+          "ts": 25.91,
+          "end_ts": 26.07,
+          "confidence": 0.75
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "think",
+          "ts": 26.07,
+          "end_ts": 26.11,
+          "confidence": 0.49
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "maybe",
+          "ts": 26.2,
+          "end_ts": 26.55,
+          "confidence": 0.94
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "later",
+          "ts": 26.55,
+          "end_ts": 26.83,
+          "confidence": 0.97
+        },
+        {
+          "type": "punct",
+          "value": ","
+        },
+        {
+          "type": "punct",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "speaker": 1,
+      "elements": [
+        {
+          "type": "text",
+          "value": "What",
+          "ts": 28.5,
+          "end_ts": 28.79,
+          "confidence": 0.65
+        },
+        {
+          "type": "punct",
+          "value": "?"
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "Oh",
+          "ts": 30.17,
+          "end_ts": 30.39,
+          "confidence": 0.98
+        },
+        {
+          "type": "punct",
+          "value": ","
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "no",
+          "ts": 30.39,
+          "end_ts": 30.59,
+          "confidence": 0.96
+        },
+        {
+          "type": "punct",
+          "value": ","
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "you",
+          "ts": 31.09,
+          "end_ts": 31.31,
+          "confidence": 0.7
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "working",
+          "ts": 31.31,
+          "end_ts": 31.47,
+          "confidence": 0.52
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "on",
+          "ts": 31.57,
+          "end_ts": 31.79,
+          "confidence": 0.84
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "that",
+          "ts": 31.79,
+          "end_ts": 31.95,
+          "confidence": 0.53
+        },
+        {
+          "type": "punct",
+          "value": "."
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "It",
+          "ts": 31.97,
+          "end_ts": 32.19,
+          "confidence": 0.56
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "needs",
+          "ts": 32.19,
+          "end_ts": 32.39,
+          "confidence": 0.88
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "to",
+          "ts": 32.69,
+          "end_ts": 32.91,
+          "confidence": 0.94
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "be",
+          "ts": 32.91,
+          "end_ts": 33.11,
+          "confidence": 0.93
+        },
+        {
+          "type": "punct",
+          "value": ","
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "it",
+          "ts": 33.41,
+          "end_ts": 33.63,
+          "confidence": 0.32
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "needs",
+          "ts": 33.63,
+          "end_ts": 33.79,
+          "confidence": 0.76
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "some",
+          "ts": 33.79,
+          "end_ts": 34.03,
+          "confidence": 0.99
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "content",
+          "ts": 34.03,
+          "end_ts": 34.27,
+          "confidence": 0.99
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "to",
+          "ts": 34.41,
+          "end_ts": 34.63,
+          "confidence": 0.97
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "check",
+          "ts": 34.63,
+          "end_ts": 34.91,
+          "confidence": 0.98
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "it",
+          "ts": 34.91,
+          "end_ts": 35.07,
+          "confidence": 0.98
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "up",
+          "ts": 35.07,
+          "end_ts": 35.27,
+          "confidence": 0.57
+        },
+        {
+          "type": "punct",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "speaker": 0,
+      "elements": [
+        {
+          "type": "text",
+          "value": "That",
+          "ts": 35.58,
+          "end_ts": 35.87,
+          "confidence": 0.55
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "enough",
+          "ts": 35.87,
+          "end_ts": 36.19,
+          "confidence": 0.71
+        },
+        {
+          "type": "punct",
+          "value": "."
+        },
+        {
+          "type": "punct",
+          "value": " "
+        }
+      ]
+    },
+    {
+      "speaker": 1,
+      "elements": [
+        {
+          "type": "text",
+          "value": "Oh",
+          "ts": 36.81,
+          "end_ts": 37.03,
+          "confidence": 0.95
+        },
+        {
+          "type": "punct",
+          "value": ","
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "it",
+          "ts": 37.03,
+          "end_ts": 37.15,
+          "confidence": 0.82
+        },
+        {
+          "type": "punct",
+          "value": " "
+        },
+        {
+          "type": "text",
+          "value": "just",
+          "ts": 37.15,
+          "end_ts": 37.31,
+          "confidence": 0.94
+        },
+        {
+          "type": "punct",
+          "value": "."
+        }
+      ]
+    }
+  ]
+}

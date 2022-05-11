@@ -8,6 +8,7 @@ export enum StorageType {
   recordings = 'recordings',
   journals = 'journals',
   general = 'general',
+  transcripts = 'transcripts',
 }
 
 export interface StorageUrlParams {

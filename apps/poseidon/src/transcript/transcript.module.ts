@@ -1,7 +1,7 @@
 import { Transcript, TranscriptDto } from '@argus/poseidonClient';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { TranscriptService } from '.';
+import { TranscriptCalculator, TranscriptService } from '.';
 import { CommonModule } from '../common';
 import { ProvidersModule } from '../providers';
 
@@ -11,7 +11,7 @@ import { ProvidersModule } from '../providers';
     ProvidersModule,
     MongooseModule.forFeature([{ name: Transcript.name, schema: TranscriptDto }]),
   ],
-  providers: [TranscriptService],
+  providers: [TranscriptCalculator, TranscriptService],
   exports: [],
 })
 export class TranscriptModule {}

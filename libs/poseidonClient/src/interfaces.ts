@@ -28,6 +28,11 @@ export enum TranscriptStatus {
   canceled = 'canceled', // the event was canceled before it was processed
 }
 
+export enum Speaker {
+  speakerA = 'speakerA',
+  speakerB = 'speakerB',
+}
+
 @ObjectType()
 export class ConversationPercentage {
   @Field(() => Number)

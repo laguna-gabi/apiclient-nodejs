@@ -1,5 +1,6 @@
-import { StorageType, mockProcessWarnings } from '@argus/pandora';
+import { StorageType, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import {
+  ConversationPercentage,
   Transcript,
   TranscriptDocument,
   TranscriptDto,
@@ -7,16 +8,19 @@ import {
 } from '@argus/poseidonClient';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { RevAI, StorageService } from '../../src/providers';
+import { lorem } from 'faker';
+import { readFileSync } from 'fs';
 import { Model, model } from 'mongoose';
 import { dbConnect, generateId, generateTranscriptMock } from '..';
+import { LoggerService } from '../../src/common';
 import { DbModule } from '../../src/db';
-import { TranscriptModule, TranscriptService } from '../../src/transcript';
-import { lorem } from 'faker';
+import { RevAI, StorageService } from '../../src/providers';
+import { TranscriptCalculator, TranscriptModule, TranscriptService } from '../../src/transcript';
 
 describe(TranscriptService.name, () => {
   let module: TestingModule;
   let service: TranscriptService;
+  let transcriptCalculator: TranscriptCalculator;
   let revAI: RevAI;
   let storageService: StorageService;
   let transcriptModel: Model<TranscriptDocument>;
@@ -28,9 +32,12 @@ describe(TranscriptService.name, () => {
     }).compile();
 
     service = module.get<TranscriptService>(TranscriptService);
+    transcriptCalculator = module.get<TranscriptCalculator>(TranscriptCalculator);
     revAI = module.get<RevAI>(RevAI);
     storageService = module.get<StorageService>(StorageService);
     transcriptModel = model<TranscriptDocument>(Transcript.name, TranscriptDto);
+
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     await dbConnect();
   });
@@ -126,4 +133,116 @@ describe(TranscriptService.name, () => {
       );
     });
   });
+
+  describe('handleTranscriptTranscribed', () => {
+    let spyOnCalculatorCalculateConversationPercentage;
+    let spyOnRevAIGetTranscriptText;
+    let spyOnStorageUploadFile;
+
+    beforeEach(() => {
+      spyOnCalculatorCalculateConversationPercentage = jest.spyOn(
+        transcriptCalculator,
+        'calculateConversationPercentage',
+      );
+      spyOnRevAIGetTranscriptText = jest.spyOn(revAI, 'getTranscriptText');
+      spyOnStorageUploadFile = jest.spyOn(storageService, 'uploadFile');
+    });
+
+    afterEach(() => {
+      spyOnCalculatorCalculateConversationPercentage.mockReset();
+      spyOnRevAIGetTranscriptText.mockReset();
+      spyOnStorageUploadFile.mockReset();
+    });
+
+    it('should handel transcript transcribed', async () => {
+      const transcriptText = readFileSync(
+        'apps/poseidon/test/unit/mocks/transcriptTextMock.txt',
+      ).toString();
+      const conversationPercentage: ConversationPercentage = {
+        speakerA: 40,
+        speakerB: 40,
+        silence: 20,
+      };
+      spyOnRevAIGetTranscriptText.mockImplementationOnce(async () => transcriptText);
+      spyOnCalculatorCalculateConversationPercentage.mockImplementationOnce(
+        async () => conversationPercentage,
+      );
+      spyOnStorageUploadFile.mockImplementation();
+      const { recordingId, memberId, transcriptionId } = await createTranscript();
+
+      await service.handleTranscriptTranscribed({ transcriptionId });
+
+      expect(spyOnStorageUploadFile).toHaveBeenCalledTimes(2);
+      expect(spyOnStorageUploadFile).toHaveBeenNthCalledWith(1, {
+        storageType: StorageType.transcripts,
+        memberId,
+        id: recordingId,
+        data: transcriptText,
+      });
+      expect(spyOnStorageUploadFile).toHaveBeenNthCalledWith(2, {
+        storageType: StorageType.transcripts,
+        memberId,
+        id: `${recordingId}.json`,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        data: service.createTranscriptJson(transcriptText),
+      });
+
+      const updatedTranscript = await transcriptModel.findOne({ transcriptionId });
+      expect(updatedTranscript).toEqual(
+        expect.objectContaining({
+          recordingId,
+          memberId,
+          transcriptionId,
+          status: TranscriptStatus.done,
+          conversationPercentage,
+        }),
+      );
+    });
+
+    test.each`
+      time          | seconds
+      ${'00:00:00'} | ${0}
+      ${'00:01:01'} | ${61}
+      ${'12:45:07'} | ${45907}
+    `('should get seconds from Time', ({ time, seconds }) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const result = service.getSecondsFromTime(time);
+      expect(result).toEqual(seconds);
+    });
+  });
+
+  describe('handleTranscriptFailed', () => {
+    it('should handel transcript failed', async () => {
+      const failureReason = lorem.words();
+      const { recordingId, memberId, transcriptionId } = await createTranscript();
+
+      await service.handleTranscriptFailed({ failureReason, transcriptionId });
+
+      const updatedTranscript = await transcriptModel.findOne({ transcriptionId });
+      expect(updatedTranscript).toEqual(
+        expect.objectContaining({
+          recordingId,
+          memberId,
+          transcriptionId,
+          status: TranscriptStatus.error,
+          failureReason,
+        }),
+      );
+    });
+  });
+
+  async function createTranscript({
+    recordingId = generateId(),
+    memberId = generateId(),
+    transcriptionId = generateId(),
+  }: {
+    recordingId?: string;
+    memberId?: string;
+    transcriptionId?: string;
+  } = {}) {
+    await transcriptModel.create({ recordingId, memberId, transcriptionId });
+    return { recordingId, memberId, transcriptionId };
+  }
 });
