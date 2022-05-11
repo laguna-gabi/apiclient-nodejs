@@ -6,13 +6,13 @@ import {
   ErrorType,
   Errors,
   IsIdAndChangeTypeAligned,
-  IsOnlyDate,
+  IsOnlyDateInSub,
   onlyDateRegex,
 } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '@argus/hepiusClient';
-import { IsOptional, Matches, ValidateNested } from 'class-validator';
+import { IsOptional, Matches } from 'class-validator';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -241,12 +241,10 @@ export class Diagnosis extends BaseCategory {
 
   @Prop({ isNan: true })
   @Field({ nullable: true })
-  @IsOnlyDate({ message: Errors.get(ErrorType.admissionDiagnosisOnsetStart) })
   onsetStart?: string;
 
   @Prop({ isNan: true })
   @Field({ nullable: true })
-  @IsOnlyDate({ message: Errors.get(ErrorType.admissionDiagnosisOnsetEnd) })
   onsetEnd?: string;
 }
 
@@ -256,7 +254,6 @@ export class Diagnosis extends BaseCategory {
 export class Procedure extends BaseCategory {
   @Prop({ isNan: true })
   @Field({ nullable: true })
-  @IsOnlyDate({ message: Errors.get(ErrorType.admissionProcedureDate) })
   date?: string;
 
   @Prop({ type: String, enum: ProcedureType, isNan: true })
@@ -499,11 +496,13 @@ export class ChangeMemberDnaParams {
    */
   @Field(() => ChangeAdmissionDiagnosisParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
+  @IsOnlyDateInSub('onsetStart', { message: Errors.get(ErrorType.admissionDiagnosisOnsetStart) })
+  @IsOnlyDateInSub('onsetEnd', { message: Errors.get(ErrorType.admissionDiagnosisOnsetEnd) })
   diagnosis?: ChangeAdmissionDiagnosisParams;
 
   @Field(() => ChangeAdmissionProcedureParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
-  @ValidateNested()
+  @IsOnlyDateInSub('date', { message: Errors.get(ErrorType.admissionProcedureDate) })
   procedure?: ChangeAdmissionProcedureParams;
 
   @Field(() => ChangeAdmissionMedicationParams, { nullable: true })
