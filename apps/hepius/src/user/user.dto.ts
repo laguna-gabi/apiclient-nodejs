@@ -1,6 +1,6 @@
 import { User, UserRole } from '@argus/hepiusClient';
 import { Language } from '@argus/pandora';
-import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsOptional, IsPhoneNumber, IsUrl, Length } from 'class-validator';
 import { Document } from 'mongoose';
@@ -13,8 +13,6 @@ import {
   validPhoneExamples,
 } from '../common';
 import { audit } from '../db';
-
-registerEnumType(UserRole, { name: 'UserRole' });
 
 export const NotNullableUserKeys = ['maxMembers', 'languages', 'roles', 'avatar'];
 
