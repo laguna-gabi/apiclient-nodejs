@@ -12,7 +12,7 @@ module.exports = {
     '^.+\\.[tj]s$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
-  coverageDirectory: '../../coverage/apps/clinicalEngine',
+  coverageDirectory: '../../coverage/apps/themis',
   maxWorkers: 1,
   globalSetup: '../../global-setup.ts',
   coverageReporters: ['json-summary', 'lcov'],
