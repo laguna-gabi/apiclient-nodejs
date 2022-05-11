@@ -114,21 +114,22 @@ describe('Validations - DNA', () => {
 
   /* eslint-disable max-len */
   test.each`
-    input                              | errors
-    ${{ admitDate: lorem.word() }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
-    ${{ admitDate: '2021-13-1' }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
-    ${{ admitDate: new Date() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
-    ${{ admitType: lorem.word() }}     | ${{ missingFieldError: 'does not exist in "AdmitType" enum' }}
-    ${{ admitSource: lorem.word() }}   | ${{ missingFieldError: 'does not exist in "AdmitSource" enum' }}
-    ${{ dischargeDate: lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
-    ${{ dischargeDate: '2021-13-1' }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
-    ${{ dischargeDate: new Date() }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
-    ${{ dischargeTo: lorem.word() }}   | ${{ missingFieldError: 'does not exist in "DischargeTo" enum' }}
-    ${{ facility: 123 }}               | ${{ missingFieldError: stringError }}
-    ${{ specialInstructions: 123 }}    | ${{ missingFieldError: stringError }}
-    ${{ reasonForAdmission: 123 }}     | ${{ missingFieldError: stringError }}
-    ${{ hospitalCourse: 123 }}         | ${{ missingFieldError: stringError }}
-    ${{ warningSigns: lorem.word() }}  | ${{ missingFieldError: 'does not exist in "WarningSigns" enum' }}
+    input                               | errors
+    ${{ admitDate: lorem.word() }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
+    ${{ admitDate: '2021-13-1' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
+    ${{ admitDate: new Date() }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
+    ${{ admitType: lorem.word() }}      | ${{ missingFieldError: 'does not exist in "AdmitType" enum' }}
+    ${{ admitSource: lorem.word() }}    | ${{ missingFieldError: 'does not exist in "AdmitSource" enum' }}
+    ${{ dischargeDate: lorem.word() }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+    ${{ dischargeDate: '2021-13-1' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+    ${{ dischargeDate: new Date() }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+    ${{ dischargeTo: lorem.word() }}    | ${{ missingFieldError: 'does not exist in "DischargeTo" enum' }}
+    ${{ facility: 123 }}                | ${{ missingFieldError: stringError }}
+    ${{ specialInstructions: 123 }}     | ${{ missingFieldError: stringError }}
+    ${{ reasonForAdmission: 123 }}      | ${{ missingFieldError: stringError }}
+    ${{ hospitalCourse: 123 }}          | ${{ missingFieldError: stringError }}
+    ${{ warningSigns: [lorem.word()] }} | ${{ missingFieldError: 'does not exist in "WarningSigns" enum' }}
+    ${{ warningSigns: lorem.word() }}   | ${{ missingFieldError: 'does not exist in "WarningSigns" enum' }}
   `(`should fail to change dna since $input is not valid`, async ({ input, errors }) => {
     /* eslint-enable max-len */
     const changeMemberDnaParams: ChangeMemberDnaParams = { ...input, memberId: generateId() };

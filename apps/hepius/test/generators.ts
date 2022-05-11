@@ -1566,7 +1566,7 @@ export const generateChangeMemberDnaParams = ({
     specialInstructions: lorem.sentences(),
     reasonForAdmission: lorem.sentences(),
     hospitalCourse: lorem.sentences(),
-    warningSigns: WarningSigns.confusion,
+    warningSigns: [WarningSigns.confusion],
   };
 };
 

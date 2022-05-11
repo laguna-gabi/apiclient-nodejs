@@ -488,8 +488,8 @@ export class ChangeMemberDnaParams {
   @Field(() => String, { nullable: true })
   hospitalCourse?: string;
 
-  @Field(() => WarningSigns, { nullable: true })
-  warningSigns?: WarningSigns;
+  @Field(() => [WarningSigns], { nullable: true })
+  warningSigns?: WarningSigns[];
 
   /**
    * Lists on change admission
@@ -585,9 +585,9 @@ export class Admission extends Identifier {
   @Field(() => String, { nullable: true })
   hospitalCourse?: string;
 
-  @Prop({ type: String, enum: WarningSigns, isNan: true })
-  @Field(() => WarningSigns, { nullable: true })
-  warningSigns?: WarningSigns;
+  @Prop({ type: [String], enum: WarningSigns, isNan: true })
+  @Field(() => [WarningSigns], { nullable: true })
+  warningSigns?: WarningSigns[];
 
   /**
    * Lists on admission

@@ -2630,7 +2630,7 @@ describe('Integration tests: all', () => {
       specialInstructions: expect.any(String),
       reasonForAdmission: expect.any(String),
       hospitalCourse: expect.any(String),
-      warningSigns: expect.any(String),
+      warningSigns: expect.any(Array),
     };
 
     expect(memberAdmissions.length).toEqual(2);
@@ -2777,7 +2777,7 @@ describe('Integration tests: all', () => {
         specialInstructions: changeMemberDnaParams.specialInstructions,
         reasonForAdmission: changeMemberDnaParams.reasonForAdmission,
         hospitalCourse: expect.any(String),
-        warningSigns: expect.any(String),
+        warningSigns: expect.any(Array),
       }),
     );
   });

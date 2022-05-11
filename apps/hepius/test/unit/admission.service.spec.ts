@@ -103,7 +103,7 @@ describe(AdmissionService.name, () => {
     { specialInstructions: lorem.sentences() },
     { reasonForAdmission: lorem.sentences() },
     { hospitalCourse: lorem.sentences() },
-    { warningSigns: WarningSigns.difficultyBreathingOrShortnessOfBreath },
+    { warningSigns: [WarningSigns.confusion, WarningSigns.passingOut] },
     {
       admitDate: generateDateOnly(subDays(new Date(), 5)),
       admitType: AdmitType.urgent,
@@ -114,7 +114,7 @@ describe(AdmissionService.name, () => {
       specialInstructions: lorem.sentences(),
       reasonForAdmission: lorem.sentences(),
       hospitalCourse: lorem.sentences(),
-      warningSigns: WarningSigns.difficultyBreathingOrShortnessOfBreath,
+      warningSigns: [WarningSigns.confusion, WarningSigns.passingOut],
     },
   ])(`should create a single element in admission`, async (object) => {
     const changeMemberDnaParams: ChangeMemberDnaParams = { ...object, memberId: generateId() };
@@ -124,21 +124,23 @@ describe(AdmissionService.name, () => {
     expect(result).toMatchObject(changeMemberDnaParams);
   });
 
+  /* eslint-disable max-len */
   test.each`
-    field                    | input1                           | input2
-    ${'admitDate'}           | ${generateDateOnly(date.soon())} | ${generateDateOnly(date.soon())}
-    ${'admitType'}           | ${AdmitType.snf}                 | ${AdmitType.psych}
-    ${'admitSource'}         | ${AdmitSource.hmoReferral}       | ${AdmitSource.clinicReferral}
-    ${'dischargeDate'}       | ${generateDateOnly(date.soon())} | ${generateDateOnly(date.soon())}
-    ${'dischargeTo'}         | ${DischargeTo.snf}               | ${DischargeTo.expired}
-    ${'facility'}            | ${lorem.sentence()}              | ${lorem.sentence()}
-    ${'specialInstructions'} | ${lorem.sentences()}             | ${lorem.sentences()}
-    ${'reasonForAdmission'}  | ${lorem.sentences()}             | ${lorem.sentences()}
-    ${'hospitalCourse'}      | ${lorem.sentences()}             | ${lorem.sentences()}
-    ${'warningSigns'}        | ${WarningSigns.confusion}        | ${WarningSigns.passingOut}
+    field                    | input1                            | input2
+    ${'admitDate'}           | ${generateDateOnly(date.soon())}  | ${generateDateOnly(date.soon())}
+    ${'admitType'}           | ${AdmitType.snf}                  | ${AdmitType.psych}
+    ${'admitSource'}         | ${AdmitSource.hmoReferral}        | ${AdmitSource.clinicReferral}
+    ${'dischargeDate'}       | ${generateDateOnly(date.soon())}  | ${generateDateOnly(date.soon())}
+    ${'dischargeTo'}         | ${DischargeTo.snf}                | ${DischargeTo.expired}
+    ${'facility'}            | ${lorem.sentence()}               | ${lorem.sentence()}
+    ${'specialInstructions'} | ${lorem.sentences()}              | ${lorem.sentences()}
+    ${'reasonForAdmission'}  | ${lorem.sentences()}              | ${lorem.sentences()}
+    ${'hospitalCourse'}      | ${lorem.sentences()}              | ${lorem.sentences()}
+    ${'warningSigns'}        | ${[WarningSigns.severeDizziness]} | ${[WarningSigns.confusion, WarningSigns.passingOut]}
   `(
     `should create and update only date $field element in admission`,
     async ({ field, input1, input2 }) => {
+      /* eslint-enable max-len */
       const memberId = generateId();
       const changeMemberDnaParams: ChangeMemberDnaParams = { [`${field}`]: input1, memberId };
       const result = await service.change(changeMemberDnaParams);
@@ -160,7 +162,7 @@ describe(AdmissionService.name, () => {
     ${'specialInstructions'} | ${lorem.sentences()}
     ${'reasonForAdmission'}  | ${lorem.sentences()}
     ${'hospitalCourse'}      | ${lorem.sentences()}
-    ${'warningSigns'}        | ${WarningSigns.confusion}
+    ${'warningSigns'}        | ${[WarningSigns.confusion, WarningSigns.severeDizziness]}
   `(`should not update $field when its null`, async ({ field, input }) => {
     const memberId = generateId();
     const changeMemberDnaParams: ChangeMemberDnaParams = { [`${field}`]: input, memberId };
