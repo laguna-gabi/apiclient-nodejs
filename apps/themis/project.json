@@ -54,6 +54,12 @@
       "options": {
         "command": "jest-coverage-badges input coverage/apps/themis/coverage-summary.json output coverage/apps/themis"
       }
+    },
+    "uploadCoverage": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "ts-node -P ./tsconfig.base.json ./ci/uploadCoverage.ts themis coverage/apps/themis/"
+      }
     }
   },
   "tags": []
