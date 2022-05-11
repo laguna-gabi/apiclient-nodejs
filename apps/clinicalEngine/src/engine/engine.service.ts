@@ -18,6 +18,7 @@ export class EngineService {
     // todo: remove (it's just for debugging)
     engineResult.events.map((event) => console.log(event));
     const changes = await this.stateResolverService.calcChanges(engineResult, currentState);
+    changes.map((event) => console.log(event));
     await this.fetcherService.applyChanges(changes);
   }
 }

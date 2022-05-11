@@ -19,7 +19,7 @@ export class RulesService implements OnModuleInit {
   async onModuleInit() {
     // for now - loading rules only once
     // we might want to move it the 'run' method so we init the engine with the rules on every run
-    const rules = await RulesService.getRules();
+    const rules = await this.getRules();
     await this.initEngine(rules, dynamicFacts);
   }
 
@@ -42,7 +42,7 @@ export class RulesService implements OnModuleInit {
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
 
-  private static async getRules() {
+  private async getRules() {
     const activeRules = engineRules.filter((rule) => rule.active);
     return activeRules as RuleProperties[];
   }
