@@ -27,6 +27,7 @@ export class QueueService implements OnModuleInit {
   private auditQueueUrl;
   private notificationsQueueUrl;
   private imageQueueUrl;
+  private changeEventQueueUrl;
   private consumer;
 
   constructor(
@@ -36,7 +37,8 @@ export class QueueService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    const { queueNameAudit, queueNameNotifications, queueNameImage } = ExternalConfigs.aws;
+    const { queueNameAudit, queueNameNotifications, queueNameImage, queueNameChangeEvent } =
+      ExternalConfigs.aws;
 
     if (process.env.NODE_ENV === Environments.production) {
       const auditName = await this.configsService.getConfig(queueNameAudit);
@@ -61,6 +63,15 @@ export class QueueService implements OnModuleInit {
       .getQueueUrl({ QueueName: imageName })
       .promise();
     this.imageQueueUrl = imageQueueUrl;
+
+    const changeEventName =
+      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+        ? aws.queue.changeEvent
+        : await this.configsService.getConfig(queueNameChangeEvent);
+    const { QueueUrl: changeEventsQueueUrl } = await this.sqs
+      .getQueueUrl({ QueueName: changeEventName })
+      .promise();
+    this.changeEventQueueUrl = changeEventsQueueUrl;
 
     // register and start consumer for ImageQ
     this.consumer = Consumer.create({
@@ -90,10 +101,7 @@ export class QueueService implements OnModuleInit {
 
   @OnEvent(GlobalEventType.notifyQueue, { async: true })
   async sendMessage(params: IEventNotifyQueue) {
-    if (
-      (params.type === QueueType.audit && process.env.NODE_ENV !== Environments.production) ||
-      params.type === QueueType.entityChange
-    ) {
+    if (params.type === QueueType.audit && process.env.NODE_ENV !== Environments.production) {
       //audit log only exists in production
       this.logger.info(params, QueueService.name, this.sendMessage.name);
       return;
@@ -122,6 +130,8 @@ export class QueueService implements OnModuleInit {
         };
       case QueueType.notifications:
         return { QueueUrl: this.notificationsQueueUrl };
+      case QueueType.changeEvent:
+        return { QueueUrl: this.changeEventQueueUrl };
       default:
         throw new NotImplementedException();
     }

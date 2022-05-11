@@ -28,8 +28,8 @@ export enum Language {
 export enum QueueType {
   audit = 'audit',
   notifications = 'notifications',
+  changeEvent = 'changeEvent',
   transcript = 'transcript',
-  entityChange = 'entityChange',
 }
 
 export enum AuditType {

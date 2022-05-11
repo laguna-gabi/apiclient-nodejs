@@ -296,7 +296,7 @@ function emitChangeEvent(
   };
 
   eventEmitter.emit(GlobalEventType.notifyQueue, {
-    type: QueueType.entityChange,
+    type: QueueType.changeEvent,
     message: JSON.stringify(changeEvent),
   });
 }
