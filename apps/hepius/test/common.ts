@@ -327,7 +327,7 @@ export const confirmEmittedChangeSetEvent = (
     expect(mockEventEmitterEmit).toHaveBeenLastCalledWith(
       GlobalEventType.notifyQueue,
       expect.objectContaining({
-        type: QueueType.entityChange,
+        type: QueueType.changeEvent,
         message: expect.stringContaining(
           key === 'correlationId' ? key : `"${key}":"${expectedChangeEvent[key]}"`,
         ),
