@@ -1,10 +1,9 @@
-import { Identifier } from '@argus/hepiusClient';
+import { Appointment, AppointmentData, Identifier } from '@argus/hepiusClient';
 import { Language } from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsOptional, IsPhoneNumber, IsUrl, Length } from 'class-validator';
 import { Document, Types } from 'mongoose';
-import { Appointment, AppointmentData } from '../appointment';
 import {
   ErrorType,
   Errors,

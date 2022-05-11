@@ -47,7 +47,7 @@ import {
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from './index';
-import { Appointment, AppointmentDocument, AppointmentStatus } from '../appointment';
+import { AppointmentDocument } from '../appointment';
 import {
   BaseService,
   DbErrors,
@@ -70,7 +70,7 @@ import { Internationalization, StorageService } from '../providers';
 import { Questionnaire, QuestionnaireAlerts, QuestionnaireService } from '../questionnaire';
 import { NotificationService } from '../services';
 import { Todo, TodoDocument, TodoStatus } from '../todo';
-import { Caregiver, Identifier } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, Caregiver, Identifier } from '@argus/hepiusClient';
 
 @Injectable()
 export class MemberService extends BaseService {

@@ -35,7 +35,6 @@ import {
   SheetOption,
   SummaryFileSuffix,
 } from '.';
-import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import {
   CaregiverDocument,
@@ -51,7 +50,7 @@ import {
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
 } from '../../src/questionnaire';
-import {
+import { AppointmentMethod, AppointmentStatus,
   Barrier,
   BarrierType,
   BaseCare,

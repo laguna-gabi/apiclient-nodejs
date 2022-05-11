@@ -2,9 +2,10 @@ import { Platform, QueueType } from '@argus/pandora';
 import { Types } from 'mongoose';
 import { HealthPersona, QuestionnaireType } from '../questionnaire';
 import { UpdatedAppointmentAction } from '.';
-import { Appointment, AppointmentDocument, AppointmentStatus, Scores } from '../appointment';
+import { AppointmentDocument } from '../appointment';
 import { Member } from '../member';
 import { User } from '../user';
+import { Appointment, AppointmentStatus, Scores } from '@argus/hepiusClient';
 
 export enum EventType {
   //member

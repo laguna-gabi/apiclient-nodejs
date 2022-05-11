@@ -24,7 +24,7 @@ import {
   generateScheduleAppointmentParams,
   generateUpdateUserParams,
 } from '..';
-import { Appointment, AppointmentModule, AppointmentResolver } from '../../src/appointment';
+import { AppointmentModule, AppointmentResolver } from '../../src/appointment';
 import { AvailabilityModule, AvailabilityResolver } from '../../src/availability';
 import {
   ErrorType,
@@ -46,6 +46,7 @@ import {
   defaultSlotsParams,
   defaultUserParams,
 } from '../../src/user';
+import { Appointment } from '@argus/hepiusClient';
 
 describe('UserService', () => {
   let module: TestingModule;

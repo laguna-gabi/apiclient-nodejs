@@ -10,7 +10,6 @@ import {
   MemberCommunicationInfo,
   UnreadMessagesCount,
 } from '.';
-import { AppointmentStatus } from '../appointment';
 import {
   Client,
   ErrorType,
@@ -31,6 +30,7 @@ import {
 } from '../common';
 import { UserService } from '../user';
 import { formatEx } from '@argus/pandora';
+import { AppointmentStatus } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => CommunicationInfo)

@@ -1,5 +1,5 @@
 import { EntityName } from '@argus/pandora';
-import { Caregiver } from '@argus/hepiusClient';
+import { Appointment, Caregiver } from '@argus/hepiusClient';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -46,7 +46,7 @@ import {
   WoundCare,
   WoundCareDto,
 } from '.';
-import { Appointment, AppointmentDto } from '../appointment';
+import { AppointmentDto } from '../appointment';
 import { CommonModule, LoggerService } from '../common';
 import { CommunicationModule } from '../communication';
 import { ChangeEventFactoryProvider, useFactoryOptions } from '../db';

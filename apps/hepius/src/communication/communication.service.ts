@@ -11,7 +11,6 @@ import {
   RegisterSendbirdUserParams,
   UpdateSendbirdUserParams,
 } from '.';
-import { AppointmentStatus } from '../appointment';
 import {
   ErrorType,
   Errors,
@@ -30,6 +29,7 @@ import { User } from '../user';
 import { Platform, formatEx } from '@argus/pandora';
 import { ISoftDelete } from '../db';
 import { chunk } from 'lodash';
+import { AppointmentStatus } from '@argus/hepiusClient';
 
 @Injectable()
 export class CommunicationService {

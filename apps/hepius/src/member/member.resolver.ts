@@ -1,4 +1,4 @@
-import { Caregiver, Identifier } from '@argus/hepiusClient';
+import { AppointmentStatus, Caregiver, Identifier } from '@argus/hepiusClient';
 import {
   AlertInternalKey,
   ChatInternalKey,
@@ -37,7 +37,6 @@ import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { camelCase } from 'lodash';
 import { lookup } from 'zipcode-to-timezone';
-import { AppointmentStatus } from '../appointment';
 import {
   Client,
   ErrorType,

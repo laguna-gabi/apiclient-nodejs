@@ -1,4 +1,4 @@
-import { Caregiver } from '@argus/hepiusClient';
+import { Appointment, Caregiver } from '@argus/hepiusClient';
 import { general } from 'config';
 import { addDays, addHours } from 'date-fns';
 import { date as fakerDate, lorem } from 'faker';
@@ -33,7 +33,7 @@ import {
   urls,
 } from '..';
 import { buildNPSQuestionnaire } from '../../cmd/static';
-import { Appointment, AppointmentDocument } from '../../src/appointment';
+import { AppointmentDocument } from '../../src/appointment';
 import { Availability, AvailabilityDocument } from '../../src/availability';
 import {
   BarrierDocument,

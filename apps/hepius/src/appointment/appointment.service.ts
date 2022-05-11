@@ -6,11 +6,8 @@ import { hosts } from 'config';
 import { isUndefined, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
-  Appointment,
   AppointmentDocument,
-  AppointmentStatus,
   EndAppointmentParams,
-  Notes,
   NotesDocument,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
@@ -29,6 +26,7 @@ import {
   LoggerService,
 } from '../common';
 import { ISoftDelete } from '../db';
+import { Appointment, AppointmentStatus, Notes } from '@argus/hepiusClient';
 
 @Injectable()
 export class AppointmentService extends BaseService {

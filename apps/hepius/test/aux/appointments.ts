@@ -5,8 +5,8 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
 } from '..';
-import { Appointment, AppointmentStatus } from '../../src/appointment';
 import { Member } from '../../src/member';
+import { Appointment, AppointmentStatus } from '@argus/hepiusClient';
 
 export class AppointmentsIntegrationActions {
   constructor(private readonly mutations: Mutations, private readonly defaultUserRequestHeaders) {}

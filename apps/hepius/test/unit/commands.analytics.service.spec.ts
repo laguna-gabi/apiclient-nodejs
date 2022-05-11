@@ -34,14 +34,21 @@ import {
   PopulatedAppointment,
   PopulatedMember,
 } from '../../cmd';
-import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import { MemberModule } from '../../src/member';
 import { ProvidersModule } from '../../src/providers';
 import { User, UserDocument, UserModule } from '../../src/user';
 import { QuestionnaireModule, QuestionnaireResponse } from '../../src/questionnaire';
-import { Barrier, BarrierType, CarePlan, CarePlanType, Caregiver } from '@argus/hepiusClient';
 import { CareModule, RedFlag, RedFlagType } from '../../src/care';
+import {
+  AppointmentMethod,
+  AppointmentStatus,
+  Barrier,
+  BarrierType,
+  CarePlan,
+  CarePlanType,
+  Caregiver,
+} from '@argus/hepiusClient';
 
 describe('Commands: AnalyticsService', () => {
   let module: TestingModule;
