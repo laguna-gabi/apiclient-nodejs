@@ -140,12 +140,12 @@ export class DailyReportService extends BaseService {
 
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteMemberDailyReports(params: IEventDeleteMember) {
-    await deleteMemberObjects<Model<DailyReportDocument> & ISoftDelete<DailyReportDocument>>(
+    await deleteMemberObjects<Model<DailyReportDocument> & ISoftDelete<DailyReportDocument>>({
       params,
-      this.dailyReportModel,
-      this.logger,
-      this.deleteMemberDailyReports.name,
-      DailyReportService.name,
-    );
+      model: this.dailyReportModel,
+      logger: this.logger,
+      methodName: this.deleteMemberDailyReports.name,
+      serviceName: DailyReportService.name,
+    });
   }
 }

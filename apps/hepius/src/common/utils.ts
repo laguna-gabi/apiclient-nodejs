@@ -97,13 +97,19 @@ type Entity =
   | BarrierDocument
   | CarePlanDocument;
 
-export async function deleteMemberObjects<T extends Model<Entity> & ISoftDelete<Entity>>(
-  params: IEventDeleteMember,
-  model: T,
-  logger: LoggerService,
-  methodName: string,
-  serviceName: string,
-) {
+export async function deleteMemberObjects<T extends Model<Entity> & ISoftDelete<Entity>>({
+  params,
+  model,
+  logger,
+  methodName,
+  serviceName,
+}: {
+  params: IEventDeleteMember;
+  model: T;
+  logger: LoggerService;
+  methodName: string;
+  serviceName: string;
+}) {
   logger.info(params, serviceName, methodName);
 
   try {
