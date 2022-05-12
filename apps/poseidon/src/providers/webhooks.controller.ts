@@ -6,6 +6,7 @@ import {
   IEventOnTranscriptFailed,
   IEventOnTranscriptTranscribed,
   LoggerService,
+  revai,
 } from '../common';
 
 @Controller(`${webhooks}`)
@@ -15,7 +16,7 @@ export class WebhooksController {
     private readonly logger: LoggerService,
   ) {}
 
-  @Post(`revAI`)
+  @Post(revai)
   async revAI(@Body('job') body) {
     const { id, status, failure_detail } = body;
 

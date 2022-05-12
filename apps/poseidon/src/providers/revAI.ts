@@ -3,7 +3,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { RevAiApiClient, RevAiApiTranscript } from 'revai-node-sdk';
 import { hosts } from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
-import { LoggerService } from '../common';
+import { LoggerService, revai } from '../common';
 
 @Injectable()
 export class RevAI implements OnModuleInit {
@@ -27,7 +27,7 @@ export class RevAI implements OnModuleInit {
     ) {
       try {
         const { id } = await this.client.submitJobUrl(url, {
-          callback_url: `${hosts.api}/${webhooks}/revAI`,
+          callback_url: `${hosts.api}/${webhooks}/${revai}`,
           language: 'en',
         });
         return id;
