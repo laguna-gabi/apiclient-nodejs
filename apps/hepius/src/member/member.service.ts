@@ -494,6 +494,13 @@ export class MemberService extends BaseService {
     return this.controlMemberModel.find().populate({ path: 'org' });
   }
 
+  async isControlByPhone(phone: string): Promise<boolean> {
+    const controlMember = await this.controlMemberModel.findOne({
+      $or: [{ phone }, { phoneSecondary: phone }],
+    });
+    return !isNil(controlMember);
+  }
+
   /*************************************************************************************************
    ********************************************* Scores *********************************************
    ************************************************************************************************/

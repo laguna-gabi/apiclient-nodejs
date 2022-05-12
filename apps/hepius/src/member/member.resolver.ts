@@ -1320,6 +1320,10 @@ export class MemberResolver extends MemberBase {
   async sendSmsToChat(params: IEventOnReceivedTextMessage) {
     this.logger.info(params, MemberResolver.name, this.sendSmsToChat.name);
     try {
+      const isControl = await this.memberService.isControlByPhone(params.phone);
+      if (isControl) {
+        return;
+      }
       const member = await this.memberService.getByPhone(params.phone);
       const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
         memberId: member.id,

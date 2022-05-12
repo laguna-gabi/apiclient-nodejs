@@ -877,6 +877,20 @@ describe('MemberService', () => {
         expect(createdObject).not.toHaveProperty(key, null);
       });
     });
+
+    it('should return true on isControlByPhone by phone when control member exists', async () => {
+      const org = await modelOrg.create(generateOrgParams());
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id.toString() });
+      await service.insertControl(createMemberParams);
+
+      const result = await service.isControlByPhone(createMemberParams.phone);
+      expect(result).toBeTruthy();
+    });
+
+    it('should return false on isControlByPhone when control member does not exists', async () => {
+      const result = await service.isControlByPhone(generatePhone());
+      expect(result).toBeFalsy();
+    });
   });
 
   describe('delete', () => {

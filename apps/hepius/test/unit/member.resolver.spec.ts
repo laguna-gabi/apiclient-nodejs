@@ -9,6 +9,7 @@ import {
   SlackChannel,
   SlackIcon,
   StorageType,
+  generatePhone,
   mockLogger,
   mockProcessWarnings,
 } from '@argus/pandora';
@@ -63,6 +64,7 @@ import {
   IEventOnAlertForQRSubmit,
   IEventOnNewMember,
   IEventOnReceivedChatMessage,
+  IEventOnReceivedTextMessage,
   IEventOnUpdatedMemberPlatform,
   LoggerService,
   PhoneType,
@@ -2691,6 +2693,45 @@ describe('MemberResolver', () => {
         assessmentName: params.questionnaireName,
         assessmentScore: params.score.toString(),
       });
+    });
+  });
+
+  describe('sendSmsToChat', async () => {
+    let spyOnServiceIsControlByPhone;
+    let spyOnServiceGetByPhone;
+
+    beforeEach(() => {
+      spyOnServiceIsControlByPhone = jest.spyOn(service, 'isControlByPhone');
+      spyOnServiceGetByPhone = jest.spyOn(service, 'getByPhone');
+    });
+
+    afterEach(() => {
+      spyOnServiceIsControlByPhone.mockReset();
+      spyOnServiceGetByPhone.mockReset();
+    });
+
+    it('should exit when control member sends an sms', async () => {
+      spyOnServiceIsControlByPhone.mockResolvedValueOnce(true);
+      const event: IEventOnReceivedTextMessage = {
+        phone: generatePhone(),
+        message: lorem.sentence(),
+      };
+      await resolver.sendSmsToChat(event);
+
+      expect(spyOnServiceIsControlByPhone).toBeCalled();
+      expect(spyOnServiceGetByPhone).not.toBeCalled();
+    });
+
+    it('should be handled when member sends an sms', async () => {
+      spyOnServiceIsControlByPhone.mockResolvedValueOnce(false);
+      const event: IEventOnReceivedTextMessage = {
+        phone: generatePhone(),
+        message: lorem.sentence(),
+      };
+      await resolver.sendSmsToChat(event);
+
+      expect(spyOnServiceIsControlByPhone).toBeCalled();
+      expect(spyOnServiceGetByPhone).toBeCalled();
     });
   });
 
