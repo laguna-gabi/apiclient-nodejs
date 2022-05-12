@@ -8,14 +8,22 @@ import {
 } from '@argus/poseidonClient';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { lorem } from 'faker';
+import { datatype, lorem } from 'faker';
 import { readFileSync } from 'fs';
 import { Model, model } from 'mongoose';
+import { v4 } from 'uuid';
 import { dbConnect, generateId, generateTranscriptMock } from '..';
 import { LoggerService } from '../../src/common';
 import { DbModule } from '../../src/db';
 import { RevAI, StorageService } from '../../src/providers';
 import { TranscriptCalculator, TranscriptModule, TranscriptService } from '../../src/transcript';
+
+// mock uuid.v4:
+jest.mock('uuid', () => {
+  const actualUUID = jest.requireActual('uuid');
+  const mockV4 = jest.fn(actualUUID.v4);
+  return { v4: mockV4 };
+});
 
 describe(TranscriptService.name, () => {
   let module: TestingModule;
@@ -128,6 +136,7 @@ describe(TranscriptService.name, () => {
       const transcriptText = readFileSync(
         'apps/poseidon/test/unit/mocks/transcriptTextMock.txt',
       ).toString();
+      const fakeUUID = datatype.uuid();
       const conversationPercentage: ConversationPercentage = {
         speakerA: 40,
         speakerB: 40,
@@ -137,6 +146,7 @@ describe(TranscriptService.name, () => {
       spyOnCalculatorCalculateConversationPercentage.mockImplementationOnce(
         async () => conversationPercentage,
       );
+      (v4 as jest.Mock).mockImplementation(() => fakeUUID);
       spyOnStorageUploadFile.mockImplementation();
       const { recordingId, memberId, transcriptionId } = await createTranscript();
 

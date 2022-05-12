@@ -124,7 +124,7 @@ export class TranscriptService {
       .split('\n')
       .map((line) => {
         const lineArray = line.split(/\s\s+/g);
-        if (lineArray.length === 4) {
+        if (lineArray.length >= 3) {
           return {
             speaker: lineArray[0] === 'Speaker 0' ? Speaker.speakerA : Speaker.speakerB,
             time: this.getSecondsFromTime(lineArray[1]),
