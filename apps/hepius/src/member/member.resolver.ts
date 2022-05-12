@@ -82,13 +82,10 @@ import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
 import { UserService } from '../user';
 import {
   AddCaregiverParams,
-  Admission,
-  AdmissionService,
   Alert,
   AppointmentCompose,
   AudioType,
   CancelNotifyParams,
-  ChangeMemberDnaParams,
   ChatMessageOrigin,
   CompleteMultipartUploadParams,
   CreateMemberParams,
@@ -96,8 +93,6 @@ import {
   DeleteDischargeDocumentParams,
   DeleteMemberGeneralDocumentParams,
   DeleteMemberParams,
-  DietaryHelper,
-  DietaryMatcher,
   DischargeDocumentsLinks,
   GetMemberUploadGeneralDocumentLinkParams,
   GetMemberUploadJournalAudioLinkParams,
@@ -139,7 +134,6 @@ import {
 export class MemberResolver extends MemberBase {
   constructor(
     readonly memberService: MemberService,
-    readonly admissionService: AdmissionService,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
     private readonly cognitoService: CognitoService,
@@ -149,7 +143,6 @@ export class MemberResolver extends MemberBase {
     protected readonly bitly: Bitly,
     readonly featureFlagService: FeatureFlagService,
     readonly journeyService: JourneyService,
-    readonly dietaryMatcher: DietaryHelper,
     readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {
@@ -1406,6 +1399,7 @@ export class MemberResolver extends MemberBase {
       );
     }
   }
+
   private async deleteSchedules(params: IEventMember) {
     try {
       await this.notifyDeleteDispatch({
@@ -1429,39 +1423,6 @@ export class MemberResolver extends MemberBase {
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, formatEx(ex));
     }
-  }
-
-  /************************************************************************************************
-   *************************************** Member Admission ***************************************
-   ************************************************************************************************/
-  @Mutation(() => Admission)
-  @Roles(UserRole.coach, UserRole.nurse)
-  async changeMemberDna(
-    @Client('roles') roles,
-    @Args(camelCase(ChangeMemberDnaParams.name))
-    changeMemberDnaParams: ChangeMemberDnaParams,
-  ): Promise<Admission> {
-    this.dietaryMatcher.validate(changeMemberDnaParams.dietary);
-    return this.admissionService.change(changeMemberDnaParams);
-  }
-
-  @Query(() => [Admission])
-  @Roles(UserRole.coach, UserRole.nurse)
-  async getMemberAdmissions(
-    @Args(
-      'memberId',
-      { type: () => String, nullable: false },
-      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid), { nullable: true }),
-    )
-    memberId: string,
-  ) {
-    return this.admissionService.get(memberId);
-  }
-
-  @Query(() => DietaryMatcher)
-  @Roles(UserRole.coach, UserRole.nurse)
-  async getAdmissionsDietaryMatcher() {
-    return this.dietaryMatcher.get();
   }
 
   /************************************************************************************************

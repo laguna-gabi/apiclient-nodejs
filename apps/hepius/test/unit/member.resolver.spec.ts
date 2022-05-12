@@ -75,7 +75,6 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import {
-  AdmissionService,
   AudioFormat,
   AudioType,
   DischargeDocumentType,
@@ -104,7 +103,6 @@ describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
-  let admissionService: AdmissionService;
   let userService: UserService;
   let storage: StorageService;
   let cognitoService: CognitoService;
@@ -125,7 +123,6 @@ describe('MemberResolver', () => {
 
     resolver = module.get<MemberResolver>(MemberResolver);
     service = module.get<MemberService>(MemberService);
-    admissionService = module.get<AdmissionService>(AdmissionService);
     userService = module.get<UserService>(UserService);
     storage = module.get<StorageService>(StorageService);
     cognitoService = module.get<CognitoService>(CognitoService);
@@ -2694,44 +2691,6 @@ describe('MemberResolver', () => {
         assessmentName: params.questionnaireName,
         assessmentScore: params.score.toString(),
       });
-    });
-  });
-
-  describe('MemberAdmission', () => {
-    let spyOnServiceGetMemberAdmission: jest.SpyInstance;
-    let spyOnServiceChangeMemberDna: jest.SpyInstance;
-
-    beforeEach(() => {
-      spyOnServiceGetMemberAdmission = jest.spyOn(admissionService, 'get');
-      spyOnServiceChangeMemberDna = jest.spyOn(admissionService, 'change');
-    });
-
-    afterEach(() => {
-      spyOnServiceGetMemberAdmission.mockReset();
-      spyOnServiceChangeMemberDna.mockReset();
-    });
-
-    it('should call get member admission', async () => {
-      spyOnServiceGetMemberAdmission.mockResolvedValueOnce(undefined);
-
-      const memberId = generateId();
-      await resolver.getMemberAdmissions(memberId);
-
-      expect(spyOnServiceGetMemberAdmission).toBeCalledWith(memberId);
-    });
-
-    it('should call change member admission', async () => {
-      spyOnServiceChangeMemberDna.mockResolvedValueOnce(undefined);
-
-      const memberId = generateId();
-      await resolver.changeMemberDna([], { memberId });
-
-      expect(spyOnServiceChangeMemberDna).toBeCalledWith({ memberId });
-    });
-
-    it('should return dietary matcher', async () => {
-      const result = await resolver.getAdmissionsDietaryMatcher();
-      expect(result.map.length).toEqual(17);
     });
   });
 

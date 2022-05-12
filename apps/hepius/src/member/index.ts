@@ -13,6 +13,7 @@ export * from './member.service';
 export * from './admission.service';
 export * from './dietary.helper';
 export * from './journey.service';
+export * from './journey.resolver';
 export * from './member.resolver';
 export * from './member.controller';
 export * from './member.module';
