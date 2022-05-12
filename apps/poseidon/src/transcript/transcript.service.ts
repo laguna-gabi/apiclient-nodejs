@@ -31,14 +31,6 @@ export class TranscriptService {
     private readonly logger: LoggerService,
   ) {}
 
-  async update(transcript: Transcript): Promise<Transcript> {
-    return this.transcriptModel.findOneAndUpdate(
-      { recordingId: transcript.recordingId },
-      { $set: transcript },
-      { upsert: true, new: true },
-    );
-  }
-
   async get(recordingId: string): Promise<Transcript | null> {
     return this.transcriptModel.findOne({ recordingId });
   }

@@ -46,40 +46,10 @@ describe(TranscriptService.name, () => {
     await module.close();
   });
 
-  describe('update', () => {
-    it('should create new transcript if does not exist', async () => {
-      const transcript = generateTranscriptMock();
-
-      const resultBefore = await transcriptModel.findOne({ recordingId: transcript.recordingId });
-      expect(resultBefore).toBeNull();
-
-      const result = await service.update(transcript);
-
-      expect(result).toEqual(expect.objectContaining(transcript));
-      const resultAfter = await transcriptModel.findOne({ recordingId: transcript.recordingId });
-      expect(resultAfter).toEqual(expect.objectContaining(transcript));
-    });
-
-    it('should update and already exists transcript', async () => {
-      const transcript = generateTranscriptMock();
-      await service.update(transcript);
-
-      const resultBefore = await transcriptModel.findOne({ recordingId: transcript.recordingId });
-      expect(resultBefore).toEqual(expect.objectContaining(transcript));
-
-      const updateParams = generateTranscriptMock({ recordingId: transcript.recordingId });
-      const result = await service.update(updateParams);
-
-      expect(result).toEqual(expect.objectContaining(updateParams));
-      const resultAfter = await transcriptModel.findOne({ recordingId: transcript.recordingId });
-      expect(resultAfter).toEqual(expect.objectContaining(updateParams));
-    });
-  });
-
   describe('get', () => {
     it('should return transcript if exists', async () => {
       const transcript = generateTranscriptMock();
-      await service.update(transcript);
+      await transcriptModel.create(transcript);
 
       const result = await service.get(transcript.recordingId);
       expect(result).toEqual(expect.objectContaining(transcript));

@@ -1,25 +1,5 @@
-import { ClientCategory, ServiceName } from '@argus/pandora';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-
-export enum InnerQueueTypes {
-  createTranscript = 'createTranscript',
-}
-
-export interface IInnerQueueTypes {
-  type: InnerQueueTypes;
-}
-
-interface IDispatch extends IInnerQueueTypes {
-  serviceName: ServiceName;
-  correlationId: string;
-}
-
-export interface ICreateTranscript extends IDispatch {
-  recordingId: string;
-  memberId: string;
-  userId: string;
-}
 
 export enum TranscriptStatus {
   received = 'received', // the event is received, and is being processed
@@ -71,9 +51,9 @@ export class Transcript {
   @Field(() => ConversationPercentage, { nullable: true })
   conversationPercentage?: ConversationPercentage;
 
-  @Prop({ type: String, enum: ClientCategory, isNaN: true })
+  @Prop({ type: String, enum: Speaker, isNaN: true })
   @Field(() => String, { nullable: true })
-  speakerA?: ClientCategory;
+  coach?: Speaker;
 
   @Field(() => String, { nullable: true })
   transcriptLink?: string;
