@@ -22,7 +22,7 @@ export class RevAI implements OnModuleInit {
 
   async createTranscript(url: string): Promise<string> {
     if (
-      process.env.NODE_ENV === Environments.production ||
+      // process.env.NODE_ENV === Environments.production ||
       process.env.NODE_ENV === Environments.develop
     ) {
       try {
