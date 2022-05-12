@@ -149,14 +149,16 @@ export async function deployTaskDefinition(
     const taskDefContents = maintainValidObjects(removeIgnoredAttributes(taskDefinition));
 
     let registerResponse;
+
     try {
-      registerResponse = await awsClient.registerTaskDefinition(taskDefContents).promise();
-    } catch (error) {
-      error('Failed to register task definition in ECS: ' + error.message);
       info('Task definition contents:');
       info(JSON.stringify(taskDefContents, undefined, 4));
-      throw error;
+
+      registerResponse = await awsClient.registerTaskDefinition(taskDefContents).promise();
+    } catch (ex) {
+      logAndThrow('Failed to register task definition in ECS: ' + ex.message);
     }
+
     const taskDefArn = registerResponse.taskDefinition.taskDefinitionArn;
 
     // Update the service with the new task definition
