@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { general } from 'config';
+import { general, services } from 'config';
 import { AppModule } from './app.module';
 import { LoggerService } from './common';
 import { internalLogs } from '@argus/pandora';
@@ -11,7 +11,7 @@ async function bootstrap() {
 
   const logger = app.get(LoggerService);
 
-  await app.listen(3002);
+  await app.listen(services.themis.port);
 
   logger.info(
     { lastCommit: internalLogs.lastCommit.replace('@hash@', process.env.COMMIT_SHA) },

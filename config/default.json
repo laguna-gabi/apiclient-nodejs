@@ -48,14 +48,17 @@
     }
   },
   "services": {
-    "iris": {
-      "port": 3001,
-      "taskName": "iris"
-    },
     "hepius": {
       "port": 3000,
       "tcpPort": 4000,
       "taskName": "hepius"
+    },
+    "iris": {
+      "port": 3001,
+      "taskName": "iris"
+    },
+    "themis": {
+      "port": 3002
     },
     "poseidon": {
       "port": 3003,
