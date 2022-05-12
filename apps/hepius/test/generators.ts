@@ -99,6 +99,8 @@ import {
   DietaryName,
   DischargeDocumentType,
   DischargeTo,
+  ExternalAppointmentStatus,
+  ExternalAppointmentType,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
   Honorific,
@@ -1461,21 +1463,19 @@ export const generateAdmissionMedicationParams = ({
 export const generateAdmissionExternalAppointmentParams = ({
   changeType,
   id,
-  isScheduled,
 }: {
   changeType: ChangeType;
   id?: string;
-  isScheduled?: boolean;
 }): ChangeAdmissionExternalAppointmentParams => {
   const attachIdParam = id ? { id } : {};
   return {
     changeType,
     ...attachIdParam,
-    isScheduled: isScheduled !== undefined || Math.random() < 0.5,
+    status: ExternalAppointmentStatus.scheduled,
     drName: `dr ${name.lastName()}`,
     clinic: lorem.word(),
     date: new Date(),
-    type: lorem.word(),
+    type: ExternalAppointmentType.cardiac,
     specialInstructions: lorem.sentences(),
     fullAddress: lorem.sentence(),
     phone: generatePhone(),

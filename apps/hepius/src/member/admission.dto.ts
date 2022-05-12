@@ -187,6 +187,100 @@ export enum DietaryName {
 }
 registerEnumType(DietaryName, { name: 'DietaryName' });
 
+export enum ExternalAppointmentStatus {
+  scheduled = 'scheduled',
+  toBeScheduled = 'toBeScheduled',
+  notWanted = 'notWanted',
+  missed = 'missed',
+}
+registerEnumType(ExternalAppointmentStatus, { name: 'ExternalAppointmentStatus' });
+
+export enum ExternalAppointmentType {
+  surgical = 'surgical',
+  consultation = 'consultation',
+  diagnosticXRay = 'diagnostic X-Ray',
+  diagnosticLab = 'diagnostic lab',
+  radiationTherapy = 'radiation therapy',
+  blood = 'blood',
+  preAdmissionTesting = 'pre-admission testing',
+  secondSurgicalOpinion = 'second surgical opinion',
+  socialWork = 'social work',
+  chiropractic = 'chiropractic',
+  dentalCare = 'dental care',
+  oralSurgery = 'oral surgery',
+  homeHealthCare = 'home health care',
+  hospice = 'hospice',
+  respiteCare = 'respite care',
+  MRIScan = 'MRI Scan',
+  acupuncture = 'acupuncture',
+  newbornCare = 'newborn care',
+  smokingCessation = 'smoking cessation',
+  maternity = 'maternity',
+  transplants = 'transplants',
+  audiology = 'audiology',
+  inhalationTherapy = 'inhalation therapy',
+  diagnosticMedical = 'diagnostic medical',
+  prosthetics = 'prosthetics',
+  dialysis = 'dialysis',
+  chemotherapy = 'chemotherapy',
+  immunizations = 'immunizations',
+  routinePhysical = 'routine physical',
+  familyPlanning = 'family planning',
+  cancerTreatment = 'cancer treatment',
+  podiatry = 'podiatry',
+  psychiatric = 'psychiatric',
+  psychotherapy = 'psychotherapy',
+  psychiatricInpatient = 'psychiatric inpatient',
+  rehabilitationInpatient = 'rehabilitation - inpatient',
+  rehabilitationOutpatient = 'rehabilitation - outpatient',
+  occupationalTherapy = 'occupational therapy',
+  physicalMedicine = 'physical medicine',
+  speechTherapy = 'speech therapy',
+  skilledNursingCare = 'skilled nursing care',
+  substanceAbuse = 'substance abuse',
+  drugAddiction = 'drug addiction',
+  optometry = 'optometry',
+  routineEyeExam = 'routine eye exam',
+  experimentalDrugTherapy = 'experimental drug therapy',
+  burnCare = 'burn care',
+  independentMedicalEvaluation = 'independent medical evaluation',
+  dayCare = 'day care (psychiatric)',
+  cognitiveTherapy = 'cognitive therapy',
+  massageTherapy = 'massage therapy',
+  pulmonaryRehabilitation = 'pulmonary rehabilitation',
+  cardiacRehabilitation = 'cardiac rehabilitation',
+  pediatric = 'pediatric',
+  orthopedic = 'orthopedic',
+  cardiac = 'cardiac',
+  gastrointestinal = 'gastrointestinal',
+  endocrine = 'endocrine',
+  neurology = 'neurology',
+  gynecological = 'gynecological',
+  obstetrical = 'obstetrical',
+  fluVaccination = 'flu vaccination',
+  caseManagement = 'case management',
+  dermatology = 'dermatology',
+  durableMedicalEquipment = 'durable medical equipment',
+  diagnosticImaging = 'diagnostic imaging',
+  // eslint-disable-next-line max-len
+  comprehensiveMedicationTherapyManagementReview = 'comprehensive medication therapy management review',
+  dietaryNutritionalServices = 'dietary/nutritional services',
+  telemedicine = 'telemedicine',
+  diabeticEducation = 'diabetic education',
+  preventiveServices = 'preventive services',
+  ophthalmology = 'ophthalmology',
+  allergy = 'allergy',
+  mentalHealth = 'mental health',
+  oncology = 'oncology',
+  positronEmissionTomographyScan = 'positron emission tomography (PET) scan',
+  physicalTherapy = 'physical therapy',
+  pulmonary = 'pulmonary',
+  transitionalCare = 'transitional care',
+  transitionalNurseryCare = 'transitional nursery care',
+  catScan = 'CAT Scan',
+}
+registerEnumType(ExternalAppointmentType, { name: 'ExternalAppointmentType' });
+
 export enum AdmissionCategory {
   diagnoses = 'diagnoses',
   procedures = 'procedures',
@@ -317,9 +411,9 @@ export class Medication extends BaseCategory {
 @InputType('ExternalAppointmentInput')
 @Schema({ versionKey: false, timestamps: true })
 export class ExternalAppointment extends BaseCategory {
-  @Prop({ default: true })
-  @Field(() => Boolean, { nullable: true })
-  isScheduled?: boolean;
+  @Prop({ type: String, enum: ExternalAppointmentStatus, isNan: true })
+  @Field(() => ExternalAppointmentStatus, { nullable: true })
+  status?: ExternalAppointmentStatus;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
@@ -333,9 +427,9 @@ export class ExternalAppointment extends BaseCategory {
   @Field(() => Date, { nullable: true })
   date?: Date;
 
-  @Prop({ isNan: true })
-  @Field(() => String, { nullable: true })
-  type?: string;
+  @Prop({ type: String, enum: ExternalAppointmentType, isNan: true })
+  @Field(() => ExternalAppointmentType, { nullable: true })
+  type?: ExternalAppointmentType;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })

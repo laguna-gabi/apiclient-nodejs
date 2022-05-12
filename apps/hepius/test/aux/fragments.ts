@@ -197,7 +197,7 @@ export const FRAGMENT_ADMISSION = gql`
     }
     externalAppointments {
       id
-      isScheduled
+      status
       drName
       clinic
       date

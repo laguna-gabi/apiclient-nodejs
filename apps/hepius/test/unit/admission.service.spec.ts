@@ -318,9 +318,8 @@ describe(AdmissionService.name, () => {
   );
 
   test.each`
-    admissionCategory                         | key              | defaultValue
-    ${AdmissionCategory.externalAppointments} | ${'isScheduled'} | ${true}
-    ${AdmissionCategory.diagnoses}            | ${'primaryType'} | ${PrimaryDiagnosisType.clinical}
+    admissionCategory              | key              | defaultValue
+    ${AdmissionCategory.diagnoses} | ${'primaryType'} | ${PrimaryDiagnosisType.clinical}
   `(
     'should set $admissionCategory default $key when not provided in params',
     async ({ admissionCategory, key, defaultValue }) => {
