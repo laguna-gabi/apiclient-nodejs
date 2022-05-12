@@ -1,5 +1,6 @@
 {
   "hosts": {
+    "api": "https://dev.api.lagunahealth.com",
     "chat": "https://dev.chat.lagunahealth.com",
     "app": "https://dev.app.lagunahealth.com",
     "harmony": "https://dev.harmony.lagunahealth.com",
@@ -55,6 +56,11 @@
       "port": 3000,
       "tcpPort": 4000,
       "taskName": "hepius"
+    },
+    "poseidon": {
+      "port": 3003,
+      "tcpPort": 4003,
+      "taskName": "poseidon"
     },
     "timeout": 2000,
     "retries": 3

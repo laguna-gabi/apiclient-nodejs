@@ -1,6 +1,7 @@
-import { Environments } from '@argus/pandora';
+import { Environments, webhooks } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { RevAiApiClient, RevAiApiTranscript } from 'revai-node-sdk';
+import { hosts } from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
 import { LoggerService } from '../common';
 
@@ -26,7 +27,7 @@ export class RevAI implements OnModuleInit {
     ) {
       try {
         const { id } = await this.client.submitJobUrl(url, {
-          // callback_url: '', // will be added once we have url for poseidon
+          callback_url: `${hosts.api}/${webhooks}/revAI`,
           language: 'en',
         });
         return id;
