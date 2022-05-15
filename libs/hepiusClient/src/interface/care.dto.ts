@@ -107,6 +107,6 @@ export class Barrier extends BaseCare {
   type: BarrierType;
 
   @Prop({ index: true, type: Types.ObjectId })
-  @Field(() => String)
-  redFlagId: Types.ObjectId;
+  @Field(() => String, { nullable: true })
+  redFlagId?: Types.ObjectId;
 }

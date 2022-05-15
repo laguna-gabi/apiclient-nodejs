@@ -163,28 +163,31 @@ describe('CareService', () => {
   });
 
   describe('Barrier', () => {
-    it('should create a barrier', async () => {
-      const memberId = generateId();
-      const redFlagId = await generateRedFlag(memberId);
-      const type = await generateBarrierType();
-      const params = generateCreateBarrierParams({
-        memberId,
-        redFlagId,
-        type: type,
-      });
-      const { id } = await service.createBarrier(params);
+    test.each([true, false])(
+      'should create a barrier with and without red flag: %p',
+      async (withRedFlag) => {
+        const memberId = generateId();
+        const redFlagId = await generateRedFlag(memberId);
+        const type = await generateBarrierType();
+        const params = generateCreateBarrierParams({
+          memberId,
+          redFlagId: withRedFlag ? redFlagId : undefined,
+          type: type,
+        });
+        const { id } = await service.createBarrier(params);
 
-      const result = await service.getBarrier(id);
-      expect(result).toEqual(
-        expect.objectContaining({
-          ...params,
-          status: CareStatus.active,
-          memberId: new Types.ObjectId(memberId),
-          redFlagId: new Types.ObjectId(redFlagId),
-          type: new Types.ObjectId(type),
-        }),
-      );
-    });
+        const result = await service.getBarrier(id);
+        expect(result).toEqual(
+          expect.objectContaining({
+            ...params,
+            status: CareStatus.active,
+            memberId: new Types.ObjectId(memberId),
+            redFlagId: withRedFlag ? new Types.ObjectId(redFlagId) : undefined,
+            type: new Types.ObjectId(type),
+          }),
+        );
+      },
+    );
 
     it('should fail to create a barrier with a wrong barrier type', async () => {
       const memberId = generateId();

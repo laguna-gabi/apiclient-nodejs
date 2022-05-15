@@ -24,9 +24,9 @@ export class BaseBarrierParams {
 
 @InputType()
 export class CreateBarrierParams extends BaseBarrierParams {
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   @IsObjectId({ message: Errors.get(ErrorType.redFlagIdInvalid) })
-  redFlagId: string;
+  redFlagId?: string;
 
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })

@@ -11,6 +11,7 @@ import {
 } from '../../src/appointment';
 import { AvailabilityInput } from '../../src/availability';
 import {
+  CreateBarrierParams,
   CreateCarePlanParams,
   RedFlag,
   UpdateBarrierParams,
@@ -1954,5 +1955,39 @@ export class Mutations {
       });
 
     return updateJourney;
+  };
+
+  createBarrier = async ({
+    createBarrierParams,
+    missingFieldError,
+    invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    createBarrierParams: CreateBarrierParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+    requestHeaders?;
+  }): Promise<Identifier> => {
+    const { createBarrier } = await this.client
+      .request(
+        gql`
+          mutation createBarrier($createBarrierParams: CreateBarrierParams!) {
+            createBarrier(createBarrierParams: $createBarrierParams) {
+              id
+            }
+          }
+        `,
+        { createBarrierParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return createBarrier;
   };
 }

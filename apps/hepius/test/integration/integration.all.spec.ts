@@ -26,6 +26,7 @@ import {
   generateAvailabilityInput,
   generateCarePlanTypeInput,
   generateChangeMemberDnaParams,
+  generateCreateBarrierParams,
   generateCreateBarrierParamsWizard,
   generateCreateCarePlanParams,
   generateCreateCarePlanParamsWizard,
@@ -2047,6 +2048,40 @@ describe('Integration tests: all', () => {
               ...memberBarriers[0],
               notes: 'new notes',
               status: CareStatus.completed,
+            }),
+          ]),
+        );
+      });
+
+      it('should create a barrier', async () => {
+        const {
+          member: { id: memberId },
+          user: { authId },
+        } = await creators.createMemberUserAndOptionalOrg();
+        const createBarrierParams = generateCreateBarrierParams({
+          memberId,
+          type: handler.barrierType.id,
+        });
+
+        delete createBarrierParams.redFlagId;
+        const { id } = await handler.mutations.createBarrier({
+          createBarrierParams,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+
+        // get to verify the create
+        const memberBarriers = await handler.queries.getMemberBarriers({
+          memberId,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+        expect(memberBarriers.length).toEqual(1);
+
+        expect(memberBarriers).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              ...createBarrierParams,
+              type: expect.objectContaining({ id: handler.barrierType.id }),
+              id,
             }),
           ]),
         );

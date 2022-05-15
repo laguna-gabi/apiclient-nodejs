@@ -2,6 +2,7 @@ import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   CareService,
+  CreateBarrierParams,
   CreateCarePlanParams,
   RedFlag,
   RedFlagType,
@@ -66,6 +67,14 @@ export class CareResolver {
   @Roles(UserRole.coach, UserRole.nurse)
   async getBarrierTypes(): Promise<BarrierType[]> {
     return this.careService.getBarrierTypes();
+  }
+
+  @Mutation(() => Barrier)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async createBarrier(
+    @Args(camelCase(CreateBarrierParams.name)) createBarrierParams: CreateBarrierParams,
+  ): Promise<Barrier> {
+    return this.careService.createBarrier(createBarrierParams);
   }
 
   @Mutation(() => Barrier)

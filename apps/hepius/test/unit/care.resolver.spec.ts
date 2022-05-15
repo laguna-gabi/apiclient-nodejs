@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   dbDisconnect,
   defaultModules,
+  generateCreateBarrierParams,
   generateCreateBarrierParamsWizard,
   generateCreateCarePlanParams,
   generateCreateCarePlanParamsWizard,
@@ -81,18 +82,30 @@ describe('CareResolver', () => {
     let spyOnServiceGetMemberBarriers;
     let spyOnServiceUpdateBarrier;
     let spyOnServiceGetBarrierTypes;
+    let spyOnServiceCreateBarrier;
 
     beforeEach(() => {
       spyOnServiceGetMemberBarriers = jest.spyOn(service, 'getMemberBarriers');
       spyOnServiceUpdateBarrier = jest.spyOn(service, 'updateBarrier');
+      spyOnServiceCreateBarrier = jest.spyOn(service, 'createBarrier');
       spyOnServiceGetBarrierTypes = jest.spyOn(service, 'getBarrierTypes');
       spyOnServiceUpdateBarrier.mockImplementationOnce(async () => true);
+      spyOnServiceCreateBarrier.mockImplementationOnce(async () => undefined);
     });
 
     afterEach(() => {
       spyOnServiceGetMemberBarriers.mockReset();
       spyOnServiceUpdateBarrier.mockReset();
+      spyOnServiceCreateBarrier.mockReset();
       spyOnServiceGetBarrierTypes.mockReset();
+    });
+
+    it('should create a barrier', async () => {
+      const params = generateCreateBarrierParams();
+      await resolver.createBarrier(params);
+
+      expect(spyOnServiceCreateBarrier).toBeCalledTimes(1);
+      expect(spyOnServiceCreateBarrier).toBeCalledWith(params);
     });
 
     it('should get barriers by memberId', async () => {

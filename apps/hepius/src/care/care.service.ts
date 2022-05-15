@@ -143,6 +143,9 @@ export class CareService extends BaseService {
       throw new Error(Errors.get(ErrorType.barrierTypeNotFound));
     }
 
+    // red flag is not mandatory
+    if (!redFlagId) return;
+
     // validate red flag
     const redFlag = await this.getRedFlag(redFlagId);
     if (!redFlag) {

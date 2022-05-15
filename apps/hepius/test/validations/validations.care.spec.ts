@@ -1,5 +1,6 @@
-import { BEFORE_ALL_TIMEOUT } from '..';
+import { BEFORE_ALL_TIMEOUT, generateCreateBarrierParams } from '..';
 import {
+  CreateBarrierParams,
   CreateCarePlanParams,
   UpdateBarrierParams,
   UpdateCarePlanParams,
@@ -74,6 +75,41 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
         memberId: params.field,
         invalidFieldsError: params.error,
       });
+    });
+  });
+
+  describe('createBarrier', () => {
+    /* eslint-disable max-len */
+    test.each`
+      field         | error
+      ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'type'}     | ${`Field "type" of required type "String!" was not provided.`}
+    `(`should fail to create a barrier since mandatory field $field is missing`, async (params) => {
+      const createBarrierParams: CreateBarrierParams = generateCreateBarrierParams({
+        type: generateId(),
+        redFlagId: generateId(),
+      });
+      delete createBarrierParams[params.field];
+      await handler.mutations.createBarrier({
+        createBarrierParams,
+        missingFieldError: params.error,
+      });
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      input                 | error
+      ${{ redFlagId: 123 }} | ${{ missingFieldError: stringError }}
+      ${{ notes: 123 }}     | ${{ missingFieldError: stringError }}
+      ${{ type: 123 }}      | ${{ missingFieldError: stringError }}
+    `(`should fail to create a care plan since $input is not valid`, async (params) => {
+      const createBarrierParams: CreateBarrierParams = generateCreateBarrierParams({
+        type: generateId(),
+        redFlagId: generateId(),
+        ...params.input,
+      });
+
+      await handler.mutations.createBarrier({ createBarrierParams, ...params.error });
     });
   });
 
