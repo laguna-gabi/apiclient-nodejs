@@ -2787,6 +2787,16 @@ describe('Integration tests: all', () => {
     expect(matcher.map.length).toEqual(17);
   });
 
+  it('should create a member journey, update and get it', async () => {
+    const { member } = await creators.createMemberUserAndOptionalOrg();
+
+    const journeys = await handler.queries.getJourneys({ memberId: member.id });
+    expect(journeys.length).toEqual(1);
+
+    const journey = await handler.queries.getJourney({ id: journeys[0].id });
+    expect(journey).not.toBeUndefined();
+  });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

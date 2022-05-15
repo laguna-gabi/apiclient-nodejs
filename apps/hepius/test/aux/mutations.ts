@@ -41,6 +41,7 @@ import {
   SetGeneralNotesParams,
   UpdateCaregiverParams,
   UpdateJournalTextParams,
+  UpdateJourneyParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -60,7 +61,12 @@ import {
   UpdateTodoParams,
 } from '../../src/todo';
 import { CreateUserParams, UpdateUserParams } from '../../src/user';
-import { FRAGMENT_ADMISSION, FRAGMENT_APPOINTMENT, FRAGMENT_MEMBER } from './fragments';
+import {
+  FRAGMENT_ADMISSION,
+  FRAGMENT_APPOINTMENT,
+  FRAGMENT_JOURNEY,
+  FRAGMENT_MEMBER,
+} from './fragments';
 
 export class Mutations {
   constructor(
@@ -1915,5 +1921,38 @@ export class Mutations {
       });
 
     return changeMemberDna;
+  };
+
+  updateJourney = async ({
+    updateJourneyParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateJourneyParams: UpdateJourneyParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Member> => {
+    const { updateJourney } = await this.client
+      .request(
+        gql`
+          mutation updateJourney($updateJourneyParams: UpdateJourneyParams!) {
+            updateJourney(updateJourneyParams: $updateJourneyParams) {
+              ...journeyFragment
+            }
+          }
+          ${FRAGMENT_JOURNEY}
+        `,
+        { updateJourneyParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return updateJourney;
   };
 }

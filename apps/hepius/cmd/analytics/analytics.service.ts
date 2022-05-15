@@ -238,7 +238,7 @@ export class AnalyticsService {
           as: 'activeJourney',
         },
       },
-      { $match: { 'activeJourney.isActive': true } },
+      { $match: { 'activeJourney.active': true } },
       { $unwind: { path: '$activeJourney', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {

@@ -17,6 +17,7 @@ import {
   DietaryMatcher,
   Journey,
   JourneyService,
+  UpdateJourneyParams,
 } from '.';
 import { UserRole } from '@argus/hepiusClient';
 import { camelCase } from 'lodash';
@@ -32,7 +33,40 @@ export class JourneyResolver {
   ) {}
 
   /************************************************************************************************
-   *************************************** Member Admission ***************************************
+   ******************************************** Journey *******************************************
+   ************************************************************************************************/
+  @Mutation(() => Journey)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async updateJourney(
+    @Args(camelCase(UpdateJourneyParams.name)) params: UpdateJourneyParams,
+  ): Promise<Journey> {
+    return this.journeyService.update(params);
+  }
+
+  @Query(() => [Journey])
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getJourneys(
+    @Args(
+      'memberId',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    memberId: string,
+  ): Promise<Journey[]> {
+    return this.journeyService.getAll({ memberId });
+  }
+
+  @Query(() => Journey)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getJourney(
+    @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.journeyIdInvalid)))
+    id: string,
+  ): Promise<Journey> {
+    return this.journeyService.get(id);
+  }
+
+  /************************************************************************************************
+   ****************************************** Admission *******************************************
    ************************************************************************************************/
   @Mutation(() => Admission)
   @Roles(UserRole.coach, UserRole.nurse)

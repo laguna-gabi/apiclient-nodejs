@@ -90,6 +90,7 @@ import {
   ChangeAdmissionProcedureParams,
   ChangeMemberDnaParams,
   ClinicalStatus,
+  CreateJourneyParams,
   CreateMemberParams,
   CreateTaskParams,
   DeleteDischargeDocumentParams,
@@ -123,6 +124,7 @@ import {
   TaskStatus,
   UpdateCaregiverParams,
   UpdateJournalTextParams,
+  UpdateJourneyParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -483,7 +485,7 @@ export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey
   memberId: new Types.ObjectId(memberId),
   firstLoggedInAt: fakerDate.past(2),
   lastLoggedInAt: fakerDate.past(1),
-  isActive: true,
+  active: true,
   admissions: [],
 });
 
@@ -1378,6 +1380,24 @@ export const mockDbRedFlag = () => {
     notes: lorem.sentence(),
   };
 };
+
+/*************************************************************************************************
+ ******************************************** Journey ********************************************
+ ************************************************************************************************/
+export const generateCreateJourneyParams = ({
+  memberId = generateId(),
+}: Partial<CreateJourneyParams> = {}): CreateJourneyParams => ({
+  memberId,
+});
+
+export const generateUpdateJourneyParams = ({
+  memberId = generateId(),
+  id,
+}: Partial<UpdateJourneyParams> = {}): UpdateJourneyParams => ({
+  memberId,
+  id,
+});
+
 /*************************************************************************************************
  ***************************** ChangeMemberDnaParams related methods *****************************
  ************************************************************************************************/

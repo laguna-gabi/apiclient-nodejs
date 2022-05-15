@@ -11,6 +11,7 @@ import {
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
+  Journey,
   Member,
   MultipartUploadInfo,
   MultipartUploadRecordingLinkParams,
@@ -20,7 +21,7 @@ import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams, UserSummary } from '../../src/user';
-import { FRAGMENT_ADMISSION, FRAGMENT_MEMBER } from './fragments';
+import { FRAGMENT_ADMISSION, FRAGMENT_JOURNEY, FRAGMENT_MEMBER } from './fragments';
 
 export class Queries {
   constructor(private readonly client: GraphQLClient, private readonly defaultUserRequestHeaders) {}
@@ -157,7 +158,7 @@ export class Queries {
     const result = await this.client
       .request(
         gql`
-          query getUserSlotsByAppointmentId($appointmentId: string!) {
+          query getUserSlotsByAppointmentId($appointmentId: String!) {
             getUserSlotsByAppointmentId(appointmentId: $appointmentId) {
               slots
               user {
@@ -1393,5 +1394,61 @@ export class Queries {
     );
 
     return getAdmissionsDietaryMatcher;
+  };
+
+  getJourneys = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId: string;
+    invalidFieldsError?: string;
+  }): Promise<Journey[]> => {
+    const result = await this.client
+      .request(
+        gql`
+          query getJourneys($memberId: String!) {
+            getJourneys(memberId: $memberId) {
+              ...journeyFragment
+            }
+          }
+          ${FRAGMENT_JOURNEY}
+        `,
+        { memberId },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
+
+    return result?.getJourneys;
+  };
+
+  getJourney = async ({
+    id,
+    invalidFieldsError,
+  }: {
+    id: string;
+    invalidFieldsError?: string;
+  }): Promise<Journey[]> => {
+    const result = await this.client
+      .request(
+        gql`
+          query getJourney($id: String!) {
+            getJourney(id: $id) {
+              ...journeyFragment
+            }
+          }
+          ${FRAGMENT_JOURNEY}
+        `,
+        { id },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
+
+    return result?.getJourney;
   };
 }

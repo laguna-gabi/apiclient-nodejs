@@ -1,6 +1,6 @@
-import { generateId } from '../generators';
+import { generateId, generateUpdateJourneyParams } from '../generators';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AdmissionService, JourneyResolver, MemberModule } from '../../src/member';
+import { AdmissionService, JourneyResolver, JourneyService, MemberModule } from '../../src/member';
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { dbDisconnect, defaultModules } from '../common';
 import { LoggerService } from '../../src/common';
@@ -8,6 +8,7 @@ import { LoggerService } from '../../src/common';
 describe(JourneyResolver.name, () => {
   let module: TestingModule;
   let resolver: JourneyResolver;
+  let service: JourneyService;
   let admissionService: AdmissionService;
 
   beforeAll(async () => {
@@ -17,6 +18,7 @@ describe(JourneyResolver.name, () => {
     }).compile();
 
     resolver = module.get<JourneyResolver>(JourneyResolver);
+    service = module.get<JourneyService>(JourneyService);
     admissionService = module.get<AdmissionService>(AdmissionService);
     mockLogger(module.get<LoggerService>(LoggerService));
   });
@@ -26,7 +28,46 @@ describe(JourneyResolver.name, () => {
     await dbDisconnect();
   });
 
-  describe('MemberAdmission', () => {
+  describe('Journey', () => {
+    let spyOnServiceUpdate: jest.SpyInstance;
+    let spyOnServiceGetAll: jest.SpyInstance;
+    let spyOnServiceGet: jest.SpyInstance;
+
+    beforeEach(() => {
+      spyOnServiceUpdate = jest.spyOn(service, 'update');
+      spyOnServiceGetAll = jest.spyOn(service, 'getAll');
+      spyOnServiceGet = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdate.mockReset();
+      spyOnServiceGetAll.mockReset();
+      spyOnServiceGet.mockReset();
+    });
+
+    it('should update a journey', async () => {
+      spyOnServiceUpdate.mockResolvedValueOnce(null);
+      await resolver.updateJourney(generateUpdateJourneyParams());
+
+      expect(spyOnServiceUpdate).toBeCalled();
+    });
+
+    it('should get all journeys', async () => {
+      spyOnServiceGetAll.mockResolvedValueOnce([generateUpdateJourneyParams()]);
+      await resolver.getJourneys(generateId());
+
+      expect(spyOnServiceGetAll).toBeCalled();
+    });
+
+    it('should get a journey', async () => {
+      spyOnServiceGet.mockResolvedValueOnce(generateUpdateJourneyParams());
+      await resolver.getJourney(generateId());
+
+      expect(spyOnServiceGet).toBeCalled();
+    });
+  });
+
+  describe('Admission', () => {
     let spyOnServiceGetMemberAdmission: jest.SpyInstance;
     let spyOnServiceChangeMemberDna: jest.SpyInstance;
 

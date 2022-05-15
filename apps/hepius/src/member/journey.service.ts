@@ -11,9 +11,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ISoftDelete } from '../db';
-import { Journey, JourneyDocument } from '.';
+import { CreateJourneyParams, Journey, JourneyDocument, UpdateJourneyParams } from '.';
 import { Identifier } from '@argus/hepiusClient';
 import { OnEvent } from '@nestjs/event-emitter';
+import { isEmpty, isNil, omitBy } from 'lodash';
 
 @Injectable()
 export class JourneyService extends BaseService {
@@ -25,15 +26,10 @@ export class JourneyService extends BaseService {
     super();
   }
 
-  // the params to this method will be set on many journey tickets, for example:
-  // https://app.shortcut.com/laguna-health/story/4951/move-member-fields-to-journey
-  async create({ memberId }: { memberId: string }): Promise<Identifier> {
-    const memberIdObject = { memberId: new Types.ObjectId(memberId) };
+  async create(params: CreateJourneyParams): Promise<Identifier> {
+    const memberIdObject = { memberId: new Types.ObjectId(params.memberId) };
     const { _id: id } = await this.journeyModel.create(memberIdObject);
-    await this.journeyModel.updateMany(
-      { ...memberIdObject, _id: { $ne: id } },
-      { isActive: false },
-    );
+    await this.journeyModel.updateMany({ ...memberIdObject, _id: { $ne: id } }, { active: false });
     return { id };
   }
 
@@ -49,7 +45,7 @@ export class JourneyService extends BaseService {
   async getActive(memberId: string): Promise<Journey> {
     const result = await this.journeyModel.findOne({
       memberId: new Types.ObjectId(memberId),
-      isActive: true,
+      active: true,
     });
     if (!result) {
       throw new Error(Errors.get(ErrorType.journeyForMemberNotFound));
@@ -62,6 +58,30 @@ export class JourneyService extends BaseService {
     return results.map((result) => this.replaceId(result));
   }
 
+  async update(updateJourneyParams: UpdateJourneyParams): Promise<Journey> {
+    const setParams = omitBy(updateJourneyParams, isNil);
+    const memberId = new Types.ObjectId(setParams.memberId);
+    const filter = setParams.id
+      ? { _id: new Types.ObjectId(setParams.id), memberId }
+      : { active: true, memberId };
+
+    delete setParams.memberId;
+    delete setParams.id;
+
+    let result;
+    if (isEmpty(setParams)) {
+      result = await this.journeyModel.findOne(filter);
+    } else {
+      result = await this.journeyModel.findOneAndUpdate(filter, { $set: setParams }, { new: true });
+    }
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.journeyMemberIdAndOrIdNotFound));
+    }
+
+    return this.replaceId(result.toObject());
+  }
+
   async updateLoggedInAt(memberId: Types.ObjectId): Promise<Journey> {
     this.logger.info({ memberId }, JourneyService.name, this.updateLoggedInAt.name);
     const date = new Date();
@@ -70,7 +90,7 @@ export class JourneyService extends BaseService {
       { $set: { firstLoggedInAt: date } },
     );
     return this.journeyModel.findOneAndUpdate(
-      { memberId, isActive: true },
+      { memberId, active: true },
       { $set: { lastLoggedInAt: date } },
       { upsert: false, new: true },
     );

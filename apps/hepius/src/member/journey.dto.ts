@@ -1,11 +1,28 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '@argus/hepiusClient';
+import { IsOptional } from 'class-validator';
 
-/********∏******************************************************************************************
+/**************************************************************************************************
+ ********************************** Input params for gql methods **********************************
+ *************************************************************************************************/
+@InputType()
+export class CreateJourneyParams {
+  @Field(() => String)
+  memberId: string;
+}
+
+@InputType()
+export class UpdateJourneyParams extends CreateJourneyParams {
+  // if id is not supplied, we're updating the default journey of the member
+  @Field(() => String)
+  @IsOptional()
+  id?: string;
+}
+/***************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
 
@@ -18,7 +35,7 @@ export class Journey extends Identifier {
 
   @Prop({ type: Boolean, index: true, default: true })
   @Field(() => Boolean)
-  isActive: boolean;
+  active: boolean;
 
   @Prop({ type: [{ type: Types.ObjectId }], default: [] })
   @Field(() => [String])

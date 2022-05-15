@@ -216,3 +216,10 @@ export const FRAGMENT_ADMISSION = gql`
     }
   }
 `;
+
+export const FRAGMENT_JOURNEY = gql`
+  fragment journeyFragment on Journey {
+    id
+    memberId
+  }
+`;
