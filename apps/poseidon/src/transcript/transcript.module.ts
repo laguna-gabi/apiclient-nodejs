@@ -1,7 +1,7 @@
 import { Transcript, TranscriptDto } from '@argus/poseidonClient';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { TranscriptCalculator, TranscriptService } from '.';
+import { TranscriptCalculator, TranscriptController, TranscriptService } from '.';
 import { CommonModule } from '../common';
 import { ProvidersModule } from '../providers';
 
@@ -13,5 +13,6 @@ import { ProvidersModule } from '../providers';
   ],
   providers: [TranscriptCalculator, TranscriptService],
   exports: [],
+  controllers: [TranscriptController],
 })
 export class TranscriptModule {}

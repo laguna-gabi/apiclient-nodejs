@@ -1,9 +1,11 @@
-import { EntityName } from '@argus/pandora';
 import { Appointment, Caregiver } from '@argus/hepiusClient';
+import { EntityName, Environments, ServiceName } from '@argus/pandora';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MongooseModule } from '@nestjs/mongoose';
+import { services } from 'config';
 import * as mongooseDelete from 'mongoose-delete';
 import {
   ActionItem,
@@ -47,11 +49,12 @@ import { AppointmentDto } from '../appointment';
 import { CommonModule, LoggerService } from '../common';
 import { CommunicationModule } from '../communication';
 import { ChangeEventFactoryProvider, useFactoryOptions } from '../db';
-import { ConfigsService, ProvidersModule } from '../providers';
+import { ConfigsService, ExternalConfigs, ProvidersModule } from '../providers';
 import { QuestionnaireModule } from '../questionnaire';
 import { ServiceModule } from '../services';
 import { Todo, TodoDto } from '../todo';
 import { UserModule } from '../user';
+
 @Module({
   imports: [
     CommunicationModule,
@@ -100,6 +103,23 @@ import { UserModule } from '../user';
         imports: [CommonModule],
         useFactory: ChangeEventFactoryProvider(EntityName.caregiver, CaregiverDto, 'memberId'),
         inject: [EventEmitter2, LoggerService],
+      },
+    ]),
+    ClientsModule.registerAsync([
+      {
+        name: ServiceName.poseidon,
+        inject: [ConfigsService],
+        imports: [ProvidersModule],
+        useFactory: async (configsService: ConfigsService) => {
+          const host =
+            !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+              ? `localhost`
+              : await configsService.getConfig(ExternalConfigs.host.poseidon);
+          return {
+            transport: Transport.TCP,
+            options: { host, port: services.poseidon.tcpPort },
+          };
+        },
       },
     ]),
   ],

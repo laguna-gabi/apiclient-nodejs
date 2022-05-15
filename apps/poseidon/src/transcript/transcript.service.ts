@@ -31,8 +31,8 @@ export class TranscriptService {
     private readonly logger: LoggerService,
   ) {}
 
-  async get(recordingId: string): Promise<Transcript | null> {
-    return this.transcriptModel.findOne({ recordingId });
+  async get(recordingId: string): Promise<Transcript> {
+    return this.transcriptModel.findOne({ recordingId }).lean();
   }
 
   @OnEvent(EventType.onCreateTranscript, { async: true })

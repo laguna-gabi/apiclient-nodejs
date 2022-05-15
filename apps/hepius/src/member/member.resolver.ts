@@ -22,7 +22,6 @@ import {
   generateDispatchId,
 } from '@argus/irisClient';
 import {
-  ClientCategory,
   GlobalEventType,
   IEventNotifySlack,
   NotificationType,
@@ -34,10 +33,11 @@ import {
   StorageType,
   formatEx,
 } from '@argus/pandora';
-import { Transcript, TranscriptStatus } from '@argus/poseidonClient';
-import { UseInterceptors } from '@nestjs/common';
+import { PoseidonMessagePatterns, Transcript } from '@argus/poseidonClient';
+import { Inject, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { ClientProxy } from '@nestjs/microservices';
 import { isEmpty } from 'class-validator';
 import { hosts } from 'config';
 import { addDays, isAfter, millisecondsInHour } from 'date-fns';
@@ -133,6 +133,7 @@ import {
 @Resolver(() => Member)
 export class MemberResolver extends MemberBase {
   constructor(
+    @Inject(ServiceName.poseidon) private client: ClientProxy,
     readonly memberService: MemberService,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
@@ -588,19 +589,13 @@ export class MemberResolver extends MemberBase {
     return this.memberService.getRecordings(memberId);
   }
 
-  @Query(() => Transcript)
+  @Query(() => Transcript, { nullable: true })
   @Roles(UserRole.coach, UserRole.nurse)
   async getTranscript(
-    @Args('recordingId', { type: () => String }) // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Args('recordingId', { type: () => String })
     recordingId: string,
   ) {
-    return {
-      transcriptLink:
-        'https://d1ic17v34w4spl.cloudfront.net/public/dischargeInstructions/transcriptMock.json',
-      conversationPercentage: { speakerA: 34, speakerB: 53, silence: 13 },
-      speakerA: ClientCategory.member,
-      status: TranscriptStatus.done,
-    };
+    return this.client.send(PoseidonMessagePatterns.getTranscript, recordingId).toPromise();
   }
 
   /*************************************************************************************************

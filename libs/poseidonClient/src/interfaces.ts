@@ -1,6 +1,10 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
+export enum PoseidonMessagePatterns {
+  getTranscript = 'getTranscript',
+}
+
 export enum TranscriptStatus {
   received = 'received', // the event is received, and is being processed
   done = 'done', // the transcript is done

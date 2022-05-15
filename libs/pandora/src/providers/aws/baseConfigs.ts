@@ -27,8 +27,9 @@ export const BaseExternalConfigs = {
     groupGuid: 'bitly.groupGuid',
   },
   host: {
-    iris: 'host.iris',
     hepius: 'host.hepius',
+    iris: 'host.iris',
+    poseidon: 'host.poseidon',
   },
 };
 
