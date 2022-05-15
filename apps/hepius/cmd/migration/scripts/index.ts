@@ -35,3 +35,4 @@ export * as m20220504085736 from './20220504085736-add-csat-questionnaire';
 export * as m20220502170053 from './20220502170053-move-first-last-logged-from-config-to-journey';
 export * as m20220511110535 from './20220511110535-add-questionnaires-isAssignableToMember';
 export * as m20220515092918 from './20220515092918-update-journey-isActive-active';
+export * as m20220515143904 from './20220515143904-enable-CSAT-to-memeber';

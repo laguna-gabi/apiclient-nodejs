@@ -274,6 +274,6 @@ export const buildCSATQuestionnaire = (): CreateQuestionnaireParams => {
         ],
       },
     ],
-    isAssignableToMember: false,
+    isAssignableToMember: true,
   };
 };
