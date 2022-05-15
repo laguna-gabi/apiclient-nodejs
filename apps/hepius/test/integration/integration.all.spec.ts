@@ -20,7 +20,7 @@ import {
   generateAdmissionActivityParams,
   generateAdmissionDietaryParams,
   generateAdmissionMedicationParams,
-  generateAdmissionProcedureParams,
+  generateAdmissionTreatmentRenderedParams,
   generateAdmissionWoundCareParams,
   generateAppointmentLink,
   generateAvailabilityInput,
@@ -2648,8 +2648,8 @@ describe('Integration tests: all', () => {
       diagnoses: expect.arrayContaining([
         expect.objectContaining({ description: expect.any(String) }),
       ]),
-      procedures: expect.arrayContaining([
-        expect.objectContaining({ description: expect.any(String) }),
+      treatmentRendereds: expect.arrayContaining([
+        expect.objectContaining({ text: expect.any(String) }),
       ]),
       medications: expect.arrayContaining([expect.objectContaining({ name: expect.any(String) })]),
       externalAppointments: expect.arrayContaining([
@@ -2692,10 +2692,10 @@ describe('Integration tests: all', () => {
     const diagnoses = [
       { id: createResult.diagnoses[0].id, ...removeChangeType(createMemberDnaParams.diagnosis) },
     ];
-    const procedures = [
+    const treatmentRendereds = [
       {
-        id: createResult.procedures[0].id,
-        ...removeChangeType(createMemberDnaParams.procedure),
+        id: createResult.treatmentRendereds[0].id,
+        ...removeChangeType(createMemberDnaParams.treatmentRendered),
       },
     ];
     const medications = [
@@ -2735,7 +2735,7 @@ describe('Integration tests: all', () => {
       expect.objectContaining({
         id: createResult.id,
         diagnoses,
-        procedures,
+        treatmentRendereds,
         medications,
         externalAppointments,
         dietaries,
@@ -2760,15 +2760,17 @@ describe('Integration tests: all', () => {
     const changeMemberDnaParams: ChangeMemberDnaParams = {
       id: createResult.id.toString(),
       memberId: member.id,
-      procedure: generateAdmissionProcedureParams({
-        changeType: ChangeType.update,
-        id: createResult.procedures[0].id,
+      treatmentRendered: generateAdmissionTreatmentRenderedParams({
+        changeType: ChangeType.create,
       }),
       medication: generateAdmissionMedicationParams({
         changeType: ChangeType.delete,
         id: createResult.medications[0].id,
       }),
-      dietary: generateAdmissionDietaryParams({ changeType: ChangeType.create }),
+      dietary: generateAdmissionDietaryParams({
+        changeType: ChangeType.update,
+        id: createResult.dietaries[0].id,
+      }),
       admitDate: newAdmitDate,
       admitType: null,
       admitSource: null,
@@ -2784,12 +2786,12 @@ describe('Integration tests: all', () => {
     };
     const changeResult = await handler.mutations.changeMemberDna({ changeMemberDnaParams });
 
-    procedures[0] = {
-      id: createResult.procedures[0].id,
-      ...removeChangeType(changeMemberDnaParams.procedure),
+    treatmentRendereds[1] = {
+      id: createResult.treatmentRendereds[0].id,
+      ...removeChangeType(changeMemberDnaParams.treatmentRendered),
     };
-    dietaries[1] = {
-      id: changeResult.dietaries[1].id,
+    dietaries[0] = {
+      id: changeResult.dietaries[0].id,
       ...removeChangeType(changeMemberDnaParams.dietary),
     };
 
@@ -2797,7 +2799,7 @@ describe('Integration tests: all', () => {
       expect.objectContaining({
         id: createResult.id,
         diagnoses,
-        procedures,
+        treatmentRendereds,
         medications: [],
         externalAppointments,
         dietaries,

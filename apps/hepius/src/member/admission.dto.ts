@@ -17,13 +17,6 @@ import { IsOptional, Matches } from 'class-validator';
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
-export enum ProcedureType {
-  treatment = 'treatment',
-  diagnostic = 'diagnostic',
-  other = 'other',
-}
-registerEnumType(ProcedureType, { name: 'ProcedureType' });
-
 export enum PrimaryDiagnosisType {
   principal = 'principal',
   admitting = 'admitting',
@@ -283,7 +276,7 @@ registerEnumType(ExternalAppointmentType, { name: 'ExternalAppointmentType' });
 
 export enum AdmissionCategory {
   diagnoses = 'diagnoses',
-  procedures = 'procedures',
+  treatmentRendereds = 'treatmentRendereds',
   medications = 'medications',
   externalAppointments = 'externalAppointments',
   dietaries = 'dietaries',
@@ -341,20 +334,24 @@ export class Diagnosis extends BaseCategory {
 }
 
 @ObjectType()
-@InputType('ProcedureInput')
+@InputType('TreatmentRenderedInput')
 @Schema({ versionKey: false, timestamps: true })
-export class Procedure extends BaseCategory {
+export class TreatmentRendered extends BaseCategory {
   @Prop({ isNan: true })
   @Field({ nullable: true })
-  date?: string;
-
-  @Prop({ type: String, enum: ProcedureType, isNan: true })
-  @Field(() => ProcedureType, { nullable: true })
-  procedureType?: ProcedureType;
+  text?: string;
 
   @Prop({ isNan: true })
-  @Field(() => String, { nullable: true })
-  description?: string;
+  @Field({ nullable: true })
+  code?: string;
+
+  @Prop({ isNan: true })
+  @Field({ nullable: true })
+  startDate?: string;
+
+  @Prop({ isNan: true })
+  @Field({ nullable: true })
+  endDate?: string;
 }
 
 @ObjectType()
@@ -517,7 +514,7 @@ export class ChangeAdmissionDiagnosisParams extends Diagnosis {
 }
 
 @InputType()
-export class ChangeAdmissionProcedureParams extends Procedure {
+export class ChangeAdmissionTreatmentRenderedParams extends TreatmentRendered {
   @Field(() => ChangeType)
   changeType: ChangeType;
 }
@@ -604,10 +601,13 @@ export class ChangeMemberDnaParams {
   @IsOnlyDateInSub('onsetEnd', { message: Errors.get(ErrorType.admissionDiagnosisOnsetEnd) })
   diagnosis?: ChangeAdmissionDiagnosisParams;
 
-  @Field(() => ChangeAdmissionProcedureParams, { nullable: true })
+  @Field(() => ChangeAdmissionTreatmentRenderedParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
-  @IsOnlyDateInSub('date', { message: Errors.get(ErrorType.admissionProcedureDate) })
-  procedure?: ChangeAdmissionProcedureParams;
+  @IsOnlyDateInSub('startDate', {
+    message: Errors.get(ErrorType.admissionTreatmentRenderedStartDate),
+  })
+  @IsOnlyDateInSub('endDate', { message: Errors.get(ErrorType.admissionTreatmentRenderedEndDate) })
+  treatmentRendered?: ChangeAdmissionTreatmentRenderedParams;
 
   @Field(() => ChangeAdmissionMedicationParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
@@ -705,9 +705,9 @@ export class Admission extends Identifier {
   @Field(() => [Diagnosis], { nullable: true })
   diagnoses?: Diagnosis[];
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: Procedure.name }], isNaN: true })
-  @Field(() => [Procedure], { nullable: true })
-  procedures?: Procedure[];
+  @Prop({ type: [{ type: Types.ObjectId, ref: TreatmentRendered.name }], isNaN: true })
+  @Field(() => [TreatmentRendered], { nullable: true })
+  treatmentRendereds?: TreatmentRendered[];
 
   @Prop({ type: [{ type: Types.ObjectId, ref: Medication.name }], isNaN: true })
   @Field(() => [Medication], { nullable: true })
@@ -750,9 +750,11 @@ export const DiagnosisDto = audit(
   SchemaFactory.createForClass(Diagnosis).plugin(mongooseDelete, useFactoryOptions),
 );
 
-export type ProcedureDocument = Procedure & Document & ISoftDelete<Procedure>;
-export const ProcedureDto = audit(
-  SchemaFactory.createForClass(Procedure).plugin(mongooseDelete, useFactoryOptions),
+export type TreatmentRenderedDocument = TreatmentRendered &
+  Document &
+  ISoftDelete<TreatmentRendered>;
+export const TreatmentRenderedDto = audit(
+  SchemaFactory.createForClass(TreatmentRendered).plugin(mongooseDelete, useFactoryOptions),
 );
 
 export type MedicationDocument = Medication & Document & ISoftDelete<Medication>;

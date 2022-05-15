@@ -16,9 +16,9 @@ import {
   Medication,
   MedicationDocument,
   MedicationDto,
-  Procedure,
-  ProcedureDocument,
-  ProcedureDto,
+  TreatmentRendered,
+  TreatmentRenderedDocument,
+  TreatmentRenderedDto,
 } from '../../src/member';
 import { ErrorType, defaultTimestampsDbValues } from '../../src/common';
 import {
@@ -26,12 +26,12 @@ import {
   generateAdmissionDietaryParams,
   generateAdmissionExternalAppointmentParams,
   generateAdmissionMedicationParams,
-  generateAdmissionProcedureParams,
+  generateAdmissionTreatmentRenderedParams,
 } from '../generators';
 
 export class AdmissionHelper {
   private diagnosisModel: Model<DiagnosisDocument & defaultTimestampsDbValues>;
-  private procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
+  private treatmentRenderedModel: Model<TreatmentRenderedDocument & defaultTimestampsDbValues>;
   private medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
   private externalAppointmentModel: Model<ExternalAppointmentDocument & defaultTimestampsDbValues>;
   private dietaryModel: Model<DietaryDocument & defaultTimestampsDbValues>;
@@ -50,7 +50,7 @@ export class AdmissionHelper {
   getSubModels() {
     return [
       this.diagnosisModel,
-      this.procedureModel,
+      this.treatmentRenderedModel,
       this.medicationModel,
       this.externalAppointmentModel,
       this.dietaryModel,
@@ -66,9 +66,9 @@ export class AdmissionHelper {
       Diagnosis.name,
       DiagnosisDto,
     );
-    this.procedureModel = model<ProcedureDocument & defaultTimestampsDbValues>(
-      Procedure.name,
-      ProcedureDto,
+    this.treatmentRenderedModel = model<TreatmentRenderedDocument & defaultTimestampsDbValues>(
+      TreatmentRendered.name,
+      TreatmentRenderedDto,
     );
     this.medicationModel = model<MedicationDocument & defaultTimestampsDbValues>(
       Medication.name,
@@ -91,11 +91,11 @@ export class AdmissionHelper {
       model: this.diagnosisModel,
       errorNotFound: ErrorType.admissionDiagnosisIdNotFound,
     });
-    this.mapper.set(AdmissionCategory.procedures, {
-      field: 'procedure',
-      method: generateAdmissionProcedureParams,
-      model: this.procedureModel,
-      errorNotFound: ErrorType.admissionProcedureIdNotFound,
+    this.mapper.set(AdmissionCategory.treatmentRendereds, {
+      field: 'treatmentRendered',
+      method: generateAdmissionTreatmentRenderedParams,
+      model: this.treatmentRenderedModel,
+      errorNotFound: ErrorType.admissionTreatmentRenderedIdNotFound,
     });
     this.mapper.set(AdmissionCategory.medications, {
       field: 'medication',

@@ -87,7 +87,7 @@ import {
   ChangeAdmissionDietaryParams,
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
-  ChangeAdmissionProcedureParams,
+  ChangeAdmissionTreatmentRenderedParams,
   ChangeMemberDnaParams,
   ClinicalStatus,
   CreateJourneyParams,
@@ -114,7 +114,6 @@ import {
   NotifyContentParams,
   NotifyParams,
   PrimaryDiagnosisType,
-  ProcedureType,
   ReadmissionRisk,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
@@ -1442,20 +1441,25 @@ export const generateAdmissionDiagnosisParams = ({
   };
 };
 
-export const generateAdmissionProcedureParams = ({
+export const generateAdmissionTreatmentRenderedParams = ({
   changeType,
   id,
+  startDate,
+  endDate,
 }: {
   changeType: ChangeType;
   id?: string;
-}): ChangeAdmissionProcedureParams => {
+  startDate?: string;
+  endDate?: string;
+}): ChangeAdmissionTreatmentRenderedParams => {
   const attachIdParam = id ? { id } : {};
   return {
     changeType,
     ...attachIdParam,
-    date: generateDateOnly(new Date()),
-    procedureType: ProcedureType.diagnostic,
-    description: lorem.sentence(),
+    text: lorem.sentence(),
+    code: v4(),
+    startDate: startDate || generateDateOnly(subDays(new Date(), 2)),
+    endDate: endDate || generateDateOnly(subDays(new Date(), 1)),
   };
 };
 
@@ -1548,7 +1552,7 @@ export const generateChangeMemberDnaParams = ({
   id?: string;
 }): ChangeMemberDnaParams => {
   const createDiagnosis = generateAdmissionDiagnosisParams({ changeType });
-  const createProcedure = generateAdmissionProcedureParams({ changeType });
+  const createTreatmentRendered = generateAdmissionTreatmentRenderedParams({ changeType });
   const createMedication = generateAdmissionMedicationParams({ changeType });
   const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
   const createDietary = generateAdmissionDietaryParams({ changeType });
@@ -1557,7 +1561,7 @@ export const generateChangeMemberDnaParams = ({
     memberId,
     ...idObject,
     diagnosis: createDiagnosis,
-    procedure: createProcedure,
+    treatmentRendered: createTreatmentRendered,
     medication: createMedication,
     externalAppointment: createExternalAppointment,
     dietary: createDietary,

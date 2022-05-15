@@ -166,7 +166,7 @@ export enum ErrorType {
 
   //member admission
   admissionDiagnosisIdNotFound = 10601,
-  admissionProcedureIdNotFound = 10602,
+  admissionTreatmentRenderedIdNotFound = 10602,
   admissionMedicationIdNotFound = 10603,
   admissionExternalAppointmentIdNotFound = 10604,
   admissionDietaryIdNotFound = 10607,
@@ -174,9 +174,10 @@ export enum ErrorType {
   admissionDataNotProvidedOnChangeDna = 10609,
   admissionDiagnosisOnsetStart = 10610,
   admissionDiagnosisOnsetEnd = 10611,
-  admissionProcedureDate = 10612,
-  admissionDietaryCategoryNameMismatch = 10613,
-  admissionDietaryDate = 10614,
+  admissionTreatmentRenderedStartDate = 10612,
+  admissionTreatmentRenderedEndDate = 10613,
+  admissionDietaryCategoryNameMismatch = 10614,
+  admissionDietaryDate = 10615,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -432,7 +433,10 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.journeyIdInvalid.valueOf(), `journey id ${objectIdFormat}`],
   [ErrorType.admissionDiagnosisIdNotFound.valueOf(), `diagnosis ${notFoundPrefix}`],
-  [ErrorType.admissionProcedureIdNotFound.valueOf(), `procedure ${notFoundPrefix}`],
+  [
+    ErrorType.admissionTreatmentRenderedIdNotFound.valueOf(),
+    `treatment rendered ${notFoundPrefix}`,
+  ],
   [ErrorType.admissionMedicationIdNotFound.valueOf(), `medication ${notFoundPrefix}`],
   [
     ErrorType.admissionExternalAppointmentIdNotFound.valueOf(),
@@ -450,7 +454,14 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.admissionDiagnosisOnsetStart.valueOf(), `diagnosis onsetStart ${dateInstanceFormat}`],
   [ErrorType.admissionDiagnosisOnsetEnd.valueOf(), `diagnosis onsetEnd ${dateInstanceFormat}`],
-  [ErrorType.admissionProcedureDate.valueOf(), `procedure date ${dateInstanceFormat}`],
+  [
+    ErrorType.admissionTreatmentRenderedStartDate.valueOf(),
+    `treatment rendered startDate ${dateInstanceFormat}`,
+  ],
+  [
+    ErrorType.admissionTreatmentRenderedEndDate.valueOf(),
+    `treatment rendered endDate ${dateInstanceFormat}`,
+  ],
   [
     ErrorType.admissionDietaryCategoryNameMismatch.valueOf(),
     // eslint-disable-next-line max-len

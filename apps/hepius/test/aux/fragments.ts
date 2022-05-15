@@ -175,11 +175,11 @@ export const FRAGMENT_ADMISSION = gql`
       onsetStart
       onsetEnd
     }
-    procedures {
-      id
-      date
-      procedureType
-      description
+    treatmentRendereds {
+      text
+      code
+      startDate
+      endDate
     }
     medications {
       id

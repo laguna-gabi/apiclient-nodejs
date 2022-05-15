@@ -270,7 +270,7 @@ describe(AdmissionService.name, () => {
   test.each`
     admissionCategory                         | key
     ${AdmissionCategory.diagnoses}            | ${'description'}
-    ${AdmissionCategory.procedures}           | ${'description'}
+    ${AdmissionCategory.treatmentRendereds}   | ${'description'}
     ${AdmissionCategory.medications}          | ${'name'}
     ${AdmissionCategory.externalAppointments} | ${'date'}
     ${AdmissionCategory.dietaries}            | ${'notes'}
@@ -293,7 +293,7 @@ describe(AdmissionService.name, () => {
   test.each`
     admissionCategory                         | key
     ${AdmissionCategory.diagnoses}            | ${'description'}
-    ${AdmissionCategory.procedures}           | ${'text'}
+    ${AdmissionCategory.treatmentRendereds}   | ${'text'}
     ${AdmissionCategory.medications}          | ${'name'}
     ${AdmissionCategory.externalAppointments} | ${'date'}
     ${AdmissionCategory.dietaries}            | ${'notes'}
@@ -341,13 +341,13 @@ describe(AdmissionService.name, () => {
     const createResult = await createAllCategories(memberId);
 
     //create another one and make sure it returns all the existing created values above
-    const { field, method } = admissionHelper.mapper.get(AdmissionCategory.procedures);
+    const { field, method } = admissionHelper.mapper.get(AdmissionCategory.treatmentRendereds);
     const createParams = method({ changeType: ChangeType.create });
     const changeResult = await change(field, createParams, memberId, createResult.id);
 
-    expect(changeResult[AdmissionCategory.procedures]).toEqual([
-      expect.objectContaining({ description: expect.any(String) }),
-      expect.objectContaining({ description: expect.any(String) }),
+    expect(changeResult[AdmissionCategory.treatmentRendereds]).toEqual([
+      expect.objectContaining({ text: expect.any(String) }),
+      expect.objectContaining({ text: expect.any(String) }),
     ]);
     checkAllCategories(changeResult);
   });
@@ -357,15 +357,17 @@ describe(AdmissionService.name, () => {
     let result = await createAllCategories(memberId);
 
     //update one and make sure it returns all the existing created values above
-    const { field, method, model } = admissionHelper.mapper.get(AdmissionCategory.procedures);
+    const { field, method, model } = admissionHelper.mapper.get(
+      AdmissionCategory.treatmentRendereds,
+    );
     const { id } = await model.findById(
-      new Types.ObjectId(result[AdmissionCategory.procedures][0].id),
+      new Types.ObjectId(result[AdmissionCategory.treatmentRendereds][0].id),
     );
     const updateParams = method({ changeType: ChangeType.update, id });
     result = await change(field, updateParams, memberId, result.id.toString());
 
-    expect(result[AdmissionCategory.procedures]).toEqual([
-      expect.objectContaining({ date: updateParams.date }),
+    expect(result[AdmissionCategory.treatmentRendereds]).toEqual([
+      expect.objectContaining({ startDate: updateParams.startDate }),
     ]);
     checkAllCategories(result);
   });
@@ -375,14 +377,16 @@ describe(AdmissionService.name, () => {
     const result = await createAllCategories(memberId);
 
     //update one and make sure it returns all the existing created values above
-    const { field, method, model } = admissionHelper.mapper.get(AdmissionCategory.procedures);
+    const { field, method, model } = admissionHelper.mapper.get(
+      AdmissionCategory.treatmentRendereds,
+    );
     const { id } = await model.findById(
-      new Types.ObjectId(result[AdmissionCategory.procedures][0].id),
+      new Types.ObjectId(result[AdmissionCategory.treatmentRendereds][0].id),
     );
     const deleteParams = method({ changeType: ChangeType.delete, id });
     const deleteResult = await change(field, deleteParams, memberId, result.id.toString());
 
-    expect(deleteResult[AdmissionCategory.procedures]).toEqual([]);
+    expect(deleteResult[AdmissionCategory.treatmentRendereds]).toEqual([]);
     checkAllCategories(deleteResult);
   });
 

@@ -41,9 +41,9 @@ import {
   MemberRecordingDto,
   MemberResolver,
   MemberService,
-  Procedure,
-  ProcedureDto,
   Recording,
+  TreatmentRendered,
+  TreatmentRenderedDto,
 } from '.';
 import { AppointmentDto } from '../appointment';
 import { CommonModule, LoggerService } from '../common';
@@ -72,7 +72,7 @@ import { UserModule } from '../user';
       { name: ActionItem.name, schema: ActionItemDto },
       { name: Member.name, schema: MemberDto },
       { name: Diagnosis.name, schema: DiagnosisDto },
-      { name: Procedure.name, schema: ProcedureDto },
+      { name: TreatmentRendered.name, schema: TreatmentRenderedDto },
       { name: Medication.name, schema: MedicationDto },
       { name: ExternalAppointment.name, schema: ExternalAppointmentDto },
       { name: Dietary.name, schema: DietaryDto },

@@ -7,7 +7,7 @@ import {
   ChangeAdmissionDietaryParams,
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
-  ChangeAdmissionProcedureParams,
+  ChangeAdmissionTreatmentRenderedParams,
   ChangeMemberDnaParams,
   Diagnosis,
   DiagnosisDocument,
@@ -17,8 +17,8 @@ import {
   ExternalAppointmentDocument,
   Medication,
   MedicationDocument,
-  Procedure,
-  ProcedureDocument,
+  TreatmentRendered,
+  TreatmentRenderedDocument,
   singleAdmissionItems,
 } from '.';
 import {
@@ -50,8 +50,9 @@ export class AdmissionService extends BaseService {
   constructor(
     @InjectModel(Diagnosis.name)
     private readonly diagnosisModel: Model<DiagnosisDocument> & ISoftDelete<DiagnosisDocument>,
-    @InjectModel(Procedure.name)
-    private readonly procedureModel: Model<ProcedureDocument> & ISoftDelete<ProcedureDocument>,
+    @InjectModel(TreatmentRendered.name)
+    private readonly treatmentRenderedModel: Model<TreatmentRenderedDocument> &
+      ISoftDelete<TreatmentRenderedDocument>,
     @InjectModel(Medication.name)
     private readonly medicationModel: Model<MedicationDocument> & ISoftDelete<MedicationDocument>,
     @InjectModel(Admission.name)
@@ -68,9 +69,9 @@ export class AdmissionService extends BaseService {
       model: this.diagnosisModel,
       errorType: ErrorType.admissionDiagnosisIdNotFound,
     };
-    this.matchMap[AdmissionCategory.procedures] = {
-      model: this.procedureModel,
-      errorType: ErrorType.admissionProcedureIdNotFound,
+    this.matchMap[AdmissionCategory.treatmentRendereds] = {
+      model: this.treatmentRenderedModel,
+      errorType: ErrorType.admissionTreatmentRenderedIdNotFound,
     };
     this.matchMap[AdmissionCategory.medications] = {
       model: this.medicationModel,
@@ -111,10 +112,17 @@ export class AdmissionService extends BaseService {
       result = await this.changeInternal(diagnoses, changeType, admissionCategory, memberId, id);
       id = result._id.toString();
     }
-    if (setParams.procedure) {
-      const { changeType, ...procedure }: ChangeAdmissionProcedureParams = setParams.procedure;
-      const admissionCategory = AdmissionCategory.procedures;
-      result = await this.changeInternal(procedure, changeType, admissionCategory, memberId, id);
+    if (setParams.treatmentRendered) {
+      const { changeType, ...treatmentRendered }: ChangeAdmissionTreatmentRenderedParams =
+        setParams.treatmentRendered;
+      const admissionCategory = AdmissionCategory.treatmentRendereds;
+      result = await this.changeInternal(
+        treatmentRendered,
+        changeType,
+        admissionCategory,
+        memberId,
+        id,
+      );
       id = result._id.toString();
     }
     if (setParams.medication) {
@@ -174,8 +182,10 @@ export class AdmissionService extends BaseService {
       ...data,
     });
 
-    await deleteMemberObjects<Model<ProcedureDocument> & ISoftDelete<ProcedureDocument>>({
-      model: this.procedureModel,
+    await deleteMemberObjects<
+      Model<TreatmentRenderedDocument> & ISoftDelete<TreatmentRenderedDocument>
+    >({
+      model: this.treatmentRenderedModel,
       ...data,
     });
 
@@ -306,7 +316,7 @@ export class AdmissionService extends BaseService {
   /**
    * @param object any db object
    * changing internal _id on sub array objects, for example :
-   * {memberId, procedures: [{_id: "some_id"}]} will be {memberId, procedures: [{id: "some_id"}]}
+   * {memberId, diagnoses: [{_id: "some_id"}]} will be {memberId, diagnoses: [{id: "some_id"}]}
    */
   private replaceSubIds(object) {
     Object.keys(object).map((key) => {

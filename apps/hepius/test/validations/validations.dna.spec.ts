@@ -66,25 +66,28 @@ describe('Validations - DNA', () => {
 
     /* eslint-disable max-len */
     test.each`
-      admissionCategory               | input                              | error
-      ${AdmissionCategory.diagnoses}  | ${{ code: 123 }}                   | ${{ missingFieldError: stringError }}
-      ${AdmissionCategory.diagnoses}  | ${{ description: 123 }}            | ${{ missingFieldError: stringError }}
-      ${AdmissionCategory.diagnoses}  | ${{ primaryType: 'not-valid' }}    | ${{ missingFieldError: 'does not exist in "PrimaryDiagnosisType" enum' }}
-      ${AdmissionCategory.diagnoses}  | ${{ secondaryType: 'not-valid' }}  | ${{ missingFieldError: 'does not exist in "SecondaryDiagnosisType" enum' }}
-      ${AdmissionCategory.diagnoses}  | ${{ clinicalStatus: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "ClinicalStatus" enum' }}
-      ${AdmissionCategory.diagnoses}  | ${{ severity: 'not-valid' }}       | ${{ missingFieldError: 'does not exist in "DiagnosisSeverity" enum' }}
-      ${AdmissionCategory.diagnoses}  | ${{ onsetStart: lorem.word() }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetStart)] }}
-      ${AdmissionCategory.diagnoses}  | ${{ onsetStart: '2021-13-1' }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetStart)] }}
-      ${AdmissionCategory.diagnoses}  | ${{ onsetStart: new Date() }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetStart)] }}
-      ${AdmissionCategory.diagnoses}  | ${{ onsetEnd: lorem.word() }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetEnd)] }}
-      ${AdmissionCategory.diagnoses}  | ${{ onsetEnd: '2021-13-1' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetEnd)] }}
-      ${AdmissionCategory.diagnoses}  | ${{ onsetEnd: new Date() }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetEnd)] }}
-      ${AdmissionCategory.procedures} | ${{ date: lorem.word() }}          | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionProcedureDate)] }}
-      ${AdmissionCategory.procedures} | ${{ date: '2021-13-1' }}           | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionProcedureDate)] }}
-      ${AdmissionCategory.procedures} | ${{ date: new Date() }}            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionProcedureDate)] }}
-      ${AdmissionCategory.dietaries}  | ${{ date: lorem.word() }}          | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
-      ${AdmissionCategory.dietaries}  | ${{ date: '2021-13-1' }}           | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
-      ${AdmissionCategory.dietaries}  | ${{ date: new Date() }}            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
+      admissionCategory                       | input                              | error
+      ${AdmissionCategory.diagnoses}          | ${{ code: 123 }}                   | ${{ missingFieldError: stringError }}
+      ${AdmissionCategory.diagnoses}          | ${{ description: 123 }}            | ${{ missingFieldError: stringError }}
+      ${AdmissionCategory.diagnoses}          | ${{ primaryType: 'not-valid' }}    | ${{ missingFieldError: 'does not exist in "PrimaryDiagnosisType" enum' }}
+      ${AdmissionCategory.diagnoses}          | ${{ secondaryType: 'not-valid' }}  | ${{ missingFieldError: 'does not exist in "SecondaryDiagnosisType" enum' }}
+      ${AdmissionCategory.diagnoses}          | ${{ clinicalStatus: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "ClinicalStatus" enum' }}
+      ${AdmissionCategory.diagnoses}          | ${{ severity: 'not-valid' }}       | ${{ missingFieldError: 'does not exist in "DiagnosisSeverity" enum' }}
+      ${AdmissionCategory.diagnoses}          | ${{ onsetStart: lorem.word() }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetStart)] }}
+      ${AdmissionCategory.diagnoses}          | ${{ onsetStart: '2021-13-1' }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetStart)] }}
+      ${AdmissionCategory.diagnoses}          | ${{ onsetStart: new Date() }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetStart)] }}
+      ${AdmissionCategory.diagnoses}          | ${{ onsetEnd: lorem.word() }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetEnd)] }}
+      ${AdmissionCategory.diagnoses}          | ${{ onsetEnd: '2021-13-1' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetEnd)] }}
+      ${AdmissionCategory.diagnoses}          | ${{ onsetEnd: new Date() }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetEnd)] }}
+      ${AdmissionCategory.treatmentRendereds} | ${{ startDate: lorem.word() }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionTreatmentRenderedStartDate)] }}
+      ${AdmissionCategory.treatmentRendereds} | ${{ startDate: '2021-13-1' }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionTreatmentRenderedStartDate)] }}
+      ${AdmissionCategory.treatmentRendereds} | ${{ startDate: new Date() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionTreatmentRenderedStartDate)] }}
+      ${AdmissionCategory.treatmentRendereds} | ${{ endDate: lorem.word() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionTreatmentRenderedEndDate)] }}
+      ${AdmissionCategory.treatmentRendereds} | ${{ endDate: '2021-13-1' }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionTreatmentRenderedEndDate)] }}
+      ${AdmissionCategory.treatmentRendereds} | ${{ endDate: new Date() }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionTreatmentRenderedEndDate)] }}
+      ${AdmissionCategory.dietaries}          | ${{ date: lorem.word() }}          | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
+      ${AdmissionCategory.dietaries}          | ${{ date: '2021-13-1' }}           | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
+      ${AdmissionCategory.dietaries}          | ${{ date: new Date() }}            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
     `(
       `should fail to change ${AdmissionCategory.diagnoses} dna since $input is not valid`,
       async ({ admissionCategory, input, error }) => {

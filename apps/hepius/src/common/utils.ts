@@ -24,8 +24,8 @@ import {
   JournalDocument,
   JourneyDocument,
   MedicationDocument,
-  ProcedureDocument,
   RecordingDocument,
+  TreatmentRenderedDocument,
 } from '../member';
 import { QuestionnaireResponseDocument } from '../questionnaire';
 import { TodoDocument, TodoDoneDocument } from '../todo';
@@ -110,7 +110,7 @@ type Entity =
   | JourneyDocument
   | AdmissionDocument
   | DiagnosisDocument
-  | ProcedureDocument
+  | TreatmentRenderedDocument
   | MedicationDocument
   | ExternalAppointmentDocument
   | DietaryDocument;
