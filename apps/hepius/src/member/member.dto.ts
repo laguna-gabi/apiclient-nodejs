@@ -297,6 +297,11 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsOptional()
   lastName?: string;
 
+  /**
+   * will be @deprecated soon
+   * use journey.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   */
   @Field(() => String, { nullable: true })
   @IsOptional()
   fellowName?: string;
@@ -642,6 +647,11 @@ export class Member extends Identifier {
   @Field(() => Scores, { nullable: true })
   scores?: Scores;
 
+  /**
+   * will be @deprecated soon
+   * use journey.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   */
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   @IsOptional()

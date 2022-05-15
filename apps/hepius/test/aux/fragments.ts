@@ -221,5 +221,6 @@ export const FRAGMENT_JOURNEY = gql`
   fragment journeyFragment on Journey {
     id
     memberId
+    fellowName
   }
 `;

@@ -374,7 +374,7 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     race: defaultMemberParams.race,
     maritalStatus: MaritalStatus.single,
     zipCode: generateZipCode(),
-    fellowName: `${name.firstName()} ${name.lastName()}`,
+    fellowName: generateFellowName(),
     address: {
       street: fakerAddress.streetName(),
       city: fakerAddress.city(),
@@ -412,7 +412,7 @@ export const generateUpdateMemberParams = ({
   email = generateEmail(),
   zipCode = generateZipCode(),
   dischargeDate = generateDateOnly(fakerDate.soon(10)),
-  fellowName = name.firstName(),
+  fellowName = generateFellowName(),
   drgDesc = name.firstName(),
   drg = datatype.number({ min: 1, max: 1000 }).toString(),
   phoneSecondary = generatePhone(),
@@ -486,6 +486,7 @@ export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey
   firstLoggedInAt: fakerDate.past(2),
   lastLoggedInAt: fakerDate.past(1),
   active: true,
+  fellowName: generateFellowName(),
   admissions: [],
 });
 
@@ -1393,9 +1394,11 @@ export const generateCreateJourneyParams = ({
 export const generateUpdateJourneyParams = ({
   memberId = generateId(),
   id,
+  fellowName = generateFellowName(),
 }: Partial<UpdateJourneyParams> = {}): UpdateJourneyParams => ({
   memberId,
   id,
+  fellowName,
 });
 
 /*************************************************************************************************
@@ -1595,3 +1598,5 @@ export function getIsAssignableToMember(questionnaireType: QuestionnaireType): b
     questionnaireType === QuestionnaireType.who5
   );
 }
+
+const generateFellowName = () => `${name.firstName()} ${name.lastName()}`;

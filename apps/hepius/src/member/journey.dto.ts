@@ -18,9 +18,13 @@ export class CreateJourneyParams {
 @InputType()
 export class UpdateJourneyParams extends CreateJourneyParams {
   // if id is not supplied, we're updating the default journey of the member
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   @IsOptional()
   id?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  fellowName?: string;
 }
 /***************************************************************************************************
  ********************************* Return params for gql methods **********************************
@@ -48,6 +52,10 @@ export class Journey extends Identifier {
   @Prop({ type: Date })
   @Field(() => Date, { nullable: true })
   lastLoggedInAt?: Date;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  fellowName?: string;
 }
 
 /**************************************************************************************************

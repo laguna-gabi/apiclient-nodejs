@@ -1,7 +1,7 @@
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
-import { JourneyService, MemberModule } from '../../src/member';
+import { JourneyService, MemberModule, UpdateJourneyParams } from '../../src/member';
 import {
   dbConnect,
   dbDisconnect,
@@ -155,10 +155,26 @@ describe(JourneyService.name, () => {
       const memberId = generateId();
       const { id } = await service.create(generateCreateJourneyParams({ memberId }));
 
-      const { id: updateResultId } = await service.update(
-        generateUpdateJourneyParams({ memberId, id }),
-      );
-      expect(id).toEqual(updateResultId);
+      await checkUpdate({ memberId, id });
     });
+
+    it('should multiple update item', async () => {
+      const memberId = generateId();
+      const { id } = await service.create(generateCreateJourneyParams({ memberId }));
+
+      await checkUpdate(generateUpdateJourneyParams({ memberId, id }));
+      await checkUpdate(generateUpdateJourneyParams({ memberId, id }));
+    });
+
+    const checkUpdate = async (updateParams: UpdateJourneyParams) => {
+      const result = await service.update(updateParams);
+      expect(updateParams.id).toEqual(result.id);
+      expect(result).toEqual(
+        expect.objectContaining({
+          ...updateParams,
+          memberId: new Types.ObjectId(updateParams.memberId),
+        }),
+      );
+    };
   });
 });
