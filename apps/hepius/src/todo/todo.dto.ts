@@ -18,7 +18,7 @@ import { Identifier } from '@argus/hepiusClient';
 
 export const NotNullableTodoKeys = ['label', 'cronExpressions', 'start', 'end'];
 
-export type TodoNotificationsType = 'createTodo' | 'updateTodo' | 'deleteTodo';
+export type TodoNotificationsType = 'createTodo' | 'createActionTodo' | 'updateTodo' | 'deleteTodo';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************

@@ -5,6 +5,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import {
+  ActionTodoLabel,
   CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
@@ -67,9 +68,13 @@ export class TodoResolver {
   @Mutation(() => Identifier)
   @Roles(UserRole.coach, UserRole.nurse)
   async createActionTodo(
+    @Client('roles') roles,
+    @Client('_id') clientId,
     @Args(camelCase(CreateActionTodoParams.name)) createActionTodoParams: CreateActionTodoParams,
   ) {
-    return this.todoService.createActionTodo(createActionTodoParams);
+    const todo = await this.todoService.createActionTodo(createActionTodoParams);
+    this.todoSendNotification(todo, roles, clientId, 'createActionTodo');
+    return { id: todo.id };
   }
 
   @Query(() => [Todo])
@@ -225,6 +230,15 @@ export class TodoResolver {
           return TodoInternalKey.createTodoAppointment;
         case TodoLabel.Meds:
           return TodoInternalKey.createTodoMeds;
+        default:
+          return TodoInternalKey.createTodoTodo;
+      }
+    } else if (todoNotificationsType === 'createActionTodo') {
+      switch (label) {
+        case ActionTodoLabel.Questionnaire:
+          return TodoInternalKey.createTodoQuestionnaire;
+        case ActionTodoLabel.Explore:
+          return TodoInternalKey.createTodoExplore;
         default:
           return TodoInternalKey.createTodoTodo;
       }

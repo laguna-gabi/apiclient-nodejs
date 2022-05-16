@@ -34,7 +34,9 @@ import {
   generateAssessmentSubmitAlertMock,
   generateChatMessageUserMock,
   generateCreateTodoAppointmentMock,
+  generateCreateTodoExploreMock,
   generateCreateTodoMedsMock,
+  generateCreateTodoQuestionnaireMock,
   generateCreateTodoTodoMock,
   generateDeleteDispatchMock,
   generateDeleteTodoAppointmentMock,
@@ -96,9 +98,16 @@ import {
   QuestionnaireType,
   SubmitQuestionnaireResponseParams,
 } from '../../src/questionnaire';
-import { CreateTodoParams, TodoLabel, UpdateTodoParams } from '../../src/todo';
+import {
+  ActionTodoLabel,
+  CreateActionTodoParams,
+  CreateTodoParams,
+  TodoLabel,
+  UpdateTodoParams,
+} from '../../src/todo';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
+  generateCreateActionTodoParams,
   generateCreateMemberParams,
   generateCreateQuestionnaireParams,
   generateCreateTodoParams,
@@ -1167,6 +1176,133 @@ describe('Integration tests: notifications', () => {
         );
       });
     });
+
+    /**
+     * Trigger : TodoResolver.createActionTodo
+     * Dispatches:
+     *      1. send createTodo dispatch
+     */
+    // eslint-disable-next-line max-len
+    it(`createActionTodo: should send dispatch ${TodoInternalKey.createTodoQuestionnaire}`, async () => {
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const createActionTodoParams: CreateActionTodoParams = generateCreateActionTodoParams({
+        memberId: member.id,
+        label: ActionTodoLabel.Questionnaire,
+      });
+
+      const { id } = await handler.mutations.createActionTodo({
+        requestHeaders: generateRequestHeaders(user.authId),
+        createActionTodoParams,
+      });
+      await delay(200);
+
+      const mock = generateCreateTodoQuestionnaireMock({
+        recipientClientId: member.id,
+        senderClientId: user.id,
+        todoId: id,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : TodoResolver.createActionTodo
+     * Dispatches:
+     *      1. send createTodo dispatch
+     */
+    it(`createActionTodo: should send dispatch ${TodoInternalKey.createTodoExplore}`, async () => {
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const createActionTodoParams: CreateActionTodoParams = generateCreateActionTodoParams({
+        memberId: member.id,
+        label: ActionTodoLabel.Explore,
+      });
+
+      const { id } = await handler.mutations.createActionTodo({
+        requestHeaders: generateRequestHeaders(user.authId),
+        createActionTodoParams,
+      });
+      await delay(200);
+
+      const mock = generateCreateTodoExploreMock({
+        recipientClientId: member.id,
+        senderClientId: user.id,
+        todoId: id,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : TodoResolver.createActionTodo
+     * Dispatches:
+     *      1. send createTodo dispatch
+     */
+    test.each([ActionTodoLabel.Journal, ActionTodoLabel.Scanner])(
+      `createActionTodo: should send dispatch ${TodoInternalKey.createTodoExplore}`,
+      async (label) => {
+        const { member, user } = await creators.createMemberUserAndOptionalOrg();
+
+        await delay(200);
+        handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+        const createActionTodoParams: CreateActionTodoParams = generateCreateActionTodoParams({
+          memberId: member.id,
+          label,
+        });
+
+        const { id } = await handler.mutations.createActionTodo({
+          requestHeaders: generateRequestHeaders(user.authId),
+          createActionTodoParams,
+        });
+        await delay(200);
+
+        const mock = generateCreateTodoTodoMock({
+          recipientClientId: member.id,
+          senderClientId: user.id,
+          todoId: id,
+        });
+
+        const object = new ObjectBaseClass(mock);
+        Object.keys(object.objectBaseType).forEach((key) => {
+          expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+            expect.objectContaining({
+              type: QueueType.notifications,
+              message: expect.stringContaining(
+                key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+              ),
+            }),
+          );
+        });
+      },
+    );
 
     /**
      * Trigger : TodoResolver.updateTodo

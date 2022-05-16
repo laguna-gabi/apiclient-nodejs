@@ -104,6 +104,8 @@ export enum TodoInternalKey {
   createTodoMeds = 'createTodo.Meds',
   createTodoAppointment = 'createTodo.Appointment',
   createTodoTodo = 'createTodo.Todo',
+  createTodoQuestionnaire = 'createTodo.Questionnaire',
+  createTodoExplore = 'createTodo.Explore',
   updateTodoMeds = 'updateTodo.Meds',
   updateTodoAppointment = 'updateTodo.Appointment',
   updateTodoTodo = 'updateTodo.Todo',

@@ -6,6 +6,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   dbDisconnect,
   defaultModules,
+  generateCreateActionTodoParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateGetTodoDonesParams,
@@ -19,6 +20,8 @@ import {
 } from '..';
 import { ErrorType, Errors, EventType, LoggerService } from '../../src/common';
 import {
+  ActionTodoLabel,
+  CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
   TodoLabel,
@@ -155,6 +158,83 @@ describe('TodoResolver', () => {
         expect(result).toEqual({ id: todo.id });
       },
     );
+  });
+
+  describe('createActionTodo', () => {
+    let spyOnServiceCreateActionTodo;
+
+    beforeEach(() => {
+      spyOnServiceCreateActionTodo = jest.spyOn(service, 'createActionTodo');
+    });
+
+    afterEach(() => {
+      spyOnServiceCreateActionTodo.mockReset();
+      spyOnEventEmitter.mockReset();
+    });
+
+    [UserRole.coach, UserRole.nurse, UserRole.admin].forEach((role) => {
+      test.each([ActionTodoLabel.Questionnaire, ActionTodoLabel.Explore])(
+        `should create action Todo by ${role} and send notification to member`,
+        async (label) => {
+          const memberId = generateId();
+          const userId = generateId();
+          const todo = mockGenerateActionTodo({ memberId: generateObjectId(memberId), label });
+          spyOnServiceCreateActionTodo.mockImplementationOnce(async () => todo);
+          const params: CreateActionTodoParams = generateCreateActionTodoParams({
+            memberId,
+            label,
+          });
+
+          const result = await resolver.createActionTodo([role], userId, params);
+
+          expect(spyOnServiceCreateActionTodo).toHaveBeenCalledWith(params);
+          expect(result).toEqual({ id: todo.id });
+
+          const contentKey = TodoInternalKey[`createTodo${label}`];
+          expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, {
+            correlationId: expect.any(String),
+            dispatchId: generateDispatchId(contentKey, todo.memberId.toString(), todo.id),
+            notificationType: NotificationType.text,
+            recipientClientId: todo.memberId.toString(),
+            senderClientId: userId,
+            contentKey,
+            path: 'todo',
+          });
+        },
+      );
+    });
+
+    [UserRole.coach, UserRole.nurse, UserRole.admin].forEach((role) => {
+      test.each([ActionTodoLabel.Journal, ActionTodoLabel.Scanner])(
+        `should create action Todo by ${role} and send notification to member`,
+        async (label) => {
+          const memberId = generateId();
+          const userId = generateId();
+          const todo = mockGenerateActionTodo({ memberId: generateObjectId(memberId), label });
+          spyOnServiceCreateActionTodo.mockImplementationOnce(async () => todo);
+          const params: CreateActionTodoParams = generateCreateActionTodoParams({
+            memberId,
+            label,
+          });
+
+          const result = await resolver.createActionTodo([role], userId, params);
+
+          expect(spyOnServiceCreateActionTodo).toHaveBeenCalledWith(params);
+          expect(result).toEqual({ id: todo.id });
+
+          const contentKey = TodoInternalKey.createTodoTodo;
+          expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, {
+            correlationId: expect.any(String),
+            dispatchId: generateDispatchId(contentKey, todo.memberId.toString(), todo.id),
+            notificationType: NotificationType.text,
+            recipientClientId: todo.memberId.toString(),
+            senderClientId: userId,
+            contentKey,
+            path: 'todo',
+          });
+        },
+      );
+    });
   });
 
   describe('getTodos', () => {

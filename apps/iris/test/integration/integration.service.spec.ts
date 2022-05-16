@@ -33,7 +33,9 @@ import {
   generateAssessmentSubmitAlertMock,
   generateChatMessageUserMock,
   generateCreateTodoAppointmentMock,
+  generateCreateTodoExploreMock,
   generateCreateTodoMedsMock,
+  generateCreateTodoQuestionnaireMock,
   generateCreateTodoTodoMock,
   generateDeleteTodoAppointmentMock,
   generateDeleteTodoMedsMock,
@@ -1126,6 +1128,27 @@ describe('Notifications full flow', () => {
 
   it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoTodo}`, async () => {
     const mock = generateCreateTodoTodoMock({
+      recipientClientId: mobileMemberClient.id,
+      senderClientId: userClient.id,
+      todoId: generateId(),
+    });
+
+    await compareTodos(mock);
+  });
+
+  // eslint-disable-next-line max-len
+  it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoQuestionnaire}`, async () => {
+    const mock = generateCreateTodoQuestionnaireMock({
+      recipientClientId: mobileMemberClient.id,
+      senderClientId: userClient.id,
+      todoId: generateId(),
+    });
+
+    await compareTodos(mock);
+  });
+
+  it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoExplore}`, async () => {
+    const mock = generateCreateTodoExploreMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
       todoId: generateId(),

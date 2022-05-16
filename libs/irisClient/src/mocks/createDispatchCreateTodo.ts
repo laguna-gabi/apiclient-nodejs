@@ -83,3 +83,53 @@ export const generateCreateTodoTodoMock = ({
     path: 'todo',
   };
 };
+
+export const generateCreateTodoQuestionnaireMock = ({
+  recipientClientId,
+  senderClientId,
+  todoId,
+  correlationId = v4(),
+}: {
+  recipientClientId: string;
+  senderClientId: string;
+  todoId: string;
+  correlationId?: string;
+}): ObjectCreateTodoType => {
+  const contentKey = TodoInternalKey.createTodoQuestionnaire;
+  return {
+    type: InnerQueueTypes.createDispatch,
+    dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
+    correlationId,
+    serviceName: ServiceName.hepius,
+    notificationType: NotificationType.text,
+    recipientClientId,
+    senderClientId,
+    contentKey,
+    path: 'todo',
+  };
+};
+
+export const generateCreateTodoExploreMock = ({
+  recipientClientId,
+  senderClientId,
+  todoId,
+  correlationId = v4(),
+}: {
+  recipientClientId: string;
+  senderClientId: string;
+  todoId: string;
+  correlationId?: string;
+}): ObjectCreateTodoType => {
+  const contentKey = TodoInternalKey.createTodoExplore;
+  return {
+    type: InnerQueueTypes.createDispatch,
+    dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
+    correlationId,
+    serviceName: ServiceName.hepius,
+    notificationType: NotificationType.text,
+    recipientClientId,
+    senderClientId,
+    contentKey,
+    path: 'todo',
+  };
+};

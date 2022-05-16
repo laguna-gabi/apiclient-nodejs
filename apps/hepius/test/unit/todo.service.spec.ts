@@ -90,6 +90,35 @@ describe('TodoService', () => {
     });
   });
 
+  describe('createActionTodo', () => {
+    it('should create action todo', async () => {
+      const memberId = generateId();
+
+      loadSessionClient(memberId);
+
+      const params: CreateActionTodoParams = generateCreateActionTodoParams({
+        memberId,
+      });
+
+      const todo = await service.createActionTodo(params);
+      expect(todo).not.toBeUndefined();
+
+      const createdTodo = await todoModel.findById(todo.id).lean();
+      expect(createdTodo).toEqual(
+        expect.objectContaining({
+          ...params,
+          _id: generateObjectId(todo.id),
+          memberId: generateObjectId(memberId),
+          status: TodoStatus.active,
+          createdBy: generateObjectId(memberId),
+          updatedBy: generateObjectId(memberId),
+          updatedAt: expect.any(Date),
+          deleted: false,
+        }),
+      );
+    });
+  });
+
   describe('getTodos', () => {
     it('should get todos', async () => {
       const memberId = generateId();
