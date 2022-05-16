@@ -737,10 +737,10 @@ describe('Integration tests: all', () => {
 
     /* eslint-disable max-len */
     test.each`
-      additionalGetSlotsParams             | expectedDefaultSlots | testTitle
-      ${{}}                                | ${6}                 | ${'should get default slots count not available'}
-      ${{ allowEmptySlotsResponse: true }} | ${0}                 | ${'should get empty slots when enabling empty response'}
-      ${{ defaultSlotsCount: 20 }}         | ${20}                | ${'should get specific default slots count if defaultSlotsCount'}
+      additionalGetSlotsParams             | expectedDefaultSlots               | testTitle
+      ${{}}                                | ${defaultSlotsParams.defaultSlots} | ${'should get default slots count not available'}
+      ${{ allowEmptySlotsResponse: true }} | ${0}                               | ${'should get empty slots when enabling empty response'}
+      ${{ defaultSlotsCount: 20 }}         | ${20}                              | ${'should get specific default slots count if defaultSlotsCount'}
     `('$testTitle', async ({ additionalGetSlotsParams, expectedDefaultSlots }) => {
       /* eslint-enable max-len */
       const { member, user } = await creators.createMemberUserAndOptionalOrg();

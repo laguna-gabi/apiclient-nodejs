@@ -3,6 +3,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   add,
+  addDays,
   areIntervalsOverlapping,
   differenceInMinutes,
   isAfter,
@@ -424,7 +425,8 @@ describe('UserService', () => {
       }
     });
 
-    it('should return 6 default slots if availability in the past', async () => {
+    // eslint-disable-next-line max-len
+    it(`should return ${defaultSlotsParams.defaultSlots} default slots if availability in the past`, async () => {
       const user = await service.insert(generateCreateUserParams());
       await availabilityResolver.createAvailabilities(user.id, [
         generateAvailabilityInput({
@@ -438,17 +440,18 @@ describe('UserService', () => {
         notBefore: add(startOfToday(), { hours: 10 }),
       });
 
-      expect(result.slots.length).toEqual(6);
+      expect(result.slots.length).toEqual(defaultSlotsParams.defaultSlots);
     });
 
-    it('should return 6 default slots if there is no availability', async () => {
+    // eslint-disable-next-line max-len
+    it(`should return ${defaultSlotsParams.defaultSlots} default slots if there is no availability`, async () => {
       const user = await service.insert(generateCreateUserParams());
       const result = await service.getSlots({
         userId: user.id,
         notBefore: add(startOfToday(), { hours: 10 }),
       });
 
-      expect(result.slots.length).toEqual(6);
+      expect(result.slots.length).toEqual(defaultSlotsParams.defaultSlots);
     });
 
     /* eslint-disable-next-line max-len */
@@ -494,7 +497,7 @@ describe('UserService', () => {
         allowEmptySlotsResponse: true,
       });
 
-      expect(result.slots.length).toEqual(5);
+      expect(result.slots.length).toEqual(defaultSlotsParams.defaultSlots + 1);
     });
 
     test.each([true, false])(
@@ -537,19 +540,22 @@ describe('UserService', () => {
       expect(result.slots[0].getTime()).toBeGreaterThan(Date.now());
     });
 
-    it('should return 5 slots from today and the next from tomorrow', async () => {
+    it(`should return ${
+      defaultSlotsParams.defaultSlots - 1
+    } slots from today and the next from tomorrow`, async () => {
       const result = await preformGetUserSlots();
 
-      for (let index = 0; index < 5; index++) {
-        expect(
-          isSameDay(new Date(result.slots[index]), add(startOfToday(), { hours: 12 })),
-        ).toEqual(true);
+      for (let index = 0; index < defaultSlotsParams.defaultSlots + 1; index++) {
+        expect(isSameDay(new Date(result.slots[index]), new Date())).toEqual(true);
       }
 
-      for (let index = 5; index < defaultSlotsParams.maxSlots; index++) {
-        expect(
-          isSameDay(new Date(result.slots[index]), add(startOfTomorrow(), { hours: 12 })),
-        ).toEqual(true);
+      const tomorrow = addDays(new Date(), 1);
+      for (
+        let index = defaultSlotsParams.defaultSlots + 1;
+        index < defaultSlotsParams.maxSlots;
+        index++
+      ) {
+        expect(isSameDay(new Date(result.slots[index]), tomorrow)).toEqual(true);
       }
     });
 
@@ -558,10 +564,11 @@ describe('UserService', () => {
       expect(result.slots.length).toBe(10);
     });
 
-    it('should return 5 slots only from today if capped by notAfter to this midnight', async () => {
+    // eslint-disable-next-line max-len
+    it(`should return ${defaultSlotsParams.defaultSlots} slots only from today if capped by notAfter to this midnight`, async () => {
       const result = await preformGetUserSlots({ notAfter: startOfTomorrow() });
-      expect(result.slots.length).toBe(5);
-      for (let index = 0; index < 5; index++) {
+      expect(result.slots.length).toBe(defaultSlotsParams.defaultSlots + 1);
+      for (let index = 0; index < defaultSlotsParams.defaultSlots - 1; index++) {
         expect(
           isSameDay(new Date(result.slots[index]), add(startOfToday(), { hours: 12 })),
         ).toEqual(true);

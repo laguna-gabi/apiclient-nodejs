@@ -6,8 +6,8 @@ import { AppointmentMethod, Identifier, UserRole } from '@argus/hepiusClient';
 
 export const defaultSlotsParams = {
   duration: 30,
-  maxSlots: 9,
-  defaultSlots: 6,
+  maxSlots: 18,
+  defaultSlots: 12,
 };
 
 export const NotNullableSlotsKeys = ['notBefore', 'userId', 'appointmentId'];

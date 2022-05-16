@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { add, areIntervalsOverlapping, isBefore, isSameDay, startOfDay } from 'date-fns';
 import { Availability } from '../availability';
 import { Appointment, AppointmentStatus } from '@argus/hepiusClient';
+import { defaultSlotsParams } from '.';
 
 @Injectable()
 export class SlotService {
@@ -28,7 +29,13 @@ export class SlotService {
         slots.push(start);
       }
 
-      if (slots.length >= 5 && isSameDay(slots[slots.length - 1], slots[slots.length - 5])) {
+      if (
+        slots.length >= defaultSlotsParams.defaultSlots - 1 &&
+        isSameDay(
+          slots[slots.length - 1],
+          slots[slots.length - defaultSlotsParams.defaultSlots - 1],
+        )
+      ) {
         start = startOfDay(add(start, { days: 1 }));
       } else {
         start = add(start, { minutes: duration });
