@@ -2702,8 +2702,6 @@ describe('Integration tests: all', () => {
       {
         id: createResult.medications[0].id,
         ...removeChangeType(createMemberDnaParams.medication),
-        startDate: createMemberDnaParams.medication.startDate.toISOString(),
-        endDate: createMemberDnaParams.medication.endDate.toISOString(),
       },
     ];
     const externalAppointments = [

@@ -183,17 +183,13 @@ export const FRAGMENT_ADMISSION = gql`
     }
     medications {
       id
+      status
       name
-      frequency
-      type
-      amount {
-        amount
-        unitType
-      }
+      route
+      dosage
       startDate
       endDate
-      memberNote
-      coachNote
+      specialInstructions
     }
     externalAppointments {
       id

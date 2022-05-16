@@ -274,6 +274,14 @@ export enum ExternalAppointmentType {
 }
 registerEnumType(ExternalAppointmentType, { name: 'ExternalAppointmentType' });
 
+export enum MedicationStatus {
+  continue = 'continue',
+  change = 'change',
+  start = 'start',
+  stop = 'stop',
+}
+registerEnumType(MedicationStatus, { name: 'MedicationStatus' });
+
 export enum AdmissionCategory {
   diagnoses = 'diagnoses',
   treatmentRendereds = 'treatmentRendereds',
@@ -355,53 +363,36 @@ export class TreatmentRendered extends BaseCategory {
 }
 
 @ObjectType()
-@InputType('AmountInput')
-@Schema({ versionKey: false, timestamps: true })
-export class Amount {
-  @Prop({ type: Number, isNan: true })
-  @Field(() => Number, { nullable: true })
-  amount?: number;
-
-  @Prop({ isNan: true })
-  @Field(() => String, { nullable: true })
-  unitType?: string;
-}
-
-@ObjectType()
 @InputType('MedicationInput')
 @Schema({ versionKey: false, timestamps: true })
 export class Medication extends BaseCategory {
+  @Prop({ type: String, enum: MedicationStatus, isNan: true })
+  @Field(() => MedicationStatus, { nullable: true })
+  status?: MedicationStatus;
+
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   name?: string;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
-  frequency?: string;
+  route?: string;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
-  type?: string;
+  dosage?: string;
 
-  @Prop({ type: Amount, isNan: true })
-  @Field(() => Amount, { nullable: true })
-  amount?: Amount;
+  @Prop({ isNan: true })
+  @Field({ nullable: true })
+  startDate?: string;
 
-  @Prop({ type: Date, isNan: true })
-  @Field(() => Date, { nullable: true })
-  startDate?: Date;
-
-  @Prop({ type: Date, isNan: true })
-  @Field(() => Date, { nullable: true })
-  endDate?: Date;
+  @Prop({ isNan: true })
+  @Field({ nullable: true })
+  endDate?: string;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
-  memberNote?: string;
-
-  @Prop({ isNan: true })
-  @Field(() => String, { nullable: true })
-  coachNote?: string;
+  specialInstructions?: string;
 }
 
 @ObjectType()
@@ -611,6 +602,11 @@ export class ChangeMemberDnaParams {
 
   @Field(() => ChangeAdmissionMedicationParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
+  @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
+  @IsOnlyDateInSub('startDate', {
+    message: Errors.get(ErrorType.admissionTreatmentRenderedStartDate),
+  })
+  @IsOnlyDateInSub('endDate', { message: Errors.get(ErrorType.admissionTreatmentRenderedEndDate) })
   medication?: ChangeAdmissionMedicationParams;
 
   @Field(() => ChangeAdmissionExternalAppointmentParams, { nullable: true })

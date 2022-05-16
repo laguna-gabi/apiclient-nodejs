@@ -178,6 +178,8 @@ export enum ErrorType {
   admissionTreatmentRenderedEndDate = 10613,
   admissionDietaryCategoryNameMismatch = 10614,
   admissionDietaryDate = 10615,
+  admissionMedicationStartDate = 10616,
+  admissionMedicationEndDate = 10617,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -468,6 +470,8 @@ export const Errors: Map<ErrorType, string> = new Map([
     `dietary category and name dont match, as each category has designated names. please use getAdmissionsDietaryMatcher to get the match between category and name`,
   ],
   [ErrorType.admissionDietaryDate.valueOf(), `dietary date ${dateInstanceFormat}`],
+  [ErrorType.admissionMedicationStartDate.valueOf(), `medication startDate ${dateInstanceFormat}`],
+  [ErrorType.admissionMedicationEndDate.valueOf(), `medication endDate ${dateInstanceFormat}`],
 ]);
 
 export const DbErrors = {

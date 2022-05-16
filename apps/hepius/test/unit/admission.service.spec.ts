@@ -478,7 +478,7 @@ describe(AdmissionService.name, () => {
       expect.objectContaining({ description: expect.any(String) }),
     ]);
     expect(result[AdmissionCategory.medications]).toEqual([
-      expect.objectContaining({ coachNote: expect.any(String) }),
+      expect.objectContaining({ name: expect.any(String) }),
     ]);
     expect(result[AdmissionCategory.externalAppointments]).toEqual([
       expect.objectContaining({ date: expect.any(Date) }),

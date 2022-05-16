@@ -109,6 +109,7 @@ import {
   InternalCreateMemberParams,
   Journey,
   MaritalStatus,
+  MedicationStatus,
   Member,
   MemberConfig,
   NotifyContentParams,
@@ -1486,19 +1487,16 @@ export const generateAdmissionMedicationParams = ({
   id?: string;
 }): ChangeAdmissionMedicationParams => {
   const attachIdParam = id ? { id } : {};
-  const startDate = new Date();
-  const endDate = add(startDate, { days: 3 });
   return {
     changeType,
     ...attachIdParam,
+    status: MedicationStatus.start,
     name: lorem.word(),
-    frequency: lorem.word(),
-    type: lorem.word(),
-    amount: { amount: datatype.number(), unitType: lorem.word() },
-    startDate,
-    endDate,
-    memberNote: lorem.words(),
-    coachNote: lorem.words(),
+    route: lorem.word(),
+    dosage: lorem.word(),
+    startDate: generateDateOnly(subDays(new Date(), 2)),
+    endDate: generateDateOnly(subDays(new Date(), 1)),
+    specialInstructions: lorem.sentences(),
   };
 };
 

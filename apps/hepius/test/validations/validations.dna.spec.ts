@@ -88,6 +88,12 @@ describe('Validations - DNA', () => {
       ${AdmissionCategory.dietaries}          | ${{ date: lorem.word() }}          | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
       ${AdmissionCategory.dietaries}          | ${{ date: '2021-13-1' }}           | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
       ${AdmissionCategory.dietaries}          | ${{ date: new Date() }}            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDietaryDate)] }}
+      ${AdmissionCategory.medications}        | ${{ startDate: lorem.word() }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionMedicationStartDate)] }}
+      ${AdmissionCategory.medications}        | ${{ startDate: '2021-13-1' }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionMedicationStartDate)] }}
+      ${AdmissionCategory.medications}        | ${{ startDate: new Date() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionMedicationStartDate)] }}
+      ${AdmissionCategory.medications}        | ${{ endDate: lorem.word() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionMedicationEndDate)] }}
+      ${AdmissionCategory.medications}        | ${{ endDate: '2021-13-1' }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionMedicationEndDate)] }}
+      ${AdmissionCategory.medications}        | ${{ endDate: new Date() }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionMedicationEndDate)] }}
     `(
       `should fail to change ${AdmissionCategory.diagnoses} dna since $input is not valid`,
       async ({ admissionCategory, input, error }) => {
