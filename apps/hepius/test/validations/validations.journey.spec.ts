@@ -54,9 +54,16 @@ describe('Validations - Journey', () => {
     });
   });
 
-  describe('getJourneys + getJourney', () => {
+  describe('getJourneys + getJourney + getActiveJourney', () => {
     it('should fail to get journeys since member is invalid', async () => {
       await handler.queries.getJourneys({
+        memberId: 'not-valid',
+        invalidFieldsError: Errors.get(ErrorType.memberIdInvalid),
+      });
+    });
+
+    it('should fail to get active journey since member is invalid', async () => {
+      await handler.queries.getActiveJourney({
         memberId: 'not-valid',
         invalidFieldsError: Errors.get(ErrorType.memberIdInvalid),
       });

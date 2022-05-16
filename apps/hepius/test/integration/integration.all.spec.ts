@@ -2830,6 +2830,12 @@ describe('Integration tests: all', () => {
 
     const journey = await handler.queries.getJourney({ id: journeys[0].id });
     expect(journey).not.toBeUndefined();
+
+    const activeJourney = await handler.queries.getActiveJourney({ memberId: member.id });
+    expect(activeJourney).not.toBeUndefined();
+
+    expect(journey).toEqual(activeJourney);
+    expect(journeys.some((journey) => journey.id === activeJourney.id)).toBeTruthy();
   });
 
   /************************************************************************************************

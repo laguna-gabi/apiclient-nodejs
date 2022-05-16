@@ -1456,4 +1456,32 @@ export class Queries {
 
     return result?.getJourney;
   };
+
+  getActiveJourney = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId: string;
+    invalidFieldsError?: string;
+  }): Promise<Journey> => {
+    const result = await this.client
+      .request(
+        gql`
+          query getActiveJourney($memberId: String!) {
+            getActiveJourney(memberId: $memberId) {
+              ...journeyFragment
+            }
+          }
+          ${FRAGMENT_JOURNEY}
+        `,
+        { memberId },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
+
+    return result?.getActiveJourney;
+  };
 }

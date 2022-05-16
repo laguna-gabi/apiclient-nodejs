@@ -65,6 +65,19 @@ export class JourneyResolver {
     return this.journeyService.get(id);
   }
 
+  @Query(() => Journey)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getActiveJourney(
+    @Args(
+      'memberId',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    memberId: string,
+  ): Promise<Journey> {
+    return this.journeyService.getActive(memberId);
+  }
+
   /************************************************************************************************
    ****************************************** Admission *******************************************
    ************************************************************************************************/

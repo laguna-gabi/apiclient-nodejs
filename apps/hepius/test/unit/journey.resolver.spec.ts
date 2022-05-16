@@ -32,17 +32,20 @@ describe(JourneyResolver.name, () => {
     let spyOnServiceUpdate: jest.SpyInstance;
     let spyOnServiceGetAll: jest.SpyInstance;
     let spyOnServiceGet: jest.SpyInstance;
+    let spyOnServiceGetActive: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnServiceUpdate = jest.spyOn(service, 'update');
       spyOnServiceGetAll = jest.spyOn(service, 'getAll');
       spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnServiceGetActive = jest.spyOn(service, 'getActive');
     });
 
     afterEach(() => {
       spyOnServiceUpdate.mockReset();
       spyOnServiceGetAll.mockReset();
       spyOnServiceGet.mockReset();
+      spyOnServiceGetActive.mockReset();
     });
 
     it('should update a journey', async () => {
@@ -64,6 +67,13 @@ describe(JourneyResolver.name, () => {
       await resolver.getJourney(generateId());
 
       expect(spyOnServiceGet).toBeCalled();
+    });
+
+    it('should get active journey', async () => {
+      spyOnServiceGet.mockResolvedValueOnce(generateUpdateJourneyParams());
+      await resolver.getActiveJourney(generateId());
+
+      expect(spyOnServiceGetActive).toBeCalled();
     });
   });
 
