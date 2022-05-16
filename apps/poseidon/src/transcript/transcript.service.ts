@@ -35,6 +35,18 @@ export class TranscriptService {
     return this.transcriptModel.findOne({ recordingId }).lean();
   }
 
+  async setSpeaker({
+    recordingId,
+    coach,
+  }: {
+    recordingId: string;
+    coach: Speaker;
+  }): Promise<Transcript> {
+    return this.transcriptModel
+      .findOneAndUpdate({ recordingId }, { $set: { coach } }, { new: true })
+      .lean();
+  }
+
   @OnEvent(EventType.onCreateTranscript, { async: true })
   async handleCreateTranscript(params: IEventOnCreateTranscript) {
     const { memberId, recordingId } = params;

@@ -37,6 +37,8 @@ export class BaseLogger extends PinoLogger {
     'sub',
     'externalUserId',
     'lastCommit',
+    // member recording
+    'recordingId',
   ]);
 
   constructor(

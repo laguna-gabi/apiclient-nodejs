@@ -1,8 +1,9 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 export enum PoseidonMessagePatterns {
   getTranscript = 'getTranscript',
+  setTranscriptSpeaker = 'setTranscriptSpeaker',
 }
 
 export enum TranscriptStatus {
@@ -16,6 +17,8 @@ export enum Speaker {
   speakerA = 'speakerA',
   speakerB = 'speakerB',
 }
+
+registerEnumType(Speaker, { name: 'Speaker' });
 
 @ObjectType()
 export class ConversationPercentage {

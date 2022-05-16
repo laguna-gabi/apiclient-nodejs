@@ -1,6 +1,7 @@
 import { StorageType, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import {
   ConversationPercentage,
+  Speaker,
   Transcript,
   TranscriptDocument,
   TranscriptDto,
@@ -67,6 +68,33 @@ describe(TranscriptService.name, () => {
       const result = await service.get(generateId());
       expect(result).toBeNull();
     });
+  });
+
+  describe('setSpeaker', () => {
+    test.each([Speaker.speakerA, Speaker.speakerB])('should set coach speaker', async (coach) => {
+      const transcript = generateTranscriptMock();
+      await transcriptModel.create(transcript);
+
+      const resultBefore = await service.get(transcript.recordingId);
+      expect(resultBefore.coach).toBeUndefined();
+
+      const resultAfter = await service.setSpeaker({
+        recordingId: transcript.recordingId,
+        coach,
+      });
+      expect(resultAfter.coach).toEqual(coach);
+    });
+
+    test.each([Speaker.speakerA, Speaker.speakerB])(
+      'should return null if transcript does not exist',
+      async (coach) => {
+        const result = await service.setSpeaker({
+          recordingId: generateId(),
+          coach,
+        });
+        expect(result).toBeNull();
+      },
+    );
   });
 
   describe('handelCreateTranscript', () => {

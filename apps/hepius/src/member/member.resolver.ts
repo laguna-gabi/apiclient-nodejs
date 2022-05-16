@@ -33,7 +33,7 @@ import {
   StorageType,
   formatEx,
 } from '@argus/pandora';
-import { PoseidonMessagePatterns, Transcript } from '@argus/poseidonClient';
+import { PoseidonMessagePatterns, Speaker, Transcript } from '@argus/poseidonClient';
 import { Inject, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -589,6 +589,10 @@ export class MemberResolver extends MemberBase {
     return this.memberService.getRecordings(memberId);
   }
 
+  /*************************************************************************************************
+   ******************************************* Transcript ******************************************
+   ************************************************************************************************/
+
   @Query(() => Transcript, { nullable: true })
   @Roles(UserRole.coach, UserRole.nurse)
   async getTranscript(
@@ -596,6 +600,19 @@ export class MemberResolver extends MemberBase {
     recordingId: string,
   ) {
     return this.client.send(PoseidonMessagePatterns.getTranscript, recordingId).toPromise();
+  }
+
+  @Mutation(() => Transcript, { nullable: true })
+  @Roles(UserRole.coach, UserRole.nurse)
+  async setTranscriptSpeaker(
+    @Args('recordingId', { type: () => String })
+    recordingId: string,
+    @Args('coach', { type: () => Speaker })
+    coach: Speaker,
+  ) {
+    return this.client
+      .send(PoseidonMessagePatterns.setTranscriptSpeaker, { recordingId, coach })
+      .toPromise();
   }
 
   /*************************************************************************************************
