@@ -25,7 +25,9 @@
             "createTodo": {
                 "Meds": "",
                 "Appointment": "",
-                "Todo": ""
+                "Todo": "",
+                "Questionnaire": "",
+                "Explore": ""
             },
             "updateTodo": {
                 "Meds": "",

@@ -25,7 +25,9 @@
             "createTodo": {
                 "Meds": "Your coach, {{user.firstName}}, added a new medication for you. Tap here to review",
                 "Appointment": "Your coach, {{user.firstName}}, added a new appointment for you. Tap here to review",
-                "Todo": "Your coach, {{user.firstName}}, added a new to-do for you. Tap here to review"
+                "Todo": "Your coach, {{user.firstName}}, added a new to-do for you. Tap here to review",
+                "Questionnaire": "Your coach, {{user.firstName}}, sent you a questionnaire. Tap here to review",
+                "Explore": "Your coach, {{user.firstName}}, sent you a new resource to assist in your recovery. Tap here to review"
             },
             "updateTodo": {
                 "Meds": "Your coach, {{user.firstName}}, changed your medications. Tap here to review",
