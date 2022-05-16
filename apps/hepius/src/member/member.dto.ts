@@ -177,6 +177,7 @@ export class ExtraMemberParams {
    * will be @deprecated soon
    * use admission.dto.ts instead
    * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
    */
   @Field(() => String, { nullable: true })
   @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberDischargeDate) })
@@ -306,6 +307,7 @@ export class UpdateMemberParams extends ExtraMemberParams {
    * will be @deprecated soon
    * use journey.dto.ts instead
    * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
    */
   @Field(() => String, { nullable: true })
   @IsOptional()
@@ -319,6 +321,12 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsOptional()
   drgDesc?: string;
 
+  /**
+   * will be @deprecated soon
+   * use admission.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
+   */
   @Field(() => ReadmissionRisk, { nullable: true })
   @IsOptional()
   readmissionRisk?: ReadmissionRisk;
@@ -342,6 +350,7 @@ export class UpdateMemberParams extends ExtraMemberParams {
    * will be @deprecated soon
    * use admission.dto.ts instead
    * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
    */
   @Field(() => String, { nullable: true })
   @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberAdmitDate) })
@@ -656,6 +665,7 @@ export class Member extends Identifier {
    * will be @deprecated soon
    * use journey.dto.ts instead
    * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
    */
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
@@ -717,10 +727,22 @@ export class Member extends Identifier {
   @Field(() => Race, { nullable: true })
   race?: Race;
 
+  /**
+   * will be @deprecated soon
+   * use admission.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
+   */
   @Prop({ isNaN: true })
   @Field(() => ReadmissionRisk, { nullable: true })
   readmissionRisk?: ReadmissionRisk;
 
+  /**
+   * will be @deprecated soon
+   * use admission.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
+   */
   @Prop({ isNaN: true })
   @Field(() => [ReadmissionRiskHistory], { nullable: true })
   readmissionRiskHistory?: ReadmissionRiskHistory[];

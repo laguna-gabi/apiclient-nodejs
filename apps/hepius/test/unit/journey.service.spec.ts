@@ -1,7 +1,12 @@
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
-import { JourneyService, MemberModule, UpdateJourneyParams } from '../../src/member';
+import {
+  JourneyService,
+  MemberModule,
+  ReadmissionRisk,
+  UpdateJourneyParams,
+} from '../../src/member';
 import {
   dbConnect,
   dbDisconnect,
@@ -164,6 +169,76 @@ describe(JourneyService.name, () => {
 
       await checkUpdate(generateUpdateJourneyParams({ memberId, id }));
       await checkUpdate(generateUpdateJourneyParams({ memberId, id }));
+    });
+
+    it('should be able to update partial fields', async () => {
+      const memberId = generateId();
+      const { id } = await service.create(generateCreateJourneyParams({ memberId }));
+
+      const updateParams1 = generateUpdateJourneyParams({ memberId, id });
+      await checkUpdate(updateParams1);
+
+      const updateParams2 = generateUpdateJourneyParams({ memberId, id });
+      delete updateParams2.fellowName;
+      await checkUpdate(updateParams2);
+
+      const active = await service.getActive(memberId);
+      expect(active).toEqual(
+        expect.objectContaining({
+          ...updateParams2,
+          fellowName: updateParams1.fellowName,
+          memberId: new Types.ObjectId(memberId),
+        }),
+      );
+    });
+
+    it('should not add to readmissionRiskHistory if the readmissionRisk is the same', async () => {
+      const memberId = generateId();
+      const { id } = await service.create(generateCreateJourneyParams({ memberId }));
+
+      const updateJourney = generateUpdateJourneyParams({
+        memberId,
+        id,
+        readmissionRisk: ReadmissionRisk.low,
+      });
+
+      const updateJourneyResult1 = await service.update(updateJourney);
+      expect(updateJourneyResult1.readmissionRiskHistory.length).toEqual(1);
+
+      const updateJourneyResult2 = await service.update(updateJourney);
+      expect(updateJourneyResult2.readmissionRiskHistory.length).toEqual(1);
+      expect(updateJourneyResult2.readmissionRiskHistory).toEqual(
+        expect.arrayContaining([{ readmissionRisk: ReadmissionRisk.low, date: expect.any(Date) }]),
+      );
+    });
+
+    it('should add to readmissionRiskHistory if the readmissionRisk is not the same', async () => {
+      const memberId = generateId();
+      const { id } = await service.create(generateCreateJourneyParams({ memberId }));
+
+      const updateJourney1 = generateUpdateJourneyParams({
+        memberId,
+        id,
+        readmissionRisk: ReadmissionRisk.low,
+      });
+
+      const updateJourneyResult1 = await service.update(updateJourney1);
+      expect(updateJourneyResult1.readmissionRiskHistory.length).toEqual(1);
+
+      const updateJourney2 = generateUpdateJourneyParams({
+        memberId,
+        id,
+        readmissionRisk: ReadmissionRisk.medium,
+      });
+
+      const updateJourneyResult2 = await service.update(updateJourney2);
+      expect(updateJourneyResult2.readmissionRiskHistory.length).toEqual(2);
+      expect(updateJourneyResult2.readmissionRiskHistory).toEqual(
+        expect.arrayContaining([
+          { readmissionRisk: ReadmissionRisk.low, date: expect.any(Date) },
+          { readmissionRisk: ReadmissionRisk.medium, date: expect.any(Date) },
+        ]),
+      );
     });
 
     const checkUpdate = async (updateParams: UpdateJourneyParams) => {

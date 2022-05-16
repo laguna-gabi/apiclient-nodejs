@@ -5,6 +5,7 @@ import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '@argus/hepiusClient';
 import { IsOptional } from 'class-validator';
+import { ReadmissionRisk, ReadmissionRiskHistory } from '../member';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -29,6 +30,10 @@ export class UpdateJourneyParams extends CreateJourneyParams {
   @Field(() => String, { nullable: true })
   @IsOptional()
   fellowName?: string;
+
+  @Field(() => ReadmissionRisk, { nullable: true })
+  @IsOptional()
+  readmissionRisk?: ReadmissionRisk;
 }
 /***************************************************************************************************
  ********************************* Return params for gql methods **********************************
@@ -64,6 +69,14 @@ export class Journey extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   healthPlan?: string;
+
+  @Prop({ type: String, enum: ReadmissionRisk, isNaN: true })
+  @Field(() => ReadmissionRisk, { nullable: true })
+  readmissionRisk?: ReadmissionRisk;
+
+  @Prop({ isNan: true })
+  @Field(() => [ReadmissionRiskHistory], { nullable: true })
+  readmissionRiskHistory?: ReadmissionRiskHistory[];
 }
 
 /**************************************************************************************************

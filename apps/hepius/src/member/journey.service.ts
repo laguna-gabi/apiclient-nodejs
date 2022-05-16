@@ -68,15 +68,23 @@ export class JourneyService extends BaseService {
     delete setParams.memberId;
     delete setParams.id;
 
+    const exisingRecord = await this.journeyModel.findOne(filter);
+    if (!exisingRecord) {
+      throw new Error(Errors.get(ErrorType.journeyMemberIdAndOrIdNotFound));
+    }
+
     let result;
     if (isEmpty(setParams)) {
-      result = await this.journeyModel.findOne(filter);
+      result = exisingRecord;
     } else {
       result = await this.journeyModel.findOneAndUpdate(filter, { $set: setParams }, { new: true });
     }
 
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.journeyMemberIdAndOrIdNotFound));
+    if (
+      setParams.readmissionRisk &&
+      setParams.readmissionRisk !== exisingRecord.toObject().readmissionRisk
+    ) {
+      result = await this.updateReadmissionRiskHistory(result._id, setParams);
     }
 
     return this.replaceId(result.toObject());
@@ -105,5 +113,23 @@ export class JourneyService extends BaseService {
       methodName: this.deleteJourney.name,
       serviceName: JourneyService.name,
     });
+  }
+
+  /*************************************************************************************************
+   ******************************************** Helpers ********************************************
+   ************************************************************************************************/
+  private async updateReadmissionRiskHistory(id: Types.ObjectId, setParams) {
+    return this.journeyModel.findByIdAndUpdate(
+      id,
+      {
+        $push: {
+          readmissionRiskHistory: {
+            readmissionRisk: setParams.readmissionRisk,
+            date: new Date(),
+          },
+        },
+      },
+      { new: true },
+    );
   }
 }
