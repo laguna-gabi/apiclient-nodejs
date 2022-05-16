@@ -21,8 +21,13 @@ export class TranscriptCalculator {
       this.calculateConversationPercentage.name,
     );
     const transcriptObject = await this.revAI.getTranscriptObject(transcriptionId);
-    const endTime = this.calculateEndTime(transcriptObject);
     const { speakerATime, speakerBTime } = this.calculateSpeakersTime(transcriptObject);
+
+    if (speakerATime === 0 && speakerBTime === 0) {
+      return { speakerA: speakerATime, speakerB: speakerBTime, silence: 100 };
+    }
+
+    const endTime = this.calculateEndTime(transcriptObject);
 
     const speakerA = Math.round((100 * speakerATime) / endTime);
     const speakerB = Math.round((100 * speakerBTime) / endTime);
@@ -52,8 +57,9 @@ export class TranscriptCalculator {
   }
 
   private calculateEndTime(transcriptObject: RevAiApiTranscript): number {
-    return transcriptObject.monologues[transcriptObject.monologues.length - 1].elements
-      .slice()
+    return transcriptObject.monologues
+      .pop()
+      ?.elements.slice()
       .reverse()
       .find((element) => element.ts && element.end_ts).end_ts;
   }

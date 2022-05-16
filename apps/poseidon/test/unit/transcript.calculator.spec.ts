@@ -41,5 +41,18 @@ describe(TranscriptService.name, () => {
 
       expect(result).toEqual({ speakerA: 13, speakerB: 25, silence: 62 });
     });
+
+    it('should return only silence', async () => {
+      const transcriptionId = generateId();
+      spyOnRevAIGetTranscriptObject.mockImplementationOnce(async () => {
+        return {
+          monologues: [],
+        };
+      });
+
+      const result = await transcriptCalculator.calculateConversationPercentage(transcriptionId);
+
+      expect(result).toEqual({ speakerA: 0, speakerB: 0, silence: 100 });
+    });
   });
 });
