@@ -16,6 +16,7 @@ LABEL git_branch=${GIT_BRANCH}
 WORKDIR /poseidon
 COPY --from=builder /poseidon/ /poseidon/
 EXPOSE 3003
+EXPOSE 4003
 ENV NO_COLOR=true
 ENV COMMIT_SHA=${GIT_COMMIT}
 ENV BRANCH=${GIT_BRANCH}
