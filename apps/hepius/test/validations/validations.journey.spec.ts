@@ -43,6 +43,7 @@ describe('Validations - Journey', () => {
       ${{ id: 123 }}         | ${{ missingFieldError: stringError }}
       ${{ memberId: 123 }}   | ${{ missingFieldError: stringError }}
       ${{ fellowName: 123 }} | ${{ missingFieldError: stringError }}
+      ${{ healthPlan: 123 }} | ${{ missingFieldError: stringError }}
     `(`should fail to update a member since setting $input is not a valid`, async (params) => {
       const updateJourneyParams = generateUpdateJourneyParams({ ...params.input });
       await handler.mutations.updateJourney({ updateJourneyParams, ...params.error });

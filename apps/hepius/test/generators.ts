@@ -427,7 +427,7 @@ export const generateUpdateMemberParams = ({
   deviceId = datatype.uuid(),
   readmissionRisk = ReadmissionRisk.medium,
   maritalStatus = MaritalStatus.married,
-  healthPlan = datatype.string(10),
+  healthPlan = generateHealthPlan(),
   preferredGenderPronoun = datatype.string(10),
   deceased = {
     cause: lorem.sentence(),
@@ -493,6 +493,7 @@ export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey
   active: true,
   fellowName: generateFellowName(),
   admissions: [],
+  healthPlan: generateHealthPlan(),
 });
 
 export const generateUpdateMemberConfigParams = ({
@@ -1410,10 +1411,12 @@ export const generateUpdateJourneyParams = ({
   memberId = generateId(),
   id,
   fellowName = generateFellowName(),
+  healthPlan = generateHealthPlan(),
 }: Partial<UpdateJourneyParams> = {}): UpdateJourneyParams => ({
   memberId,
   id,
   fellowName,
+  healthPlan,
 });
 
 /*************************************************************************************************
@@ -1617,3 +1620,4 @@ export function getIsAssignableToMember(questionnaireType: QuestionnaireType): b
 }
 
 const generateFellowName = () => `${name.firstName()} ${name.lastName()}`;
+const generateHealthPlan = () => datatype.string(10);

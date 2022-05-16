@@ -218,5 +218,6 @@ export const FRAGMENT_JOURNEY = gql`
     id
     memberId
     fellowName
+    healthPlan
   }
 `;

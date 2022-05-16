@@ -194,6 +194,11 @@ export class ExtraMemberParams {
   @IsOptional()
   race?: Race;
 
+  /**
+   * will be @deprecated soon
+   * use journey.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   */
   @Field(() => String, { nullable: true })
   @IsString() /* for rest api */
   @IsOptional()
@@ -720,6 +725,11 @@ export class Member extends Identifier {
   @Field(() => [ReadmissionRiskHistory], { nullable: true })
   readmissionRiskHistory?: ReadmissionRiskHistory[];
 
+  /**
+   * will be @deprecated soon
+   * use journey.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   */
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   healthPlan?: string;
