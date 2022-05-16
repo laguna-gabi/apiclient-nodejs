@@ -596,6 +596,11 @@ export class Queries {
               firstLoggedInAt
               lastLoggedInAt
               language
+              systemVersion
+              brand
+              codePushVersion
+              appVersion
+              buildVersion
             }
           }
         `,

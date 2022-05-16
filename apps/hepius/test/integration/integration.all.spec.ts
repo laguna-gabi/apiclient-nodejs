@@ -424,6 +424,11 @@ describe('Integration tests: all', () => {
       isRecommendationsEnabled: true,
       isTodoNotificationsEnabled: true,
       language: Language.en,
+      systemVersion: null,
+      brand: null,
+      codePushVersion: null,
+      appVersion: null,
+      buildVersion: null,
     });
 
     const updateMemberConfigParams = generateUpdateMemberConfigParams();
@@ -440,12 +445,7 @@ describe('Integration tests: all', () => {
       firstLoggedInAt: null,
       lastLoggedInAt: null,
       articlesPath: memberConfigBefore.articlesPath,
-      platform: Platform.web,
-      isPushNotificationsEnabled: updateMemberConfigParams.isPushNotificationsEnabled,
-      isAppointmentsReminderEnabled: updateMemberConfigParams.isAppointmentsReminderEnabled,
-      isRecommendationsEnabled: updateMemberConfigParams.isRecommendationsEnabled,
-      isTodoNotificationsEnabled: updateMemberConfigParams.isTodoNotificationsEnabled,
-      language: Language.en,
+      ...updateMemberConfigParams,
     });
   });
 

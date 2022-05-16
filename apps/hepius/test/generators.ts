@@ -476,6 +476,11 @@ export const mockGenerateMemberConfig = ({
     accessToken: generateId(),
     articlesPath: system.directoryPath(),
     language: defaultMemberParams.language,
+    systemVersion: datatype.number({ min: 5, max: 10 }).toString(),
+    brand: lorem.word(),
+    codePushVersion: v4(),
+    appVersion: v4(),
+    buildVersion: v4(),
   };
 };
 
@@ -497,6 +502,11 @@ export const generateUpdateMemberConfigParams = ({
   isRecommendationsEnabled = false,
   isTodoNotificationsEnabled = false,
   language = Language.en,
+  systemVersion = datatype.number({ min: 5, max: 10 }).toString(),
+  brand = lorem.word(),
+  codePushVersion = v4(),
+  appVersion = v4(),
+  buildVersion = v4(),
 }: Partial<UpdateMemberConfigParams> = {}): UpdateMemberConfigParams => {
   return {
     memberId,
@@ -506,6 +516,11 @@ export const generateUpdateMemberConfigParams = ({
     isRecommendationsEnabled,
     isTodoNotificationsEnabled,
     language,
+    systemVersion,
+    brand,
+    codePushVersion,
+    appVersion,
+    buildVersion,
   };
 };
 

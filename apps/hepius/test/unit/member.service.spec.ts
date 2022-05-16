@@ -2266,13 +2266,10 @@ describe('MemberService', () => {
       await service.updateMemberConfig(params1);
 
       const configs1 = await service.getMemberConfig(id);
-      expect(configs1.externalUserId).toEqual(expect.any(String));
-      expect(configs1.isPushNotificationsEnabled).toEqual(params1.isPushNotificationsEnabled);
-      expect(configs1.isAppointmentsReminderEnabled).toEqual(params1.isAppointmentsReminderEnabled);
-      expect(configs1.isRecommendationsEnabled).toEqual(params1.isRecommendationsEnabled);
-      expect(configs1.isTodoNotificationsEnabled).toEqual(params1.isTodoNotificationsEnabled);
-      expect(configs1.platform).toEqual(params1.platform);
-      expect(configs1.language).toEqual(params1.language);
+      expect(configs1).toMatchObject({
+        ...params1,
+        memberId: new Types.ObjectId(params1.memberId),
+      });
 
       const params2 = await generateUpdateMemberConfigParams({
         memberId: generateId(id),
@@ -2287,14 +2284,10 @@ describe('MemberService', () => {
       await service.updateMemberConfig(params2);
 
       const configs2 = await service.getMemberConfig(id);
-      expect(configs1.memberId).toEqual(configs2.memberId);
-      expect(configs1.externalUserId).toEqual(configs2.externalUserId);
-      expect(configs2.platform).toEqual(params2.platform);
-      expect(configs2.isPushNotificationsEnabled).toEqual(params2.isPushNotificationsEnabled);
-      expect(configs2.isAppointmentsReminderEnabled).toEqual(params2.isAppointmentsReminderEnabled);
-      expect(configs2.isRecommendationsEnabled).toEqual(params2.isRecommendationsEnabled);
-      expect(configs2.isTodoNotificationsEnabled).toEqual(params2.isTodoNotificationsEnabled);
-      expect(configs2.language).toEqual(params2.language);
+      expect(configs2).toMatchObject({
+        ...params2,
+        memberId: new Types.ObjectId(params2.memberId),
+      });
     });
 
     it('should update only isPushNotificationsEnabled', async () => {
@@ -2330,6 +2323,11 @@ describe('MemberService', () => {
       { isRecommendationsEnabled: null },
       { isTodoNotificationsEnabled: null },
       { language: null },
+      { systemVersion: null },
+      { brand: null },
+      { codePushVersion: null },
+      { appVersion: null },
+      { buildVersion: null },
     ])('should not override %p since it is not define in input', async (field) => {
       const id = await generateMember();
       const configsBefore = await service.getMemberConfig(id);

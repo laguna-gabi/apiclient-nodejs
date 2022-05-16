@@ -38,6 +38,26 @@ export class UpdateMemberConfigParams {
   @Field(() => Language, { nullable: true })
   @IsOptional()
   language?: Language;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  systemVersion?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  brand?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  codePushVersion?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  appVersion?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  buildVersion?: string;
 }
 
 /**************************************************************************************************
@@ -91,6 +111,26 @@ export class MemberConfig {
 
   @Field(() => Date, { nullable: true })
   lastLoggedInAt?: Date;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  systemVersion?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  brand?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  codePushVersion?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  appVersion?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  buildVersion?: string;
 }
 
 /**************************************************************************************************
