@@ -3,7 +3,6 @@ import {
   AppointmentStatus,
   BarrierDomain,
   CareStatus,
-  Caregiver,
   MemberRole,
   Notes,
   Relationship,
@@ -37,7 +36,6 @@ import {
   datatype,
   address as fakerAddress,
   date as fakerDate,
-  phone as fakerPhone,
   image,
   internet,
   lorem,
@@ -894,26 +892,6 @@ export const generateUpdateCaregiverParams = ({
   memberId,
 }: Partial<UpdateCaregiverParams> = {}): UpdateCaregiverParams => {
   return { id, firstName, lastName, email, relationship, phone, memberId };
-};
-
-export const mockGenerateCaregiver = ({
-  id = generateId(),
-  memberId = generateObjectId(),
-  firstName = name.firstName(),
-  lastName = name.lastName(),
-  email = internet.email(),
-  phone = fakerPhone.phoneNumber(),
-  relationship = Relationship.parent,
-}: Partial<Caregiver> = {}): Caregiver => {
-  return {
-    id,
-    memberId,
-    firstName,
-    lastName,
-    email,
-    phone,
-    relationship,
-  };
 };
 
 export const mockGenerateTodo = ({

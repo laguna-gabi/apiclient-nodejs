@@ -231,7 +231,7 @@ export class Handler extends BaseHandler {
 
     await this.app.startAllMicroservices();
 
-    await this.app.listen(datatype.number({ min: 4000, max: 9000 }));
+    await this.app.listen(tcpPort + 1000);
     this.client = new GraphQLClient(`${await this.app.getUrl()}/graphql`);
 
     this.mutations = new Mutations(

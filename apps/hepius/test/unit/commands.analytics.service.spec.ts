@@ -16,7 +16,6 @@ import {
   mockDbCarePlanType,
   mockDbRedFlag,
   mockDbRedFlagType,
-  mockGenerateCaregiver,
   mockGenerateJourney,
   mockGenerateMember,
   mockGenerateMemberConfig,
@@ -49,6 +48,7 @@ import {
   CarePlanType,
   Caregiver,
   User,
+  mockGenerateCaregiver,
 } from '@argus/hepiusClient';
 
 describe('Commands: AnalyticsService', () => {

@@ -1,3 +1,4 @@
+import { Caregiver } from '@argus/hepiusClient';
 import { DynamicFactCallback, EventHandler, FactOptions } from 'json-rules-engine';
 import { DynamicFacts } from './facts';
 
@@ -77,7 +78,7 @@ export type TopLevelCondition = AllConditions | AnyConditions;
 // todo: setup with real types
 export interface MemberFacts {
   memberInfo: MemberInfo;
-  caregivers: string[];
+  caregivers: Caregiver[];
   barriers: Barrier[];
   carePlans: CarePlan[];
 }

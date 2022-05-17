@@ -38,6 +38,7 @@ export enum AuditType {
   archive = 'archive',
   delete = 'delete',
   message = 'message',
+  command = 'command',
   userReplaced = 'userReplaced',
 }
 

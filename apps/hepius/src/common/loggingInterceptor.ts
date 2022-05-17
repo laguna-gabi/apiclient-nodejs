@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuditType, Client, Environments, GlobalEventType, QueueType } from '@argus/pandora';
 import { IEventNotifyQueue, LoggerService } from '.';
-import { GqlExecutionContext } from '@nestjs/graphql';
+import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -31,11 +31,15 @@ export class LoggingInterceptor implements NestInterceptor {
       args = Object.keys(params).length > 0 ? { params } : {};
       args = Object.keys(body).length > 0 ? { ...args, body } : args;
       type = request.method === 'GET' ? AuditType.read : AuditType.write;
-    } else {
+    } else if (context.getType<GqlContextType>() === 'graphql') {
       const ctx = GqlExecutionContext.create(context);
       request = ctx.getContext().req;
       args = context.getArgByIndex(1);
       type = this.getGqlType(context);
+    } else if (context.getType() === 'rpc') {
+      const ctx = context.switchToRpc().getContext();
+      args = ctx.args;
+      type = AuditType.command;
     }
 
     const params = LoggingInterceptor.getParams(args);

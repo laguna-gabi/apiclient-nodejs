@@ -1,4 +1,3 @@
-import { Types } from 'mongoose';
 import {
   Barrier,
   BarrierStatus,
@@ -9,14 +8,8 @@ import {
   TargetEntity,
 } from '../src/rules/types';
 import { Almanac, EngineResult, Event, RuleResult } from 'json-rules-engine';
-
-export const generateObjectId = (id?): Types.ObjectId => {
-  return new Types.ObjectId(id);
-};
-
-export const generateId = (id?): string => {
-  return generateObjectId(id).toString();
-};
+import { Caregiver } from '@argus/hepiusClient';
+import { generateId } from '@argus/pandora';
 
 export const generateEngineResult = ({
   almanac,
@@ -47,7 +40,7 @@ export const generateMemberFacts = ({
   memberInfo,
 }: {
   memberInfo?: MemberInfo;
-  caregivers?: string[];
+  caregivers?: Caregiver[];
   barriers?: Barrier[];
   carePlans?: CarePlan[];
 }): MemberFacts => {
