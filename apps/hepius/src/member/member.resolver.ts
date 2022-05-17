@@ -97,7 +97,6 @@ import {
   GetMemberUploadGeneralDocumentLinkParams,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
-  GraduateMemberParams,
   ImageType,
   Journal,
   JournalUploadAudioLink,
@@ -313,26 +312,6 @@ export class MemberResolver extends MemberBase {
     const member = await this.memberService.replaceMemberOrg(replaceMemberOrgParams);
     this.notifyUpdatedMemberConfig({ member });
     return true;
-  }
-
-  @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.admin)
-  async graduateMember(
-    @Args(camelCase(GraduateMemberParams.name))
-    graduateMemberParams: GraduateMemberParams,
-  ) {
-    const member = await this.memberService.get(graduateMemberParams.id);
-    const memberConfig = await this.memberService.getMemberConfig(graduateMemberParams.id);
-    if (member.isGraduated !== graduateMemberParams.isGraduated) {
-      if (memberConfig.platform !== Platform.web) {
-        if (graduateMemberParams.isGraduated) {
-          await this.cognitoService.disableClient(member.deviceId);
-        } else {
-          await this.cognitoService.enableClient(member.deviceId);
-        }
-      }
-      await this.memberService.graduate(graduateMemberParams);
-    }
   }
 
   /*************************************************************************************************

@@ -111,7 +111,6 @@ export const defaultMemberParams = {
   honorific: Honorific.mx,
   roles: [MemberRole.member],
   race: Race.white,
-  isGraduated: false,
 };
 
 export const NotNullableMemberKeys = [
@@ -575,15 +574,6 @@ export class GetMemberUploadGeneralDocumentLinkParams extends BaseMemberGeneralD
 @InputType()
 export class DeleteMemberGeneralDocumentParams extends BaseMemberGeneralDocuments {}
 
-@InputType()
-export class GraduateMemberParams {
-  @Field(() => String)
-  id: string;
-
-  @Field(() => Boolean)
-  isGraduated: boolean;
-}
-
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
@@ -763,14 +753,6 @@ export class Member extends Identifier {
   @Prop({ type: String, enum: HealthPersona, isNaN: true })
   @Field(() => HealthPersona, { nullable: true })
   healthPersona?: HealthPersona;
-
-  @Prop({ type: Boolean, default: defaultMemberParams.isGraduated })
-  @Field(() => Boolean)
-  isGraduated: boolean;
-
-  @Prop({ type: Date, isNaN: true })
-  @Field(() => Date, { nullable: true })
-  graduationDate?: Date;
 
   @Prop({ type: String, enum: MaritalStatus, isNaN: true })
   @Field(() => MaritalStatus, { nullable: true })

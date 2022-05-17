@@ -71,36 +71,33 @@ export class UserService extends BaseService {
       },
       {
         $lookup: {
+          from: 'journeys',
+          localField: 'members._id',
+          foreignField: 'memberId',
+          as: 'members.journeys',
+        },
+      },
+      {
+        $lookup: {
           from: 'appointments',
           localField: 'appointments',
           foreignField: '_id',
           as: 'appointments',
         },
       },
-      {
-        $addFields: {
-          membersFiltered: {
-            $filter: {
-              input: '$members',
-              as: 'members',
-              cond: {
-                $eq: ['$$members.isGraduated', false],
-              },
-            },
-          },
-        },
-      },
-      { $addFields: { currentMembersCount: { $size: '$membersFiltered' } } },
-      { $unset: 'membersFiltered' },
-      { $unset: 'members' },
       { $addFields: { id: '$_id' } },
       { $unset: '_id' },
     ]);
 
     return result.map((res) => {
+      const currentMembersCount = res.members.journeys.filter(
+        (journey) => !journey.isGraduated && journey.active,
+      ).length;
+      delete res.members;
       const { appointments, ...rest } = res;
       return {
         ...rest,
+        currentMembersCount,
         appointments: appointments.map(({ _id, ...app }) => ({ ...app, id: _id })),
       };
     });
@@ -376,30 +373,26 @@ export class UserService extends BaseService {
         },
       },
       {
-        $project: {
-          members: {
-            $filter: {
-              input: '$members',
-              as: 'members',
-              cond: {
-                $eq: ['$$members.isGraduated', false],
-              },
-            },
-          },
-          lastMemberAssignedAt: '$lastMemberAssignedAt',
-          maxMembers: '$maxMembers',
+        $lookup: {
+          from: 'journeys',
+          localField: 'members._id',
+          foreignField: 'memberId',
+          as: 'members.journeys',
         },
       },
       {
         $project: {
-          members: { $size: '$members' },
+          journeys: '$members.journeys',
           lastMemberAssignedAt: '$lastMemberAssignedAt',
           maxMembers: '$maxMembers',
         },
       },
     ]);
     for (let index = 0; index < users.length; index++) {
-      if (users[index].maxMembers > users[index].members) {
+      const currentMembersCount = users[index].journeys
+        ? users[index].journeys.filter((journey) => !journey.isGraduated && journey.active).length
+        : 0;
+      if (users[index].maxMembers > currentMembersCount) {
         await this.userModel.updateOne(
           { _id: users[index]._id },
           { $set: { lastMemberAssignedAt: new Date() } },

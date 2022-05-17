@@ -22,7 +22,6 @@ import {
   DismissedAlert,
   DismissedAlertDocument,
   EmbeddedMemberProperties,
-  GraduateMemberParams,
   InternalCreateMemberParams,
   Journal,
   JournalDocument,
@@ -249,8 +248,8 @@ export class MemberService extends BaseService {
           org: '$org',
           firstLoggedInAt: '$journey.firstLoggedInAt',
           platform: '$memberconfig.platform',
-          isGraduated: '$isGraduated',
-          graduationDate: '$graduationDate',
+          isGraduated: '$journey.isGraduated',
+          graduationDate: '$journey.graduationDate',
         },
       },
     ]);
@@ -314,18 +313,6 @@ export class MemberService extends BaseService {
         },
       },
     ]);
-  }
-
-  async graduate(graduateParams: GraduateMemberParams) {
-    await this.memberModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(graduateParams.id) },
-      {
-        $set: {
-          isGraduated: graduateParams.isGraduated,
-          graduationDate: graduateParams.isGraduated ? Date.now() : null,
-        },
-      },
-    );
   }
 
   @OnEvent(EventType.onNewAppointment, { async: true })
@@ -468,6 +455,7 @@ export class MemberService extends BaseService {
       ...data,
     });
   }
+
   /************************************************************************************************
    ******************************************** Control *******************************************
    ************************************************************************************************/
@@ -795,6 +783,7 @@ export class MemberService extends BaseService {
   async getRecordings(memberId: string): Promise<RecordingOutput[]> {
     return this.recordingModel.find({ memberId: new Types.ObjectId(memberId) });
   }
+
   /************************************************************************************************
    **************************************** Modifications *****************************************
    ************************************************************************************************/
@@ -951,6 +940,7 @@ export class MemberService extends BaseService {
 
     return alerts;
   }
+
   private async memberItemToAlerts(member: Member): Promise<Alert[]> {
     return [
       {

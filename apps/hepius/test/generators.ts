@@ -381,7 +381,6 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     },
     nurse_notes: lorem.sentence(),
     general_notes: lorem.sentence(),
-    isGraduated: defaultMemberParams.isGraduated,
     deceased: { cause: lorem.sentence(), date: generateDateOnly(deceasedDate) },
   };
 };
@@ -494,6 +493,7 @@ export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey
   admissions: [],
   healthPlan: generateHealthPlan(),
   readmissionRisk: ReadmissionRisk.low,
+  isGraduated: false,
 });
 
 export const generateUpdateMemberConfigParams = ({

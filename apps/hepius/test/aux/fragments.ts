@@ -97,8 +97,6 @@ export const FRAGMENT_MEMBER = gql`
       readmissionRisk
       date
     }
-    isGraduated
-    graduationDate
     maritalStatus
     height
     weight
@@ -217,6 +215,7 @@ export const FRAGMENT_JOURNEY = gql`
   fragment journeyFragment on Journey {
     id
     memberId
+    active
     fellowName
     healthPlan
     readmissionRisk
@@ -224,5 +223,7 @@ export const FRAGMENT_JOURNEY = gql`
       readmissionRisk
       date
     }
+    isGraduated
+    graduationDate
   }
 `;

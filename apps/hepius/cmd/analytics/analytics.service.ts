@@ -528,10 +528,10 @@ export class AnalyticsService {
         Date.parse(member.memberDetails.dischargeDate),
       ),
       active: daysSinceDischarge < GraduationPeriod,
-      graduated: member.memberDetails.isGraduated,
+      graduated: member.activeJourney.isGraduated,
       graduation_date:
-        member.memberDetails.graduationDate &&
-        reformatDate(member.memberDetails.graduationDate.toString(), momentFormats.mysqlDate),
+        member.activeJourney.graduationDate &&
+        reformatDate(member.activeJourney.graduationDate.toString(), momentFormats.mysqlDate),
       dc_summary_load_date: dcSummaryLoadDate
         ? reformatDate(dcSummaryLoadDate.toString(), momentFormats.mysqlDate)
         : undefined,
@@ -629,8 +629,8 @@ export class AnalyticsService {
       : undefined;
     // eslint-disable-next-line max-len
     const graduation_date =
-      member.memberDetails.graduationDate &&
-      reformatDate(member.memberDetails.graduationDate.toString(), momentFormats.mysqlDate);
+      member.activeJourney.graduationDate &&
+      reformatDate(member.activeJourney.graduationDate.toString(), momentFormats.mysqlDate);
     const results = [];
 
     // load appointment 0: (according to example excel spreadsheet we have appointment 0 also for engaged members)
@@ -639,7 +639,7 @@ export class AnalyticsService {
       customer_id: member._id.toString(),
       mbr_initials,
       appt_number: 0,
-      graduated: member.memberDetails.isGraduated,
+      graduated: member.activeJourney.isGraduated,
       graduation_date,
     });
 

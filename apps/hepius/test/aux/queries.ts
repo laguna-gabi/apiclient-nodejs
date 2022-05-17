@@ -1437,7 +1437,7 @@ export class Queries {
   }: {
     id: string;
     invalidFieldsError?: string;
-  }): Promise<Journey[]> => {
+  }): Promise<Journey> => {
     const result = await this.client
       .request(
         gql`

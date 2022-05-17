@@ -377,6 +377,7 @@ describe('MemberService', () => {
           nextAppointment: undefined,
           appointmentsCount: 0,
           platform: memberConfig.platform,
+          isGraduated: false,
         }),
       );
       expect(primaryUser['title']).toEqual(result[0].primaryUser.title);
@@ -426,6 +427,7 @@ describe('MemberService', () => {
           nextAppointment: undefined,
           appointmentsCount: 0,
           platform: memberConfig.platform,
+          isGraduated: false,
         }),
       );
 
@@ -2615,24 +2617,6 @@ describe('MemberService', () => {
       await expect(service.replaceMemberOrg(generateReplaceMemberOrgParams())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
-    });
-  });
-
-  describe('graduate', () => {
-    it('should set graduate on existing member', async () => {
-      const currentTime = new Date();
-      const id = await generateMember();
-      await service.graduate({ id, isGraduated: true });
-
-      const result1 = await service.get(id);
-      expect(result1.isGraduated).toBeTruthy();
-      expect(result1.graduationDate.getTime()).toBeGreaterThanOrEqual(currentTime.getTime());
-
-      await service.graduate({ id, isGraduated: false });
-
-      const result2 = await service.get(id);
-      expect(result2.isGraduated).toBeFalsy();
-      expect(result2.graduationDate).toBeFalsy();
     });
   });
 

@@ -11,7 +11,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ISoftDelete } from '../db';
-import { CreateJourneyParams, Journey, JourneyDocument, UpdateJourneyParams } from '.';
+import {
+  CreateJourneyParams,
+  GraduateMemberParams,
+  Journey,
+  JourneyDocument,
+  UpdateJourneyParams,
+} from '.';
 import { Identifier } from '@argus/hepiusClient';
 import { OnEvent } from '@nestjs/event-emitter';
 import { isEmpty, isNil, omitBy } from 'lodash';
@@ -54,7 +60,9 @@ export class JourneyService extends BaseService {
   }
 
   async getAll({ memberId }: { memberId: string }): Promise<Journey[]> {
-    const results = await this.journeyModel.find({ memberId: new Types.ObjectId(memberId) });
+    const results = await this.journeyModel
+      .find({ memberId: new Types.ObjectId(memberId) })
+      .sort({ _id: -1 });
     return results.map((result) => this.replaceId(result));
   }
 
@@ -101,6 +109,20 @@ export class JourneyService extends BaseService {
       { memberId, active: true },
       { $set: { lastLoggedInAt: date } },
       { upsert: false, new: true },
+    );
+  }
+
+  async graduate(graduateParams: GraduateMemberParams) {
+    await this.journeyModel.updateOne(
+      { memberId: new Types.ObjectId(graduateParams.id), active: graduateParams.isGraduated },
+      {
+        $set: {
+          isGraduated: graduateParams.isGraduated,
+          active: !graduateParams.isGraduated,
+          graduationDate: graduateParams.isGraduated ? Date.now() : null,
+        },
+      },
+      { sort: { createdAt: -1 } },
     );
   }
 

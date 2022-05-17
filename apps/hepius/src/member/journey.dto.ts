@@ -35,6 +35,15 @@ export class UpdateJourneyParams extends CreateJourneyParams {
   @IsOptional()
   readmissionRisk?: ReadmissionRisk;
 }
+
+@InputType()
+export class GraduateMemberParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => Boolean)
+  isGraduated: boolean;
+}
 /***************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
@@ -77,6 +86,14 @@ export class Journey extends Identifier {
   @Prop({ isNan: true })
   @Field(() => [ReadmissionRiskHistory], { nullable: true })
   readmissionRiskHistory?: ReadmissionRiskHistory[];
+
+  @Prop({ type: Boolean, default: false })
+  @Field(() => Boolean)
+  isGraduated: boolean;
+
+  @Prop({ type: Date, isNaN: true })
+  @Field(() => Date, { nullable: true })
+  graduationDate?: Date;
 }
 
 /**************************************************************************************************

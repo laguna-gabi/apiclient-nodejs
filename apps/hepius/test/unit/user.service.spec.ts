@@ -179,45 +179,52 @@ describe('UserService', () => {
     const USER1 = generateId();
     const USER2 = generateId();
     const USER3 = generateId();
+    const journey1 = { isGraduated: false, active: true };
+    const journey2 = { isGraduated: true, active: false };
 
     it.each([
       {
         users: [
-          { _id: USER1, members: 0, lastMemberAssignedAt: new Date(0), maxMembers: 1 },
-          { _id: USER2, members: 0, lastMemberAssignedAt: new Date(1), maxMembers: 1 },
-          { _id: USER3, members: 0, lastMemberAssignedAt: new Date(2), maxMembers: 1 },
+          { _id: USER1, journeys: [], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
+          { _id: USER2, journeys: [], lastMemberAssignedAt: new Date(1), maxMembers: 1 },
+          { _id: USER3, journeys: [], lastMemberAssignedAt: new Date(2), maxMembers: 1 },
         ],
         userId: USER1,
       },
       {
         users: [
-          { _id: USER1, members: 1, lastMemberAssignedAt: new Date(0), maxMembers: 1 },
-          { _id: USER2, members: 0, lastMemberAssignedAt: new Date(1), maxMembers: 1 },
-          { _id: USER3, members: 0, lastMemberAssignedAt: new Date(2), maxMembers: 1 },
+          { _id: USER1, journeys: [journey1], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
+          { _id: USER2, journeys: [journey2], lastMemberAssignedAt: new Date(1), maxMembers: 1 },
+          { _id: USER3, journeys: [], lastMemberAssignedAt: new Date(2), maxMembers: 1 },
         ],
         userId: USER2,
       },
       {
         users: [
-          { _id: USER1, members: 1, lastMemberAssignedAt: new Date(0), maxMembers: 1 },
-          { _id: USER2, members: 1, lastMemberAssignedAt: new Date(1), maxMembers: 1 },
-          { _id: USER3, members: 0, lastMemberAssignedAt: new Date(2), maxMembers: 1 },
+          { _id: USER1, journeys: [journey1], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
+          {
+            _id: USER2,
+            journeys: [journey1, journey2],
+            lastMemberAssignedAt: new Date(1),
+            maxMembers: 1,
+          },
+          { _id: USER3, journeys: [], lastMemberAssignedAt: new Date(2), maxMembers: 1 },
         ],
         userId: USER3,
       },
       {
         users: [
-          { _id: USER1, members: 1, lastMemberAssignedAt: new Date(0), maxMembers: 1 },
-          { _id: USER2, members: 0, lastMemberAssignedAt: new Date(1), maxMembers: 1 },
-          { _id: USER3, members: 1, lastMemberAssignedAt: new Date(2), maxMembers: 1 },
+          { _id: USER1, journeys: [journey1], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
+          { _id: USER2, journeys: [], lastMemberAssignedAt: new Date(1), maxMembers: 1 },
+          { _id: USER3, journeys: [journey1], lastMemberAssignedAt: new Date(2), maxMembers: 1 },
         ],
         userId: USER2,
       },
       {
         users: [
-          { _id: USER1, members: 1, lastMemberAssignedAt: new Date(0), maxMembers: 1 },
-          { _id: USER2, members: 1, lastMemberAssignedAt: new Date(1), maxMembers: 1 },
-          { _id: USER3, members: 1, lastMemberAssignedAt: new Date(2), maxMembers: 1 },
+          { _id: USER1, journeys: [journey2], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
+          { _id: USER2, journeys: [journey1], lastMemberAssignedAt: new Date(1), maxMembers: 1 },
+          { _id: USER3, journeys: [], lastMemberAssignedAt: new Date(2), maxMembers: 1 },
         ],
         userId: USER1,
       },

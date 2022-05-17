@@ -52,8 +52,8 @@ describe(JourneyService.name, () => {
 
     const results = await service.getAll({ memberId });
     expect(results).toMatchObject([
-      { id: id1, ...matchObject, active: false },
       { id: id2, ...matchObject, active: true },
+      { id: id1, ...matchObject, active: false },
     ]);
 
     const activeJourney = await service.getActive(memberId);
@@ -251,5 +251,24 @@ describe(JourneyService.name, () => {
         }),
       );
     };
+
+    describe('graduate', () => {
+      it('should set graduate on existing member', async () => {
+        const currentTime = new Date();
+        const memberId = generateId();
+        const { id } = await service.create(generateCreateJourneyParams({ memberId }));
+        await service.graduate({ id: memberId, isGraduated: true });
+
+        const result1 = await service.get(id);
+        expect(result1.isGraduated).toBeTruthy();
+        expect(result1.graduationDate.getTime()).toBeGreaterThanOrEqual(currentTime.getTime());
+
+        await service.graduate({ id: memberId, isGraduated: false });
+
+        const result2 = await service.get(id);
+        expect(result2.isGraduated).toBeFalsy();
+        expect(result2.graduationDate).toBeFalsy();
+      });
+    });
   });
 });

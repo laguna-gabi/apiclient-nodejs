@@ -1,15 +1,26 @@
 import { generateId, generateUpdateJourneyParams } from '../generators';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AdmissionService, JourneyResolver, JourneyService, MemberModule } from '../../src/member';
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import {
+  AdmissionService,
+  GraduateMemberParams,
+  JourneyResolver,
+  JourneyService,
+  MemberModule,
+  MemberService,
+} from '../../src/member';
+import { Platform, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { dbDisconnect, defaultModules } from '../common';
 import { LoggerService } from '../../src/common';
+import { CognitoService } from '../../src/providers';
+import { v4 } from 'uuid';
 
 describe(JourneyResolver.name, () => {
   let module: TestingModule;
   let resolver: JourneyResolver;
   let service: JourneyService;
   let admissionService: AdmissionService;
+  let memberService: MemberService;
+  let cognitoService: CognitoService;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -20,6 +31,8 @@ describe(JourneyResolver.name, () => {
     resolver = module.get<JourneyResolver>(JourneyResolver);
     service = module.get<JourneyService>(JourneyService);
     admissionService = module.get<AdmissionService>(AdmissionService);
+    memberService = module.get<MemberService>(MemberService);
+    cognitoService = module.get<CognitoService>(CognitoService);
     mockLogger(module.get<LoggerService>(LoggerService));
   });
 
@@ -74,6 +87,103 @@ describe(JourneyResolver.name, () => {
       await resolver.getActiveJourney(generateId());
 
       expect(spyOnServiceGetActive).toBeCalled();
+    });
+
+    describe('graduateMember', () => {
+      let spyOnServiceGetAll;
+      let spyOnServiceGetMember;
+      let spyOnServiceGetMemberConfig;
+      let spyOnServiceGraduate;
+      let spyOnCognitoServiceEnableClient;
+      let spyOnCognitoServiceDisableClient;
+
+      beforeEach(() => {
+        spyOnServiceGetAll = jest.spyOn(service, 'getAll');
+        spyOnServiceGetMember = jest.spyOn(memberService, 'get');
+        spyOnServiceGetMemberConfig = jest.spyOn(memberService, 'getMemberConfig');
+        spyOnServiceGraduate = jest.spyOn(service, 'graduate');
+        spyOnCognitoServiceEnableClient = jest.spyOn(cognitoService, 'enableClient');
+        spyOnCognitoServiceDisableClient = jest.spyOn(cognitoService, 'disableClient');
+      });
+
+      afterEach(() => {
+        spyOnServiceGetAll.mockReset();
+        spyOnServiceGetMember.mockReset();
+        spyOnServiceGetMemberConfig.mockReset();
+        spyOnServiceGraduate.mockReset();
+        spyOnCognitoServiceEnableClient.mockReset();
+        spyOnCognitoServiceDisableClient.mockReset();
+      });
+
+      test.each([Platform.web, Platform.android, Platform.ios])(
+        'should graduate an existing member(true)',
+        async (platform) => {
+          const deviceId = v4();
+          spyOnServiceGetAll.mockResolvedValue([{ isGraduated: false }]);
+          spyOnServiceGetMember.mockResolvedValue({ deviceId });
+          spyOnServiceGetMemberConfig.mockResolvedValue({ platform });
+          spyOnServiceGraduate.mockResolvedValue(undefined);
+          spyOnCognitoServiceDisableClient.mockResolvedValue(true);
+
+          const graduateMemberParams: GraduateMemberParams = {
+            id: generateId(),
+            isGraduated: true,
+          };
+          await resolver.graduateMember(graduateMemberParams);
+          if (platform !== Platform.web) {
+            expect(spyOnCognitoServiceDisableClient).toBeCalledWith(deviceId);
+          } else {
+            expect(spyOnCognitoServiceEnableClient).not.toBeCalled();
+          }
+          expect(spyOnCognitoServiceEnableClient).not.toBeCalled();
+          expect(spyOnServiceGraduate).toBeCalledWith(graduateMemberParams);
+        },
+      );
+
+      test.each([Platform.web, Platform.android, Platform.ios])(
+        'should graduate an existing member(false)',
+        async (platform) => {
+          const deviceId = v4();
+          spyOnServiceGetAll.mockResolvedValue([{ isGraduated: true }]);
+          spyOnServiceGetMember.mockResolvedValue({ deviceId });
+          spyOnServiceGetMemberConfig.mockResolvedValue({ platform });
+          spyOnServiceGraduate.mockResolvedValue(undefined);
+          spyOnCognitoServiceDisableClient.mockResolvedValue(true);
+
+          const graduateMemberParams: GraduateMemberParams = {
+            id: generateId(),
+            isGraduated: false,
+          };
+          await resolver.graduateMember(graduateMemberParams);
+          if (platform !== Platform.web) {
+            expect(spyOnCognitoServiceEnableClient).toBeCalledWith(deviceId);
+          } else {
+            expect(spyOnCognitoServiceEnableClient).not.toBeCalled();
+          }
+          expect(spyOnCognitoServiceDisableClient).not.toBeCalled();
+          expect(spyOnServiceGraduate).toBeCalledWith(graduateMemberParams);
+        },
+      );
+
+      [Platform.web, Platform.android, Platform.ios].forEach((platform) => {
+        test.each([true, false])(
+          'should not update isGraduated to %p since it is already %p',
+          async (isGraduated) => {
+            const deviceId = v4();
+            spyOnServiceGetAll.mockResolvedValue([{ isGraduated }]);
+            spyOnServiceGetMember.mockResolvedValue({ deviceId });
+            spyOnServiceGetMemberConfig.mockResolvedValue({ platform });
+            spyOnServiceGraduate.mockResolvedValue(undefined);
+            spyOnCognitoServiceDisableClient.mockResolvedValue(true);
+
+            const graduateMemberParams: GraduateMemberParams = { id: generateId(), isGraduated };
+            await resolver.graduateMember(graduateMemberParams);
+            expect(spyOnServiceGraduate).not.toBeCalled();
+            expect(spyOnCognitoServiceDisableClient).not.toBeCalled();
+            expect(spyOnCognitoServiceEnableClient).not.toBeCalled();
+          },
+        );
+      });
     });
   });
 

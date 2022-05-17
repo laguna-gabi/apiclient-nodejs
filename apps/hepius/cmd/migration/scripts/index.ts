@@ -37,3 +37,4 @@ export * as m20220511110535 from './20220511110535-add-questionnaires-isAssignab
 export * as m20220515142505 from './20220515142505-add-username-field-to-user-entity';
 export * as m20220515092918 from './20220515092918-update-journey-isActive-active';
 export * as m20220515143904 from './20220515143904-enable-CSAT-to-memeber';
+export * as m20220516160354 from './20220516160354-move-graduate-data-to-journey';

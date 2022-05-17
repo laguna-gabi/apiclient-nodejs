@@ -30,6 +30,7 @@ import {
   generateCreateBarrierParamsWizard,
   generateCreateCarePlanParams,
   generateCreateCarePlanParamsWizard,
+  generateCreateJourneyParams,
   generateCreateMemberParams,
   generateCreateQuestionnaireParams,
   generateCreateRedFlagParamsWizard,
@@ -90,7 +91,6 @@ import {
   Task,
   TaskStatus,
   UpdateJournalTextParams,
-  defaultMemberParams,
 } from '../../src/member';
 import { Internationalization } from '../../src/providers';
 import {
@@ -371,12 +371,7 @@ describe('Integration tests: all', () => {
     await handler.mutations.updateMember({ updateMemberParams });
 
     const memberAfter = await handler.queries.getMember({ id: member.id });
-    expect(memberAfter).toEqual(
-      expect.objectContaining({
-        ...updateMemberParams,
-        isGraduated: defaultMemberParams.isGraduated,
-      }),
-    );
+    expect(memberAfter).toEqual(expect.objectContaining(updateMemberParams));
   });
 
   it('should register member and get configs with firstLoggedInAt and lastLoggedInAt', async () => {
@@ -853,6 +848,34 @@ describe('Integration tests: all', () => {
       expect({ currentMembersCount: 1, isEnabled: true, ...singlePrimaryUser }).toMatchObject(
         singlePrimaryUserResult,
       );
+    }, 10000);
+
+    it('should exclude isGraduated from summing members count on getUsers', async () => {
+      const { member: member1, user } = await creators.createMemberUserAndOptionalOrg();
+      const { member: member2 } = await creators.createMemberUserAndOptionalOrg();
+      const { member: member3 } = await creators.createMemberUserAndOptionalOrg();
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams: { memberId: member2.id, userId: user.id },
+      });
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams: { memberId: member3.id, userId: user.id },
+      });
+
+      //generating multiple journeys to check that currentMembersCount is calculated right
+      await handler.journeyService.create(generateCreateJourneyParams({ memberId: member1.id }));
+      await handler.journeyService.create(generateCreateJourneyParams({ memberId: member1.id }));
+      await handler.journeyService.create(generateCreateJourneyParams({ memberId: member2.id }));
+      await handler.journeyService.create(generateCreateJourneyParams({ memberId: member2.id }));
+
+      //filtering member3 out as he is graduated
+      await handler.mutations.graduateMember({
+        graduateMemberParams: { id: member3.id, isGraduated: true },
+      });
+
+      const users = await handler.queries.getUsers();
+      expect(
+        users.filter((userSummary) => userSummary.id === user.id)[0].currentMembersCount,
+      ).toEqual(2);
     }, 10000);
   });
 
@@ -2604,17 +2627,16 @@ describe('Integration tests: all', () => {
         graduateMemberParams: { id: member.id, isGraduated },
       });
 
-      const memberAfter = await handler.queries.getMember({ id: member.id });
-      expect(memberAfter.isGraduated).toEqual(isGraduated);
+      const result = await handler.queries.getJourney({ id: journey.id });
+      expect(result.isGraduated).toEqual(isGraduated);
+      expect(result.active).toEqual(!isGraduated);
 
       if (isGraduated) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        expect(Date.parse(memberAfter.graduationDate)).toBeGreaterThanOrEqual(
-          currentTime.getTime(),
-        );
+        expect(Date.parse(result.graduationDate)).toBeGreaterThanOrEqual(currentTime.getTime());
       } else {
-        expect(memberAfter.graduationDate).toBeFalsy();
+        expect(result.graduationDate).toBeFalsy();
       }
 
       expect(calledMethod).toBeCalledWith(deviceId);
@@ -2623,6 +2645,7 @@ describe('Integration tests: all', () => {
       notCalledMethod.mockReset();
     };
 
+    const journey = await handler.queries.getActiveJourney({ memberId: member.id });
     const { spyOnCognitoServiceDisableClient, spyOnCognitoServiceEnableClient } =
       handler.cognitoService;
     await graduate(true, spyOnCognitoServiceDisableClient, spyOnCognitoServiceEnableClient);

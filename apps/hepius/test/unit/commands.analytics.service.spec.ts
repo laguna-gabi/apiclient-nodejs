@@ -285,6 +285,9 @@ describe('Commands: AnalyticsService', () => {
             ...mockMember,
             primaryUser: mockPrimaryUser,
           } as PopulatedMember,
+          activeJourney: {
+            ...mockActiveJourney,
+          },
         } as MemberDataAggregate),
       ).toEqual([
         {
@@ -312,10 +315,12 @@ describe('Commands: AnalyticsService', () => {
         _id: new Types.ObjectId(mockMember.id),
         memberDetails: {
           ...mockMember,
-          isGraduated: false,
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
         } as PopulatedMember,
+        activeJourney: {
+          isGraduated: false,
+        },
         appointments: [
           {
             _id: app1Id, // no start date so should be filtered out
@@ -468,8 +473,6 @@ describe('Commands: AnalyticsService', () => {
         memberConfig: mockMemberConfig,
         memberDetails: {
           ...mockMember,
-          isGraduated: true,
-          graduationDate: sub(now, { days: 20 }),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
           org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
@@ -486,7 +489,11 @@ describe('Commands: AnalyticsService', () => {
             notesData: { scores: { adherence: 1, wellbeing: 2 } },
           } as PopulatedAppointment,
         ],
-        activeJourney: mockActiveJourney,
+        activeJourney: {
+          ...mockActiveJourney,
+          isGraduated: true,
+          graduationDate: sub(now, { days: 20 }),
+        },
       } as MemberDataAggregate);
 
       expect(data).toMatchObject({
@@ -669,6 +676,7 @@ describe('Commands: AnalyticsService', () => {
           primaryUserId: undefined,
           org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
+        activeJourney: { ...mockActiveJourney, firstLoggedInAt: undefined },
         isControlMember: true,
       } as MemberDataAggregate);
 

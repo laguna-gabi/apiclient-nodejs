@@ -15,20 +15,26 @@ import {
   ChangeMemberDnaParams,
   DietaryHelper,
   DietaryMatcher,
+  GraduateMemberParams,
   Journey,
   JourneyService,
+  MemberService,
   UpdateJourneyParams,
 } from '.';
 import { UserRole } from '@argus/hepiusClient';
 import { camelCase } from 'lodash';
+import { Platform } from '@argus/pandora';
+import { CognitoService } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Journey)
 export class JourneyResolver {
   constructor(
     readonly journeyService: JourneyService,
+    readonly memberService: MemberService,
     readonly admissionService: AdmissionService,
     readonly dietaryMatcher: DietaryHelper,
+    private readonly cognitoService: CognitoService,
     readonly logger: LoggerService,
   ) {}
 
@@ -76,6 +82,27 @@ export class JourneyResolver {
     memberId: string,
   ): Promise<Journey> {
     return this.journeyService.getActive(memberId);
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.admin)
+  async graduateMember(
+    @Args(camelCase(GraduateMemberParams.name))
+    graduateMemberParams: GraduateMemberParams,
+  ) {
+    const member = await this.memberService.get(graduateMemberParams.id);
+    const journeys = await this.journeyService.getAll({ memberId: graduateMemberParams.id });
+    const memberConfig = await this.memberService.getMemberConfig(graduateMemberParams.id);
+    if (journeys[0].isGraduated !== graduateMemberParams.isGraduated) {
+      if (memberConfig.platform !== Platform.web) {
+        if (graduateMemberParams.isGraduated) {
+          await this.cognitoService.disableClient(member.deviceId);
+        } else {
+          await this.cognitoService.enableClient(member.deviceId);
+        }
+      }
+      await this.journeyService.graduate(graduateMemberParams);
+    }
   }
 
   /************************************************************************************************
