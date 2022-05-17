@@ -112,7 +112,7 @@
     "sample": "sample",
     "index": "index",
     "extension": ".ts",
-    "migrationDir": "apps/hepius/cmd/migration/scripts"
+    "migrationDir": "apps/hepius/server/cmd/migration/scripts"
   },
   "retryMax": 2,
   "gapTriggersAt": 5,

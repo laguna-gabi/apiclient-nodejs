@@ -2598,7 +2598,7 @@ describe('MemberResolver', () => {
     });
   });
 
-  describe('sendSmsToChat', async () => {
+  describe('sendSmsToChat', () => {
     let spyOnServiceIsControlByPhone;
     let spyOnServiceGetByPhone;
 

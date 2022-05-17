@@ -1,10 +1,10 @@
 {
   "version": 2,
   "projects": {
-    "hepius": "apps/hepius",
+    "hepius": "apps/hepius/server",
+    "hepiusClient": "apps/hepius/client",
     "iris": "apps/iris",
     "irisClient": "libs/irisClient",
-    "hepiusClient": "libs/hepiusClient",
     "poseidon": "apps/poseidon",
     "poseidonClient": "libs/poseidonClient",
     "themis": "apps/themis",

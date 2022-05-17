@@ -1,6 +1,6 @@
 {
-  "root": "apps/hepius",
-  "sourceRoot": "apps/hepius/src",
+  "root": "apps/hepius/server",
+  "sourceRoot": "apps/hepius/server/src",
   "projectType": "application",
   "targets": {
     "build": {
@@ -8,8 +8,8 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/hepius",
-        "main": "apps/hepius/src/main.ts",
-        "tsConfig": "apps/hepius/tsconfig.app.json",
+        "main": "apps/hepius/server/src/main.ts",
+        "tsConfig": "apps/hepius/server/tsconfig.app.json",
         "webpackConfig": "./webpackConfig.js",
         "generatePackageJson": true
       },
@@ -20,8 +20,8 @@
           "inspect": false,
           "fileReplacements": [
             {
-              "replace": "apps/hepius/src/environments/environment.ts",
-              "with": "apps/hepius/src/environments/environment.prod.ts"
+              "replace": "apps/hepius/server/src/environments/environment.ts",
+              "with": "apps/hepius/server/src/environments/environment.prod.ts"
             }
           ]
         }
@@ -37,34 +37,34 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/hepius/**/*.ts"]
+        "lintFilePatterns": ["apps/hepius/server/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "apps/hepius/test/unit/jest.config.js",
+        "jestConfig": "apps/hepius/server/test/unit/jest.config.js",
         "passWithNoTests": true
       }
     },
     "test:integration": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "apps/hepius/test/integration/jest.config.js",
+        "jestConfig": "apps/hepius/server/test/integration/jest.config.js",
         "passWithNoTests": true
       }
     },
     "test:validation": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "apps/hepius/test/validations/jest.config.js",
+        "jestConfig": "apps/hepius/server/test/validations/jest.config.js",
         "passWithNoTests": true
       }
     },
     "test:live": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "apps/hepius/test/live/jest.config.js",
+        "jestConfig": "apps/hepius/server/test/live/jest.config.js",
         "passWithNoTests": true
       }
     },
@@ -72,7 +72,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/apps/hepius"],
       "options": {
-        "jestConfig": "apps/hepius/test/jest.config.js",
+        "jestConfig": "apps/hepius/server/test/jest.config.js",
         "passWithNoTests": true
       }
     },
@@ -99,8 +99,8 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/hepius/cmd",
-        "main": "apps/hepius/cmd/main.ts",
-        "tsConfig": "apps/hepius/tsconfig.app.json",
+        "main": "apps/hepius/server/cmd/main.ts",
+        "tsConfig": "apps/hepius/server/tsconfig.app.json",
         "webpackConfig": "./webpackConfig.js"
       }
     },
@@ -119,7 +119,7 @@
     "generate:gql": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "gql-generator -i ./apps/hepius/schema.gql -o ./apps/hepius/gql"
+        "command": "gql-generator -i ./apps/hepius/server/schema.gql -o ./apps/hepius/server/gql"
       }
     }
   },

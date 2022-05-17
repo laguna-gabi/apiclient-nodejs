@@ -1,11 +1,11 @@
 module.exports = {
   displayName: 'hepius',
-  rootDir: '../validations',
-  preset: '../../../../jest.preset.js',
-  globalSetup: '../../../../global-setup.ts',
+  rootDir: '../live',
+  preset: '../../../../../jest.preset.js',
+  globalSetup: '../../../../../global-setup.ts',
   globals: {
     'ts-jest': {
-      tsconfig: 'apps/hepius/tsconfig.spec.json',
+      tsconfig: 'apps/hepius/server/tsconfig.spec.json',
     },
   },
   testEnvironment: 'node',

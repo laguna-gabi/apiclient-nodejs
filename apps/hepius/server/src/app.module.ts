@@ -45,7 +45,7 @@ const badRequestException = 'Bad Request Exception';
     EventEmitterModule.forRoot({ maxListeners: eventEmitter.maxListeners }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: './apps/hepius/schema.gql',
+      autoSchemaFile: './apps/hepius/server/schema.gql',
       cors: true,
       formatError: (error: GraphQLError) => {
         const handleErrorMessage = (message: string) => {

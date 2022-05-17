@@ -1,10 +1,10 @@
 module.exports = {
-  displayName: 'hepiusClient',
+  displayName: 'hepius',
   rootDir: '../',
-  preset: '../../jest.preset.js',
+  preset: '../../../jest.preset.js',
   globals: {
     'ts-jest': {
-      tsconfig: 'libs/hepiusClient/tsconfig.spec.json',
+      tsconfig: 'apps/hepius/server/tsconfig.spec.json',
     },
   },
   testEnvironment: 'node',
@@ -12,9 +12,10 @@ module.exports = {
     '^.+\\.[tj]s$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
-  coverageDirectory: '../../coverage/libs/hepiusClient',
+  coverageDirectory: '../../../coverage/apps/hepius',
   maxWorkers: 1,
-  globalSetup: '../../global-setup.ts',
+  globalSetup: '../../../global-setup.ts',
   coverageReporters: ['json-summary', 'lcov'],
   collectCoverage: true,
+  coveragePathIgnorePatterns: ['<rootDir>/cmd/', '<rootDir>/scripts/'],
 };

@@ -1,20 +1,20 @@
 {
-  "root": "libs/hepiusClient",
-  "sourceRoot": "libs/hepiusClient/src",
+  "root": "apps/hepius/client",
+  "sourceRoot": "apps/hepius/client/src",
   "projectType": "library",
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/hepiusClient/**/*.ts"]
+        "lintFilePatterns": ["apps/hepius/client/**/*.ts"]
       }
     },
     "test:cov": {
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/libs/hepiusClient"],
       "options": {
-        "jestConfig": "libs/hepiusClient/test/jest.config.js",
+        "jestConfig": "apps/hepius/client/test/jest.config.js",
         "passWithNoTests": true
       }
     },

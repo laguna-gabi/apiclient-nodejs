@@ -5,7 +5,7 @@
     "seed": "nx command hepius --cmd=general --options='-t seed'",
     "seed:dev": "export NODE_ENV=develop && yarn seed",
     "get:tokens": "nx command hepius --cmd=general --options='-t getTokens'",
-    "setup": "./apps/hepius/scripts/setup.sh",
+    "setup": "./apps/hepius/server/scripts/setup.sh",
     "analytics:dump": "nx command hepius --cmd=analytics",
     "analytics:dump:dev": "export NODE_ENV=develop && yarn analytics:dump",
     "analytics:dump:prod": "export NODE_ENV=production && yarn analytics:dump",

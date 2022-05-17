@@ -69,7 +69,7 @@ describe('live: aws', () => {
     it('should be able to download a file', async () => {
       // upload a file to our local storage
       const filename = `lagunaIcon.png`;
-      const fileContent = readFileSync(`./apps/hepius/test/live/mocks/${filename}`);
+      const fileContent = readFileSync(`./apps/hepius/server/test/live/mocks/${filename}`);
 
       const refHash = createHash('md5').update(fileContent.toString(), 'utf8').digest('hex');
 
@@ -163,7 +163,7 @@ describe('live: aws', () => {
       };
 
       const fileName = `${lorem.word()}.mp4`;
-      const buffer = readFileSync('./apps/hepius/test/live/mocks/tempFile.ogg');
+      const buffer = readFileSync('./apps/hepius/server/test/live/mocks/tempFile.ogg');
 
       const uploadID = await uploadPart(fileName, 0, buffer.toString('hex'));
       await uploadPart(fileName, 1, lorem.sentence(), uploadID);
