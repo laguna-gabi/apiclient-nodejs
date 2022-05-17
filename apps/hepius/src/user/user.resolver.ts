@@ -46,16 +46,17 @@ export class UserResolver {
     createUserParams: CreateUserParams,
   ) {
     const { id } = await this.userService.insert(createUserParams);
-    let authId;
+    let authId, username;
+
     try {
-      authId = await this.cognitoService.addUser(createUserParams);
+      ({ authId, username } = await this.cognitoService.addUser(createUserParams));
     } catch (ex) {
       await this.userService.delete(id);
       this.logger.error(createUserParams, UserResolver.name, this.createUser.name, formatEx(ex));
       throw new Error(Errors.get(ErrorType.userFailedToCreateOnExternalProvider));
     }
 
-    const user = await this.userService.updateAuthId(id, authId);
+    const user = await this.userService.updateAuthIdAndUsername(id, authId, username);
 
     const eventParams: IEventOnNewUser = { user };
     this.eventEmitter.emit(EventType.onNewUser, eventParams);

@@ -242,7 +242,10 @@ export class Handler extends BaseHandler {
     this.queries = new Queries(this.client, this.defaultUserRequestHeaders);
 
     const { id: orgId } = await this.mutations.createOrg({ orgParams: generateOrgParams() });
-    this.cognitoService.spyOnCognitoServiceAddUser.mockResolvedValueOnce(v4());
+    this.cognitoService.spyOnCognitoServiceAddUser.mockResolvedValueOnce({
+      authId: v4(),
+      username: v4(),
+    });
     const user = await this.mutations.createUser({ createUserParams: generateCreateUserParams() });
     const memberParams = generateCreateMemberParams({ userId: user.id, orgId });
     const { id } = await this.mutations.createMember({ memberParams });
@@ -356,7 +359,7 @@ export const initClients = async (
   if (users.length === 0) {
     const createUserParams = generateCreateUserParams({ roles });
     const { id } = await userService.insert(createUserParams);
-    const user = await userService.updateAuthId(id, v4());
+    const user = await userService.updateAuthIdAndUsername(id, v4(), createUserParams.firstName);
     const eventParams: IEventOnNewUser = { user };
     eventEmitter.emit(EventType.onNewUser, eventParams);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

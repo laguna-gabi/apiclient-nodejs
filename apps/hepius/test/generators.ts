@@ -250,6 +250,7 @@ export const mockGenerateUser = (): User => {
     createdAt: fakerDate.past(1),
     phone: generatePhone(),
     authId: v4(),
+    username: firstName,
     lastMemberAssignedAt: new Date(0),
     lastQueryAlert: fakerDate.past(2),
     inEscalationGroup: true,

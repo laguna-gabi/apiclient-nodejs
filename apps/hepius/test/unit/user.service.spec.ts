@@ -288,7 +288,7 @@ describe('UserService', () => {
 
   describe('updateAuthId', () => {
     it('should throw when trying to update authId for a non existing user', async () => {
-      await expect(service.updateAuthId(generateId(), v4())).rejects.toThrow(
+      await expect(service.updateAuthIdAndUsername(generateId(), v4(), v4())).rejects.toThrow(
         Errors.get(ErrorType.userNotFound),
       );
     });
@@ -298,7 +298,7 @@ describe('UserService', () => {
       const { id } = await service.insert(createUserParams);
 
       const authId = v4();
-      const user = await service.updateAuthId(id, authId);
+      const user = await service.updateAuthIdAndUsername(id, authId, createUserParams.firstName);
 
       const result = await service.get(id);
       expect(result).toMatchObject({ ...user, authId });

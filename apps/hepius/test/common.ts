@@ -219,7 +219,7 @@ export const mockProviders = (
   spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
   spyOnSendBirdInvite.mockResolvedValue([generateId()]);
   spyOnSendBirdLeave.mockReturnValue(undefined);
-  spyOnCognitoServiceAddUser.mockResolvedValue(v4());
+  spyOnCognitoServiceAddUser.mockResolvedValue({ authId: v4(), username: v4() });
   spyOnCognitoServiceDisableClient.mockResolvedValue(true);
   spyOnCognitoServiceEnableClient.mockResolvedValue(true);
   spyOnCognitoServiceDeleteClient.mockReturnValue(undefined);

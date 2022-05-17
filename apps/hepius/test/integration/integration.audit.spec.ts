@@ -564,7 +564,10 @@ describe('Integration tests : Audit', () => {
 
   describe(User.name, () => {
     it('should create a user + config with createdBy and updatedBy fields', async () => {
-      handler.cognitoService.spyOnCognitoServiceAddUser.mockResolvedValueOnce(v4());
+      handler.cognitoService.spyOnCognitoServiceAddUser.mockResolvedValueOnce({
+        authId: v4(),
+        username: v4(),
+      });
       const { id } = await handler.mutations.createUser({
         createUserParams: generateCreateUserParams(),
         requestHeaders: generateRequestHeaders(user1.authId),
@@ -585,7 +588,10 @@ describe('Integration tests : Audit', () => {
     });
 
     it('should update on addAppointmentToUser', async () => {
-      handler.cognitoService.spyOnCognitoServiceAddUser.mockResolvedValueOnce(v4());
+      handler.cognitoService.spyOnCognitoServiceAddUser.mockResolvedValueOnce({
+        authId: v4(),
+        username: v4(),
+      });
       const { id } = await handler.mutations.createUser({
         createUserParams: generateCreateUserParams(),
         requestHeaders: generateRequestHeaders(user1.authId),

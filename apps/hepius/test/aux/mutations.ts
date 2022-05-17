@@ -94,6 +94,7 @@ export class Mutations {
             createUser(createUserParams: $createUserParams) {
               id
               authId
+              username
             }
           }
         `,
@@ -134,6 +135,7 @@ export class Mutations {
             updateUser(updateUserParams: $updateUserParams) {
               id
               authId
+              username
               firstName
               lastName
               email

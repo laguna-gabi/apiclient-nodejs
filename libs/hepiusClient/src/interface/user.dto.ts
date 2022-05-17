@@ -25,6 +25,10 @@ export class User extends Identifier {
   authId?: string;
 
   @Prop()
+  @Field(() => String, { nullable: true })
+  username?: string;
+
+  @Prop()
   @Field(() => String)
   firstName: string;
 

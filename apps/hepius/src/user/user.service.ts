@@ -121,9 +121,9 @@ export class UserService extends BaseService {
     }
   }
 
-  async updateAuthId(id: string, authId: string): Promise<User> {
+  async updateAuthIdAndUsername(id: string, authId: string, username: string): Promise<User> {
     const user = await this.userModel
-      .findByIdAndUpdate(new Types.ObjectId(id), { authId }, { upsert: false, new: true })
+      .findByIdAndUpdate(new Types.ObjectId(id), { authId, username }, { upsert: false, new: true })
       .lean();
 
     if (!user) {

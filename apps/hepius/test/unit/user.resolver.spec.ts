@@ -75,7 +75,7 @@ describe('UserResolver', () => {
 
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
-      spyOnServiceUpdateAuthId = jest.spyOn(service, 'updateAuthId');
+      spyOnServiceUpdateAuthId = jest.spyOn(service, 'updateAuthIdAndUsername');
       spyOnServiceDelete = jest.spyOn(service, 'delete');
       spyOnCognitoAddClient = jest.spyOn(cognitoService, 'addUser');
     });

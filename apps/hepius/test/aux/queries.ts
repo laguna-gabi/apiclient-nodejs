@@ -35,6 +35,7 @@ export class Queries {
           getUser {
             id
             authId
+            username
             firstName
             lastName
             email
@@ -77,6 +78,7 @@ export class Queries {
           getUsers {
             id
             authId
+            username
             firstName
             lastName
             email

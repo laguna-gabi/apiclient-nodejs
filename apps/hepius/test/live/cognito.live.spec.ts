@@ -27,11 +27,12 @@ describe('live: cognito', () => {
   it('should add, disable, enable, get client enabled and delete a client', async () => {
     const user = {
       firstName: `${name.firstName()}.${v4()}`,
+      lastName: `${name.lastName()}.${v4()}`,
       email: 'hadas@lagunahealth.com',
       phone: generatePhone(),
     };
 
-    const authId = await cognitoService.addUser(user);
+    const { authId } = await cognitoService.addUser(user);
     expect(authId).not.toBeUndefined();
 
     const currentClient = await getClient(user.firstName.toLowerCase());
@@ -63,7 +64,44 @@ describe('live: cognito', () => {
 
     isEnabled = await cognitoService.isClientEnabled(user.firstName.toLowerCase());
     expect(isEnabled).toBeFalsy();
-  }, 10000);
+  }, 15000);
+
+  describe('should add multiple users with the same first name', () => {
+    const addedUsernames = [];
+    const firstName = `${name.firstName()}.${v4()}`;
+
+    const userLastNames = ['Levi', 'Levinsky', 'Levinshtein'];
+
+    afterAll(async () => {
+      // delete test users from cognito
+      await Promise.all(
+        addedUsernames.map(async (username) => {
+          await cognitoService.deleteClient(username);
+        }),
+      );
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      lastName            | expectedUsername                                      | title
+      ${userLastNames[0]} | ${firstName.toLowerCase()}                            | ${`should add user ${firstName} ${userLastNames[0]}`}
+      ${userLastNames[1]} | ${`${firstName}${userLastNames[1][0]}`.toLowerCase()} | ${`should add user ${firstName} ${userLastNames[1]}`}
+      ${userLastNames[2]} | ${`${firstName}.${userLastNames[2]}`.toLowerCase()}   | ${`should add user ${firstName} ${userLastNames[2]}`}
+    `(`$title`, async ({ lastName, expectedUsername }) => {
+      const { authId, username } = await cognitoService.addUser({
+        firstName,
+        lastName,
+        email: 'test@lagunahealth.com',
+        phone: generatePhone(),
+      });
+      expect(authId).not.toBeUndefined();
+
+      addedUsernames.push(username); // save the username so we can cleanup `afterAll`
+
+      const currentClient = await getClient(expectedUsername);
+      expect(currentClient.Enabled).toBeTruthy();
+    });
+  });
 
   const getClient = async (userName): Promise<AdminGetUserResponse> => {
     return cognito
