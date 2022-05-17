@@ -1742,28 +1742,30 @@ describe('MemberResolver', () => {
 
   describe('getMemberConfig', () => {
     let spyOnServiceGetMemberConfig;
-    let spyOnServiceGetActiveJourney;
+    let spyOnServiceGetAllJourneys;
     beforeEach(() => {
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
-      spyOnServiceGetActiveJourney = jest.spyOn(journeyService, 'getActive');
+      spyOnServiceGetAllJourneys = jest.spyOn(journeyService, 'getAll');
     });
 
     afterEach(() => {
       spyOnServiceGetMemberConfig.mockReset();
-      spyOnServiceGetActiveJourney.mockReset();
+      spyOnServiceGetAllJourneys.mockReset();
     });
 
     it('should call MemberConfig', async () => {
       const memberConfig = mockGenerateMemberConfig();
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnServiceGetActiveJourney.mockResolvedValueOnce(
+      spyOnServiceGetAllJourneys.mockResolvedValueOnce([
         mockGenerateJourney({ memberId: memberConfig.memberId.toString() }),
-      );
+      ]);
       await resolver.getMemberConfig(memberConfig.memberId.toString());
 
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(memberConfig.memberId.toString());
-      expect(spyOnServiceGetActiveJourney).toBeCalledWith(memberConfig.memberId.toString());
+      expect(spyOnServiceGetAllJourneys).toBeCalledWith({
+        memberId: memberConfig.memberId.toString(),
+      });
     });
   });
 

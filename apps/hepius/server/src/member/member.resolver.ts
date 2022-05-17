@@ -1436,7 +1436,10 @@ export class MemberResolver extends MemberBase {
     id?: string,
   ) {
     const baseMemberConfig = await this.memberService.getMemberConfig(id);
-    const { firstLoggedInAt, lastLoggedInAt } = await this.journeyService.getActive(id);
+    const journeys = await this.journeyService.getAll({
+      memberId: id,
+    });
+    const { firstLoggedInAt, lastLoggedInAt } = journeys[0];
     return { ...baseMemberConfig, firstLoggedInAt, lastLoggedInAt };
   }
 
