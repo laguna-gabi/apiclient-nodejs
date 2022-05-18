@@ -1457,7 +1457,6 @@ export const generateAdmissionTreatmentRenderedParams = ({
   return {
     changeType,
     ...attachIdParam,
-    text: lorem.sentence(),
     code: v4(),
     startDate: startDate || generateDateOnly(subDays(new Date(), 2)),
     endDate: endDate || generateDateOnly(subDays(new Date(), 1)),
@@ -1572,6 +1571,9 @@ export const generateChangeMemberDnaParams = ({
     specialInstructions: lorem.sentences(),
     reasonForAdmission: lorem.sentences(),
     hospitalCourse: lorem.sentences(),
+    admissionSummary: lorem.sentences(),
+    drg: lorem.word(),
+    drgDesc: lorem.sentence(),
     warningSigns: [WarningSigns.confusion],
     activity: generateAdmissionActivityParams(),
     woundCare: generateAdmissionWoundCareParams(),

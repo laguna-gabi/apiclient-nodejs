@@ -312,10 +312,22 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsOptional()
   fellowName?: string;
 
+  /**
+   * will be @deprecated soon
+   * use journey.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
+   */
   @Field(() => String, { nullable: true })
   @IsOptional()
   drg?: string;
 
+  /**
+   * will be @deprecated soon
+   * use journey.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
+   */
   @Field(() => String, { nullable: true })
   @IsOptional()
   drgDesc?: string;

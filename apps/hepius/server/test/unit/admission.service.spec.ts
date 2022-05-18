@@ -107,6 +107,9 @@ describe(AdmissionService.name, () => {
     { specialInstructions: lorem.sentences() },
     { reasonForAdmission: lorem.sentences() },
     { hospitalCourse: lorem.sentences() },
+    { admissionSummary: lorem.sentences() },
+    { drg: lorem.word() },
+    { drgDesc: lorem.sentences() },
     { warningSigns: [WarningSigns.confusion, WarningSigns.passingOut] },
     { activity: generateAdmissionActivityParams() },
     { woundCare: generateAdmissionWoundCareParams() },
@@ -120,6 +123,9 @@ describe(AdmissionService.name, () => {
       specialInstructions: lorem.sentences(),
       reasonForAdmission: lorem.sentences(),
       hospitalCourse: lorem.sentences(),
+      admissionSummary: lorem.sentences(),
+      drg: lorem.word(),
+      drgDesc: lorem.sentence(),
       warningSigns: [WarningSigns.confusion, WarningSigns.passingOut],
       activity: generateAdmissionActivityParams(),
       woundCare: generateAdmissionWoundCareParams(),
@@ -144,6 +150,9 @@ describe(AdmissionService.name, () => {
     ${'specialInstructions'} | ${lorem.sentences()}                  | ${lorem.sentences()}
     ${'reasonForAdmission'}  | ${lorem.sentences()}                  | ${lorem.sentences()}
     ${'hospitalCourse'}      | ${lorem.sentences()}                  | ${lorem.sentences()}
+    ${'admissionSummary'}    | ${lorem.sentences()}                  | ${lorem.sentences()}
+    ${'drg'}                 | ${lorem.word()}                       | ${lorem.word()}
+    ${'drgDesc'}             | ${lorem.sentence()}                   | ${lorem.sentence()}
     ${'warningSigns'}        | ${[WarningSigns.severeDizziness]}     | ${[WarningSigns.confusion, WarningSigns.passingOut]}
     ${'activity'}            | ${generateAdmissionActivityParams()}  | ${generateAdmissionActivityParams()}
     ${'woundCare'}           | ${generateAdmissionWoundCareParams()} | ${generateAdmissionWoundCareParams()}
@@ -172,6 +181,9 @@ describe(AdmissionService.name, () => {
     ${'specialInstructions'} | ${lorem.sentences()}
     ${'reasonForAdmission'}  | ${lorem.sentences()}
     ${'hospitalCourse'}      | ${lorem.sentences()}
+    ${'admissionSummary'}    | ${lorem.sentences()}
+    ${'drg'}                 | ${lorem.word()}
+    ${'drgDesc'}             | ${lorem.sentences()}
     ${'warningSigns'}        | ${[WarningSigns.confusion, WarningSigns.severeDizziness]}
   `(`should not update $field when its null`, async ({ field, input }) => {
     const memberId = generateId();
@@ -293,7 +305,7 @@ describe(AdmissionService.name, () => {
   test.each`
     admissionCategory                         | key
     ${AdmissionCategory.diagnoses}            | ${'description'}
-    ${AdmissionCategory.treatmentRendereds}   | ${'text'}
+    ${AdmissionCategory.treatmentRendereds}   | ${'code'}
     ${AdmissionCategory.medications}          | ${'name'}
     ${AdmissionCategory.externalAppointments} | ${'date'}
     ${AdmissionCategory.dietaries}            | ${'notes'}
@@ -346,8 +358,8 @@ describe(AdmissionService.name, () => {
     const changeResult = await change(field, createParams, memberId, createResult.id);
 
     expect(changeResult[AdmissionCategory.treatmentRendereds]).toEqual([
-      expect.objectContaining({ text: expect.any(String) }),
-      expect.objectContaining({ text: expect.any(String) }),
+      expect.objectContaining({ code: expect.any(String) }),
+      expect.objectContaining({ code: expect.any(String) }),
     ]);
     checkAllCategories(changeResult);
   });

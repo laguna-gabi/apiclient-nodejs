@@ -149,6 +149,9 @@ export const FRAGMENT_ADMISSION = gql`
     specialInstructions
     reasonForAdmission
     hospitalCourse
+    admissionSummary
+    drg
+    drgDesc
     warningSigns
     activity {
       general
@@ -174,7 +177,6 @@ export const FRAGMENT_ADMISSION = gql`
       onsetEnd
     }
     treatmentRendereds {
-      text
       code
       startDate
       endDate

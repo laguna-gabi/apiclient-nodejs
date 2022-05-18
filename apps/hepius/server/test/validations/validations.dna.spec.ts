@@ -145,6 +145,7 @@ describe('Validations - DNA', () => {
     ${{ specialInstructions: 123 }}     | ${{ missingFieldError: stringError }}
     ${{ reasonForAdmission: 123 }}      | ${{ missingFieldError: stringError }}
     ${{ hospitalCourse: 123 }}          | ${{ missingFieldError: stringError }}
+    ${{ admissionSummary: 123 }}        | ${{ missingFieldError: stringError }}
     ${{ warningSigns: [lorem.word()] }} | ${{ missingFieldError: 'does not exist in "WarningSigns" enum' }}
     ${{ warningSigns: lorem.word() }}   | ${{ missingFieldError: 'does not exist in "WarningSigns" enum' }}
     ${{ activity: lorem.word() }}       | ${{ missingFieldError: 'Expected type "ActivityInput" to be an object.' }}

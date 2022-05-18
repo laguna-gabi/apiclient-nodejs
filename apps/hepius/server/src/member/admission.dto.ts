@@ -347,10 +347,6 @@ export class Diagnosis extends BaseCategory {
 export class TreatmentRendered extends BaseCategory {
   @Prop({ isNan: true })
   @Field({ nullable: true })
-  text?: string;
-
-  @Prop({ isNan: true })
-  @Field({ nullable: true })
   code?: string;
 
   @Prop({ isNan: true })
@@ -574,6 +570,15 @@ export class ChangeMemberDnaParams {
   @Field(() => String, { nullable: true })
   hospitalCourse?: string;
 
+  @Field(() => String, { nullable: true })
+  admissionSummary?: string;
+
+  @Field(() => String, { nullable: true })
+  drg?: string;
+
+  @Field(() => String, { nullable: true })
+  drgDesc?: string;
+
   @Field(() => [WarningSigns], { nullable: true })
   warningSigns?: WarningSigns[];
 
@@ -632,6 +637,9 @@ export const singleAdmissionItems = [
   'specialInstructions',
   'reasonForAdmission',
   'hospitalCourse',
+  'admissionSummary',
+  'drg',
+  'drgDesc',
   'warningSigns',
   'activity',
   'woundCare',
@@ -681,6 +689,18 @@ export class Admission extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   hospitalCourse?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  admissionSummary?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  drg?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  drgDesc?: string;
 
   @Prop({ type: [String], enum: WarningSigns, isNan: true })
   @Field(() => [WarningSigns], { nullable: true })
