@@ -1,10 +1,10 @@
 module.exports = {
   displayName: 'irisClient',
   rootDir: '../',
-  preset: '../../jest.preset.js',
+  preset: '../../../jest.preset.js',
   globals: {
     'ts-jest': {
-      tsconfig: 'libs/irisClient/tsconfig.spec.json',
+      tsconfig: 'apps/iris/client/tsconfig.spec.json',
     },
   },
   testEnvironment: 'node',
@@ -12,9 +12,9 @@ module.exports = {
     '^.+\\.[tj]s$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
-  coverageDirectory: '../../coverage/libs/irisClient',
+  coverageDirectory: '../../../coverage/libs/irisClient',
   maxWorkers: 1,
-  globalSetup: '../../global-setup.ts',
+  globalSetup: '../../../global-setup.ts',
   coverageReporters: ['json-summary', 'lcov'],
   collectCoverage: true,
 };

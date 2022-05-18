@@ -1,6 +1,6 @@
 {
-  "root": "apps/iris",
-  "sourceRoot": "apps/iris/src",
+  "root": "apps/iris/server",
+  "sourceRoot": "apps/iris/server/src",
   "projectType": "application",
   "targets": {
     "build": {
@@ -8,8 +8,8 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/iris",
-        "main": "apps/iris/src/main.ts",
-        "tsConfig": "apps/iris/tsconfig.app.json",
+        "main": "apps/iris/server/src/main.ts",
+        "tsConfig": "apps/iris/server/tsconfig.app.json",
         "webpackConfig": "./webpackConfig.js",
         "generatePackageJson": true
       },
@@ -20,8 +20,8 @@
           "inspect": false,
           "fileReplacements": [
             {
-              "replace": "apps/iris/src/environments/environment.ts",
-              "with": "apps/iris/src/environments/environment.prod.ts"
+              "replace": "apps/iris/server/src/environments/environment.ts",
+              "with": "apps/iris/src/server/environments/environment.prod.ts"
             }
           ]
         }
@@ -37,27 +37,27 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/iris/**/*.ts"]
+        "lintFilePatterns": ["apps/iris/server/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "apps/iris/test/unit/jest.config.js",
+        "jestConfig": "apps/iris/server/test/unit/jest.config.js",
         "passWithNoTests": true
       }
     },
     "test:integration": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "apps/iris/test/integration/jest.config.js",
+        "jestConfig": "apps/iris/server/test/integration/jest.config.js",
         "passWithNoTests": true
       }
     },
     "test:live": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "apps/iris/test/live/jest.config.js",
+        "jestConfig": "apps/iris/server/test/live/jest.config.js",
         "passWithNoTests": true
       }
     },
@@ -65,7 +65,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/apps/iris"],
       "options": {
-        "jestConfig": "apps/iris/test/jest.config.js",
+        "jestConfig": "apps/iris/server/test/jest.config.js",
         "passWithNoTests": true
       }
     },

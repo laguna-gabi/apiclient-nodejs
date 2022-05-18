@@ -3,8 +3,8 @@
   "projects": {
     "hepius": "apps/hepius/server",
     "hepiusClient": "apps/hepius/client",
-    "iris": "apps/iris",
-    "irisClient": "libs/irisClient",
+    "iris": "apps/iris/server",
+    "irisClient": "apps/iris/client",
     "poseidon": "apps/poseidon/server",
     "poseidonClient": "apps/poseidon/client",
     "themis": "apps/themis",

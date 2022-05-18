@@ -1,20 +1,20 @@
 {
-  "root": "libs/irisClient",
-  "sourceRoot": "libs/irisClient/src",
+  "root": "apps/iris/client",
+  "sourceRoot": "apps/iris/client/src",
   "projectType": "library",
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/irisClient/**/*.ts"]
+        "lintFilePatterns": ["apps/iris/client/**/*.ts"]
       }
     },
     "test:cov": {
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/libs/irisClient"],
       "options": {
-        "jestConfig": "libs/irisClient/test/jest.config.js",
+        "jestConfig": "apps/iris/client/test/jest.config.js",
         "passWithNoTests": true
       }
     },
