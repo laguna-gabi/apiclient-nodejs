@@ -187,11 +187,8 @@ export class QuestionnaireService extends BaseService {
       return `${Errors.get(ErrorType.questionnaireResponseInvalidResponse)}: ${error}`;
     };
 
-    const requiredAnswerCodes = questionnaire.items
-      .filter((item) => item.required)
-      .map((item) => item.code);
     const diffResult = differenceWith(
-      requiredAnswerCodes,
+      this.findAllRequiredAnswerCodes(questionnaire.items),
       answers,
       (code, answer) => code === answer.code,
     );
@@ -299,6 +296,18 @@ export class QuestionnaireService extends BaseService {
         return this.findItemByCode(item.items, code);
       }
     }
+  }
+
+  private findAllRequiredAnswerCodes(items: Item[]): string[] {
+    const codes = [];
+    for (const item of items) {
+      if (item.type === ItemType.group) {
+        codes.push(...this.findAllRequiredAnswerCodes(item.items));
+      } else if (item.required) {
+        codes.push(item.code);
+      }
+    }
+    return codes;
   }
 
   private async getLatestQuestionnaireResponse({

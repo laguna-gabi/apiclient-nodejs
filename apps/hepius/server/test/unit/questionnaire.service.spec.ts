@@ -579,6 +579,47 @@ describe('QuestionnaireService', () => {
         }),
         `answer for 'range' type question with value out of range: 'q1', value: '5'`,
       ],
+      [
+        'missing required answers',
+        [{ code: 'q2', value: '5' }],
+        mockGenerateQuestionnaire({
+          items: [
+            mockGenerateQuestionnaireItem({
+              code: 'q1',
+              type: ItemType.text,
+              required: true,
+            }),
+            mockGenerateQuestionnaireItem({
+              code: 'g1',
+              type: ItemType.group,
+              items: [
+                mockGenerateQuestionnaireItem({
+                  code: 'q2',
+                  type: ItemType.text,
+                  required: true,
+                }),
+                mockGenerateQuestionnaireItem({
+                  code: 'g2',
+                  type: ItemType.group,
+                  items: [
+                    mockGenerateQuestionnaireItem({
+                      code: 'q3',
+                      type: ItemType.text,
+                      required: true,
+                    }),
+                    mockGenerateQuestionnaireItem({
+                      code: 'q4',
+                      type: ItemType.text,
+                      required: false,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+        `invalid questionnaire response: missing required answer codes: q1,q3`,
+      ],
     ])(`%s`, async (_, answers, template, error) => {
       if (error) {
         expect(() => {
