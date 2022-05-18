@@ -69,10 +69,9 @@ describe(JourneyService.name, () => {
     expect(result).toHaveLength(0);
   });
 
-  it('should fail to get active journey of a member', async () => {
-    await expect(service.getActive(generateId())).rejects.toThrow(
-      Errors.get(ErrorType.journeyForMemberNotFound),
-    );
+  it('should return null on non existing active journey', async () => {
+    const result = await service.getActive(generateId());
+    expect(result).toBeNull();
   });
 
   describe('updateMemberConfigLoggedInAt', () => {

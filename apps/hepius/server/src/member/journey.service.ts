@@ -48,15 +48,12 @@ export class JourneyService extends BaseService {
     return this.replaceId(result.toObject());
   }
 
-  async getActive(memberId: string): Promise<Journey> {
+  async getActive(memberId: string): Promise<Journey | null> {
     const result = await this.journeyModel.findOne({
       memberId: new Types.ObjectId(memberId),
       active: true,
     });
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.journeyForMemberNotFound));
-    }
-    return this.replaceId(result.toObject());
+    return result ? this.replaceId(result.toObject()) : null;
   }
 
   async getAll({ memberId }: { memberId: string }): Promise<Journey[]> {

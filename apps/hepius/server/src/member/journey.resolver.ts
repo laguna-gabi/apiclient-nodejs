@@ -71,7 +71,7 @@ export class JourneyResolver {
     return this.journeyService.get(id);
   }
 
-  @Query(() => Journey)
+  @Query(() => Journey, { nullable: true })
   @Roles(UserRole.coach, UserRole.nurse)
   async getActiveJourney(
     @Args(
@@ -80,7 +80,7 @@ export class JourneyResolver {
       new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
     )
     memberId: string,
-  ): Promise<Journey> {
+  ): Promise<Journey | null> {
     return this.journeyService.getActive(memberId);
   }
 
