@@ -19,6 +19,7 @@ import {
   Journey,
   JourneyService,
   MemberService,
+  SetGeneralNotesParams,
   UpdateJourneyParams,
 } from '.';
 import { UserRole } from '@argus/hepiusClient';
@@ -103,6 +104,18 @@ export class JourneyResolver {
       }
       await this.journeyService.graduate(graduateMemberParams);
     }
+  }
+
+  /*************************************************************************************************
+   ****************************************** General notes ****************************************
+   ************************************************************************************************/
+
+  @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.coach, UserRole.nurse)
+  async setGeneralNotes(
+    @Args(camelCase(SetGeneralNotesParams.name)) setGeneralNotesParams: SetGeneralNotesParams,
+  ) {
+    return this.journeyService.setGeneralNotes(setGeneralNotesParams);
   }
 
   /************************************************************************************************

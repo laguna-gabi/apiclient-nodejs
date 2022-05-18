@@ -494,6 +494,8 @@ export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey
   healthPlan: generateHealthPlan(),
   readmissionRisk: ReadmissionRisk.low,
   isGraduated: false,
+  generalNotes: lorem.sentence(),
+  nurseNotes: lorem.sentence(),
 });
 
 export const generateUpdateMemberConfigParams = ({

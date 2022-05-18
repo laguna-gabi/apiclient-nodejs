@@ -53,6 +53,7 @@ import {
   ControlMemberDocument,
   Journal,
   JournalDocument,
+  JourneyDocument,
   Member,
   MemberDocument,
   ReplaceUserForMemberParams,
@@ -463,8 +464,16 @@ describe('Integration tests : Audit', () => {
         requestHeaders: generateRequestHeaders(user1.authId),
       });
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const { id: journeyId } = await handler.queries.getActiveJourney({ memberId });
       expect(
-        await checkAuditValues<MemberDocument>(memberId, handler.memberModel, undefined, user1.id),
+        await checkAuditValues<JourneyDocument>(
+          journeyId,
+          handler.journeyModel,
+          undefined,
+          user1.id,
+        ),
       ).toBeTruthy();
     });
 

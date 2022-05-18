@@ -6,6 +6,7 @@ import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '@argus/hepiusClient';
 import { IsOptional } from 'class-validator';
 import { ReadmissionRisk, ReadmissionRiskHistory } from '../member';
+import { ErrorType, Errors, IsNoteOrNurseNoteProvided, IsObjectId } from '../common';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -43,6 +44,20 @@ export class GraduateMemberParams {
 
   @Field(() => Boolean)
   isGraduated: boolean;
+}
+
+@InputType()
+export class SetGeneralNotesParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => String, { nullable: true })
+  note?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsNoteOrNurseNoteProvided({ message: Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided) })
+  nurseNotes?: string;
 }
 /***************************************************************************************************
  ********************************* Return params for gql methods **********************************
@@ -94,6 +109,14 @@ export class Journey extends Identifier {
   @Prop({ type: Date, isNaN: true })
   @Field(() => Date, { nullable: true })
   graduationDate?: Date;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  generalNotes?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  nurseNotes?: string;
 }
 
 /**************************************************************************************************

@@ -16,6 +16,7 @@ import {
   GraduateMemberParams,
   Journey,
   JourneyDocument,
+  SetGeneralNotesParams,
   UpdateJourneyParams,
 } from '.';
 import { Identifier } from '@argus/hepiusClient';
@@ -132,6 +133,27 @@ export class JourneyService extends BaseService {
       methodName: this.deleteJourney.name,
       serviceName: JourneyService.name,
     });
+  }
+
+  /*************************************************************************************************
+   ****************************************** General notes ****************************************
+   ************************************************************************************************/
+  async setGeneralNotes(setGeneralNotesParams: SetGeneralNotesParams): Promise<void> {
+    const setParams = omitBy(
+      {
+        generalNotes: setGeneralNotesParams.note,
+        nurseNotes: setGeneralNotesParams.nurseNotes,
+      },
+      isNil,
+    );
+    const result = await this.journeyModel.updateOne(
+      { memberId: new Types.ObjectId(setGeneralNotesParams.memberId), active: true },
+      { $set: setParams },
+    );
+
+    if (result.modifiedCount === 0) {
+      throw new Error(Errors.get(ErrorType.journeyNotFound));
+    }
   }
 
   /*************************************************************************************************

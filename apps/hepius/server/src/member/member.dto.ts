@@ -26,7 +26,6 @@ import {
   Errors,
   IsContentMetadataProvided,
   IsNotChat,
-  IsNoteOrNurseNoteProvided,
   IsObjectId,
   IsOnlyDate,
   IsPastDate,
@@ -69,6 +68,7 @@ export enum Honorific {
   coach = 'coach',
   father = 'father',
 }
+
 registerEnumType(Honorific, { name: 'Honorific' });
 
 export enum Race {
@@ -103,6 +103,7 @@ export enum MaritalStatus {
   widowed = 'widowed',
   lifePartnership = 'life partnership',
 }
+
 registerEnumType(MaritalStatus, { name: 'MaritalStatus' });
 
 export const defaultMemberParams = {
@@ -407,20 +408,6 @@ export class ReplaceMemberOrgParams {
 }
 
 @InputType()
-export class SetGeneralNotesParams {
-  @Field(() => String)
-  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
-  memberId: string;
-
-  @Field(() => String, { nullable: true })
-  note?: string;
-
-  @Field(() => String, { nullable: true })
-  @IsNoteOrNurseNoteProvided({ message: Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided) })
-  nurseNotes?: string;
-}
-
-@InputType()
 export class RecordingLinkParams {
   @Field(() => String)
   id: string;
@@ -709,10 +696,22 @@ export class Member extends Identifier {
   @Field(() => Address, { nullable: true })
   address?: Address;
 
+  /**
+   * will be @deprecated soon
+   * use admission.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
+   */
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   generalNotes?: string;
 
+  /**
+   * will be @deprecated soon
+   * use admission.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
+   */
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   nurseNotes?: string;

@@ -117,7 +117,6 @@ import {
   RecordingOutput,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
-  SetGeneralNotesParams,
   TaskStatus,
   UpdateCaregiverParams,
   UpdateJournalTextParams,
@@ -617,18 +616,6 @@ export class MemberResolver extends MemberBase {
     updateTaskStatusParams: UpdateTaskStatusParams,
   ) {
     return this.memberService.updateActionItemStatus(updateTaskStatusParams);
-  }
-
-  /*************************************************************************************************
-   ****************************************** General notes ****************************************
-   ************************************************************************************************/
-
-  @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
-  async setGeneralNotes(
-    @Args(camelCase(SetGeneralNotesParams.name)) setGeneralNotesParams: SetGeneralNotesParams,
-  ) {
-    return this.memberService.setGeneralNotes(setGeneralNotesParams);
   }
 
   /*************************************************************************************************

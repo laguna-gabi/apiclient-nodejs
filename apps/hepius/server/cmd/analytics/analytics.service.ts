@@ -565,8 +565,8 @@ export class AnalyticsService {
           `${member.memberDetails.primaryUser.firstName} ${member.memberDetails.primaryUser.lastName}`
         : undefined,
       coach_id: member.memberDetails.primaryUserId?.toString(),
-      general_notes: member.memberDetails.generalNotes,
-      nurse_notes: member.memberDetails.nurseNotes,
+      general_notes: member.activeJourney.generalNotes,
+      nurse_notes: member.activeJourney.nurseNotes,
       marital_status: member.memberDetails.maritalStatus,
       height: member.memberDetails.height,
       weight: member.memberDetails.weight,

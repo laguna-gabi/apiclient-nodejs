@@ -81,6 +81,9 @@ import {
   Journal,
   JournalDocument,
   JournalDto,
+  Journey,
+  JourneyDocument,
+  JourneyDto,
   JourneyService,
   Member,
   MemberDocument,
@@ -155,6 +158,7 @@ export class Handler extends BaseHandler {
   availabilityModel: Model<AvailabilityDocument>;
   memberModel: Model<MemberDocument>;
   journalModel: Model<JournalDocument>;
+  journeyModel: Model<JourneyDocument>;
   userModel: Model<UserDocument>;
   userConfigModel: Model<UserConfigDocument>;
   communicationModel: Model<CommunicationDocument>;
@@ -339,6 +343,7 @@ export class Handler extends BaseHandler {
     this.availabilityModel = model<AvailabilityDocument>(Availability.name, AvailabilityDto);
     this.memberModel = model<MemberDocument>(Member.name, MemberDto);
     this.journalModel = model<JournalDocument>(Journal.name, JournalDto);
+    this.journeyModel = model<JourneyDocument>(Journey.name, JourneyDto);
     this.userModel = model<UserDocument>(User.name, UserDto);
     this.userConfigModel = model<UserConfigDocument>(UserConfig.name, UserConfigDto);
     this.communicationModel = model<CommunicationDocument>(Communication.name, CommunicationDto);

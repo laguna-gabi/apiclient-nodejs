@@ -227,5 +227,7 @@ export const FRAGMENT_JOURNEY = gql`
     }
     isGraduated
     graduationDate
+    generalNotes
+    nurseNotes
   }
 `;

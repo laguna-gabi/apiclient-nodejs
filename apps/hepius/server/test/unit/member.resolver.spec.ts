@@ -38,7 +38,6 @@ import {
   generateObjectId,
   generateReplaceMemberOrgParams,
   generateScheduleAppointmentParams,
-  generateSetGeneralNotesParams,
   generateUniqueUrl,
   generateUpdateCaregiverParams,
   generateUpdateClientSettings,
@@ -1040,27 +1039,6 @@ describe('MemberResolver', () => {
 
       expect(spyOnServiceUpdateActionItemStatus).toBeCalledTimes(1);
       expect(spyOnServiceUpdateActionItemStatus).toBeCalledWith(updateActionItemStatus);
-    });
-  });
-
-  describe('setGeneralNotes', () => {
-    let spyOnServiceSetGeneralNotes;
-    beforeEach(() => {
-      spyOnServiceSetGeneralNotes = jest.spyOn(service, 'setGeneralNotes');
-    });
-
-    afterEach(() => {
-      spyOnServiceSetGeneralNotes.mockReset();
-    });
-
-    it('should set general notes', async () => {
-      spyOnServiceSetGeneralNotes.mockImplementationOnce(async () => undefined);
-
-      const params = generateSetGeneralNotesParams();
-      await resolver.setGeneralNotes(params);
-
-      expect(spyOnServiceSetGeneralNotes).toBeCalledTimes(1);
-      expect(spyOnServiceSetGeneralNotes).toBeCalledWith(params);
     });
   });
 

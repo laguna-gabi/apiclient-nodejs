@@ -36,7 +36,6 @@ import {
   RecordingOutput,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
-  SetGeneralNotesParams,
   TaskStatus,
   UpdateCaregiverParams,
   UpdateJournalParams,
@@ -597,27 +596,6 @@ export class MemberService extends BaseService {
         this.handleUpdateMemberConfig.name,
         formatEx(ex),
       );
-    }
-  }
-
-  /*************************************************************************************************
-   ****************************************** General notes ****************************************
-   ************************************************************************************************/
-  async setGeneralNotes(setGeneralNotesParams: SetGeneralNotesParams): Promise<void> {
-    const setParams = omitBy(
-      {
-        generalNotes: setGeneralNotesParams.note,
-        nurseNotes: setGeneralNotesParams.nurseNotes,
-      },
-      isNil,
-    );
-    const result = await this.memberModel.updateOne(
-      { _id: new Types.ObjectId(setGeneralNotesParams.memberId) },
-      { $set: setParams },
-    );
-
-    if (result.modifiedCount === 0) {
-      throw new Error(Errors.get(ErrorType.memberNotFound));
     }
   }
 

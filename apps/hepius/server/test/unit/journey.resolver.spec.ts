@@ -1,4 +1,8 @@
-import { generateId, generateUpdateJourneyParams } from '../generators';
+import {
+  generateId,
+  generateSetGeneralNotesParams,
+  generateUpdateJourneyParams,
+} from '../generators';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   AdmissionService,
@@ -222,6 +226,27 @@ describe(JourneyResolver.name, () => {
     it('should return dietary matcher', async () => {
       const result = await resolver.getAdmissionsDietaryMatcher();
       expect(result.map.length).toEqual(17);
+    });
+  });
+
+  describe('setGeneralNotes', () => {
+    let spyOnServiceSetGeneralNotes;
+    beforeEach(() => {
+      spyOnServiceSetGeneralNotes = jest.spyOn(service, 'setGeneralNotes');
+    });
+
+    afterEach(() => {
+      spyOnServiceSetGeneralNotes.mockReset();
+    });
+
+    it('should set general notes', async () => {
+      spyOnServiceSetGeneralNotes.mockImplementationOnce(async () => undefined);
+
+      const params = generateSetGeneralNotesParams();
+      await resolver.setGeneralNotes(params);
+
+      expect(spyOnServiceSetGeneralNotes).toBeCalledTimes(1);
+      expect(spyOnServiceSetGeneralNotes).toBeCalledWith(params);
     });
   });
 });

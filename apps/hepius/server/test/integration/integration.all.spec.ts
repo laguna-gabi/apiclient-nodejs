@@ -947,12 +947,9 @@ describe('Integration tests: all', () => {
       const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
 
-      const memberResult = await handler.queries.getMember({
-        id: member.id,
-        requestHeaders: generateRequestHeaders(member.authId),
-      });
-      expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
-      expect(memberResult.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
+      const result = await handler.queries.getActiveJourney({ memberId: member.id });
+      expect(result.generalNotes).toEqual(setGeneralNotesParams.note);
+      expect(result.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
     });
 
     it('should accept empty note or nurseNotes for a member', async () => {
@@ -964,8 +961,7 @@ describe('Integration tests: all', () => {
       });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams: params1 });
 
-      const requestHeaders = generateRequestHeaders(member.authId);
-      const result1 = await handler.queries.getMember({ id: member.id, requestHeaders });
+      const result1 = await handler.queries.getActiveJourney({ memberId: member.id });
       expect(result1.generalNotes).toEqual(params1.note);
       expect(result1.nurseNotes).toEqual(params1.nurseNotes);
 
@@ -975,7 +971,7 @@ describe('Integration tests: all', () => {
       });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams: params2 });
 
-      const result2 = await handler.queries.getMember({ id: member.id, requestHeaders });
+      const result2 = await handler.queries.getActiveJourney({ memberId: member.id });
       expect(result2.generalNotes).toEqual(params2.note);
       expect(result2.nurseNotes).toEqual(params2.nurseNotes);
     });
