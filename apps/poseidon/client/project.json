@@ -1,20 +1,20 @@
 {
-  "root": "libs/poseidonClient",
-  "sourceRoot": "libs/poseidonClient/src",
+  "root": "apps/poseidon/client",
+  "sourceRoot": "apps/poseidon/client/src",
   "projectType": "library",
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/poseidonClient/**/*.ts"]
+        "lintFilePatterns": ["apps/poseidon/client/**/*.ts"]
       }
     },
     "test:cov": {
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/libs/poseidonClient"],
       "options": {
-        "jestConfig": "libs/poseidonClient/test/jest.config.js",
+        "jestConfig": "apps/poseidon/client/test/jest.config.js",
         "passWithNoTests": true
       }
     },

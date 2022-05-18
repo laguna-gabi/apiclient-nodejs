@@ -15,7 +15,7 @@
       "@argus/pandora": ["libs/pandora/src/index.ts"],
       "@argus/hepiusClient": ["apps/hepius/client/src/index.ts"],
       "@argus/irisClient": ["libs/irisClient/src/index.ts"],
-      "@argus/poseidonClient": ["libs/poseidonClient/src/index.ts"]
+      "@argus/poseidonClient": ["apps/poseidon/client/src/index.ts"]
     },
     "target": "es2019",
     "module": "commonjs",

@@ -1,10 +1,10 @@
 module.exports = {
   displayName: 'poseidonClient',
   rootDir: '../',
-  preset: '../../jest.preset.js',
+  preset: '../../../jest.preset.js',
   globals: {
     'ts-jest': {
-      tsconfig: 'libs/poseidonClient/tsconfig.spec.json',
+      tsconfig: 'apps/poseidon/client/tsconfig.spec.json',
     },
   },
   testEnvironment: 'node',
@@ -12,9 +12,9 @@ module.exports = {
     '^.+\\.[tj]s$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
-  coverageDirectory: '../../coverage/libs/poseidonClient',
+  coverageDirectory: '../../../coverage/libs/poseidonClient',
   maxWorkers: 1,
-  globalSetup: '../../global-setup.ts',
+  globalSetup: '../../../global-setup.ts',
   coverageReporters: ['json-summary', 'lcov'],
   collectCoverage: true,
 };

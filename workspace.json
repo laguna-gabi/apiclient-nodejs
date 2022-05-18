@@ -5,8 +5,8 @@
     "hepiusClient": "apps/hepius/client",
     "iris": "apps/iris",
     "irisClient": "libs/irisClient",
-    "poseidon": "apps/poseidon",
-    "poseidonClient": "libs/poseidonClient",
+    "poseidon": "apps/poseidon/server",
+    "poseidonClient": "apps/poseidon/client",
     "themis": "apps/themis",
     "pandora": "libs/pandora",
     "cmd": "libs/cmd"

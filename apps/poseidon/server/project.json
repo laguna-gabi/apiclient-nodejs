@@ -1,6 +1,6 @@
 {
-  "root": "apps/poseidon",
-  "sourceRoot": "apps/poseidon/src",
+  "root": "apps/poseidon/server",
+  "sourceRoot": "apps/poseidon/server/src",
   "projectType": "application",
   "targets": {
     "build": {
@@ -8,8 +8,8 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/poseidon",
-        "main": "apps/poseidon/src/main.ts",
-        "tsConfig": "apps/poseidon/tsconfig.app.json",
+        "main": "apps/poseidon/server/src/main.ts",
+        "tsConfig": "apps/poseidon/server/tsconfig.app.json",
         "webpackConfig": "./webpackConfig.js",
         "generatePackageJson": true
       },
@@ -20,8 +20,8 @@
           "inspect": false,
           "fileReplacements": [
             {
-              "replace": "apps/poseidon/src/environments/environment.ts",
-              "with": "apps/poseidon/src/environments/environment.prod.ts"
+              "replace": "apps/poseidon/server/src/environments/environment.ts",
+              "with": "apps/poseidon/server/src/environments/environment.prod.ts"
             }
           ]
         }
@@ -37,20 +37,20 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/poseidon/**/*.ts"]
+        "lintFilePatterns": ["apps/poseidon/server/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "apps/poseidon/test/unit/jest.config.js",
+        "jestConfig": "apps/poseidon/server/test/unit/jest.config.js",
         "passWithNoTests": true
       }
     },
     "test:live": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "apps/poseidon/test/live/jest.config.js",
+        "jestConfig": "apps/poseidon/server/test/live/jest.config.js",
         "passWithNoTests": true
       }
     },
@@ -58,7 +58,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/apps/poseidon"],
       "options": {
-        "jestConfig": "apps/poseidon/test/jest.config.js",
+        "jestConfig": "apps/poseidon/server/test/jest.config.js",
         "passWithNoTests": true
       }
     },

@@ -162,7 +162,7 @@ describe(TranscriptService.name, () => {
 
     it('should handel transcript transcribed', async () => {
       const transcriptText = readFileSync(
-        'apps/poseidon/test/unit/mocks/transcriptTextMock.txt',
+        'apps/poseidon/server/test/unit/mocks/transcriptTextMock.txt',
       ).toString();
       const fakeUUID = datatype.uuid();
       const conversationPercentage: ConversationPercentage = {

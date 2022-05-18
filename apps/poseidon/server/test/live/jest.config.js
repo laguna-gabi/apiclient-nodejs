@@ -1,11 +1,11 @@
 module.exports = {
   displayName: 'poseidon',
-  rootDir: '../unit',
-  preset: '../../../../jest.preset.js',
-  globalSetup: '../../../../global-setup.ts',
+  rootDir: '../live',
+  preset: '../../../../../jest.preset.js',
+  globalSetup: '../../../../../global-setup.ts',
   globals: {
     'ts-jest': {
-      tsconfig: 'apps/poseidon/tsconfig.spec.json',
+      tsconfig: 'apps/poseidon/server/tsconfig.spec.json',
     },
   },
   testEnvironment: 'node',
