@@ -297,7 +297,7 @@ const deploy = async () => {
       `\u001b[38;5;6mStart building image (${imageName}:${process.env.GITHUB_SHA}) for app ${appName}`,
     );
     execSync(
-      `docker build -f ./apps/${appName}/Dockerfile -t ` +
+      `docker build -f ./apps/${appName}/server/Dockerfile -t ` +
         `${imageName}:${process.env.GITHUB_SHA} .` +
         ` --build-arg GIT_COMMIT=${process.env.GITHUB_SHA} --build-arg NODE_ENV=${nodeEnv}`,
     );
