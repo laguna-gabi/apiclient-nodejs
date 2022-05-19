@@ -41,10 +41,6 @@ export class LoggerService extends BaseLogger {
     'label',
     'createdBy',
     'updatedBy',
-    // general
-    'type',
-    'start',
-    'end',
     //sendbird
     'sendBirdChannelUrl',
     'senderUserId',

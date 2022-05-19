@@ -41,6 +41,10 @@ export class BaseLogger extends PinoLogger {
     'finishedAndItTook',
     // member recording
     'recordingId',
+    // general
+    'type',
+    'start',
+    'end',
   ]);
 
   constructor(
