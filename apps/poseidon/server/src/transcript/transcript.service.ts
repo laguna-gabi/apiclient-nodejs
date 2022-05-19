@@ -1,4 +1,4 @@
-import { StorageType } from '@argus/pandora';
+import { StorageType, formatEx } from '@argus/pandora';
 import {
   ConversationPercentage,
   Speaker,
@@ -50,46 +50,72 @@ export class TranscriptService {
   @OnEvent(EventType.onCreateTranscript, { async: true })
   async handleCreateTranscript(params: IEventOnCreateTranscript) {
     const { memberId, recordingId } = params;
-    const recordingDownloadLink = await this.storageService.getDownloadUrl({
-      storageType: StorageType.recordings,
-      memberId,
-      id: recordingId,
-    });
-    const transcriptionId = await this.revAI.createTranscript(recordingDownloadLink);
-    this.logger.info(
-      { recordingId, memberId, transcriptionId },
-      TranscriptService.name,
-      this.handleCreateTranscript.name,
-    );
-    await this.transcriptModel.create({ recordingId, memberId, transcriptionId });
+    try {
+      const recordingDownloadLink = await this.storageService.getDownloadUrl({
+        storageType: StorageType.recordings,
+        memberId,
+        id: recordingId,
+      });
+      const transcriptionId = await this.revAI.createTranscript(recordingDownloadLink);
+      this.logger.info(
+        { recordingId, memberId, transcriptionId },
+        TranscriptService.name,
+        this.handleCreateTranscript.name,
+      );
+      await this.transcriptModel.create({ recordingId, memberId, transcriptionId });
+    } catch (ex) {
+      this.logger.error(
+        params,
+        TranscriptService.name,
+        this.handleCreateTranscript.name,
+        formatEx(ex),
+      );
+    }
   }
 
   @OnEvent(EventType.onTranscriptTranscribed, { async: true })
   async handleTranscriptTranscribed(params: IEventOnTranscriptTranscribed) {
     this.logger.info(params, TranscriptService.name, this.handleTranscriptTranscribed.name);
     const { transcriptionId } = params;
+    try {
+      const conversationPercentage: ConversationPercentage =
+        await this.transcriptCalculator.calculateConversationPercentage(transcriptionId);
 
-    const conversationPercentage: ConversationPercentage =
-      await this.transcriptCalculator.calculateConversationPercentage(transcriptionId);
+      const { memberId, recordingId } = await this.transcriptModel.findOne({ transcriptionId });
 
-    const { memberId, recordingId } = await this.transcriptModel.findOne({ transcriptionId });
+      await this.uploadTranscript({ memberId, recordingId, transcriptionId });
 
-    await this.uploadTranscript({ memberId, recordingId, transcriptionId });
-
-    await this.transcriptModel.findOneAndUpdate(
-      { transcriptionId },
-      { $set: { conversationPercentage, status: TranscriptStatus.done } },
-    );
+      await this.transcriptModel.findOneAndUpdate(
+        { transcriptionId },
+        { $set: { conversationPercentage, status: TranscriptStatus.done } },
+      );
+    } catch (ex) {
+      this.logger.error(
+        params,
+        TranscriptService.name,
+        this.handleTranscriptTranscribed.name,
+        formatEx(ex),
+      );
+    }
   }
 
   @OnEvent(EventType.onTranscriptFailed, { async: true })
   async handleTranscriptFailed(params: IEventOnTranscriptFailed) {
     this.logger.info(params, TranscriptService.name, this.handleTranscriptFailed.name);
-    const { transcriptionId, failureReason } = params;
-    await this.transcriptModel.findOneAndUpdate(
-      { transcriptionId },
-      { $set: { status: TranscriptStatus.error, failureReason } },
-    );
+    try {
+      const { transcriptionId, failureReason } = params;
+      await this.transcriptModel.findOneAndUpdate(
+        { transcriptionId },
+        { $set: { status: TranscriptStatus.error, failureReason } },
+      );
+    } catch (ex) {
+      this.logger.error(
+        params,
+        TranscriptService.name,
+        this.handleTranscriptFailed.name,
+        formatEx(ex),
+      );
+    }
   }
 
   private async uploadTranscript({

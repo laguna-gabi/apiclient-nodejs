@@ -4,7 +4,7 @@ export * from './customValidators';
 export * from './interfaces.dto';
 export * from './decorators';
 export * from './constants';
-export * from './exception.filter';
+export * from './exceptionFilter';
 export * from './log.service';
 export * from './loggingInterceptor';
 export * from './memberUserRouteInterceptor';

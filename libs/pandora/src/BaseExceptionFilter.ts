@@ -1,9 +1,18 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
-import { LogAsWarning, LoggerService } from '.';
+import { BaseLogger } from '.';
 
 @Catch()
-export class AllExceptionsFilter implements ExceptionFilter {
-  constructor(private readonly logger: LoggerService) {}
+export class BaseAllExceptionsFilter implements ExceptionFilter {
+  LogAsWarning: Set<string>;
+
+  constructor(protected readonly logger: BaseLogger, logAsWarningErrors) {
+    this.LogAsWarning = new Set([
+      ...logAsWarningErrors,
+      'Forbidden resource',
+      'Unauthorized',
+      'Argument passed in must be a single String of 12 bytes or a string of 24 hex characters',
+    ]);
+  }
 
   catch(exception, host: ArgumentsHost) {
     let args;
@@ -21,6 +30,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
       const response = res.getResponse();
       response.status(statusCode).json(exception.response);
+    } else if (host.getType() === 'rpc') {
+      args = host.switchToRpc().getData();
     } else {
       args = host.getArgByIndex(1);
     }
@@ -30,7 +41,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private logException(exception, args) {
     const { ClassName, MethodName } = this.getClassNameAndMethodName(exception);
     const message = exception.response?.message?.toString() || exception.message || exception;
-    if (LogAsWarning.has(message)) {
+    if (this.LogAsWarning.has(message)) {
       // log as warning without stack trace
       this.logger.warn(Object.values(args)[0], ClassName, MethodName, { message });
     } else {
@@ -40,7 +51,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
   }
 
-  getClassNameAndMethodName(exception) {
+  private getClassNameAndMethodName(exception) {
     const ClassNameAndMethodName = exception.stack
       .split('\n')[1]
       .replace('at', '')

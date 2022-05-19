@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { general, services } from 'config';
 import { AppModule } from './app.module';
-import { LoggerService } from './common';
+import { AllExceptionsFilter, LoggerService } from './common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,6 +18,7 @@ async function bootstrap() {
   process.env.TZ = general.timezone;
 
   const logger = app.get(LoggerService);
+  app.useGlobalFilters(new AllExceptionsFilter(logger));
 
   await app.listen(services.poseidon.port);
   await app.startAllMicroservices();

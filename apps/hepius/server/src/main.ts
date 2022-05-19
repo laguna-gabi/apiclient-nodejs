@@ -1,11 +1,10 @@
 import { internalLogs } from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { general, services } from 'config';
 import { AppModule } from './app.module';
 import { GlobalAuthGuard, RolesGuard } from './auth';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-
 import {
   AllExceptionsFilter,
   AppRequestContext,
