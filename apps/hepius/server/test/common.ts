@@ -10,7 +10,8 @@ import { Document, Model, Types, connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
 import { AppRequestContext, RequestContext, apiPrefix } from '../src/common';
 import { Audit, DbModule } from '../src/db';
-import { BaseCategory, Member, defaultMemberParams } from '../src/member';
+import { Member, defaultMemberParams } from '../src/member';
+import { BaseCategory } from '../src/journey';
 import {
   CognitoService,
   FeatureFlagService,

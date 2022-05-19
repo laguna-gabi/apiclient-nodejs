@@ -6,17 +6,15 @@ import { RedFlag, RedFlagType } from '../../src/care';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
-  Admission,
-  DietaryMatcher,
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
-  Journey,
   Member,
   MultipartUploadInfo,
   MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
+import { Admission, DietaryMatcher, Journey } from '../../src/journey';
 import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';

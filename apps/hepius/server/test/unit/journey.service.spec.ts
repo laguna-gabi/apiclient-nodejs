@@ -1,12 +1,8 @@
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
-import {
-  JourneyService,
-  MemberModule,
-  ReadmissionRisk,
-  UpdateJourneyParams,
-} from '../../src/member';
+import { MemberModule } from '../../src/member';
+import { JourneyService, ReadmissionRisk, UpdateJourneyParams } from '../../src/journey';
 import {
   dbConnect,
   dbDisconnect,

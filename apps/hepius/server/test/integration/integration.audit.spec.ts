@@ -53,12 +53,12 @@ import {
   ControlMemberDocument,
   Journal,
   JournalDocument,
-  JourneyDocument,
   Member,
   MemberDocument,
   ReplaceUserForMemberParams,
   TaskStatus,
 } from '../../src/member';
+import { JourneyDocument } from '../../src/journey';
 import {
   Questionnaire,
   QuestionnaireDocument,

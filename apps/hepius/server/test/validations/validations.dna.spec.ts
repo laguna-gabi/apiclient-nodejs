@@ -5,7 +5,7 @@ import {
   ChangeMemberDnaParams,
   DietaryCategory,
   DietaryName,
-} from '../../src/member';
+} from '../../src/journey';
 import { AdmissionHelper, AppointmentsIntegrationActions, Creators } from '../aux';
 import { Handler } from '../aux/handler';
 import { lorem } from 'faker';

@@ -19,7 +19,7 @@ import {
   TreatmentRendered,
   TreatmentRenderedDocument,
   TreatmentRenderedDto,
-} from '../../src/member';
+} from '../../src/journey';
 import { ErrorType, defaultTimestampsDbValues } from '../../src/common';
 import {
   generateAdmissionDiagnosisParams,

@@ -1,8 +1,9 @@
 import { Body, Controller, HttpException, HttpStatus, Post, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { LoggerService, LoggingInterceptor, Public, apiPrefix } from '../common';
-import { CreateMemberParams, JourneyService, Member, MemberBase, MemberService } from '.';
+import { CreateMemberParams, Member, MemberBase, MemberService } from '.';
 import { UserService } from '../user';
+import { JourneyService } from '../journey';
 import { FeatureFlagService, TwilioService } from '../providers';
 import { MessagePattern, Transport } from '@nestjs/microservices';
 import { Caregiver, MemberCommands } from '@argus/hepiusClient';

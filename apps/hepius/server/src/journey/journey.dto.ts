@@ -1,16 +1,35 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '@argus/hepiusClient';
 import { IsOptional } from 'class-validator';
-import { ReadmissionRisk, ReadmissionRiskHistory } from '../member';
 import { ErrorType, Errors, IsNoteOrNurseNoteProvided, IsObjectId } from '../common';
+
+/**************************************************************************************************
+ ******************************* Enum registration for gql methods ********************************
+ *************************************************************************************************/
+
+export enum ReadmissionRisk {
+  high = 'high',
+  medium = 'medium',
+  low = 'low',
+}
+registerEnumType(ReadmissionRisk, { name: 'ReadmissionRisk' });
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
+@ObjectType()
+export class ReadmissionRiskHistory {
+  @Field(() => ReadmissionRisk, { nullable: true })
+  readmissionRisk?: ReadmissionRisk;
+
+  @Field(() => Date)
+  date: Date;
+}
+
 @InputType()
 export class CreateJourneyParams {
   @Field(() => String)

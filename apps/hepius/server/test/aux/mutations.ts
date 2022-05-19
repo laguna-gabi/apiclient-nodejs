@@ -23,15 +23,12 @@ import { Identifiers, RegisterForNotificationParams } from '../../src/common';
 import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
   AddCaregiverParams,
-  Admission,
   CancelNotifyParams,
-  ChangeMemberDnaParams,
   CompleteMultipartUploadParams,
   CreateMemberParams,
   CreateTaskParams,
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
-  GraduateMemberParams,
   Journal,
   Member,
   NotifyContentParams,
@@ -39,15 +36,21 @@ import {
   Recording,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
-  SetGeneralNotesParams,
   UpdateCaregiverParams,
   UpdateJournalTextParams,
-  UpdateJourneyParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '../../src/member';
+import {
+  Admission,
+  ChangeMemberDnaParams,
+  GraduateMemberParams,
+  SetGeneralNotesParams,
+  UpdateJourneyParams,
+} from '../../src/journey';
+
 import { CreateOrgParams } from '../../src/org';
 import {
   CreateQuestionnaireParams,

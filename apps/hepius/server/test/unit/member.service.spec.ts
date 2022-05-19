@@ -84,9 +84,6 @@ import {
   Journal,
   JournalDocument,
   JournalDto,
-  Journey,
-  JourneyDocument,
-  JourneyDto,
   Member,
   MemberConfig,
   MemberConfigDocument,
@@ -97,13 +94,13 @@ import {
   MemberRecordingDto,
   MemberService,
   NotNullableMemberKeys,
-  ReadmissionRisk,
   Recording,
   RecordingDocument,
   Sex,
   TaskStatus,
   UpdateMemberParams,
 } from '../../src/member';
+import { Journey, JourneyDocument, JourneyDto, ReadmissionRisk } from '../../src/journey';
 import { Org, OrgDocument, OrgDto } from '../../src/org';
 import { Internationalization } from '../../src/providers';
 import {

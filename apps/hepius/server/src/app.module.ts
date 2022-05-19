@@ -22,12 +22,14 @@ import { TodoModule } from './todo';
 import { UserModule } from './user';
 import { CareModule } from './care';
 import { QuestionnaireModule } from './questionnaire';
+import { JourneyModule } from './journey';
 
 const badRequestException = 'Bad Request Exception';
 
 @Module({
   imports: [
     AuthModule,
+    JourneyModule,
     MemberModule,
     CommunicationModule,
     UserModule,

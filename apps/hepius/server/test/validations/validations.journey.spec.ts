@@ -6,7 +6,7 @@ import {
 } from '..';
 import { AppointmentsIntegrationActions, Creators } from '../aux';
 import { Handler } from '../aux/handler';
-import { UpdateJourneyParams } from '../../src/member';
+import { UpdateJourneyParams } from '../../src/journey';
 import { ErrorType, Errors } from '../../src/common';
 
 const stringError = `String cannot represent a non string value`;

@@ -81,9 +81,7 @@ import {
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
   AlertType,
-  ChangeMemberDnaParams,
   CreateTaskParams,
-  DischargeTo,
   Member,
   Recording,
   RecordingOutput,
@@ -92,6 +90,7 @@ import {
   TaskStatus,
   UpdateJournalTextParams,
 } from '../../src/member';
+import { ChangeMemberDnaParams, DischargeTo } from '../../src/journey';
 import { Internationalization } from '../../src/providers';
 import {
   CreateQuestionnaireParams,

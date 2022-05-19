@@ -19,7 +19,6 @@ import { Types } from 'mongoose';
 import {
   CreateMemberParams,
   InternalCreateMemberParams,
-  JourneyService,
   Member,
   MemberConfig,
   MemberService,
@@ -36,6 +35,7 @@ import {
 } from '../common';
 import { FeatureFlagService, TwilioService } from '../providers';
 import { UserService } from '../user';
+import { JourneyService } from '../journey';
 
 export class MemberBase {
   constructor(

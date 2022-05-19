@@ -10,29 +10,13 @@ import * as mongooseDelete from 'mongoose-delete';
 import {
   ActionItem,
   ActionItemDto,
-  Admission,
-  AdmissionDto,
-  AdmissionService,
   CaregiverDto,
   ControlMember,
   ControlMemberDto,
-  Diagnosis,
-  DiagnosisDto,
-  Dietary,
-  DietaryDto,
-  DietaryHelper,
   DismissedAlert,
   DismissedAlertDto,
-  ExternalAppointment,
-  ExternalAppointmentDto,
   Journal,
   JournalDto,
-  Journey,
-  JourneyDto,
-  JourneyResolver,
-  JourneyService,
-  Medication,
-  MedicationDto,
   Member,
   MemberConfig,
   MemberConfigDto,
@@ -42,8 +26,6 @@ import {
   MemberResolver,
   MemberService,
   Recording,
-  TreatmentRendered,
-  TreatmentRenderedDto,
 } from '.';
 import { AppointmentDto } from '../appointment';
 import { CommonModule, LoggerService } from '../common';
@@ -54,6 +36,7 @@ import { QuestionnaireModule } from '../questionnaire';
 import { ServiceModule } from '../services';
 import { Todo, TodoDto } from '../todo';
 import { UserModule } from '../user';
+import { JourneyModule } from '../journey';
 
 @Module({
   imports: [
@@ -64,6 +47,7 @@ import { UserModule } from '../user';
     HttpModule,
     CommonModule,
     QuestionnaireModule,
+    JourneyModule,
     MongooseModule.forFeature([
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
@@ -71,13 +55,6 @@ import { UserModule } from '../user';
       { name: Todo.name, schema: TodoDto },
       { name: ActionItem.name, schema: ActionItemDto },
       { name: Member.name, schema: MemberDto },
-      { name: Diagnosis.name, schema: DiagnosisDto },
-      { name: TreatmentRendered.name, schema: TreatmentRenderedDto },
-      { name: Medication.name, schema: MedicationDto },
-      { name: ExternalAppointment.name, schema: ExternalAppointmentDto },
-      { name: Dietary.name, schema: DietaryDto },
-      { name: Journey.name, schema: JourneyDto },
-      { name: Admission.name, schema: AdmissionDto },
     ]),
     MongooseModule.forFeatureAsync([
       {
@@ -123,15 +100,7 @@ import { UserModule } from '../user';
       },
     ]),
   ],
-  providers: [
-    MemberResolver,
-    MemberService,
-    AdmissionService,
-    ConfigsService,
-    JourneyService,
-    DietaryHelper,
-    JourneyResolver,
-  ],
+  providers: [MemberResolver, MemberService, ConfigsService],
   controllers: [MemberController],
   exports: [MemberService, MongooseModule],
 })

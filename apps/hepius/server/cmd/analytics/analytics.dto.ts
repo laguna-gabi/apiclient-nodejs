@@ -13,15 +13,14 @@ import {
 import { RecordingType } from '../../src/common';
 import {
   Honorific,
-  Journey,
   MaritalStatus,
   Member,
   MemberConfig,
   Race,
-  ReadmissionRisk,
   Recording,
   Sex,
 } from '../../src/member';
+import { Journey, ReadmissionRisk } from '../../src/journey';
 import {
   Appointment,
   AppointmentStatus,

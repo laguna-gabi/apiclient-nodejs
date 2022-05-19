@@ -21,6 +21,7 @@ import { graphql, twilio } from 'config';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 import { ActionItem } from './index';
+import { ReadmissionRisk, ReadmissionRiskHistory } from '../journey';
 import {
   ErrorType,
   Errors,
@@ -80,14 +81,6 @@ export enum Race {
 }
 
 registerEnumType(Race, { name: 'Race' });
-
-export enum ReadmissionRisk {
-  high = 'high',
-  medium = 'medium',
-  low = 'low',
-}
-
-registerEnumType(ReadmissionRisk, { name: 'ReadmissionRisk' });
 
 export enum DischargeDocumentType {
   Summary = 'Summary',
@@ -734,7 +727,7 @@ export class Member extends Identifier {
    * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
    * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
    */
-  @Prop({ isNaN: true })
+  @Prop({ type: String, enum: ReadmissionRisk, isNaN: true })
   @Field(() => ReadmissionRisk, { nullable: true })
   readmissionRisk?: ReadmissionRisk;
 
@@ -873,15 +866,6 @@ export class MultipartUploadInfo {
 
   @Field(() => String)
   uploadId: string;
-}
-
-@ObjectType()
-export class ReadmissionRiskHistory {
-  @Field(() => ReadmissionRisk, { nullable: true })
-  readmissionRisk?: ReadmissionRisk;
-
-  @Field(() => Date)
-  date: Date;
 }
 
 /**************************************************************************************************

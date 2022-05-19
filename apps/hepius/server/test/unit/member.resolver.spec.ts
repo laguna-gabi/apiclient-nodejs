@@ -82,13 +82,13 @@ import {
   ImageFormat,
   ImageType,
   Journal,
-  JourneyService,
   Member,
   MemberModule,
   MemberResolver,
   MemberService,
   TaskStatus,
 } from '../../src/member';
+import { GraduateMemberParams, JourneyService } from '../../src/journey';
 import {
   CognitoService,
   FeatureFlagService,
@@ -2089,6 +2089,103 @@ describe('MemberResolver', () => {
         message: JSON.stringify(generateUpdateClientSettings({ member })),
       };
       expect(spyOnEventEmitter).toBeCalledWith(GlobalEventType.notifyQueue, eventParams);
+    });
+  });
+
+  describe('graduateMember', () => {
+    let spyOnServiceGetAllJourneys;
+    let spyOnServiceGetMember;
+    let spyOnServiceGetMemberConfig;
+    let spyOnServiceGraduate;
+    let spyOnCognitoServiceEnableClient;
+    let spyOnCognitoServiceDisableClient;
+
+    beforeEach(() => {
+      spyOnServiceGetAllJourneys = jest.spyOn(journeyService, 'getAll');
+      spyOnServiceGetMember = jest.spyOn(service, 'get');
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+      spyOnServiceGraduate = jest.spyOn(journeyService, 'graduate');
+      spyOnCognitoServiceEnableClient = jest.spyOn(cognitoService, 'enableClient');
+      spyOnCognitoServiceDisableClient = jest.spyOn(cognitoService, 'disableClient');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetAllJourneys.mockReset();
+      spyOnServiceGetMember.mockReset();
+      spyOnServiceGetMemberConfig.mockReset();
+      spyOnServiceGraduate.mockReset();
+      spyOnCognitoServiceEnableClient.mockReset();
+      spyOnCognitoServiceDisableClient.mockReset();
+    });
+
+    test.each([Platform.web, Platform.android, Platform.ios])(
+      'should graduate an existing member(true)',
+      async (platform) => {
+        const deviceId = v4();
+        spyOnServiceGetAllJourneys.mockResolvedValue([{ isGraduated: false }]);
+        spyOnServiceGetMember.mockResolvedValue({ deviceId });
+        spyOnServiceGetMemberConfig.mockResolvedValue({ platform });
+        spyOnServiceGraduate.mockResolvedValue(undefined);
+        spyOnCognitoServiceDisableClient.mockResolvedValue(true);
+
+        const graduateMemberParams: GraduateMemberParams = {
+          id: generateId(),
+          isGraduated: true,
+        };
+        await resolver.graduateMember(graduateMemberParams);
+        if (platform !== Platform.web) {
+          expect(spyOnCognitoServiceDisableClient).toBeCalledWith(deviceId);
+        } else {
+          expect(spyOnCognitoServiceEnableClient).not.toBeCalled();
+        }
+        expect(spyOnCognitoServiceEnableClient).not.toBeCalled();
+        expect(spyOnServiceGraduate).toBeCalledWith(graduateMemberParams);
+      },
+    );
+
+    test.each([Platform.web, Platform.android, Platform.ios])(
+      'should graduate an existing member(false)',
+      async (platform) => {
+        const deviceId = v4();
+        spyOnServiceGetAllJourneys.mockResolvedValue([{ isGraduated: true }]);
+        spyOnServiceGetMember.mockResolvedValue({ deviceId });
+        spyOnServiceGetMemberConfig.mockResolvedValue({ platform });
+        spyOnServiceGraduate.mockResolvedValue(undefined);
+        spyOnCognitoServiceDisableClient.mockResolvedValue(true);
+
+        const graduateMemberParams: GraduateMemberParams = {
+          id: generateId(),
+          isGraduated: false,
+        };
+        await resolver.graduateMember(graduateMemberParams);
+        if (platform !== Platform.web) {
+          expect(spyOnCognitoServiceEnableClient).toBeCalledWith(deviceId);
+        } else {
+          expect(spyOnCognitoServiceEnableClient).not.toBeCalled();
+        }
+        expect(spyOnCognitoServiceDisableClient).not.toBeCalled();
+        expect(spyOnServiceGraduate).toBeCalledWith(graduateMemberParams);
+      },
+    );
+
+    [Platform.web, Platform.android, Platform.ios].forEach((platform) => {
+      test.each([true, false])(
+        'should not update isGraduated to %p since it is already %p',
+        async (isGraduated) => {
+          const deviceId = v4();
+          spyOnServiceGetAllJourneys.mockResolvedValue([{ isGraduated }]);
+          spyOnServiceGetMember.mockResolvedValue({ deviceId });
+          spyOnServiceGetMemberConfig.mockResolvedValue({ platform });
+          spyOnServiceGraduate.mockResolvedValue(undefined);
+          spyOnCognitoServiceDisableClient.mockResolvedValue(true);
+
+          const graduateMemberParams: GraduateMemberParams = { id: generateId(), isGraduated };
+          await resolver.graduateMember(graduateMemberParams);
+          expect(spyOnServiceGraduate).not.toBeCalled();
+          expect(spyOnCognitoServiceDisableClient).not.toBeCalled();
+          expect(spyOnCognitoServiceEnableClient).not.toBeCalled();
+        },
+      );
     });
   });
 

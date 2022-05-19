@@ -101,7 +101,6 @@ import {
   Journal,
   JournalUploadAudioLink,
   JournalUploadImageLink,
-  JourneyService,
   Member,
   MemberBase,
   MemberConfig,
@@ -126,6 +125,7 @@ import {
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from './index';
+import { GraduateMemberParams, JourneyService } from '../journey';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -1188,6 +1188,27 @@ export class MemberResolver extends MemberBase {
       peerId: metadata.peerId,
     };
     await this.notifyCreateDispatch(dispatch);
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.admin)
+  async graduateMember(
+    @Args(camelCase(GraduateMemberParams.name))
+    graduateMemberParams: GraduateMemberParams,
+  ) {
+    const member = await this.memberService.get(graduateMemberParams.id);
+    const journeys = await this.journeyService.getAll({ memberId: graduateMemberParams.id });
+    const memberConfig = await this.memberService.getMemberConfig(graduateMemberParams.id);
+    if (journeys[0].isGraduated !== graduateMemberParams.isGraduated) {
+      if (memberConfig.platform !== Platform.web) {
+        if (graduateMemberParams.isGraduated) {
+          await this.cognitoService.disableClient(member.deviceId);
+        } else {
+          await this.cognitoService.enableClient(member.deviceId);
+        }
+      }
+      await this.journeyService.graduate(graduateMemberParams);
+    }
   }
 
   /**

@@ -2,6 +2,7 @@ import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
 import { ChangeType, Errors, LoggerService } from '../../src/common';
+import { MemberModule } from '../../src/member';
 import {
   Admission,
   AdmissionCategory,
@@ -10,10 +11,9 @@ import {
   AdmitType,
   ChangeMemberDnaParams,
   DischargeTo,
-  MemberModule,
   PrimaryDiagnosisType,
   WarningSigns,
-} from '../../src/member';
+} from '../../src/journey';
 import {
   dbConnect,
   dbDisconnect,

@@ -2,7 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { AppModule } from '../../../src/app.module';
-import { Journey, MemberConfig } from '../../../src/member';
+import { MemberConfig } from '../../../src/member';
+import { Journey } from '../../../src/journey';
 
 export const up = async () => {
   const app = await NestFactory.createApplicationContext(AppModule);
