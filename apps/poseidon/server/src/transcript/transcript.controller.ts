@@ -1,11 +1,12 @@
 import { StorageType } from '@argus/pandora';
 import { PoseidonMessagePatterns, Speaker, Transcript } from '@argus/poseidonClient';
-import { Controller } from '@nestjs/common';
+import { Controller, UseInterceptors } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { TranscriptService } from '.';
-import { ErrorType, Errors, LoggerService } from '../common';
+import { ErrorType, Errors, LoggerService, LoggingInterceptor } from '../common';
 import { StorageService } from '../providers';
 
+@UseInterceptors(LoggingInterceptor)
 @Controller()
 export class TranscriptController {
   constructor(
@@ -15,7 +16,7 @@ export class TranscriptController {
   ) {}
 
   @MessagePattern(PoseidonMessagePatterns.getTranscript)
-  async getTranscript(recordingId: string): Promise<Transcript> {
+  async getTranscript({ recordingId }: { recordingId: string }): Promise<Transcript> {
     const transcript = await this.transcriptService.get(recordingId);
     return this.buildResponse(recordingId, transcript, this.getTranscript.name);
   }

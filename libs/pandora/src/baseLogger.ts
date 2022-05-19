@@ -37,6 +37,8 @@ export class BaseLogger extends PinoLogger {
     'sub',
     'externalUserId',
     'lastCommit',
+    //general finish method time
+    'finishedAndItTook',
     // member recording
     'recordingId',
   ]);

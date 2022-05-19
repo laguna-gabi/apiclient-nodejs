@@ -1,7 +1,7 @@
 import { Environments, webhooks } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { RevAiApiClient, RevAiApiTranscript } from 'revai-node-sdk';
 import { hosts } from 'config';
+import { RevAiApiClient, RevAiApiTranscript } from 'revai-node-sdk';
 import { ConfigsService, ExternalConfigs } from '.';
 import { LoggerService, revai } from '../common';
 
@@ -32,7 +32,7 @@ export class RevAI implements OnModuleInit {
         });
         return id;
       } catch (ex) {
-        this.logger.error({}, RevAI.name, this.createTranscript.name, ex);
+        this.logger.error({}, RevAI.name, this.createTranscript.name, { message: ex });
       }
     }
   }

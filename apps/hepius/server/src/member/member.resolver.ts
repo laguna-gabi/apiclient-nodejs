@@ -577,7 +577,7 @@ export class MemberResolver extends MemberBase {
     @Args('recordingId', { type: () => String })
     recordingId: string,
   ) {
-    return this.client.send(PoseidonMessagePatterns.getTranscript, recordingId).toPromise();
+    return this.client.send(PoseidonMessagePatterns.getTranscript, { recordingId }).toPromise();
   }
 
   @Mutation(() => Transcript, { nullable: true })

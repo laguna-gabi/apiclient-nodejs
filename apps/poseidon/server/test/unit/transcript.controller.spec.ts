@@ -59,7 +59,7 @@ describe('TranscriptController', () => {
       spyOnTranscriptServiceGet.mockImplementationOnce(async () => transcript);
       spyOnStorageServiceGetDownloadUrl.mockImplementationOnce(async () => transcriptLink);
 
-      const result = await controller.getTranscript(recordingId);
+      const result = await controller.getTranscript({ recordingId });
 
       expect(result).toEqual({ ...transcript, transcriptLink });
       expect(spyOnTranscriptServiceGet).toBeCalledWith(recordingId);
@@ -74,7 +74,7 @@ describe('TranscriptController', () => {
       const recordingId = generateId();
       spyOnTranscriptServiceGet.mockImplementationOnce(async () => null);
 
-      const result = await controller.getTranscript(recordingId);
+      const result = await controller.getTranscript({ recordingId });
 
       expect(result).toBeUndefined();
       expect(spyOnTranscriptServiceGet).toBeCalledWith(recordingId);

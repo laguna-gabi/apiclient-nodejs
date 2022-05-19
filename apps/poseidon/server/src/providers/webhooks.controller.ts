@@ -1,14 +1,16 @@
 import { webhooks } from '@argus/pandora';
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   EventType,
   IEventOnTranscriptFailed,
   IEventOnTranscriptTranscribed,
   LoggerService,
+  LoggingInterceptor,
   revai,
 } from '../common';
 
+@UseInterceptors(LoggingInterceptor)
 @Controller(`${webhooks}`)
 export class WebhooksController {
   constructor(

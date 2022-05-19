@@ -56,8 +56,6 @@ export class LoggerService extends BaseLogger {
     'user_id',
     //slack
     'channel',
-    //general finish method time
-    'finishedAndItTook',
     //queue
     'MessageId',
     //dispatches
