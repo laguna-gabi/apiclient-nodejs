@@ -2859,8 +2859,8 @@ describe('Integration tests: all', () => {
   it('should create a member journey, update and get it', async () => {
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
-    const activeJourney = await handler.queries.getRecentJourney({ memberId: member.id });
-    expect(activeJourney).not.toBeUndefined();
+    const recentJourney = await handler.queries.getRecentJourney({ memberId: member.id });
+    expect(recentJourney).not.toBeUndefined();
 
     //creating another journey, to see that the filter works for the latest
     const newActiveJourney = await handler.journeyService.create(
@@ -2874,7 +2874,7 @@ describe('Integration tests: all', () => {
     const journeys = await handler.queries.getJourneys({ memberId: member.id });
     expect(journeys.length).toEqual(2);
     expect(journeys[0].id).toEqual(newActiveJourney.id.toString());
-    expect(journeys[1].id).toEqual(activeJourney.id);
+    expect(journeys[1].id).toEqual(recentJourney.id);
 
     const journey = await handler.queries.getRecentJourney({ memberId: member.id });
     expect(journey.id).toEqual(newActiveJourney.id.toString());

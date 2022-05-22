@@ -463,7 +463,7 @@ export type PopulatedMember = Member & {
 export type MemberDataAggregate = BaseMember & {
   memberDetails: PopulatedMember;
   memberConfig?: MemberConfig;
-  activeJourney?: Journey;
+  recentJourney?: Journey;
   appointments?: PopulatedAppointment[];
   primaryUser?: User;
   isControlMember?: boolean;

@@ -53,8 +53,8 @@ describe(JourneyService.name, () => {
       { id: id1, ...matchObject },
     ]);
 
-    const activeJourney = await service.getRecent(memberId);
-    expect(activeJourney).toMatchObject({ id: id2, ...matchObject });
+    const recentJourney = await service.getRecent(memberId);
+    expect(recentJourney).toMatchObject({ id: id2, ...matchObject });
   });
 
   it('should throw exception on journey not found', async () => {

@@ -283,7 +283,7 @@ describe('Commands: AnalyticsService', () => {
             ...mockMember,
             primaryUser: mockPrimaryUser,
           } as PopulatedMember,
-          activeJourney: {
+          recentJourney: {
             ...mockActiveJourney,
           },
         } as MemberDataAggregate),
@@ -316,7 +316,7 @@ describe('Commands: AnalyticsService', () => {
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
         } as PopulatedMember,
-        activeJourney: {
+        recentJourney: {
           isGraduated: false,
         },
         appointments: [
@@ -487,7 +487,7 @@ describe('Commands: AnalyticsService', () => {
             notesData: { scores: { adherence: 1, wellbeing: 2 } },
           } as PopulatedAppointment,
         ],
-        activeJourney: {
+        recentJourney: {
           ...mockActiveJourney,
           isGraduated: true,
           graduationDate: sub(now, { days: 20 }),
@@ -575,7 +575,7 @@ describe('Commands: AnalyticsService', () => {
       const data = await analyticsService.buildMemberData({
         _id: new Types.ObjectId(mockMember.id),
         memberConfig: { ...mockMemberConfig },
-        activeJourney: { ...mockActiveJourney, firstLoggedInAt: undefined },
+        recentJourney: { ...mockActiveJourney, firstLoggedInAt: undefined },
         memberDetails: {
           ...mockMember,
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
@@ -672,7 +672,7 @@ describe('Commands: AnalyticsService', () => {
           primaryUserId: undefined,
           org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
-        activeJourney: { ...mockActiveJourney, firstLoggedInAt: undefined },
+        recentJourney: { ...mockActiveJourney, firstLoggedInAt: undefined },
         isControlMember: true,
       } as MemberDataAggregate);
 

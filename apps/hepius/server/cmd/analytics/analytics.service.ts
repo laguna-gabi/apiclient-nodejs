@@ -239,7 +239,7 @@ export class AnalyticsService {
         },
       },
       { $sort: { 'journeysRes._id': -1 } },
-      { $addFields: { activeJourney: { $first: '$journeysRes' } } },
+      { $addFields: { recentJourney: { $first: '$journeysRes' } } },
       { $unset: 'journeysRes' },
       {
         $lookup: {
@@ -529,10 +529,10 @@ export class AnalyticsService {
         Date.parse(member.memberDetails.dischargeDate),
       ),
       active: daysSinceDischarge < GraduationPeriod,
-      graduated: member.activeJourney.isGraduated,
+      graduated: member.recentJourney.isGraduated,
       graduation_date:
-        member.activeJourney.graduationDate &&
-        reformatDate(member.activeJourney.graduationDate.toString(), momentFormats.mysqlDate),
+        member.recentJourney.graduationDate &&
+        reformatDate(member.recentJourney.graduationDate.toString(), momentFormats.mysqlDate),
       dc_summary_load_date: dcSummaryLoadDate
         ? reformatDate(dcSummaryLoadDate.toString(), momentFormats.mysqlDate)
         : undefined,
@@ -551,11 +551,11 @@ export class AnalyticsService {
         : undefined,
       platform: member.memberConfig?.platform,
       app_first_login:
-        member.activeJourney?.firstLoggedInAt &&
-        reformatDate(member.activeJourney.firstLoggedInAt.toString(), momentFormats.mysqlDateTime),
+        member.recentJourney?.firstLoggedInAt &&
+        reformatDate(member.recentJourney.firstLoggedInAt.toString(), momentFormats.mysqlDateTime),
       app_last_login:
-        member.activeJourney?.lastLoggedInAt &&
-        reformatDate(member.activeJourney.lastLoggedInAt.toString(), momentFormats.mysqlDateTime),
+        member.recentJourney?.lastLoggedInAt &&
+        reformatDate(member.recentJourney.lastLoggedInAt.toString(), momentFormats.mysqlDateTime),
       org_name: member.memberDetails.org?.name,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
@@ -566,8 +566,8 @@ export class AnalyticsService {
           `${member.memberDetails.primaryUser.firstName} ${member.memberDetails.primaryUser.lastName}`
         : undefined,
       coach_id: member.memberDetails.primaryUserId?.toString(),
-      general_notes: member.activeJourney.generalNotes,
-      nurse_notes: member.activeJourney.nurseNotes,
+      general_notes: member.recentJourney.generalNotes,
+      nurse_notes: member.recentJourney.nurseNotes,
       marital_status: member.memberDetails.maritalStatus,
       height: member.memberDetails.height,
       weight: member.memberDetails.weight,
@@ -630,8 +630,8 @@ export class AnalyticsService {
       : undefined;
     // eslint-disable-next-line max-len
     const graduation_date =
-      member.activeJourney.graduationDate &&
-      reformatDate(member.activeJourney.graduationDate.toString(), momentFormats.mysqlDate);
+      member.recentJourney.graduationDate &&
+      reformatDate(member.recentJourney.graduationDate.toString(), momentFormats.mysqlDate);
     const results = [];
 
     // load appointment 0: (according to example excel spreadsheet we have appointment 0 also for engaged members)
@@ -640,7 +640,7 @@ export class AnalyticsService {
       customer_id: member._id.toString(),
       mbr_initials,
       appt_number: 0,
-      graduated: member.activeJourney.isGraduated,
+      graduated: member.recentJourney.isGraduated,
       graduation_date,
     });
 
