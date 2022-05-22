@@ -382,7 +382,7 @@ export class BaseCareData {
   updated: string;
   @Column('varchar', { length: 50 })
   status: CareStatus;
-  @Column('varchar', { length: 200, nullable: true })
+  @Column('varchar', { length: 300, nullable: true })
   notes: string;
   @Column('datetime', { nullable: true })
   completed: string;
@@ -426,7 +426,7 @@ export class RedFlagData {
   updated: string;
   @Column('varchar')
   type: string;
-  @Column('varchar', { nullable: true })
+  @Column('varchar', { length: 300, nullable: true })
   notes?: string;
 }
 
