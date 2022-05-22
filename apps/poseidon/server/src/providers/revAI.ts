@@ -25,15 +25,11 @@ export class RevAI implements OnModuleInit {
       // process.env.NODE_ENV === Environments.production ||
       process.env.NODE_ENV === Environments.develop
     ) {
-      try {
-        const { id } = await this.client.submitJobUrl(url, {
-          callback_url: `${hosts.api}/${webhooks}/${revai}`,
-          language: 'en',
-        });
-        return id;
-      } catch (ex) {
-        this.logger.error({}, RevAI.name, this.createTranscript.name, { message: ex });
-      }
+      const { id } = await this.client.submitJobUrl(url, {
+        callback_url: `${hosts.api}/${webhooks}/${revai}`,
+        language: 'en',
+      });
+      return id;
     }
   }
 

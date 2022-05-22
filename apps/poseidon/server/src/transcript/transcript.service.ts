@@ -49,6 +49,7 @@ export class TranscriptService {
 
   @OnEvent(EventType.onCreateTranscript, { async: true })
   async handleCreateTranscript(params: IEventOnCreateTranscript) {
+    this.logger.info(params, TranscriptService.name, this.handleCreateTranscript.name);
     const { memberId, recordingId } = params;
     try {
       const recordingDownloadLink = await this.storageService.getDownloadUrl({
@@ -64,12 +65,13 @@ export class TranscriptService {
       );
       await this.transcriptModel.create({ recordingId, memberId, transcriptionId });
     } catch (ex) {
-      this.logger.error(
-        params,
-        TranscriptService.name,
-        this.handleCreateTranscript.name,
-        formatEx(ex),
-      );
+      this.logger.error(params, TranscriptService.name, this.handleCreateTranscript.name, ex);
+      await this.transcriptModel.create({
+        recordingId,
+        memberId,
+        status: TranscriptStatus.error,
+        failureReason: JSON.stringify(ex),
+      });
     }
   }
 

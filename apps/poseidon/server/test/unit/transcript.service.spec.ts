@@ -138,6 +138,38 @@ describe(TranscriptService.name, () => {
         }),
       );
     });
+
+    // eslint-disable-next-line max-len
+    it('should create document with status error and failure reason if an error has encountered', async () => {
+      const memberId = generateId();
+      const recordingId = generateId();
+      const recordingDownloadLink = `http://${lorem.word}.com`;
+      const errorMessage = { message: 'error' };
+
+      spyOnStorageServiceGetDownloadUrl.mockImplementationOnce(async () => recordingDownloadLink);
+      spyOnRevAICreateTranscript.mockImplementationOnce(async () => {
+        throw errorMessage;
+      });
+
+      await service.handleCreateTranscript({ memberId, recordingId });
+      expect(spyOnStorageServiceGetDownloadUrl).toBeCalledWith({
+        storageType: StorageType.recordings,
+        memberId,
+        id: recordingId,
+      });
+      expect(spyOnRevAICreateTranscript).toBeCalledWith(recordingDownloadLink);
+
+      const resultAfter = await transcriptModel.findOne({ recordingId });
+      expect(resultAfter).toEqual(
+        expect.objectContaining({
+          memberId,
+          recordingId,
+          transcriptionId: undefined,
+          status: TranscriptStatus.error,
+          failureReason: JSON.stringify(errorMessage),
+        }),
+      );
+    });
   });
 
   describe('handleTranscriptTranscribed', () => {
