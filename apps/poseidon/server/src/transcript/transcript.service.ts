@@ -58,11 +58,6 @@ export class TranscriptService {
         id: recordingId,
       });
       const transcriptionId = await this.revAI.createTranscript(recordingDownloadLink);
-      this.logger.info(
-        { recordingId, memberId, transcriptionId },
-        TranscriptService.name,
-        this.handleCreateTranscript.name,
-      );
       await this.transcriptModel.create({ recordingId, memberId, transcriptionId });
     } catch (ex) {
       this.logger.error(params, TranscriptService.name, this.handleCreateTranscript.name, ex);
