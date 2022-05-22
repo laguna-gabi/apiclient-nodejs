@@ -46,7 +46,9 @@ describe(FetcherService.name, () => {
 
       const facts = await service.fetchData(memberId);
 
-      expect(mockHepiusClientServiceGetCaregiversByMemberId).toHaveBeenCalledWith(memberId);
+      expect(mockHepiusClientServiceGetCaregiversByMemberId).toHaveBeenCalledWith({
+        memberId,
+      });
 
       expect(facts.caregivers).toEqual([caregiver]);
     });

@@ -32,7 +32,7 @@ export class FetcherService {
     // for now - fake data
     return {
       ...mockFactsObject,
-      caregivers: await this.hepiusClientService.getCaregiversByMemberId(memberId),
+      caregivers: await this.hepiusClientService.getCaregiversByMemberId({ memberId }),
     };
   }
 

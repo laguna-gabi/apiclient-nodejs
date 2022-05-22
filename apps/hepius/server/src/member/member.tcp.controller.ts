@@ -10,7 +10,7 @@ export class MemberTcpController {
   constructor(readonly memberService: MemberService) {}
 
   @MessagePattern({ cmd: MemberCommands.getCaregiversByMemberId }, Transport.TCP)
-  async getCaregiversByMemberId(memberId: string): Promise<Caregiver[]> {
+  async getCaregiversByMemberId({ memberId }: { memberId: string }): Promise<Caregiver[]> {
     return this.memberService.getCaregiversByMemberId(memberId);
   }
 }

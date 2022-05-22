@@ -1558,7 +1558,10 @@ describe('Integration tests: all', () => {
 
       expect(
         await handler.tcpClient
-          .send<Caregiver[]>({ cmd: MemberCommands.getCaregiversByMemberId }, member.id)
+          .send<Caregiver[]>(
+            { cmd: MemberCommands.getCaregiversByMemberId },
+            { memberId: member.id },
+          )
           .toPromise(),
       ).toMatchObject([addCaregiverParams]);
 
