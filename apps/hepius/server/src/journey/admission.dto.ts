@@ -379,6 +379,10 @@ export class Medication extends BaseCategory {
   dosage?: string;
 
   @Prop({ isNan: true })
+  @Field(() => String, { nullable: true })
+  frequency?: string;
+
+  @Prop({ isNan: true })
   @Field({ nullable: true })
   startDate?: string;
 

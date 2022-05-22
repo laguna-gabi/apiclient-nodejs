@@ -187,6 +187,7 @@ export const FRAGMENT_ADMISSION = gql`
       name
       route
       dosage
+      frequency
       startDate
       endDate
       specialInstructions

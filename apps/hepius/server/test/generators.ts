@@ -1476,6 +1476,7 @@ export const generateAdmissionMedicationParams = ({
     name: lorem.word(),
     route: lorem.word(),
     dosage: lorem.word(),
+    frequency: lorem.word(),
     startDate: generateDateOnly(subDays(new Date(), 2)),
     endDate: generateDateOnly(subDays(new Date(), 1)),
     specialInstructions: lorem.sentences(),
