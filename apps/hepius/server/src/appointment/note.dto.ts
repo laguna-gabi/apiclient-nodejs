@@ -2,10 +2,10 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { SchemaFactory } from '@nestjs/mongoose';
 import { IsBoolean, IsOptional } from 'class-validator';
 import { Document } from 'mongoose';
-import { ErrorType, Errors, IsNoShowValid, IsObjectId } from '../common';
+import { ErrorType, Errors, IsNoShowValid } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
-import { Notes } from '@argus/hepiusClient';
+import { IsObjectId, Notes } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************

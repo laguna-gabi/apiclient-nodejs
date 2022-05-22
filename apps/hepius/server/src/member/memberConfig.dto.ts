@@ -3,9 +3,10 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
-import { ErrorType, Errors, IsObjectId } from '../common';
+import { ErrorType, Errors } from '../common';
 import { ISoftDelete } from '../db';
 import { defaultMemberParams } from './member.dto';
+import { IsObjectId } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************

@@ -10,7 +10,8 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { IsAlphanumeric, IsOptional } from 'class-validator';
 import { isNil, omitBy } from 'lodash';
 import { Types } from 'mongoose';
-import { ErrorType, Errors, IsNotPlatformWeb, IsObjectId } from '.';
+import { ErrorType, Errors, IsNotPlatformWeb } from '.';
+import { IsObjectId } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  *************************** Enum registration for external gql methods ***************************

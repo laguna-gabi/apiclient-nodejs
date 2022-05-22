@@ -1,10 +1,10 @@
 import { Field, InputType, registerEnumType } from '@nestjs/graphql';
 import { SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { ErrorType, Errors, IsObjectId } from '../common';
+import { ErrorType, Errors } from '../common';
 import * as mongooseDelete from 'mongoose-delete';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
-import { Barrier, BarrierDomain, BarrierType, CareStatus } from '@argus/hepiusClient';
+import { Barrier, BarrierDomain, BarrierType, CareStatus, IsObjectId } from '@argus/hepiusClient';
 
 registerEnumType(CareStatus, { name: 'CareStatus' });
 registerEnumType(BarrierDomain, { name: 'BarrierCategory' });

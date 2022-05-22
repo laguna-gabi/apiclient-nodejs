@@ -1,4 +1,11 @@
-import { AppointmentStatus, Identifier, MemberRole, Scores, User } from '@argus/hepiusClient';
+import {
+  AppointmentStatus,
+  Identifier,
+  IsObjectId,
+  MemberRole,
+  Scores,
+  User,
+} from '@argus/hepiusClient';
 import { ExternalKey } from '@argus/irisClient';
 import { CancelNotificationType, Language, NotificationType } from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
@@ -27,7 +34,6 @@ import {
   Errors,
   IsContentMetadataProvided,
   IsNotChat,
-  IsObjectId,
   IsOnlyDate,
   IsPastDate,
   IsTypeMetadataProvided,

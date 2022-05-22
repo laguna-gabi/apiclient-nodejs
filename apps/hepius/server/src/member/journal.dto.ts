@@ -1,10 +1,10 @@
-import { Identifier } from '@argus/hepiusClient';
+import { Identifier, IsObjectId } from '@argus/hepiusClient';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsNotEmpty } from 'class-validator';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
-import { ErrorType, Errors, IsObjectId } from '../common';
+import { ErrorType, Errors } from '../common';
 import { ISoftDelete } from '../db';
 import { audit } from '../db/middleware';
 import { useFactoryOptions } from '../db/utils';

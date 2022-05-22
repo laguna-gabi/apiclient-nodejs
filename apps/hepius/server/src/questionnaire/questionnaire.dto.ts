@@ -1,4 +1,4 @@
-import { Identifier } from '@argus/hepiusClient';
+import { Identifier, IsObjectId } from '@argus/hepiusClient';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ArrayNotEmpty } from 'class-validator';
@@ -10,7 +10,6 @@ import {
   IsDuplicateCodeInItemList,
   IsMissingOptionsInChoiceTypeItem,
   IsMissingRangeInRangeTypeItem,
-  IsObjectId,
   IsOverlappingRangeInSeverityLevelEntries,
   ItemInterface,
   ItemType,

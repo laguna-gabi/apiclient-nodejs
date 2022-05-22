@@ -3,9 +3,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
-import { Identifier } from '@argus/hepiusClient';
+import { Identifier, IsObjectId } from '@argus/hepiusClient';
 import { IsOptional } from 'class-validator';
-import { ErrorType, Errors, IsNoteOrNurseNoteProvided, IsObjectId } from '../common';
+import { ErrorType, Errors, IsNoteOrNurseNoteProvided } from '../common';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************

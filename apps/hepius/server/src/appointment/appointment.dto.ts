@@ -1,18 +1,11 @@
-import { Appointment, AppointmentMethod } from '@argus/hepiusClient';
+import { Appointment, AppointmentMethod, IsObjectId } from '@argus/hepiusClient';
 import { Field, InputType } from '@nestjs/graphql';
 import { SchemaFactory } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Document } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
-import {
-  ErrorType,
-  Errors,
-  IsDateAfter,
-  IsDateInNotificationRange,
-  IsFutureDate,
-  IsObjectId,
-} from '../common';
+import { ErrorType, Errors, IsDateAfter, IsDateInNotificationRange, IsFutureDate } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 
 /**************************************************************************************************

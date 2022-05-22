@@ -3,9 +3,9 @@ import { Prop, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
 import { Document } from 'mongoose';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
-import { ErrorType, Errors, IsObjectId, maxLength, minLength } from '../common';
+import { ErrorType, Errors, maxLength, minLength } from '../common';
 import * as mongooseDelete from 'mongoose-delete';
-import { Caregiver, Relationship } from '@argus/hepiusClient';
+import { Caregiver, IsObjectId, Relationship } from '@argus/hepiusClient';
 
 registerEnumType(Relationship, { name: 'Relationship' });
 

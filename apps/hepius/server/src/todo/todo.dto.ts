@@ -8,13 +8,12 @@ import {
   IsCronExpression,
   IsDateAfter,
   IsFutureDate,
-  IsObjectId,
   isTodoDateParamsValidCreate,
   isTodoDateParamsValidUpdate,
 } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
-import { Identifier } from '@argus/hepiusClient';
+import { Identifier, IsObjectId } from '@argus/hepiusClient';
 
 export const NotNullableTodoKeys = ['label', 'cronExpressions', 'start', 'end'];
 

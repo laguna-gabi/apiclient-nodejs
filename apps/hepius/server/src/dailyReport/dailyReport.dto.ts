@@ -3,8 +3,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsOptional, Matches } from 'class-validator';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
-import { ErrorType, Errors, IsObjectId, onlyDateRegex } from '../common';
+import { ErrorType, Errors, onlyDateRegex } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
+import { IsObjectId } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************

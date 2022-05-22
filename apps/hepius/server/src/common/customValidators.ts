@@ -294,22 +294,6 @@ export function IsNotPlatformWeb(options: ValidationOptions) {
   };
 }
 
-export function IsObjectId(options?: ValidationOptions) {
-  return (object, propertyName: string) => {
-    registerDecorator({
-      name: 'isObjectId',
-      target: object.constructor,
-      propertyName,
-      options,
-      validator: {
-        validate(value) {
-          return Types.ObjectId.isValid(value) || value == undefined;
-        },
-      },
-    });
-  };
-}
-
 export function IsObjectIds(options?: ValidationOptions) {
   return (object, propertyName: string) => {
     registerDecorator({
@@ -402,21 +386,6 @@ export function isTodoDateParamsValidUpdate(options: ValidationOptions) {
           } else {
             return false;
           }
-        },
-      },
-    });
-  };
-}
-
-export function IsValidCarePlanTypeInput(options: ValidationOptions) {
-  return (object, propertyName: string) => {
-    registerDecorator({
-      target: object.constructor,
-      propertyName,
-      options,
-      validator: {
-        validate(carePlanType: string, args: ValidationArguments) {
-          return Boolean(args.object['type']['id']) !== Boolean(args.object['type']['custom']);
         },
       },
     });
