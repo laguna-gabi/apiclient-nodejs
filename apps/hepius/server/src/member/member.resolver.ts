@@ -22,6 +22,7 @@ import {
   generateDispatchId,
 } from '@argus/irisClient';
 import {
+  Environments,
   GlobalEventType,
   IEventNotifySlack,
   NotificationType,
@@ -33,7 +34,12 @@ import {
   StorageType,
   formatEx,
 } from '@argus/pandora';
-import { PoseidonMessagePatterns, Speaker, Transcript } from '@argus/poseidonClient';
+import {
+  PoseidonMessagePatterns,
+  Speaker,
+  Transcript,
+  generateTranscriptResponse,
+} from '@argus/poseidonClient';
 import { Inject, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -70,6 +76,7 @@ import {
   getCorrelationId,
 } from '../common';
 import { Communication, CommunicationService, GetCommunicationParams } from '../communication';
+import { GraduateMemberParams, JourneyService } from '../journey';
 import {
   Bitly,
   CognitoService,
@@ -125,7 +132,6 @@ import {
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from './index';
-import { GraduateMemberParams, JourneyService } from '../journey';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -577,7 +583,11 @@ export class MemberResolver extends MemberBase {
     @Args('recordingId', { type: () => String })
     recordingId: string,
   ) {
-    return this.client.send(PoseidonMessagePatterns.getTranscript, { recordingId }).toPromise();
+    if (process.env.NODE_ENV === Environments.production) {
+      return this.client.send(PoseidonMessagePatterns.getTranscript, { recordingId }).toPromise();
+    } else {
+      return generateTranscriptResponse();
+    }
   }
 
   @Mutation(() => Transcript, { nullable: true })
@@ -588,9 +598,13 @@ export class MemberResolver extends MemberBase {
     @Args('coach', { type: () => Speaker })
     coach: Speaker,
   ) {
-    return this.client
-      .send(PoseidonMessagePatterns.setTranscriptSpeaker, { recordingId, coach })
-      .toPromise();
+    if (process.env.NODE_ENV === Environments.production) {
+      return this.client
+        .send(PoseidonMessagePatterns.setTranscriptSpeaker, { recordingId, coach })
+        .toPromise();
+    } else {
+      return generateTranscriptResponse();
+    }
   }
 
   /*************************************************************************************************
