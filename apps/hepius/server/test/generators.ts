@@ -75,6 +75,7 @@ import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
   AddCaregiverParams,
+  AddInsuranceParams,
   Alert,
   AlertType,
   AppointmentCompose,
@@ -1578,6 +1579,16 @@ export const generateRandomHeight = () =>
 
 export const generateRandomWeight = () =>
   datatype.number({ min: graphql.validators.weight.min, max: graphql.validators.weight.max });
+
+export const generateAddInsuranceParams = ({
+  name = lorem.sentence(),
+  type = 'medicare',
+  memberId = generateId(),
+  startDate = generateDateOnly(fakerDate.past()),
+  endDate = generateDateOnly(fakerDate.future()),
+}: Partial<AddInsuranceParams> = {}): AddInsuranceParams => {
+  return { name, type, memberId, startDate, endDate };
+};
 
 /*************************************************************************************************
  ******************************************** Helpers ********************************************

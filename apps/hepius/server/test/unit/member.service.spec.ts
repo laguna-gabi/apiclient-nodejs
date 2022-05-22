@@ -30,6 +30,7 @@ import {
   dbDisconnect,
   defaultModules,
   generateAddCaregiverParams,
+  generateAddInsuranceParams,
   generateCreateMemberParams,
   generateCreateQuestionnaireParams,
   generateCreateTaskParams,
@@ -80,6 +81,9 @@ import {
   DismissedAlertDto,
   Honorific,
   ImageFormat,
+  Insurance,
+  InsuranceDocument,
+  InsuranceDto,
   InternalCreateMemberParams,
   Journal,
   JournalDocument,
@@ -136,6 +140,7 @@ describe('MemberService', () => {
   let modelQuestionnaireResponse: Model<QuestionnaireResponseDocument>;
   let modelTodo: Model<TodoDocument & defaultTimestampsDbValues>;
   let modelJourney: Model<JourneyDocument & defaultTimestampsDbValues>;
+  let modelInsurance: Model<InsuranceDocument>;
   let i18nService: Internationalization;
 
   beforeAll(async () => {
@@ -172,6 +177,7 @@ describe('MemberService', () => {
     );
     modelTodo = model<TodoDocument & defaultTimestampsDbValues>(Todo.name, TodoDto);
     modelJourney = model<JourneyDocument & defaultTimestampsDbValues>(Journey.name, JourneyDto);
+    modelInsurance = model<InsuranceDocument>(Insurance.name, InsuranceDto);
 
     await dbConnect();
   });
@@ -2475,6 +2481,90 @@ describe('MemberService', () => {
       await expect(service.replaceMemberOrg(generateReplaceMemberOrgParams())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
+    });
+  });
+
+  describe('insurance', () => {
+    let mockEventEmitterEmit: jest.SpyInstance;
+
+    beforeAll(() => {
+      mockEventEmitterEmit = jest.spyOn(module.get<EventEmitter2>(EventEmitter2), `emit`);
+    });
+
+    afterEach(() => {
+      mockEventEmitterEmit.mockReset();
+    });
+
+    it('should add insurance plan', async () => {
+      const memberId = generateId();
+
+      // start a session and set member id as client in store
+      loadSessionClient(memberId);
+
+      const addInsuranceParams = generateAddInsuranceParams({ memberId });
+      const { id: insurancePlanId } = await service.addInsurance(addInsuranceParams);
+
+      confirmEmittedChangeSetEvent(
+        mockEventEmitterEmit,
+        createChangeEvent({
+          action: ChangeEventType.updated,
+          entity: EntityName.insurance,
+          memberId,
+        }),
+      );
+
+      const insurancePlans = await service.getInsurance(memberId);
+
+      expect(insurancePlans).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...addInsuranceParams,
+            memberId: new Types.ObjectId(memberId),
+            _id: new Types.ObjectId(insurancePlanId),
+          }),
+        ]),
+      );
+    });
+
+    it('should (hard) delete a soft deleted insurance plan', async () => {
+      const memberId = generateId();
+      const insuranceParams = generateAddInsuranceParams({ memberId });
+      const { id } = await service.addInsurance(insuranceParams);
+
+      // soft delete
+      await service.deleteInsurance(id, memberId.toString());
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      let deletedInsurance = await modelInsurance.findOneWithDeleted({
+        _id: new Types.ObjectId(id),
+      });
+
+      expect(deletedInsurance).toEqual(
+        expect.objectContaining({
+          ...insuranceParams,
+          memberId: new Types.ObjectId(memberId),
+        }),
+      );
+
+      await service.deleteInsurance(id, memberId.toString(), true);
+
+      confirmEmittedChangeSetEvent(
+        mockEventEmitterEmit,
+        createChangeEvent({
+          action: ChangeEventType.deleted,
+          entity: EntityName.insurance,
+          memberId,
+        }),
+      );
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      deletedInsurance = await modelInsurance.findOneWithDeleted({
+        _id: new Types.ObjectId(id),
+      });
+
+      expect(deletedInsurance).toBeFalsy();
     });
   });
 

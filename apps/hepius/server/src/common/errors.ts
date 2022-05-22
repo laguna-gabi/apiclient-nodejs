@@ -178,6 +178,11 @@ export enum ErrorType {
   admissionDietaryDate = 10615,
   admissionMedicationStartDate = 10616,
   admissionMedicationEndDate = 10617,
+
+  // Member Insurance
+  insuranceStartDate = 10701,
+  insuranceEndDate = 10702,
+  insuranceEndAfterStart = 10703,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -465,6 +470,9 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.admissionDietaryDate.valueOf(), `dietary date ${dateInstanceFormat}`],
   [ErrorType.admissionMedicationStartDate.valueOf(), `medication startDate ${dateInstanceFormat}`],
   [ErrorType.admissionMedicationEndDate.valueOf(), `medication endDate ${dateInstanceFormat}`],
+  [ErrorType.insuranceStartDate.valueOf(), `start ${dateTimeInstanceFormat}`],
+  [ErrorType.insuranceEndDate.valueOf(), `end ${dateTimeInstanceFormat}`],
+  [ErrorType.insuranceEndAfterStart.valueOf(), 'insurance end date must be after start date'],
 ]);
 
 export const DbErrors = {

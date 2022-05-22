@@ -11,6 +11,7 @@ import {
   ActionItem,
   ActionItemDocument,
   AddCaregiverParams,
+  AddInsuranceParams,
   Alert,
   AlertType,
   AppointmentCompose,
@@ -22,6 +23,8 @@ import {
   DismissedAlert,
   DismissedAlertDocument,
   EmbeddedMemberProperties,
+  Insurance,
+  InsuranceDocument,
   InternalCreateMemberParams,
   Journal,
   JournalDocument,
@@ -95,6 +98,8 @@ export class MemberService extends BaseService {
     @InjectModel(Todo.name)
     private readonly todoModel: Model<TodoDocument & defaultTimestampsDbValues> &
       ISoftDelete<TodoDocument>,
+    @InjectModel(Insurance.name)
+    private readonly insuranceModel: Model<InsuranceDocument> & ISoftDelete<InsuranceDocument>,
     private readonly storageService: StorageService,
     private readonly notificationService: NotificationService,
     private readonly internationalization: Internationalization,
@@ -451,6 +456,11 @@ export class MemberService extends BaseService {
 
     await deleteMemberObjects<Model<JournalDocument> & ISoftDelete<JournalDocument>>({
       model: this.journalModel,
+      ...data,
+    });
+
+    await deleteMemberObjects<Model<InsuranceDocument> & ISoftDelete<InsuranceDocument>>({
+      model: this.insuranceModel,
       ...data,
     });
   }
@@ -847,6 +857,35 @@ export class MemberService extends BaseService {
 
   async getCaregiversByMemberId(memberId: string): Promise<Caregiver[]> {
     const res = await this.caregiverModel.find({ memberId: new Types.ObjectId(memberId) });
+    return res;
+  }
+
+  /*************************************************************************************************
+   **************************************** Insurance Plans ****************************************
+   ************************************************************************************************/
+
+  async addInsurance(addInsuranceParams: AddInsuranceParams): Promise<Caregiver> {
+    return this.replaceId(
+      await this.insuranceModel.create({
+        ...addInsuranceParams,
+        memberId: new Types.ObjectId(addInsuranceParams.memberId),
+      }),
+    );
+  }
+
+  async deleteInsurance(id: string, deletedBy: string, hard?: boolean) {
+    if (hard) {
+      return this.insuranceModel.remove({ _id: new Types.ObjectId(id) });
+    } else {
+      const insurance = await this.insuranceModel.findOne({
+        _id: new Types.ObjectId(id),
+      });
+      await insurance?.delete(new Types.ObjectId(deletedBy));
+    }
+  }
+
+  async getInsurance(memberId: string): Promise<Insurance[]> {
+    const res = await this.insuranceModel.find({ memberId: new Types.ObjectId(memberId) });
     return res;
   }
 

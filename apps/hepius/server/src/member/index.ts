@@ -7,6 +7,7 @@ export * from './memberConfig.dto';
 export * from './member.recording.dto';
 export * from './caregiver.dto';
 export * from './alert.dto';
+export * from './insurance.dto';
 export * from './member.service';
 export * from './member.resolver';
 export * from './member.controller';
