@@ -1720,30 +1720,28 @@ describe('MemberResolver', () => {
 
   describe('getMemberConfig', () => {
     let spyOnServiceGetMemberConfig;
-    let spyOnServiceGetAllJourneys;
+    let spyOnServiceGetRecentJourney;
     beforeEach(() => {
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
-      spyOnServiceGetAllJourneys = jest.spyOn(journeyService, 'getAll');
+      spyOnServiceGetRecentJourney = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceGetMemberConfig.mockReset();
-      spyOnServiceGetAllJourneys.mockReset();
+      spyOnServiceGetRecentJourney.mockReset();
     });
 
     it('should call MemberConfig', async () => {
       const memberConfig = mockGenerateMemberConfig();
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnServiceGetAllJourneys.mockResolvedValueOnce([
+      spyOnServiceGetRecentJourney.mockResolvedValueOnce(
         mockGenerateJourney({ memberId: memberConfig.memberId.toString() }),
-      ]);
+      );
       await resolver.getMemberConfig(memberConfig.memberId.toString());
 
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(memberConfig.memberId.toString());
-      expect(spyOnServiceGetAllJourneys).toBeCalledWith({
-        memberId: memberConfig.memberId.toString(),
-      });
+      expect(spyOnServiceGetRecentJourney).toBeCalledWith(memberConfig.memberId.toString());
     });
   });
 
@@ -1786,7 +1784,7 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMemberConfig;
     let spyOnServiceUpdateMemberConfig;
     let spyOnServiceUpdateJourneyLoggedInAt;
-    let spyOnServiceGetActiveJourney;
+    let spyOnServiceGetRecentJourney;
 
     beforeEach(() => {
       spyOnOneSignalRegister = jest.spyOn(oneSignal, 'register');
@@ -1794,7 +1792,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnServiceUpdateMemberConfig = jest.spyOn(service, 'updateMemberConfig');
       spyOnServiceUpdateJourneyLoggedInAt = jest.spyOn(journeyService, 'updateLoggedInAt');
-      spyOnServiceGetActiveJourney = jest.spyOn(journeyService, 'getActive');
+      spyOnServiceGetRecentJourney = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
@@ -1803,7 +1801,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfig.mockReset();
       spyOnServiceUpdateJourneyLoggedInAt.mockReset();
-      spyOnServiceGetActiveJourney.mockReset();
+      spyOnServiceGetRecentJourney.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnEventEmitter.mockClear();
     });
@@ -1829,7 +1827,7 @@ describe('MemberResolver', () => {
       });
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceUpdateJourneyLoggedInAt.mockResolvedValueOnce(journey);
-      spyOnServiceGetActiveJourney.mockResolvedValueOnce(journey);
+      spyOnServiceGetRecentJourney.mockResolvedValueOnce(journey);
       await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
 
       expect(spyOnOneSignalRegister).not.toBeCalled();
@@ -1870,7 +1868,7 @@ describe('MemberResolver', () => {
       });
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceUpdateJourneyLoggedInAt.mockResolvedValueOnce(journey);
-      spyOnServiceGetActiveJourney.mockResolvedValueOnce(journey);
+      spyOnServiceGetRecentJourney.mockResolvedValueOnce(journey);
       await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
 
       expect(spyOnOneSignalRegister).toBeCalledTimes(1);
@@ -1909,7 +1907,7 @@ describe('MemberResolver', () => {
       const journey = mockGenerateJourney({ memberId: member.id });
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => currentMemberConfig);
-      spyOnServiceGetActiveJourney.mockResolvedValueOnce(journey);
+      spyOnServiceGetRecentJourney.mockResolvedValueOnce(journey);
       spyOnServiceUpdateJourneyLoggedInAt.mockResolvedValueOnce(journey);
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
 
@@ -2093,7 +2091,7 @@ describe('MemberResolver', () => {
   });
 
   describe('graduateMember', () => {
-    let spyOnServiceGetAllJourneys;
+    let spyOnServiceGetRecentJourney;
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnServiceGraduate;
@@ -2101,7 +2099,7 @@ describe('MemberResolver', () => {
     let spyOnCognitoServiceDisableClient;
 
     beforeEach(() => {
-      spyOnServiceGetAllJourneys = jest.spyOn(journeyService, 'getAll');
+      spyOnServiceGetRecentJourney = jest.spyOn(journeyService, 'getRecent');
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnServiceGraduate = jest.spyOn(journeyService, 'graduate');
@@ -2110,7 +2108,7 @@ describe('MemberResolver', () => {
     });
 
     afterEach(() => {
-      spyOnServiceGetAllJourneys.mockReset();
+      spyOnServiceGetRecentJourney.mockReset();
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceGraduate.mockReset();
@@ -2122,7 +2120,7 @@ describe('MemberResolver', () => {
       'should graduate an existing member(true)',
       async (platform) => {
         const deviceId = v4();
-        spyOnServiceGetAllJourneys.mockResolvedValue([{ isGraduated: false }]);
+        spyOnServiceGetRecentJourney.mockResolvedValue({ isGraduated: false });
         spyOnServiceGetMember.mockResolvedValue({ deviceId });
         spyOnServiceGetMemberConfig.mockResolvedValue({ platform });
         spyOnServiceGraduate.mockResolvedValue(undefined);
@@ -2147,7 +2145,7 @@ describe('MemberResolver', () => {
       'should graduate an existing member(false)',
       async (platform) => {
         const deviceId = v4();
-        spyOnServiceGetAllJourneys.mockResolvedValue([{ isGraduated: true }]);
+        spyOnServiceGetRecentJourney.mockResolvedValue({ isGraduated: true });
         spyOnServiceGetMember.mockResolvedValue({ deviceId });
         spyOnServiceGetMemberConfig.mockResolvedValue({ platform });
         spyOnServiceGraduate.mockResolvedValue(undefined);
@@ -2173,7 +2171,7 @@ describe('MemberResolver', () => {
         'should not update isGraduated to %p since it is already %p',
         async (isGraduated) => {
           const deviceId = v4();
-          spyOnServiceGetAllJourneys.mockResolvedValue([{ isGraduated }]);
+          spyOnServiceGetRecentJourney.mockResolvedValue({ isGraduated });
           spyOnServiceGetMember.mockResolvedValue({ deviceId });
           spyOnServiceGetMemberConfig.mockResolvedValue({ platform });
           spyOnServiceGraduate.mockResolvedValue(undefined);

@@ -38,11 +38,6 @@ export class CreateJourneyParams {
 
 @InputType()
 export class UpdateJourneyParams extends CreateJourneyParams {
-  // if id is not supplied, we're updating the default journey of the member
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  id?: string;
-
   @Field(() => String, { nullable: true })
   @IsOptional()
   fellowName?: string;
@@ -84,10 +79,6 @@ export class Journey extends Identifier {
   @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String)
   memberId: Types.ObjectId;
-
-  @Prop({ type: Boolean, index: true, default: true })
-  @Field(() => Boolean)
-  active: boolean;
 
   @Prop({ type: [{ type: Types.ObjectId }], default: [] })
   @Field(() => [String])

@@ -68,15 +68,15 @@ export class JourneyResolver {
 
   @Query(() => Journey, { nullable: true })
   @Roles(UserRole.coach, UserRole.nurse)
-  async getActiveJourney(
+  async getRecentJourney(
     @Args(
       'memberId',
       { type: () => String },
       new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
     )
     memberId: string,
-  ): Promise<Journey | null> {
-    return this.journeyService.getActive(memberId);
+  ): Promise<Journey> {
+    return this.journeyService.getRecent(memberId);
   }
 
   /*************************************************************************************************

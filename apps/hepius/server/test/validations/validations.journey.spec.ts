@@ -40,7 +40,6 @@ describe('Validations - Journey', () => {
 
     test.each`
       input                               | error
-      ${{ id: 123 }}                      | ${stringError}
       ${{ memberId: 123 }}                | ${stringError}
       ${{ fellowName: 123 }}              | ${stringError}
       ${{ readmissionRisk: 'not-valid' }} | ${'does not exist in "ReadmissionRisk" enum'}
@@ -53,7 +52,7 @@ describe('Validations - Journey', () => {
     });
   });
 
-  describe('getJourneys + getJourney + getActiveJourney', () => {
+  describe('getJourneys + getJourney + getRecentJourney', () => {
     it('should fail to get journeys since member is invalid', async () => {
       await handler.queries.getJourneys({
         memberId: 'not-valid',
@@ -61,8 +60,8 @@ describe('Validations - Journey', () => {
       });
     });
 
-    it('should fail to get active journey since member is invalid', async () => {
-      await handler.queries.getActiveJourney({
+    it('should fail to get recent journey since member is invalid', async () => {
+      await handler.queries.getRecentJourney({
         memberId: 'not-valid',
         invalidFieldsError: Errors.get(ErrorType.memberIdInvalid),
       });

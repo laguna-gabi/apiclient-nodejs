@@ -1041,7 +1041,7 @@ export class MemberResolver extends MemberBase {
     // ignoring the id from the params - replacing it with the id from the context
     const member = await this.memberService.get(memberId);
     const currentMemberConfig = await this.memberService.getMemberConfig(memberId);
-    const currentJourney = await this.journeyService.getActive(memberId);
+    const currentJourney = await this.journeyService.getRecent(memberId);
 
     if (registerForNotificationParams.platform === Platform.ios) {
       const { token } = registerForNotificationParams;
@@ -1211,9 +1211,9 @@ export class MemberResolver extends MemberBase {
     graduateMemberParams: GraduateMemberParams,
   ) {
     const member = await this.memberService.get(graduateMemberParams.id);
-    const journeys = await this.journeyService.getAll({ memberId: graduateMemberParams.id });
+    const journey = await this.journeyService.getRecent(graduateMemberParams.id);
     const memberConfig = await this.memberService.getMemberConfig(graduateMemberParams.id);
-    if (journeys[0].isGraduated !== graduateMemberParams.isGraduated) {
+    if (journey.isGraduated !== graduateMemberParams.isGraduated) {
       if (memberConfig.platform !== Platform.web) {
         if (graduateMemberParams.isGraduated) {
           await this.cognitoService.disableClient(member.deviceId);
@@ -1458,10 +1458,7 @@ export class MemberResolver extends MemberBase {
     id?: string,
   ) {
     const baseMemberConfig = await this.memberService.getMemberConfig(id);
-    const journeys = await this.journeyService.getAll({
-      memberId: id,
-    });
-    const { firstLoggedInAt, lastLoggedInAt } = journeys[0];
+    const { firstLoggedInAt, lastLoggedInAt } = await this.journeyService.getRecent(id);
     return { ...baseMemberConfig, firstLoggedInAt, lastLoggedInAt };
   }
 

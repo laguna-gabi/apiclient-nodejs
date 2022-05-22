@@ -466,7 +466,7 @@ describe('Integration tests : Audit', () => {
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      const { id: journeyId } = await handler.queries.getActiveJourney({ memberId });
+      const { id: journeyId } = await handler.queries.getRecentJourney({ memberId });
       expect(
         await checkAuditValues<JourneyDocument>(
           journeyId,

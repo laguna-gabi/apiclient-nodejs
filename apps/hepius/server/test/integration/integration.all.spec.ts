@@ -848,7 +848,7 @@ describe('Integration tests: all', () => {
       );
     }, 10000);
 
-    it('should exclude isGraduated from summing members count on getUsers', async () => {
+    it('should not exclude graduated members from summing members count on getUsers', async () => {
       const { member: member1, user } = await creators.createMemberUserAndOptionalOrg();
       const { member: member2 } = await creators.createMemberUserAndOptionalOrg();
       const { member: member3 } = await creators.createMemberUserAndOptionalOrg();
@@ -873,7 +873,7 @@ describe('Integration tests: all', () => {
       const users = await handler.queries.getUsers();
       expect(
         users.filter((userSummary) => userSummary.id === user.id)[0].currentMembersCount,
-      ).toEqual(2);
+      ).toEqual(3);
     }, 10000);
   });
 
@@ -945,7 +945,7 @@ describe('Integration tests: all', () => {
       const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
 
-      const result = await handler.queries.getActiveJourney({ memberId: member.id });
+      const result = await handler.queries.getRecentJourney({ memberId: member.id });
       expect(result.generalNotes).toEqual(setGeneralNotesParams.note);
       expect(result.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
     });
@@ -959,7 +959,7 @@ describe('Integration tests: all', () => {
       });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams: params1 });
 
-      const result1 = await handler.queries.getActiveJourney({ memberId: member.id });
+      const result1 = await handler.queries.getRecentJourney({ memberId: member.id });
       expect(result1.generalNotes).toEqual(params1.note);
       expect(result1.nurseNotes).toEqual(params1.nurseNotes);
 
@@ -969,7 +969,7 @@ describe('Integration tests: all', () => {
       });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams: params2 });
 
-      const result2 = await handler.queries.getActiveJourney({ memberId: member.id });
+      const result2 = await handler.queries.getRecentJourney({ memberId: member.id });
       expect(result2.generalNotes).toEqual(params2.note);
       expect(result2.nurseNotes).toEqual(params2.nurseNotes);
     });
@@ -2626,7 +2626,6 @@ describe('Integration tests: all', () => {
 
       const result = await handler.queries.getJourney({ id: journey.id });
       expect(result.isGraduated).toEqual(isGraduated);
-      expect(result.active).toEqual(!isGraduated);
 
       if (isGraduated) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -2642,7 +2641,7 @@ describe('Integration tests: all', () => {
       notCalledMethod.mockReset();
     };
 
-    const journey = await handler.queries.getActiveJourney({ memberId: member.id });
+    const journey = await handler.queries.getRecentJourney({ memberId: member.id });
     const { spyOnCognitoServiceDisableClient, spyOnCognitoServiceEnableClient } =
       handler.cognitoService;
     await graduate(true, spyOnCognitoServiceDisableClient, spyOnCognitoServiceEnableClient);
@@ -2860,17 +2859,26 @@ describe('Integration tests: all', () => {
   it('should create a member journey, update and get it', async () => {
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
-    const journeys = await handler.queries.getJourneys({ memberId: member.id });
-    expect(journeys.length).toEqual(1);
-
-    const journey = await handler.queries.getJourney({ id: journeys[0].id });
-    expect(journey).not.toBeUndefined();
-
-    const activeJourney = await handler.queries.getActiveJourney({ memberId: member.id });
+    const activeJourney = await handler.queries.getRecentJourney({ memberId: member.id });
     expect(activeJourney).not.toBeUndefined();
 
-    expect(journey).toEqual(activeJourney);
-    expect(journeys.some((journey) => journey.id === activeJourney.id)).toBeTruthy();
+    //creating another journey, to see that the filter works for the latest
+    const newActiveJourney = await handler.journeyService.create(
+      generateCreateJourneyParams({ memberId: member.id }),
+    );
+
+    await handler.mutations.graduateMember({
+      graduateMemberParams: { id: member.id, isGraduated: true },
+    });
+
+    const journeys = await handler.queries.getJourneys({ memberId: member.id });
+    expect(journeys.length).toEqual(2);
+    expect(journeys[0].id).toEqual(newActiveJourney.id.toString());
+    expect(journeys[1].id).toEqual(activeJourney.id);
+
+    const journey = await handler.queries.getRecentJourney({ memberId: member.id });
+    expect(journey.id).toEqual(newActiveJourney.id.toString());
+    expect(journey.isGraduated).toBeTruthy();
   });
 
   /************************************************************************************************

@@ -36,7 +36,6 @@ export class JourneyService extends BaseService {
   async create(params: CreateJourneyParams): Promise<Identifier> {
     const memberIdObject = { memberId: new Types.ObjectId(params.memberId) };
     const { _id: id } = await this.journeyModel.create(memberIdObject);
-    await this.journeyModel.updateMany({ ...memberIdObject, _id: { $ne: id } }, { active: false });
     return { id };
   }
 
@@ -49,12 +48,16 @@ export class JourneyService extends BaseService {
     return this.replaceId(result.toObject());
   }
 
-  async getActive(memberId: string): Promise<Journey | null> {
-    const result = await this.journeyModel.findOne({
-      memberId: new Types.ObjectId(memberId),
-      active: true,
-    });
-    return result ? this.replaceId(result.toObject()) : null;
+  async getRecent(memberId: string): Promise<Journey> {
+    const [result] = await this.journeyModel
+      .find({ memberId: new Types.ObjectId(memberId) })
+      .sort({ _id: -1 })
+      .limit(1)
+      .lean();
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+    return this.replaceId(result);
   }
 
   async getAll({ memberId }: { memberId: string }): Promise<Journey[]> {
@@ -66,62 +69,58 @@ export class JourneyService extends BaseService {
 
   async update(updateJourneyParams: UpdateJourneyParams): Promise<Journey> {
     const setParams = omitBy(updateJourneyParams, isNil);
-    const memberId = new Types.ObjectId(setParams.memberId);
-    const filter = setParams.id
-      ? { _id: new Types.ObjectId(setParams.id), memberId }
-      : { active: true, memberId };
-
     delete setParams.memberId;
-    delete setParams.id;
 
-    const exisingRecord = await this.journeyModel.findOne(filter);
+    const exisingRecord = await this.getRecent(updateJourneyParams.memberId);
     if (!exisingRecord) {
-      throw new Error(Errors.get(ErrorType.journeyMemberIdAndOrIdNotFound));
+      throw new Error(Errors.get(ErrorType.journeyNotFound));
     }
 
-    let result;
     if (isEmpty(setParams)) {
-      result = exisingRecord;
+      return this.replaceId(exisingRecord);
     } else {
-      result = await this.journeyModel.findOneAndUpdate(filter, { $set: setParams }, { new: true });
+      let result = await this.journeyModel.findByIdAndUpdate(
+        exisingRecord.id,
+        { $set: setParams },
+        { new: true },
+      );
+      if (
+        setParams.readmissionRisk &&
+        setParams.readmissionRisk !== exisingRecord.readmissionRisk
+      ) {
+        result = await this.updateReadmissionRiskHistory(
+          new Types.ObjectId(exisingRecord.id),
+          setParams,
+        );
+      }
+      return this.replaceId(result.toObject());
     }
-
-    if (
-      setParams.readmissionRisk &&
-      setParams.readmissionRisk !== exisingRecord.toObject().readmissionRisk
-    ) {
-      result = await this.updateReadmissionRiskHistory(result._id, setParams);
-    }
-
-    return this.replaceId(result.toObject());
   }
 
   async updateLoggedInAt(memberId: Types.ObjectId): Promise<Journey> {
     this.logger.info({ memberId }, JourneyService.name, this.updateLoggedInAt.name);
     const date = new Date();
+    const recent = await this.getRecent(memberId.toString());
     await this.journeyModel.updateOne(
-      { memberId, firstLoggedInAt: null },
+      { _id: new Types.ObjectId(recent.id), firstLoggedInAt: null },
       { $set: { firstLoggedInAt: date } },
+      { new: true },
     );
-    return this.journeyModel.findOneAndUpdate(
-      { memberId, active: true },
+    return this.journeyModel.findByIdAndUpdate(
+      recent.id,
       { $set: { lastLoggedInAt: date } },
       { upsert: false, new: true },
     );
   }
 
   async graduate(graduateParams: GraduateMemberParams) {
-    await this.journeyModel.updateOne(
-      { memberId: new Types.ObjectId(graduateParams.id), active: graduateParams.isGraduated },
-      {
-        $set: {
-          isGraduated: graduateParams.isGraduated,
-          active: !graduateParams.isGraduated,
-          graduationDate: graduateParams.isGraduated ? Date.now() : null,
-        },
+    const recent = await this.getRecent(graduateParams.id);
+    await this.journeyModel.findByIdAndUpdate(recent.id, {
+      $set: {
+        isGraduated: graduateParams.isGraduated,
+        graduationDate: graduateParams.isGraduated ? Date.now() : null,
       },
-      { sort: { createdAt: -1 } },
-    );
+    });
   }
 
   @OnEvent(EventType.onDeletedMember, { async: true })
@@ -146,14 +145,8 @@ export class JourneyService extends BaseService {
       },
       isNil,
     );
-    const result = await this.journeyModel.updateOne(
-      { memberId: new Types.ObjectId(setGeneralNotesParams.memberId), active: true },
-      { $set: setParams },
-    );
-
-    if (result.modifiedCount === 0) {
-      throw new Error(Errors.get(ErrorType.journeyNotFound));
-    }
+    const recent = await this.getRecent(setGeneralNotesParams.memberId);
+    await this.journeyModel.findByIdAndUpdate(recent.id, { $set: setParams });
   }
 
   /*************************************************************************************************

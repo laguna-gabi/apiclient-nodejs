@@ -1,4 +1,4 @@
-import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -178,8 +178,7 @@ describe('UserService', () => {
     const USER1 = generateId();
     const USER2 = generateId();
     const USER3 = generateId();
-    const journey1 = { isGraduated: false, active: true };
-    const journey2 = { isGraduated: true, active: false };
+    const journey = { memberId: generateObjectId() };
 
     it.each([
       {
@@ -192,18 +191,18 @@ describe('UserService', () => {
       },
       {
         users: [
-          { _id: USER1, journeys: [journey1], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
-          { _id: USER2, journeys: [journey2], lastMemberAssignedAt: new Date(1), maxMembers: 1 },
+          { _id: USER1, journeys: [journey], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
+          { _id: USER2, journeys: [journey], lastMemberAssignedAt: new Date(1), maxMembers: 2 },
           { _id: USER3, journeys: [], lastMemberAssignedAt: new Date(2), maxMembers: 1 },
         ],
         userId: USER2,
       },
       {
         users: [
-          { _id: USER1, journeys: [journey1], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
+          { _id: USER1, journeys: [journey], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
           {
             _id: USER2,
-            journeys: [journey1, journey2],
+            journeys: [journey, journey],
             lastMemberAssignedAt: new Date(1),
             maxMembers: 1,
           },
@@ -213,19 +212,37 @@ describe('UserService', () => {
       },
       {
         users: [
-          { _id: USER1, journeys: [journey1], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
+          { _id: USER1, journeys: [journey], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
           { _id: USER2, journeys: [], lastMemberAssignedAt: new Date(1), maxMembers: 1 },
-          { _id: USER3, journeys: [journey1], lastMemberAssignedAt: new Date(2), maxMembers: 1 },
+          { _id: USER3, journeys: [journey], lastMemberAssignedAt: new Date(2), maxMembers: 1 },
         ],
         userId: USER2,
       },
       {
         users: [
-          { _id: USER1, journeys: [journey2], lastMemberAssignedAt: new Date(0), maxMembers: 1 },
-          { _id: USER2, journeys: [journey1], lastMemberAssignedAt: new Date(1), maxMembers: 1 },
+          { _id: USER1, journeys: [journey], lastMemberAssignedAt: new Date(0), maxMembers: 2 },
+          { _id: USER2, journeys: [journey], lastMemberAssignedAt: new Date(1), maxMembers: 1 },
           { _id: USER3, journeys: [], lastMemberAssignedAt: new Date(2), maxMembers: 1 },
         ],
         userId: USER1,
+      },
+      {
+        users: [
+          {
+            _id: USER1,
+            journeys: [journey, { memberId: generateObjectId() }],
+            lastMemberAssignedAt: new Date(0),
+            maxMembers: 2,
+          },
+          {
+            _id: USER2,
+            journeys: [{ memberId: generateObjectId() }],
+            lastMemberAssignedAt: new Date(1),
+            maxMembers: 2,
+          },
+          { _id: USER3, journeys: [], lastMemberAssignedAt: new Date(2), maxMembers: 1 },
+        ],
+        userId: USER2,
       },
     ])('should get available user', async ({ users, userId }) => {
       jest.spyOn(mockUserModel, 'aggregate').mockResolvedValue(users);

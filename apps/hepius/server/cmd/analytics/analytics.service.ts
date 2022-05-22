@@ -235,11 +235,12 @@ export class AnalyticsService {
           from: 'journeys',
           localField: '_id',
           foreignField: 'memberId',
-          as: 'activeJourney',
+          as: 'journeysRes',
         },
       },
-      { $match: { 'activeJourney.active': true } },
-      { $unwind: { path: '$activeJourney', preserveNullAndEmptyArrays: true } },
+      { $sort: { 'journeysRes._id': -1 } },
+      { $addFields: { activeJourney: { $first: '$journeysRes' } } },
+      { $unset: 'journeysRes' },
       {
         $lookup: {
           from: 'users',

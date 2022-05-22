@@ -90,14 +90,17 @@ export class UserService extends BaseService {
     ]);
 
     return result.map((res) => {
-      const currentMembersCount = res.members.journeys.filter(
-        (journey) => !journey.isGraduated && journey.active,
-      ).length;
+      const currentMembers = [];
+      res.members.journeys.forEach((journey) => {
+        if (!currentMembers.some((id) => id.toString() === journey.memberId.toString())) {
+          currentMembers.push(journey.memberId);
+        }
+      });
       delete res.members;
       const { appointments, ...rest } = res;
       return {
         ...rest,
-        currentMembersCount,
+        currentMembersCount: currentMembers.length,
         appointments: appointments.map(({ _id, ...app }) => ({ ...app, id: _id })),
       };
     });
@@ -389,10 +392,13 @@ export class UserService extends BaseService {
       },
     ]);
     for (let index = 0; index < users.length; index++) {
-      const currentMembersCount = users[index].journeys
-        ? users[index].journeys.filter((journey) => !journey.isGraduated && journey.active).length
-        : 0;
-      if (users[index].maxMembers > currentMembersCount) {
+      const currentMembers = [];
+      users[index].journeys.forEach((journey) => {
+        if (!currentMembers.some((id) => id.toString() === journey.memberId.toString())) {
+          currentMembers.push(journey.memberId);
+        }
+      });
+      if (users[index].maxMembers > currentMembers.length) {
         await this.userModel.updateOne(
           { _id: users[index]._id },
           { $set: { lastMemberAssignedAt: new Date() } },

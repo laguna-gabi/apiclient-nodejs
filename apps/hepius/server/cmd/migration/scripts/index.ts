@@ -39,3 +39,4 @@ export * as m20220515092918 from './20220515092918-update-journey-isActive-activ
 export * as m20220515143904 from './20220515143904-enable-CSAT-to-memeber';
 export * as m20220516160354 from './20220516160354-move-graduate-data-to-journey';
 export * as m20220517145649 from './20220517145649-move-notes-data-to-journey';
+export * as m20220519170602 from './20220519170602-remove-active-flag-from-journey';

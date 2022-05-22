@@ -37,20 +37,20 @@ describe(JourneyResolver.name, () => {
     let spyOnServiceUpdate: jest.SpyInstance;
     let spyOnServiceGetAll: jest.SpyInstance;
     let spyOnServiceGet: jest.SpyInstance;
-    let spyOnServiceGetActive: jest.SpyInstance;
+    let spyOnServiceGetRecent: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnServiceUpdate = jest.spyOn(service, 'update');
       spyOnServiceGetAll = jest.spyOn(service, 'getAll');
       spyOnServiceGet = jest.spyOn(service, 'get');
-      spyOnServiceGetActive = jest.spyOn(service, 'getActive');
+      spyOnServiceGetRecent = jest.spyOn(service, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceUpdate.mockReset();
       spyOnServiceGetAll.mockReset();
       spyOnServiceGet.mockReset();
-      spyOnServiceGetActive.mockReset();
+      spyOnServiceGetRecent.mockReset();
     });
 
     it('should update a journey', async () => {
@@ -74,11 +74,11 @@ describe(JourneyResolver.name, () => {
       expect(spyOnServiceGet).toBeCalled();
     });
 
-    it('should get active journey', async () => {
+    it('should get recent journey', async () => {
       spyOnServiceGet.mockResolvedValueOnce(generateUpdateJourneyParams());
-      await resolver.getActiveJourney(generateId());
+      await resolver.getRecentJourney(generateId());
 
-      expect(spyOnServiceGetActive).toBeCalled();
+      expect(spyOnServiceGetRecent).toBeCalled();
     });
   });
 

@@ -492,7 +492,6 @@ export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey
   memberId: new Types.ObjectId(memberId),
   firstLoggedInAt: fakerDate.past(2),
   lastLoggedInAt: fakerDate.past(1),
-  active: true,
   fellowName: generateFellowName(),
   admissions: [],
   readmissionRisk: ReadmissionRisk.low,
@@ -1386,12 +1385,10 @@ export const generateCreateJourneyParams = ({
 
 export const generateUpdateJourneyParams = ({
   memberId = generateId(),
-  id,
   fellowName = generateFellowName(),
   readmissionRisk = ReadmissionRisk.low,
 }: Partial<UpdateJourneyParams> = {}): UpdateJourneyParams => ({
   memberId,
-  id,
   fellowName,
   readmissionRisk,
 });

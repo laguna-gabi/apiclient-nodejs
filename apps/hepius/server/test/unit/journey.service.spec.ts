@@ -45,16 +45,16 @@ describe(JourneyService.name, () => {
 
     const matchObject = { memberId: new Types.ObjectId(memberId), admissions: [] };
     const result = await service.get(id2);
-    expect(result).toMatchObject({ id: id2, ...matchObject, active: true });
+    expect(result).toMatchObject({ id: id2, ...matchObject });
 
     const results = await service.getAll({ memberId });
     expect(results).toMatchObject([
-      { id: id2, ...matchObject, active: true },
-      { id: id1, ...matchObject, active: false },
+      { id: id2, ...matchObject },
+      { id: id1, ...matchObject },
     ]);
 
-    const activeJourney = await service.getActive(memberId);
-    expect(activeJourney).toMatchObject({ id: id2, ...matchObject, active: true });
+    const activeJourney = await service.getRecent(memberId);
+    expect(activeJourney).toMatchObject({ id: id2, ...matchObject });
   });
 
   it('should throw exception on journey not found', async () => {
@@ -66,9 +66,10 @@ describe(JourneyService.name, () => {
     expect(result).toHaveLength(0);
   });
 
-  it('should return null on non existing active journey', async () => {
-    const result = await service.getActive(generateId());
-    expect(result).toBeNull();
+  it('should throw member not found', async () => {
+    await expect(service.getRecent(generateId())).rejects.toThrow(
+      Errors.get(ErrorType.memberNotFound),
+    );
   });
 
   describe('updateMemberConfigLoggedInAt', () => {
@@ -79,14 +80,14 @@ describe(JourneyService.name, () => {
       const currentTime1 = new Date().getTime();
       await service.updateLoggedInAt(new Types.ObjectId(memberId));
 
-      const journey1 = await service.getActive(memberId);
+      const journey1 = await service.getRecent(memberId);
       expect(journey1.firstLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime1);
       expect(journey1.lastLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime1);
 
       const currentTime2 = new Date().getTime();
       await service.updateLoggedInAt(new Types.ObjectId(memberId));
 
-      const journey2 = await service.getActive(memberId);
+      const journey2 = await service.getRecent(memberId);
       expect(journey2.firstLoggedInAt.getTime()).toEqual(journey1.firstLoggedInAt.getTime());
       expect(journey2.lastLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime2);
     });
@@ -118,28 +119,10 @@ describe(JourneyService.name, () => {
   });
 
   describe('update', () => {
-    it('should throw error when memberId and id doesnt match', async () => {
+    it('should throw error when memberId does not exist', async () => {
       await expect(
-        service.update(generateUpdateJourneyParams({ memberId: generateId(), id: generateId() })),
-      ).rejects.toThrow(Errors.get(ErrorType.journeyMemberIdAndOrIdNotFound));
-    });
-
-    it('should throw error when id does not exist with memberId', async () => {
-      const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
-
-      await expect(
-        service.update(generateUpdateJourneyParams({ memberId, id: generateId() })),
-      ).rejects.toThrow(Errors.get(ErrorType.journeyMemberIdAndOrIdNotFound));
-    });
-
-    it('should throw error when memberId does not exist with id', async () => {
-      const memberId = generateId();
-      const { id } = await service.create(generateCreateJourneyParams({ memberId }));
-
-      await expect(
-        service.update(generateUpdateJourneyParams({ memberId: generateId(), id })),
-      ).rejects.toThrow(Errors.get(ErrorType.journeyMemberIdAndOrIdNotFound));
+        service.update(generateUpdateJourneyParams({ memberId: generateId() })),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
 
     it('should return existing journey when no update params provided(without id)', async () => {
@@ -154,32 +137,31 @@ describe(JourneyService.name, () => {
 
     it('should return existing journey when no update params provided(with id)', async () => {
       const memberId = generateId();
-      const { id } = await service.create(generateCreateJourneyParams({ memberId }));
-
-      await checkUpdate({ memberId, id });
+      await service.create(generateCreateJourneyParams({ memberId }));
+      await checkUpdate({ memberId });
     });
 
     it('should multiple update item', async () => {
       const memberId = generateId();
-      const { id } = await service.create(generateCreateJourneyParams({ memberId }));
+      await service.create(generateCreateJourneyParams({ memberId }));
 
-      await checkUpdate(generateUpdateJourneyParams({ memberId, id }));
-      await checkUpdate(generateUpdateJourneyParams({ memberId, id }));
+      await checkUpdate(generateUpdateJourneyParams({ memberId }));
+      await checkUpdate(generateUpdateJourneyParams({ memberId }));
     });
 
     it('should be able to update partial fields', async () => {
       const memberId = generateId();
-      const { id } = await service.create(generateCreateJourneyParams({ memberId }));
+      await service.create(generateCreateJourneyParams({ memberId }));
 
-      const updateParams1 = generateUpdateJourneyParams({ memberId, id });
+      const updateParams1 = generateUpdateJourneyParams({ memberId });
       await checkUpdate(updateParams1);
 
-      const updateParams2 = generateUpdateJourneyParams({ memberId, id });
+      const updateParams2 = generateUpdateJourneyParams({ memberId });
       delete updateParams2.fellowName;
       await checkUpdate(updateParams2);
 
-      const active = await service.getActive(memberId);
-      expect(active).toEqual(
+      const current = await service.getRecent(memberId);
+      expect(current).toEqual(
         expect.objectContaining({
           ...updateParams2,
           fellowName: updateParams1.fellowName,
@@ -190,11 +172,10 @@ describe(JourneyService.name, () => {
 
     it('should not add to readmissionRiskHistory if the readmissionRisk is the same', async () => {
       const memberId = generateId();
-      const { id } = await service.create(generateCreateJourneyParams({ memberId }));
+      await service.create(generateCreateJourneyParams({ memberId }));
 
       const updateJourney = generateUpdateJourneyParams({
         memberId,
-        id,
         readmissionRisk: ReadmissionRisk.low,
       });
 
@@ -210,11 +191,10 @@ describe(JourneyService.name, () => {
 
     it('should add to readmissionRiskHistory if the readmissionRisk is not the same', async () => {
       const memberId = generateId();
-      const { id } = await service.create(generateCreateJourneyParams({ memberId }));
+      await service.create(generateCreateJourneyParams({ memberId }));
 
       const updateJourney1 = generateUpdateJourneyParams({
         memberId,
-        id,
         readmissionRisk: ReadmissionRisk.low,
       });
 
@@ -223,7 +203,6 @@ describe(JourneyService.name, () => {
 
       const updateJourney2 = generateUpdateJourneyParams({
         memberId,
-        id,
         readmissionRisk: ReadmissionRisk.medium,
       });
 
@@ -239,7 +218,6 @@ describe(JourneyService.name, () => {
 
     const checkUpdate = async (updateParams: UpdateJourneyParams) => {
       const result = await service.update(updateParams);
-      expect(updateParams.id).toEqual(result.id);
       expect(result).toEqual(
         expect.objectContaining({
           ...updateParams,
@@ -276,7 +254,7 @@ describe(JourneyService.name, () => {
       const generalNotes = generateSetGeneralNotesParams({ memberId });
       await service.setGeneralNotes(generalNotes);
 
-      const result = await service.getActive(memberId);
+      const result = await service.getRecent(memberId);
 
       expect(result.generalNotes).toEqual(generalNotes.note);
     });
@@ -284,7 +262,7 @@ describe(JourneyService.name, () => {
     it('should throw error on set general notes for a non existing member', async () => {
       const generalNotes = generateSetGeneralNotesParams();
       await expect(service.setGeneralNotes(generalNotes)).rejects.toThrow(
-        Errors.get(ErrorType.journeyNotFound),
+        Errors.get(ErrorType.memberNotFound),
       );
     });
 
@@ -296,8 +274,7 @@ describe(JourneyService.name, () => {
       delete notes.nurseNotes;
       await service.setGeneralNotes(notes);
 
-      const result = await service.getActive(memberId);
-
+      const result = await service.getRecent(memberId);
       expect(result.generalNotes).toEqual(notes.note);
       expect(result.nurseNotes).toBeUndefined();
     });
@@ -310,7 +287,7 @@ describe(JourneyService.name, () => {
       delete notes.note;
       await service.setGeneralNotes(notes);
 
-      const result = await service.getActive(memberId);
+      const result = await service.getRecent(memberId);
 
       expect(result.nurseNotes).toEqual(notes.nurseNotes);
       expect(result.generalNotes).toBeUndefined();
@@ -328,7 +305,7 @@ describe(JourneyService.name, () => {
       delete notes2.nurseNotes;
       await service.setGeneralNotes(notes2);
 
-      const result = await service.getActive(memberId);
+      const result = await service.getRecent(memberId);
 
       expect(result.nurseNotes).toEqual(notes1.nurseNotes);
       expect(result.generalNotes).toEqual(notes2.note);
@@ -346,7 +323,7 @@ describe(JourneyService.name, () => {
       delete notes2.note;
       await service.setGeneralNotes(notes2);
 
-      const result = await service.getActive(memberId);
+      const result = await service.getRecent(memberId);
 
       expect(result.nurseNotes).toEqual(notes2.nurseNotes);
       expect(result.generalNotes).toEqual(notes1.note);
@@ -364,7 +341,7 @@ describe(JourneyService.name, () => {
       delete notes2.note;
       await service.setGeneralNotes(notes2);
 
-      const result = await service.getActive(memberId);
+      const result = await service.getRecent(memberId);
 
       expect(result.nurseNotes).toEqual(notes2.nurseNotes);
       expect(result.generalNotes).toEqual(notes1.note);
@@ -382,7 +359,7 @@ describe(JourneyService.name, () => {
       delete notes2.nurseNotes;
       await service.setGeneralNotes(notes2);
 
-      const result = await service.getActive(memberId);
+      const result = await service.getRecent(memberId);
 
       expect(result.nurseNotes).toEqual(notes1.nurseNotes);
       expect(result.generalNotes).toEqual(notes2.note);
@@ -394,21 +371,21 @@ describe(JourneyService.name, () => {
 
       const params1 = generateSetGeneralNotesParams({ memberId });
       await service.setGeneralNotes(params1);
-      const result1 = await service.getActive(memberId);
+      const result1 = await service.getRecent(memberId);
       expect(result1.nurseNotes).toEqual(params1.nurseNotes);
       expect(result1.generalNotes).toEqual(params1.note);
 
       const params2 = generateSetGeneralNotesParams({ memberId, note: '' });
       delete params2.nurseNotes;
       await service.setGeneralNotes(params2);
-      const result2 = await service.getActive(memberId);
+      const result2 = await service.getRecent(memberId);
       expect(result2.nurseNotes).toEqual(params1.nurseNotes);
       expect(result2.generalNotes).toEqual(params2.note);
 
       const params3 = generateSetGeneralNotesParams({ memberId, nurseNotes: '' });
       delete params3.note;
       await service.setGeneralNotes(params3);
-      const result3 = await service.getActive(memberId);
+      const result3 = await service.getRecent(memberId);
       expect(result3.nurseNotes).toEqual(params3.nurseNotes);
       expect(result3.generalNotes).toEqual(params2.note);
     });

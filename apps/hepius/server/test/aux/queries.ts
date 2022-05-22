@@ -1457,7 +1457,7 @@ export class Queries {
     return result?.getJourney;
   };
 
-  getActiveJourney = async ({
+  getRecentJourney = async ({
     memberId,
     invalidFieldsError,
   }: {
@@ -1467,8 +1467,8 @@ export class Queries {
     const result = await this.client
       .request(
         gql`
-          query getActiveJourney($memberId: String!) {
-            getActiveJourney(memberId: $memberId) {
+          query getRecentJourney($memberId: String!) {
+            getRecentJourney(memberId: $memberId) {
               ...journeyFragment
             }
           }
@@ -1482,6 +1482,6 @@ export class Queries {
         return;
       });
 
-    return result?.getActiveJourney;
+    return result?.getRecentJourney;
   };
 }

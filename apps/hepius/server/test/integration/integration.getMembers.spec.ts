@@ -81,7 +81,7 @@ describe('Integration tests : getMembers', () => {
       registerForNotificationParams,
       requestHeaders: generateRequestHeaders(member.authId),
     });
-    const journey = await handler.journeyService.getActive(member.id);
+    const journey = await handler.journeyService.getRecent(member.id);
 
     await creators.createAndValidateAppointment({ member });
     const appointment = await appointmentsActions.scheduleAppointment({ member });
