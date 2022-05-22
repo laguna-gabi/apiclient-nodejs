@@ -43,7 +43,6 @@ describe('Validations - Journey', () => {
       ${{ id: 123 }}                      | ${stringError}
       ${{ memberId: 123 }}                | ${stringError}
       ${{ fellowName: 123 }}              | ${stringError}
-      ${{ healthPlan: 123 }}              | ${stringError}
       ${{ readmissionRisk: 'not-valid' }} | ${'does not exist in "ReadmissionRisk" enum'}
     `(`should fail to update a member since setting $input is not a valid`, async (params) => {
       const updateJourneyParams = generateUpdateJourneyParams({ ...params.input });

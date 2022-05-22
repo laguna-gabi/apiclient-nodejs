@@ -34,10 +34,6 @@ export class ReadmissionRiskHistory {
 export class CreateJourneyParams {
   @Field(() => String)
   memberId: string;
-
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  healthPlan?: string;
 }
 
 @InputType()
@@ -108,10 +104,6 @@ export class Journey extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   fellowName?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  healthPlan?: string;
 
   @Prop({ type: String, enum: ReadmissionRisk, isNaN: true })
   @Field(() => ReadmissionRisk, { nullable: true })

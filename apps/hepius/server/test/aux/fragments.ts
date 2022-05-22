@@ -220,7 +220,6 @@ export const FRAGMENT_JOURNEY = gql`
     memberId
     active
     fellowName
-    healthPlan
     readmissionRisk
     readmissionRiskHistory {
       readmissionRisk

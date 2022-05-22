@@ -715,6 +715,7 @@ describe('Validations - member', () => {
       ${{ deceased: 123 }}                | ${{ missingFieldError: 'Expected type "DeceasedInput" to be an object.' }}
       ${{ deceased: { cause: 123 } }}     | ${{ missingFieldError: stringError }}
       ${{ deceased: { date: 123 } }}      | ${{ missingFieldError: stringError }}
+      ${{ healthPlan: 123 }}              | ${{ missingFieldError: stringError }}
     `(`should fail to update a member since setting $input is not a valid`, async (params) => {
       /* eslint-enable max-len */
       const updateMemberParams = generateUpdateMemberParams({ ...params.input });

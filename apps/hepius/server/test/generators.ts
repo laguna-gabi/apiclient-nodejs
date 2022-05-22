@@ -495,7 +495,6 @@ export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey
   active: true,
   fellowName: generateFellowName(),
   admissions: [],
-  healthPlan: generateHealthPlan(),
   readmissionRisk: ReadmissionRisk.low,
   isGraduated: false,
   generalNotes: lorem.sentence(),
@@ -1389,13 +1388,11 @@ export const generateUpdateJourneyParams = ({
   memberId = generateId(),
   id,
   fellowName = generateFellowName(),
-  healthPlan = generateHealthPlan(),
   readmissionRisk = ReadmissionRisk.low,
 }: Partial<UpdateJourneyParams> = {}): UpdateJourneyParams => ({
   memberId,
   id,
   fellowName,
-  healthPlan,
   readmissionRisk,
 });
 
