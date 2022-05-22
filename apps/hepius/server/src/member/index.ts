@@ -10,4 +10,5 @@ export * from './alert.dto';
 export * from './member.service';
 export * from './member.resolver';
 export * from './member.controller';
+export * from './member.tcp.controller';
 export * from './member.module';

@@ -5,8 +5,6 @@ import { CreateMemberParams, Member, MemberBase, MemberService } from '.';
 import { UserService } from '../user';
 import { JourneyService } from '../journey';
 import { FeatureFlagService, TwilioService } from '../providers';
-import { MessagePattern, Transport } from '@nestjs/microservices';
-import { Caregiver, MemberCommands } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/members`)
@@ -40,10 +38,5 @@ export class MemberController extends MemberBase {
     } catch (ex) {
       throw new HttpException(ex.message, HttpStatus.BAD_REQUEST);
     }
-  }
-
-  @MessagePattern({ cmd: MemberCommands.getCaregiversByMemberId }, Transport.TCP)
-  async getCaregiversByMemberId(memberId: string): Promise<Caregiver[]> {
-    return this.memberService.getCaregiversByMemberId(memberId);
   }
 }

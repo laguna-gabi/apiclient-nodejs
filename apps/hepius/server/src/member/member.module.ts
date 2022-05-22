@@ -25,6 +25,7 @@ import {
   MemberRecordingDto,
   MemberResolver,
   MemberService,
+  MemberTcpController,
   Recording,
 } from '.';
 import { AppointmentDto } from '../appointment';
@@ -101,7 +102,7 @@ import { JourneyModule } from '../journey';
     ]),
   ],
   providers: [MemberResolver, MemberService, ConfigsService],
-  controllers: [MemberController],
+  controllers: [MemberController, MemberTcpController],
   exports: [MemberService, MongooseModule],
 })
 export class MemberModule {}
