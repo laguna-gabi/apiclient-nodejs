@@ -1,5 +1,5 @@
 import { MemberRole, UserRole } from '@argus/hepiusClient';
-import { Platform, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { Platform, generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { hosts } from 'config';
@@ -10,7 +10,6 @@ import {
   defaultModules,
   generateCommunication,
   generateGetCommunicationParams,
-  generateId,
   generateUniqueUrl,
   mockGenerateMember,
   mockGenerateUser,

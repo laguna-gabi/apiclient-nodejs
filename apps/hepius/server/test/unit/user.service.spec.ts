@@ -1,4 +1,4 @@
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -20,7 +20,6 @@ import {
   defaultModules,
   generateAvailabilityInput,
   generateCreateUserParams,
-  generateId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateUserParams,

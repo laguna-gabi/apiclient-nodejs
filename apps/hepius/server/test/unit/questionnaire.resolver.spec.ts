@@ -1,5 +1,5 @@
 import { MemberRole, UserRole } from '@argus/hepiusClient';
-import { mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ErrorType, Errors, EventType, IEventUpdateHealthPersona } from '../../src/common';
@@ -15,7 +15,6 @@ import {
   dbDisconnect,
   defaultModules,
   generateCreateQuestionnaireParams,
-  generateId,
   generateSubmitQuestionnaireResponseParams,
   mockGenerateQuestionnaire,
 } from '../../test';

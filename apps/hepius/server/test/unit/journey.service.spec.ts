@@ -1,4 +1,4 @@
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import { MemberModule } from '../../src/member';
@@ -8,7 +8,6 @@ import {
   dbDisconnect,
   defaultModules,
   generateCreateJourneyParams,
-  generateId,
   generateSetGeneralNotesParams,
   generateUpdateJourneyParams,
 } from '../index';

@@ -1,4 +1,5 @@
 import { defaultUserParams } from '@argus/hepiusClient';
+import { generateId } from '@argus/pandora';
 import { lorem } from 'faker';
 import * as request from 'supertest';
 import { v4 } from 'uuid';
@@ -12,7 +13,7 @@ import {
 import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
 import { CreateUserParams, GetSlotsParams, UpdateUserParams } from '../../src/user';
 import { Handler } from '../aux';
-import { generateGetSlotsParams, generateId, generateUpdateUserParams } from '../generators';
+import { generateGetSlotsParams, generateUpdateUserParams } from '../generators';
 
 const stringError = `String cannot represent a non string value`;
 

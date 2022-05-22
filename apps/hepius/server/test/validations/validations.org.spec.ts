@@ -1,4 +1,5 @@
-import { BEFORE_ALL_TIMEOUT, generateId, generateOrgParams } from '..';
+import { generateId } from '@argus/pandora';
+import { BEFORE_ALL_TIMEOUT, generateOrgParams } from '..';
 import { ErrorType, Errors } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
 import { Handler } from '../aux';

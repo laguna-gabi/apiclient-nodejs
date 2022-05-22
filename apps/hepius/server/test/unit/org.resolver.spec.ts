@@ -1,6 +1,6 @@
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { dbDisconnect, defaultModules, generateId, generateOrgParams, mockGenerateOrg } from '..';
+import { dbDisconnect, defaultModules, generateOrgParams, mockGenerateOrg } from '..';
 import { LoggerService } from '../../src/common';
 import { OrgModule, OrgResolver, OrgService } from '../../src/org';
 

@@ -1,4 +1,4 @@
-import { Platform, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { Platform, generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { date, internet } from 'faker';
@@ -10,7 +10,6 @@ import {
   dbDisconnect,
   defaultModules,
   generateCommunication,
-  generateId,
   generateUniqueUrl,
   mockGenerateMember,
   mockGenerateUser,

@@ -1,5 +1,5 @@
 import { AppointmentInternalKey, RegisterInternalKey, generateDispatchId } from '@argus/irisClient';
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addMinutes } from 'date-fns';
@@ -9,9 +9,7 @@ import {
   dbDisconnect,
   defaultModules,
   generateAppointmentLink,
-  generateId,
   generateNotesParams,
-  generateObjectId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,

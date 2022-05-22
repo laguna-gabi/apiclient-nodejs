@@ -62,6 +62,7 @@ import {
   CancelNotificationType,
   NotificationType,
   Platform,
+  generateId,
   mockLogger,
   mockProcessWarnings,
   translation,
@@ -96,11 +97,7 @@ import {
   Twilio,
 } from '../../src/providers';
 import { ClientSettings } from '../../src/settings';
-import {
-  generateId,
-  generateUpdateMemberSettingsMock,
-  generateUpdateUserSettingsMock,
-} from '../generators';
+import { generateUpdateMemberSettingsMock, generateUpdateUserSettingsMock } from '../generators';
 import { iceServers } from './twilioPeerIceServers';
 
 describe('Notifications full flow', () => {

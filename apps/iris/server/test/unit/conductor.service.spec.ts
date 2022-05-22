@@ -1,5 +1,5 @@
 import { IUpdateSenderClientId, InnerQueueTypes } from '@argus/irisClient';
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapTriggersAt } from 'config';
@@ -25,7 +25,6 @@ import { SettingsService } from '../../src/settings';
 import {
   delay,
   generateDispatch,
-  generateId,
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '../generators';

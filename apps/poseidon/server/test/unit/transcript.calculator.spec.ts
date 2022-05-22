@@ -1,7 +1,6 @@
-import { mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { generateId } from '..';
 import { DbModule } from '../../src/db';
 import { RevAI } from '../../src/providers';
 import { TranscriptCalculator, TranscriptModule, TranscriptService } from '../../src/transcript';

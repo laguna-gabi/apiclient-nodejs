@@ -1,11 +1,11 @@
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { INestApplication } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { disconnect } from 'mongoose';
 import * as request from 'supertest';
-import { generateDispatch, generateId } from '../.';
+import { generateDispatch } from '../.';
 import { LoggerService } from '../../src/common';
 import {
   Dispatch,

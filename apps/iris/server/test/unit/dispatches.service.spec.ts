@@ -1,4 +1,4 @@
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addHours, subMinutes } from 'date-fns';
@@ -13,7 +13,7 @@ import {
   defaultDispatchParams,
 } from '../../src/conductor';
 import { DbModule } from '../../src/db';
-import { generateDispatch, generateId } from '../generators';
+import { generateDispatch } from '../generators';
 
 describe(DispatchesService.name, () => {
   let module: TestingModule;

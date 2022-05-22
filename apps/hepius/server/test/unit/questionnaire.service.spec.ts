@@ -1,4 +1,4 @@
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { lorem } from 'faker';
@@ -26,8 +26,6 @@ import {
   dbDisconnect,
   defaultModules,
   generateCreateQuestionnaireParams,
-  generateId,
-  generateObjectId,
   mockGenerateQuestionnaire,
   mockGenerateQuestionnaireItem,
 } from '../../test';

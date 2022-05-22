@@ -1,9 +1,8 @@
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { dbConnect, dbDisconnect, defaultModules, generateOrgParams } from '..';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import { OrgModule, OrgService, OrgType } from '../../src/org';
-import { generateId } from '../generators';
 
 describe('OrgService', () => {
   let module: TestingModule;

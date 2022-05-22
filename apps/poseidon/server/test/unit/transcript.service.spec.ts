@@ -1,4 +1,4 @@
-import { StorageType, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { StorageType, generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import {
   ConversationPercentage,
   Speaker,
@@ -13,7 +13,7 @@ import { datatype, lorem } from 'faker';
 import { readFileSync } from 'fs';
 import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
-import { dbConnect, generateId, generateTranscriptMock } from '..';
+import { dbConnect, generateTranscriptMock } from '..';
 import { LoggerService } from '../../src/common';
 import { DbModule } from '../../src/db';
 import { RevAI, StorageService } from '../../src/providers';

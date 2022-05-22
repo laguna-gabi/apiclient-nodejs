@@ -1,22 +1,20 @@
 import { RegisterInternalKey } from '@argus/irisClient';
-import { ClientCategory, Language, NotificationType, Platform, ServiceName } from '@argus/pandora';
+import {
+  ClientCategory,
+  Language,
+  NotificationType,
+  Platform,
+  ServiceName,
+  generateId,
+} from '@argus/pandora';
 import { add } from 'date-fns';
 import { internet, lorem, name } from 'faker';
-import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import { Dispatch, Trigger, defaultDispatchParams } from '../src/conductor';
 import { ClientSettings } from '../src/settings';
 
 export const delay = async (milliseconds: number) => {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
-};
-
-export const generateObjectId = (id?): Types.ObjectId => {
-  return new Types.ObjectId(id);
-};
-
-export const generateId = (id?): string => {
-  return generateObjectId(id).toString();
 };
 
 export const generateUpdateMemberSettingsMock = ({

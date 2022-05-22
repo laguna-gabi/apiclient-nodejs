@@ -1,6 +1,12 @@
 import { MemberRole, UserRole } from '@argus/hepiusClient';
 import { TodoInternalKey, generateDispatchId } from '@argus/irisClient';
-import { NotificationType, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import {
+  NotificationType,
+  generateId,
+  generateObjectId,
+  mockLogger,
+  mockProcessWarnings,
+} from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -10,8 +16,6 @@ import {
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateGetTodoDonesParams,
-  generateId,
-  generateObjectId,
   generateUpdateTodoParams,
   mockGenerateActionTodo,
   mockGenerateMember,

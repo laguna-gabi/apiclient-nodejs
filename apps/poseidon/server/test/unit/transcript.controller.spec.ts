@@ -1,9 +1,9 @@
-import { StorageType, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { StorageType, generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Speaker } from '@argus/poseidonClient';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { lorem } from 'faker';
-import { dbConnect, dbDisconnect, generateId, generateTranscriptMock } from '..';
+import { dbConnect, dbDisconnect, generateTranscriptMock } from '..';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import { DbModule } from '../../src/db';
 import { StorageService } from '../../src/providers';

@@ -1,14 +1,9 @@
-import {
-  BEFORE_ALL_TIMEOUT,
-  generateId,
-  generateSetGeneralNotesParams,
-  generateUpdateJourneyParams,
-} from '..';
+import { BEFORE_ALL_TIMEOUT, generateSetGeneralNotesParams, generateUpdateJourneyParams } from '..';
 import { AppointmentsIntegrationActions, Creators } from '../aux';
 import { Handler } from '../aux/handler';
 import { UpdateJourneyParams } from '../../src/journey';
 import { ErrorType, Errors } from '../../src/common';
-
+import { generateId } from '@argus/pandora';
 const stringError = `String cannot represent a non string value`;
 
 describe('Validations - Journey', () => {

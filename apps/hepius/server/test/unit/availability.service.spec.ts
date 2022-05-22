@@ -1,5 +1,5 @@
 import { User } from '@argus/hepiusClient';
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types, model } from 'mongoose';
 import {
@@ -9,7 +9,6 @@ import {
   defaultModules,
   generateAvailabilityInput,
   generateCreateUserParams,
-  generateId,
 } from '..';
 import {
   Availability,

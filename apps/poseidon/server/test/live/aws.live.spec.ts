@@ -1,4 +1,10 @@
-import { Environments, StorageType, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import {
+  Environments,
+  StorageType,
+  generateId,
+  mockLogger,
+  mockProcessWarnings,
+} from '@argus/pandora';
 import { S3 } from 'aws-sdk';
 import { aws, hosts } from 'config';
 import { EventEmitter2 } from 'eventemitter2';
@@ -6,7 +12,6 @@ import { lorem } from 'faker';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { EventType, LoggerService } from '../../src/common';
 import { ConfigsService, QueueService, StorageService } from '../../src/providers';
-import { generateId } from '../generators';
 import * as s3NewRecordingEventMock from './mocks/s3NewRecordingEventMock.json';
 
 describe('live: aws', () => {

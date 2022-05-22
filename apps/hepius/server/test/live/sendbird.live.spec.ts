@@ -1,4 +1,4 @@
-import { mockLogger } from '@argus/pandora';
+import { generateId, mockLogger } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios from 'axios';
@@ -8,7 +8,6 @@ import { v4 } from 'uuid';
 import { LoggerService } from '../../src/common';
 import { CreateSendbirdGroupChannelParams } from '../../src/communication';
 import { ConfigsService, SendBird } from '../../src/providers';
-import { generateId } from '../generators';
 import { AppointmentStatus, UserRole } from '@argus/hepiusClient';
 
 describe('live: sendbird actions', () => {

@@ -1,3 +1,4 @@
+import { generateId } from '@argus/pandora';
 import { general } from 'config';
 import { addMilliseconds } from 'date-fns';
 import { date, lorem } from 'faker';
@@ -5,7 +6,6 @@ import * as request from 'supertest';
 import {
   BEFORE_ALL_TIMEOUT,
   generateEndAppointmentParams,
-  generateId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,

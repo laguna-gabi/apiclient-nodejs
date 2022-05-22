@@ -9,7 +9,7 @@ import {
   UserRole,
 } from '@argus/hepiusClient';
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
-import { GlobalEventType, Language, Platform } from '@argus/pandora';
+import { GlobalEventType, Language, Platform, generateId } from '@argus/pandora';
 import { articlesByDrg, general, hosts } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub, subDays } from 'date-fns';
 import { date, lorem } from 'faker';
@@ -39,7 +39,6 @@ import {
   generateDateOnly,
   generateDeleteMemberParams,
   generateGetTodoDonesParams,
-  generateId,
   generateOrgParams,
   generateRequestAppointmentParams,
   generateRequestHeaders,

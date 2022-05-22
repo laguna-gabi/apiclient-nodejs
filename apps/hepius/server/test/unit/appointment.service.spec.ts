@@ -1,4 +1,4 @@
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addDays, addMinutes, subDays } from 'date-fns';
@@ -10,9 +10,7 @@ import {
   dbDisconnect,
   defaultModules,
   generateAppointmentLink,
-  generateId,
   generateNotesParams,
-  generateObjectId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,

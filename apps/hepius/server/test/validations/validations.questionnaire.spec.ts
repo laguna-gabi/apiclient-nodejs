@@ -1,4 +1,5 @@
 /* eslint-disable max-len */
+import { generateId } from '@argus/pandora';
 import { BEFORE_ALL_TIMEOUT } from '..';
 import { ErrorType, Errors, ItemType } from '../../src/common';
 import {
@@ -8,7 +9,6 @@ import {
 import { Handler } from '../aux/handler';
 import {
   generateCreateQuestionnaireParams,
-  generateId,
   generateSubmitQuestionnaireResponseParams,
   mockGenerateQuestionnaireItem,
 } from '../generators';

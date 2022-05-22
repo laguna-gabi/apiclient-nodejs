@@ -1,3 +1,4 @@
+import { generateId } from '@argus/pandora';
 import { date } from 'faker';
 import {
   BEFORE_ALL_TIMEOUT,
@@ -5,7 +6,6 @@ import {
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateGetTodoDonesParams,
-  generateId,
   generateRequestHeaders,
   generateUpdateTodoParams,
 } from '..';

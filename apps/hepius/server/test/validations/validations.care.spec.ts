@@ -1,3 +1,4 @@
+import { generateId } from '@argus/pandora';
 import { BEFORE_ALL_TIMEOUT, generateCreateBarrierParams } from '..';
 import {
   CreateBarrierParams,
@@ -14,7 +15,6 @@ import {
   generateCreateCarePlanParams,
   generateCreateCarePlanParamsWizard,
   generateCreateRedFlagParamsWizard,
-  generateId,
   generateSubmitCareWizardParams,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,

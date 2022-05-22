@@ -5,6 +5,7 @@ import {
   GlobalEventType,
   Language,
   QueueType,
+  generateId,
   mockLogger,
   mockProcessWarnings,
 } from '@argus/pandora';
@@ -17,7 +18,6 @@ import {
   defaultModules,
   generateCreateUserParams,
   generateGetSlotsParams,
-  generateId,
   generateUpdateUserParams,
   mockGenerateUser,
 } from '..';

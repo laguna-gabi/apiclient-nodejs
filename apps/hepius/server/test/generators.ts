@@ -26,6 +26,8 @@ import {
   NotificationType,
   Platform,
   ServiceName,
+  generateId,
+  generateObjectId,
   generatePhone,
   generateZipCode,
 } from '@argus/pandora';
@@ -730,14 +732,6 @@ Partial<DeleteDischargeDocumentParams> = {}): DeleteDischargeDocumentParams => {
 
 export const generateAppointmentLink = (appointmentId: string) => {
   return `${hosts.app}/${appointmentId}`;
-};
-
-export const generateObjectId = (id?): Types.ObjectId => {
-  return new Types.ObjectId(id);
-};
-
-export const generateId = (id?): string => {
-  return generateObjectId(id).toString();
 };
 
 export const generateSetGeneralNotesParams = ({

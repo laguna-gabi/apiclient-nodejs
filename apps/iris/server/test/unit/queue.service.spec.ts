@@ -1,5 +1,5 @@
 import { InnerQueueTypes } from '@argus/irisClient';
-import { Environments, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { Environments, generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { NotImplementedException } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -10,7 +10,7 @@ import { CommonModule, LoggerService } from '../../src/common';
 import { ConductorModule, ConductorService, QueueService } from '../../src/conductor';
 import { DbModule } from '../../src/db';
 import { ConfigsService, ProvidersModule } from '../../src/providers';
-import { generateDispatch, generateId, generateUpdateUserSettingsMock } from '../generators';
+import { generateDispatch, generateUpdateUserSettingsMock } from '../generators';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AWS = require('aws-sdk');
 

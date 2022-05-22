@@ -1,8 +1,8 @@
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, model } from 'mongoose';
-import { dbConnect, dbDisconnect, generateId, generateUpdateMemberSettingsMock } from '../';
+import { dbConnect, dbDisconnect, generateUpdateMemberSettingsMock } from '../';
 import { LoggerService } from '../../src/common';
 import { DbModule } from '../../src/db';
 import {

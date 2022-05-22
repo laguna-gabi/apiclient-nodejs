@@ -1,4 +1,4 @@
-import { Language, mockProcessWarnings } from '@argus/pandora';
+import { Language, generateId, generateObjectId, mockProcessWarnings } from '@argus/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { hosts } from 'config';
@@ -7,9 +7,7 @@ import { Model, Types } from 'mongoose';
 import {
   dbDisconnect,
   defaultModules,
-  generateId,
   generateNotesParams,
-  generateObjectId,
   mockDbBarrier,
   mockDbBarrierType,
   mockDbCarePlan,

@@ -1,8 +1,4 @@
-import {
-  generateId,
-  generateSetGeneralNotesParams,
-  generateUpdateJourneyParams,
-} from '../generators';
+import { generateSetGeneralNotesParams, generateUpdateJourneyParams } from '../generators';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   AdmissionService,
@@ -10,7 +6,7 @@ import {
   JourneyResolver,
   JourneyService,
 } from '../../src/journey';
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { dbDisconnect, defaultModules } from '../common';
 import { LoggerService } from '../../src/common';
 
