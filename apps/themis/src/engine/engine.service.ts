@@ -13,12 +13,12 @@ export class EngineService {
 
   async handleEvent(event) {
     const memberId = event.memberId;
-    const currentState = await this.fetcherService.fetchData(memberId);
-    const engineResult = await this.rulesService.run(currentState);
+    const memberFacts = await this.fetcherService.fetchData(memberId);
+    const engineResult = await this.rulesService.run(memberFacts);
     // todo: remove (it's just for debugging)
     engineResult.events.map((event) => console.log(event));
-    const changes = await this.stateResolverService.calcChanges(engineResult, currentState);
-    changes.map((event) => console.log(event));
-    await this.fetcherService.applyChanges(changes);
+    const engineActions = await this.stateResolverService.calcChanges(engineResult, memberFacts);
+    engineActions.map((event) => console.log(event));
+    await this.fetcherService.applyChanges(engineActions);
   }
 }

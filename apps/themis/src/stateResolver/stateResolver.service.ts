@@ -5,70 +5,105 @@ import {
   EngineAction,
   EngineEvent,
   EventParams,
+  LookupResult,
   MemberFacts,
   TargetEntity,
 } from '../rules/types';
+import { LoggerService } from '../common';
+import { ErrorType, Errors } from '../common/errors';
+import { formatEx } from '@argus/pandora';
 
 @Injectable()
 export class StateResolverService {
+  constructor(private logger: LoggerService) {}
+  private currentState: MemberFacts;
   private lookupFunctions = new Map<
     TargetEntity,
-    (currentState: MemberFacts, eventParams: EventParams) => boolean
+    (currentState: MemberFacts, eventParams: EventParams) => Promise<LookupResult>
   >([
     [TargetEntity.barrier, this.lookupBarrier],
     [TargetEntity.carePlan, this.lookupCarePlan],
   ]);
-
-  private currentState: MemberFacts;
 
   async calcChanges(engineResult: EngineResult, memberFacts: MemberFacts): Promise<EngineAction[]> {
     this.currentState = memberFacts;
 
     // "create" events
     const result: EngineAction[] = [];
-    engineResult.events.map((event: EngineEvent) => {
-      const { type: targetEntity, params: eventParams } = event;
-      const { parentEntityType, parentEntity, type: entityType } = eventParams;
+    await Promise.all(
+      engineResult.events.map(async (event: EngineEvent) => {
+        const { type: targetEntity, params: eventParams } = event;
+        const { parentEntityType, parentEntity, type: entityType } = eventParams;
 
-      const found = this.lookup(targetEntity, eventParams);
-      if (!found) {
-        const engineAction = {
-          action: Action.create,
-          targetEntity,
-          entityType,
-          parentEntity,
-          parentEntityType,
-        };
-        result.push(engineAction);
-      }
-    });
-
+        try {
+          const { found, parentId } = await this.lookup(targetEntity, eventParams);
+          if (!found) {
+            const engineAction: EngineAction = {
+              memberId: memberFacts.memberInfo.id,
+              action: Action.create,
+              targetEntity,
+              entityType,
+              parentEntity,
+              parentEntityType,
+              parentEntityId: parentId,
+            };
+            result.push(engineAction);
+          }
+        } catch (ex) {
+          this.logger.error(
+            eventParams,
+            StateResolverService.name,
+            this.lookupCarePlan.name,
+            formatEx(ex),
+          );
+        }
+      }),
+    );
     return result;
   }
 
-  private lookup(targetEntity: TargetEntity, eventParams: EventParams): boolean {
+  private async lookup(
+    targetEntity: TargetEntity,
+    eventParams: EventParams,
+  ): Promise<LookupResult> {
     const lookupFunction = this.lookupFunctions.get(targetEntity);
     return lookupFunction(this.currentState, eventParams);
   }
 
   /**************************************** Lookup functions  **************************************/
 
-  private lookupCarePlan(currentState: MemberFacts, eventParams: EventParams): boolean {
+  private async lookupCarePlan(
+    currentState: MemberFacts,
+    eventParams: EventParams,
+  ): Promise<LookupResult> {
+    let found = false;
     for (const carePlan of currentState.carePlans) {
       // todo: figure out how to populate the type of the parent, if needs to be unique only in context
       if (carePlan.type === eventParams.type) {
-        return true;
+        found = true;
+        break;
       }
     }
-    return false;
+
+    const parentBarrier = currentState.barriers.find(
+      (barrier) => barrier.type === eventParams.parentEntityType,
+    );
+    if (!parentBarrier) {
+      throw new Error(Errors.get(ErrorType.parentNotFound));
+    }
+
+    return { found, parentId: parentBarrier.id };
   }
 
-  private lookupBarrier(currentState: MemberFacts, eventParams: EventParams): boolean {
+  private async lookupBarrier(
+    currentState: MemberFacts,
+    eventParams: EventParams,
+  ): Promise<LookupResult> {
     for (const barrier of currentState.barriers) {
       if (barrier.type === eventParams.type) {
-        return true;
+        return { found: true };
       }
     }
-    return false;
+    return { found: false };
   }
 }

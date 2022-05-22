@@ -9,7 +9,8 @@ import {
   generateEngineResult,
   generateMemberFacts,
 } from '../generators';
-import { Action, EngineAction, TargetEntity } from '../../src/rules/types';
+import { Action, EngineAction, LookupResult, TargetEntity } from '../../src/rules/types';
+import { ErrorType, Errors } from '../../src/common/errors';
 
 describe(StateResolverService.name, () => {
   let module: TestingModule;
@@ -31,7 +32,9 @@ describe(StateResolverService.name, () => {
     it(`should 'create' only new barriers (that does not exist in the current state)`, async () => {
       const barrierType1 = generateId();
       const barrierType2 = generateId();
+      const memberId = generateId();
       const memberFacts = generateMemberFacts({
+        memberInfo: { id: memberId },
         barriers: [generateBarrier({ type: barrierType1 })],
       });
       const barrierEvents = [
@@ -58,11 +61,14 @@ describe(StateResolverService.name, () => {
     // eslint-disable-next-line max-len
     it(`should 'create' only new carePlans (that does not exist in the current state)`, async () => {
       const carePlanType1 = generateId();
+      const memberId = generateId();
+      const barrierType = generateId();
       const memberFacts = generateMemberFacts({
+        memberInfo: { id: memberId },
+        barriers: [generateBarrier({ type: barrierType })],
         carePlans: [generateCarePlan({ type: carePlanType1 })],
       });
       const carePlanType2 = generateId();
-      const barrierType = generateId();
       const carePlanEvents = [
         generateCarePlanEvent({ type: carePlanType1, parentEntityType: barrierType }),
         generateCarePlanEvent({ type: carePlanType2, parentEntityType: barrierType }),
@@ -82,6 +88,100 @@ describe(StateResolverService.name, () => {
           }),
         ]),
       );
+    });
+  });
+
+  describe('lookupCarePlan', () => {
+    it(`should find carePlan by type and return the parent barrierId`, async () => {
+      const carePlanType1 = generateId();
+      const memberId = generateId();
+      const barrierType = generateId();
+      const barrierId = generateId();
+      const memberFacts = generateMemberFacts({
+        memberInfo: { id: memberId },
+        barriers: [generateBarrier({ type: barrierType, id: barrierId })],
+        carePlans: [generateCarePlan({ type: carePlanType1 })],
+      });
+      const carePlanEvent = generateCarePlanEvent({
+        type: carePlanType1,
+        parentEntityType: barrierType,
+      });
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore (private method)
+      const result: LookupResult = await service.lookupCarePlan(memberFacts, carePlanEvent.params);
+      expect(result).toEqual({ found: true, parentId: barrierId });
+    });
+
+    it(`should return false when carePlan was not found`, async () => {
+      const carePlanType1 = generateId();
+      const memberId = generateId();
+      const barrierType = generateId();
+      const barrierId = generateId();
+      const memberFacts = generateMemberFacts({
+        memberInfo: { id: memberId },
+        barriers: [generateBarrier({ type: barrierType, id: barrierId })],
+        carePlans: [generateCarePlan({ type: carePlanType1 })],
+      });
+      const carePlanEvent = generateCarePlanEvent({
+        parentEntityType: barrierType,
+      });
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore (private method)
+      const result: LookupResult = await service.lookupCarePlan(memberFacts, carePlanEvent.params);
+      expect(result).toEqual({ found: false, parentId: barrierId });
+    });
+
+    it(`should throw error when parent barrier not found`, async () => {
+      const carePlanType1 = generateId();
+      const memberId = generateId();
+      const barrierType = generateId();
+      const memberFacts = generateMemberFacts({
+        memberInfo: { id: memberId },
+        carePlans: [generateCarePlan({ type: carePlanType1 })],
+      });
+      const carePlanEvent = generateCarePlanEvent({
+        type: carePlanType1,
+        parentEntityType: barrierType,
+      });
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore (private method)
+      await expect(service.lookupCarePlan(memberFacts, carePlanEvent.params)).rejects.toThrow(
+        Error(Errors.get(ErrorType.parentNotFound)),
+      );
+    });
+  });
+
+  describe('lookupBarrier', () => {
+    it(`should find barrier by type`, async () => {
+      const barrierType1 = generateId();
+      const memberId = generateId();
+      const memberFacts = generateMemberFacts({
+        memberInfo: { id: memberId },
+        barriers: [generateBarrier({ type: barrierType1 })],
+      });
+      const barrierEvent = generateBarrierEvent({ type: barrierType1 });
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore (private method)
+      const result: LookupResult = await service.lookupBarrier(memberFacts, barrierEvent.params);
+      expect(result).toEqual({ found: true, parentId: undefined });
+    });
+
+    it(`should return false when barrier was not found`, async () => {
+      const memberId = generateId();
+      const memberFacts = generateMemberFacts({
+        memberInfo: { id: memberId },
+        barriers: [generateBarrier({})],
+      });
+      const barrierEvent = generateBarrierEvent({});
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore (private method)
+      const result: LookupResult = await service.lookupBarrier(memberFacts, barrierEvent.params);
+      expect(result).toEqual({ found: false, parentId: undefined });
     });
   });
 });

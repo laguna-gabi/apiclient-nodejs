@@ -3,7 +3,6 @@ import { general, services } from 'config';
 import { AppModule } from './app.module';
 import { LoggerService } from './common';
 import { internalLogs } from '@argus/pandora';
-import { EngineService } from './engine';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,7 +19,7 @@ async function bootstrap() {
   );
 
   // manual run
-  const engine = app.get(EngineService);
-  await engine.handleEvent({ memberId: '11111' });
+  // const engine = app.get(EngineService);
+  // await engine.handleEvent({ memberId: '11111' });
 }
 bootstrap();

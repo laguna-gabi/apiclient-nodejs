@@ -1,6 +1,6 @@
-import { Caregiver } from '@argus/hepiusClient';
 import { DynamicFactCallback, EventHandler, FactOptions } from 'json-rules-engine';
 import { DynamicFacts } from './facts';
+import { Caregiver } from '@argus/hepiusClient';
 
 // todo: fix "any"
 export enum TargetEntity {
@@ -51,12 +51,19 @@ export interface EventParams {
 }
 
 export interface EngineAction {
+  memberId: string;
   action: Action;
   id?: string; // for delete
   targetEntity: TargetEntity;
   entityType: string;
   parentEntity?: TargetEntity;
   parentEntityType?: string;
+  parentEntityId?: string;
+}
+
+export interface LookupResult {
+  found: boolean;
+  parentId?: string;
 }
 
 interface ConditionProperties {
@@ -84,10 +91,11 @@ export interface MemberFacts {
 }
 
 export interface MemberInfo {
-  scheduledAppointments: number;
-  appointmentsToBeScheduled: number;
-  livesAlone: boolean;
-  nested: { example: number };
+  id: string;
+  scheduledAppointments?: number;
+  appointmentsToBeScheduled?: number;
+  livesAlone?: boolean;
+  nested?: { example: number };
 }
 
 // todo: get the real statuses from common
@@ -99,12 +107,14 @@ export enum BarrierStatus {
 
 // todo: get the real types from common
 export interface Barrier {
+  id: string;
   type: string;
   status: BarrierStatus;
 }
 
 // todo: get the real types from common
 export interface CarePlan {
+  id: string;
   type: string;
   status: BarrierStatus;
 }

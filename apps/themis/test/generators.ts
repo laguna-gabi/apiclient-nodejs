@@ -1,7 +1,9 @@
 import {
+  Action,
   Barrier,
   BarrierStatus,
   CarePlan,
+  EngineAction,
   EventParams,
   MemberFacts,
   MemberInfo,
@@ -30,6 +32,37 @@ export const generateEngineResult = ({
     failureEvents,
     results,
     failureResults,
+  };
+};
+
+export const generateEngineAction = ({
+  action = Action.create,
+  entityType = generateId(),
+  id,
+  parentEntity,
+  parentEntityId,
+  parentEntityType,
+  targetEntity,
+  memberId = generateId(),
+}: {
+  memberId?: string;
+  action?: Action;
+  id?: string;
+  targetEntity: TargetEntity;
+  entityType?: string;
+  parentEntity?: TargetEntity;
+  parentEntityType?: string;
+  parentEntityId?: string;
+}): EngineAction => {
+  return {
+    memberId,
+    action,
+    id,
+    targetEntity,
+    entityType,
+    parentEntity,
+    parentEntityType,
+    parentEntityId,
   };
 };
 
@@ -97,8 +130,15 @@ export const generateCarePlanEvent = ({
 };
 
 // todo: get shared entities from common
-export const generateBarrier = ({ type = generateId() }: { type?: string }): Barrier => {
+export const generateBarrier = ({
+  type = generateId(),
+  id = generateId(),
+}: {
+  type?: string;
+  id?: string;
+}): Barrier => {
   return {
+    id,
     type,
     status: BarrierStatus.active,
   };
@@ -106,6 +146,7 @@ export const generateBarrier = ({ type = generateId() }: { type?: string }): Bar
 
 export const generateCarePlan = ({ type = generateId() }: { type?: string }): CarePlan => {
   return {
+    id: generateId(),
     type,
     status: BarrierStatus.active,
   };
