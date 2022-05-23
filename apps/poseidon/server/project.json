@@ -73,12 +73,6 @@
       "options": {
         "command": "ts-node -P ./tsconfig.base.json ./ci/uploadCoverage.ts poseidon coverage/apps/poseidon/"
       }
-    },
-    "deploy": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "command": "ts-node -P ./tsconfig.base.json ./ci/deploy.ts poseidon {args.slackChannel}"
-      }
     }
   },
   "tags": []
