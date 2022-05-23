@@ -3,7 +3,6 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   CareService,
   CreateBarrierParams,
-  CreateCarePlanParams,
   RedFlag,
   RedFlagType,
   UpdateBarrierParams,
@@ -21,7 +20,14 @@ import {
 } from '../common';
 import { camelCase } from 'lodash';
 import { SubmitCareWizardParams } from './wizard.dto';
-import { Barrier, BarrierType, CarePlan, CarePlanType, UserRole } from '@argus/hepiusClient';
+import {
+  Barrier,
+  BarrierType,
+  CarePlan,
+  CarePlanType,
+  CreateCarePlanParams,
+  UserRole,
+} from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()

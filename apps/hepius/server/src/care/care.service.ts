@@ -5,9 +5,7 @@ import {
   BarrierDocument,
   CarePlanDocument,
   CarePlanTypeDocument,
-  CarePlanTypeInput,
   CreateBarrierParams,
-  CreateCarePlanParams,
   CreateRedFlagParams,
   RedFlag,
   RedFlagDocument,
@@ -35,7 +33,9 @@ import {
   BarrierType,
   CarePlan,
   CarePlanType,
+  CarePlanTypeInput,
   CareStatus,
+  CreateCarePlanParams,
 } from '@argus/hepiusClient';
 
 @Injectable()

@@ -1,9 +1,9 @@
-import { BaseBarrierParams, BaseCarePlanParams, BaseRedFlagParams } from '.';
+import { BaseBarrierParams, BaseRedFlagParams } from '.';
 import { Field, InputType } from '@nestjs/graphql';
 import { ErrorType, Errors } from '../common';
 import { ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { IsObjectId } from '@argus/hepiusClient';
+import { BaseCarePlanParams, IsObjectId } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************

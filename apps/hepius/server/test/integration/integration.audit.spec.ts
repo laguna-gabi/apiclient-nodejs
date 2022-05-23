@@ -1,4 +1,4 @@
-import { Appointment, Caregiver, User, UserRole } from '@argus/hepiusClient';
+import { Appointment, Caregiver, CreateCarePlanParams, User, UserRole } from '@argus/hepiusClient';
 import { general } from 'config';
 import { addDays, addHours } from 'date-fns';
 import { date as fakerDate, lorem } from 'faker';
@@ -39,7 +39,6 @@ import {
   BarrierDocument,
   CarePlanDocument,
   CarePlanTypeDocument,
-  CreateCarePlanParams,
   RedFlagDocument,
 } from '../../src/care';
 import { delay, reformatDate } from '../../src/common';

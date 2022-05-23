@@ -1,4 +1,11 @@
-import { Appointment, Caregiver, Identifier, Notes, User } from '@argus/hepiusClient';
+import {
+  Appointment,
+  Caregiver,
+  CreateCarePlanParams,
+  Identifier,
+  Notes,
+  User,
+} from '@argus/hepiusClient';
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { camelCase } from 'lodash';
@@ -12,7 +19,6 @@ import {
 import { AvailabilityInput } from '../../src/availability';
 import {
   CreateBarrierParams,
-  CreateCarePlanParams,
   RedFlag,
   UpdateBarrierParams,
   UpdateCarePlanParams,

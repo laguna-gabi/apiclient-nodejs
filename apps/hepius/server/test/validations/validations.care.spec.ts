@@ -2,7 +2,6 @@ import { generateId } from '@argus/pandora';
 import { BEFORE_ALL_TIMEOUT, generateCreateBarrierParams } from '..';
 import {
   CreateBarrierParams,
-  CreateCarePlanParams,
   UpdateBarrierParams,
   UpdateCarePlanParams,
   UpdateRedFlagParams,
@@ -20,6 +19,7 @@ import {
   generateUpdateCarePlanParams,
   generateUpdateRedFlagParams,
 } from '../generators';
+import { CreateCarePlanParams } from '@argus/hepiusClient';
 
 const stringError = `String cannot represent a non string value`;
 

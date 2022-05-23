@@ -4,6 +4,7 @@ import {
   AppointmentStatus,
   CareStatus,
   Caregiver,
+  CreateCarePlanParams,
   MemberCommands,
   User,
   UserRole,
@@ -65,7 +66,6 @@ import {
 } from '..';
 import { buildLHPQuestionnaire } from '../../cmd/static';
 import { RequestAppointmentParams, ScheduleAppointmentParams } from '../../src/appointment';
-import { CreateCarePlanParams } from '../../src/care';
 import {
   ChangeType,
   ErrorType,
