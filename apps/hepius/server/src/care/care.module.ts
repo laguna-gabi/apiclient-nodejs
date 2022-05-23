@@ -14,6 +14,7 @@ import {
 } from '.';
 import { CommonModule } from '../common';
 import { Barrier, BarrierType, CarePlan, CarePlanType } from '@argus/hepiusClient';
+import { CareTcpController } from './care.tcp.controller';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { Barrier, BarrierType, CarePlan, CarePlanType } from '@argus/hepiusClien
     ]),
   ],
   providers: [CareService, CareResolver],
+  controllers: [CareTcpController],
   exports: [MongooseModule],
 })
 export class CareModule {}

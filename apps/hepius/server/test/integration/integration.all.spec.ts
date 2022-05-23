@@ -2,6 +2,7 @@ import {
   Appointment,
   AppointmentMethod,
   AppointmentStatus,
+  CarePlan,
   CareStatus,
   Caregiver,
   CreateCarePlanParams,
@@ -2327,29 +2328,35 @@ describe('Integration tests: all', () => {
       );
 
       // test care plans
-      expect(memberCarePlans).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...carePlan1,
-            dueDate: carePlan1.dueDate.toISOString(),
-            memberId,
-            type: expect.objectContaining({ id: handler.carePlanType.id }),
-          }),
-          expect.objectContaining({
-            ...carePlan2,
-            dueDate: carePlan2.dueDate.toISOString(),
-            memberId,
-            type: expect.objectContaining({ id: createdCarePlanType }),
-          }),
-          expect.objectContaining({
-            ...carePlan3,
-            dueDate: carePlan3.dueDate.toISOString(),
-            memberId,
-            type: expect.objectContaining({ id: handler.carePlanType.id }),
-          }),
-        ]),
-      );
+      const memberCarePlansTcp: CarePlan[] = await handler.tcpClient
+        .send<CarePlan[]>({ cmd: MemberCommands.getMemberCarePlans }, { memberId })
+        .toPromise();
 
+      const carePlansResult = [memberCarePlans, memberCarePlansTcp];
+      carePlansResult.forEach((carePlansResult) => {
+        expect(carePlansResult).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              ...carePlan1,
+              dueDate: carePlan1.dueDate.toISOString(),
+              memberId,
+              type: expect.objectContaining({ id: handler.carePlanType.id }),
+            }),
+            expect.objectContaining({
+              ...carePlan2,
+              dueDate: carePlan2.dueDate.toISOString(),
+              memberId,
+              type: expect.objectContaining({ id: createdCarePlanType }),
+            }),
+            expect.objectContaining({
+              ...carePlan3,
+              dueDate: carePlan3.dueDate.toISOString(),
+              memberId,
+              type: expect.objectContaining({ id: handler.carePlanType.id }),
+            }),
+          ]),
+        );
+      });
       // test matching the right plans of care to the right barriers
       const memberCarePlan1 = memberCarePlans.find((i) => i.notes === carePlan1.notes);
       const memberCarePlan2 = memberCarePlans.find((i) => i.notes === carePlan2.notes);
