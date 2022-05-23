@@ -84,13 +84,13 @@ describe('CareService', () => {
         expect.objectContaining({
           ...params,
           memberId: new Types.ObjectId(memberId),
-          type: expect.objectContaining({ _id: new Types.ObjectId(type) }),
+          type: expect.objectContaining({ id: type }),
           id,
         }),
         expect.objectContaining({
           ...params2,
           memberId: new Types.ObjectId(memberId),
-          type: expect.objectContaining({ _id: new Types.ObjectId(type) }),
+          type: expect.objectContaining({ id: type }),
           id: id2,
         }),
       ]);
@@ -152,7 +152,7 @@ describe('CareService', () => {
 
       expect(result).toEqual(
         expect.objectContaining({
-          _id: new Types.ObjectId(id),
+          id,
           description: description,
           createdBy: new Types.ObjectId(userId),
           updatedBy: new Types.ObjectId(userId),
@@ -254,7 +254,7 @@ describe('CareService', () => {
           memberId: new Types.ObjectId(memberId),
 
           redFlagId: new Types.ObjectId(redFlagId),
-          type: expect.objectContaining({ _id: new Types.ObjectId(type) }),
+          type: expect.objectContaining({ id: type }),
           id,
         }),
         expect.objectContaining({
@@ -262,7 +262,7 @@ describe('CareService', () => {
           status: CareStatus.active,
           memberId: new Types.ObjectId(memberId),
           redFlagId: new Types.ObjectId(redFlagId),
-          type: expect.objectContaining({ _id: new Types.ObjectId(type) }),
+          type: expect.objectContaining({ id: type }),
           id: id2,
         }),
       ]);
@@ -346,17 +346,13 @@ describe('CareService', () => {
             id: barrierType.id,
             description: barrierType.description,
             domain: BarrierDomain.behavior,
-            carePlanTypes: expect.arrayContaining([
-              expect.objectContaining({ _id: new Types.ObjectId(carePlanType) }),
-            ]),
+            carePlanTypes: expect.arrayContaining([expect.objectContaining({ id: carePlanType })]),
           }),
           expect.objectContaining({
             id: barrierType2.id,
             description: barrierType2.description,
             domain: BarrierDomain.logistical,
-            carePlanTypes: expect.arrayContaining([
-              expect.objectContaining({ _id: new Types.ObjectId(carePlanType2) }),
-            ]),
+            carePlanTypes: expect.arrayContaining([expect.objectContaining({ id: carePlanType2 })]),
           }),
         ]),
       );
@@ -378,12 +374,10 @@ describe('CareService', () => {
 
       expect(result).toEqual(
         expect.objectContaining({
-          _id: new Types.ObjectId(id),
+          id,
           description: description,
           domain: BarrierDomain.medical,
-          carePlanTypes: expect.arrayContaining([
-            expect.objectContaining({ _id: new Types.ObjectId(carePlanType) }),
-          ]),
+          carePlanTypes: expect.arrayContaining([expect.objectContaining({ id: carePlanType })]),
           createdBy: new Types.ObjectId(userId),
           updatedBy: new Types.ObjectId(userId),
         }),
@@ -524,14 +518,14 @@ describe('CareService', () => {
             memberId: new Types.ObjectId(params.memberId),
             barrierId: new Types.ObjectId(params.barrierId),
 
-            type: expect.objectContaining({ _id: new Types.ObjectId(carePlanTypeId) }),
+            type: expect.objectContaining({ id: carePlanTypeId }),
             id,
           }),
           expect.objectContaining({
             ...params2,
             memberId: new Types.ObjectId(params2.memberId),
             barrierId: new Types.ObjectId(params2.barrierId),
-            type: expect.objectContaining({ _id: new Types.ObjectId(carePlanTypeId) }),
+            type: expect.objectContaining({ id: carePlanTypeId }),
             id: id2,
           }),
         ]);
@@ -619,9 +613,9 @@ describe('CareService', () => {
         /* eslint-disable @typescript-eslint/ban-ts-comment*/
         // @ts-ignore
         const carePlanAfter = await carePlanModel.findWithDeleted({
-          _id: new Types.ObjectId(id),
+          id,
         });
-        checkDelete(carePlanAfter, { _id: new Types.ObjectId(id) }, userId);
+        checkDelete(carePlanAfter, { id }, userId);
       });
 
       it('should throw exception when trying to delete a non existing care plan', async () => {

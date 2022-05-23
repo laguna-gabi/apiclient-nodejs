@@ -5,6 +5,7 @@ import { Types } from 'mongoose';
 import { IsObjectId, IsValidCarePlanTypeInput } from '../customValidations';
 import { ErrorType, Errors } from '../errors';
 import { IsDate, IsOptional } from 'class-validator';
+import { DefaultSchemaOptions } from '@argus/pandora';
 
 /**************************************************************************************************
  ********************************************** Enums *********************************************
@@ -59,7 +60,7 @@ export class BaseCare extends Identifier {
 }
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class CarePlanType extends Identifier {
   @Prop()
   @Field(() => String)
@@ -71,7 +72,7 @@ export class CarePlanType extends Identifier {
 }
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class CarePlan extends BaseCare {
   @Prop({ type: Types.ObjectId, ref: CarePlanType.name, index: true })
   @Field(() => CarePlanType)
@@ -87,7 +88,7 @@ export class CarePlan extends BaseCare {
 }
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class BarrierType extends Identifier {
   @Prop()
   @Field(() => String)
@@ -103,7 +104,7 @@ export class BarrierType extends Identifier {
 }
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Barrier extends BaseCare {
   @Prop({ type: Types.ObjectId, ref: BarrierType.name, index: true })
   @Field(() => BarrierType)

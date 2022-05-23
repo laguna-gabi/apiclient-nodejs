@@ -5,6 +5,7 @@ import { ErrorType, Errors } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier, IsObjectId } from '@argus/hepiusClient';
+import { DefaultSchemaOptions } from '@argus/pandora';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -42,7 +43,7 @@ export class UpdateRedFlagParams {
  *************************************************************************************************/
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class RedFlagType extends Identifier {
   @Prop()
   @Field(() => String)
@@ -50,7 +51,7 @@ export class RedFlagType extends Identifier {
 }
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class RedFlag extends Identifier {
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)
