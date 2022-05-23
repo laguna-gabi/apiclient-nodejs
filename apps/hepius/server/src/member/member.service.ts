@@ -231,10 +231,10 @@ export class MemberService extends BaseService {
           from: 'journeys',
           localField: '_id',
           foreignField: 'memberId',
-          as: 'journey',
+          as: 'journeysRes',
         },
       },
-      { $unwind: { path: '$journey' } },
+      { $addFields: { recentJourney: { $last: '$journeysRes' } } },
       {
         $project: {
           id: '$_id',
@@ -249,10 +249,10 @@ export class MemberService extends BaseService {
           primaryUserId: '$primaryUserId',
           users: '$users',
           org: '$org',
-          firstLoggedInAt: '$journey.firstLoggedInAt',
           platform: '$memberconfig.platform',
-          isGraduated: '$journey.isGraduated',
-          graduationDate: '$journey.graduationDate',
+          firstLoggedInAt: '$recentJourney.firstLoggedInAt',
+          isGraduated: '$recentJourney.isGraduated',
+          graduationDate: '$recentJourney.graduationDate',
         },
       },
     ]);

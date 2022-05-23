@@ -223,6 +223,7 @@ export const FRAGMENT_JOURNEY = gql`
       readmissionRisk
       date
     }
+    firstLoggedInAt
     isGraduated
     graduationDate
     generalNotes

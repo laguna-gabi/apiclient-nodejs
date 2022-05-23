@@ -238,8 +238,7 @@ export class AnalyticsService {
           as: 'journeysRes',
         },
       },
-      { $sort: { 'journeysRes._id': -1 } },
-      { $addFields: { recentJourney: { $first: '$journeysRes' } } },
+      { $addFields: { recentJourney: { $last: '$journeysRes' } } },
       { $unset: 'journeysRes' },
       {
         $lookup: {
