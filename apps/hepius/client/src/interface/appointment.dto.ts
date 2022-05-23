@@ -64,10 +64,6 @@ export class Appointment extends Identifier {
   @Field(() => String, { nullable: true })
   noShowReason?: string;
 
-  @Prop({ isNaN: true })
-  @Field(() => Boolean, { nullable: true })
-  recordingConsent?: boolean;
-
   @Prop({ type: Types.ObjectId, ref: Notes.name })
   @Field(() => Notes, { nullable: true })
   notes?: Notes;

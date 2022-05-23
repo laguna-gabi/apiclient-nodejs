@@ -74,6 +74,34 @@ import { ChangeType, ItemType, momentFormats, reformatDate } from '../src/common
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
+  Activity,
+  AdmitSource,
+  AdmitType,
+  ChangeAdmissionDiagnosisParams,
+  ChangeAdmissionDietaryParams,
+  ChangeAdmissionExternalAppointmentParams,
+  ChangeAdmissionMedicationParams,
+  ChangeAdmissionTreatmentRenderedParams,
+  ChangeMemberDnaParams,
+  ClinicalStatus,
+  CreateJourneyParams,
+  DiagnosisSeverity,
+  DietaryCategory,
+  DietaryName,
+  DischargeTo,
+  ExternalAppointmentStatus,
+  ExternalAppointmentType,
+  Journey,
+  MedicationStatus,
+  PrimaryDiagnosisType,
+  ReadmissionRisk,
+  SecondaryDiagnosisType,
+  SetGeneralNotesParams,
+  UpdateJourneyParams,
+  WarningSigns,
+  WoundCare,
+} from '../src/journey';
+import {
   AddCaregiverParams,
   AddInsuranceParams,
   Alert,
@@ -109,34 +137,6 @@ import {
   UpdateTaskStatusParams,
   defaultMemberParams,
 } from '../src/member';
-import {
-  Activity,
-  AdmitSource,
-  AdmitType,
-  ChangeAdmissionDiagnosisParams,
-  ChangeAdmissionDietaryParams,
-  ChangeAdmissionExternalAppointmentParams,
-  ChangeAdmissionMedicationParams,
-  ChangeAdmissionTreatmentRenderedParams,
-  ChangeMemberDnaParams,
-  ClinicalStatus,
-  CreateJourneyParams,
-  DiagnosisSeverity,
-  DietaryCategory,
-  DietaryName,
-  DischargeTo,
-  ExternalAppointmentStatus,
-  ExternalAppointmentType,
-  Journey,
-  MedicationStatus,
-  PrimaryDiagnosisType,
-  ReadmissionRisk,
-  SecondaryDiagnosisType,
-  SetGeneralNotesParams,
-  UpdateJourneyParams,
-  WarningSigns,
-  WoundCare,
-} from '../src/journey';
 import { CreateOrgParams, Org, OrgType } from '../src/org';
 import {
   Answer,
@@ -572,9 +572,8 @@ export const generateEndAppointmentParams = ({
   noShow = true,
   noShowReason = lorem.sentence(),
   notes = generateNotesParams(),
-  recordingConsent = true,
 }: Partial<EndAppointmentParams> = {}): EndAppointmentParams => {
-  return { id, noShow, noShowReason, notes, recordingConsent };
+  return { id, noShow, noShowReason, notes };
 };
 
 export const generateNotesParams = ({

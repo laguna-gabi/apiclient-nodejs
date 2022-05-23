@@ -1,3 +1,4 @@
+import { Appointment, AppointmentMethod, AppointmentStatus, Notes } from '@argus/hepiusClient';
 import { generateId, generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -31,11 +32,9 @@ import {
   IEventDeleteMember,
   IEventOnNewAppointment,
   IEventOnUpdatedAppointmentScores,
-  IEventUnconsentedAppointmentEnded,
   LoggerService,
   defaultTimestampsDbValues,
 } from '../../src/common';
-import { Appointment, AppointmentMethod, AppointmentStatus, Notes } from '@argus/hepiusClient';
 
 describe('AppointmentService', () => {
   let module: TestingModule;
@@ -582,47 +581,6 @@ describe('AppointmentService', () => {
 
       spyOnEventEmitter.mockReset();
     });
-
-    /* eslint-disable max-len */
-    test.each`
-      recordingConsent | noShow   | expectToDispatch | title
-      ${false}         | ${false} | ${true}          | ${'should dispatch event if showed up and no consent'}
-      ${true}          | ${false} | ${false}         | ${'should not dispatch event if showed up and have consent'}
-      ${true}          | ${true}  | ${false}         | ${'should not dispatch event if didnt show up and have consent'}
-      ${true}          | ${true}  | ${false}         | ${'should not dispatch event if didnt show up and no consent'}
-    `(`$title`, async ({ recordingConsent, noShow, expectToDispatch }) => {
-      /* eslint-enable max-len */
-      const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-      const appointmentParams = generateScheduleAppointmentParams();
-      const notes = generateNotesParams();
-      const resultAppointment = await service.schedule(appointmentParams);
-      spyOnEventEmitter.mockClear();
-      expect(spyOnEventEmitter).not.toBeCalled();
-      await service.end({
-        id: resultAppointment.id,
-        notes,
-        noShow,
-        recordingConsent,
-      });
-
-      if (expectToDispatch) {
-        const eventParams: IEventUnconsentedAppointmentEnded = {
-          appointmentId: resultAppointment.id,
-          memberId: resultAppointment.memberId.toString(),
-        };
-        expect(spyOnEventEmitter).toBeCalledWith(
-          EventType.onUnconsentedAppointmentEnded,
-          eventParams,
-        );
-      } else {
-        expect(spyOnEventEmitter).not.toBeCalledWith(
-          EventType.onUnconsentedAppointmentEnded,
-          expect.anything(),
-        );
-      }
-
-      spyOnEventEmitter.mockReset();
-    });
   });
 
   describe('updateNotes', () => {
@@ -734,7 +692,7 @@ describe('AppointmentService', () => {
         const params = generateScheduleAppointmentParams();
         const { id } = await service.schedule(params);
         const notes = generateNotesParams({});
-        const appointment = await service.end({ id, notes, noShow: false, recordingConsent: true });
+        const appointment = await service.end({ id, notes, noShow: false });
 
         await service.delete({ id, deletedBy: params.userId, hard });
 
@@ -768,7 +726,7 @@ describe('AppointmentService', () => {
       const params = generateScheduleAppointmentParams();
       const { id } = await service.schedule(params);
       const notes = generateNotesParams({});
-      const appointment = await service.end({ id, notes, noShow: false, recordingConsent: true });
+      const appointment = await service.end({ id, notes, noShow: false });
 
       await service.delete({ id, deletedBy: params.userId, hard: false });
 
@@ -811,12 +769,11 @@ describe('AppointmentService', () => {
         const { id: id2 } = await service.schedule(params2);
         const notes = generateNotesParams({});
         const notes2 = generateNotesParams({});
-        const appointment = await service.end({ id, notes, noShow: false, recordingConsent: true });
+        const appointment = await service.end({ id, notes, noShow: false });
         await service.end({
           id: id2,
           notes: notes2,
           noShow: false,
-          recordingConsent: true,
         });
 
         const deleteParams: IEventDeleteMember = {

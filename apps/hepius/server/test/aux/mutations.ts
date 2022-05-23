@@ -1005,7 +1005,6 @@ export class Mutations {
               answered
               phone
               recordingType
-              deletedMedia
               review {
                 userId
                 content
