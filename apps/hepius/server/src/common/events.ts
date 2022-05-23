@@ -25,6 +25,7 @@ export enum EventType {
   onUpdatedAppointment = 'onUpdatedAppointment',
   onUpdatedAppointmentScores = 'onUpdatedAppointmentScores',
   onUpdatedUserAppointments = 'onUpdatedUserAppointments',
+  onUnconsentedAppointmentEnded = 'onUnconsentedAppointmentEnded',
   onDeletedMemberAppointments = 'onDeletedMemberAppointments',
 
   //notifications

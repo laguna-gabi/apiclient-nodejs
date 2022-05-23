@@ -119,6 +119,7 @@ export const FRAGMENT_APPOINTMENT = gql`
     end
     noShow
     noShowReason
+    recordingConsent
     notes {
       recap
       strengths

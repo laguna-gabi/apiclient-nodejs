@@ -108,6 +108,10 @@ export class Recording {
   @Field(() => String)
   appointmentId?: Types.ObjectId;
 
+  @Prop({ type: Boolean })
+  @Field(() => Boolean, { nullable: true })
+  deletedMedia?: boolean;
+
   @Prop({ type: RecordingReview })
   @Field(() => RecordingReview, { nullable: true })
   review?: RecordingReview;

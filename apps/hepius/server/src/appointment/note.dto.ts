@@ -30,6 +30,10 @@ export class EndAppointmentParams {
   @IsOptional()
   @IsNoShowValid({ message: Errors.get(ErrorType.appointmentNoShow) })
   noShowReason?: string;
+
+  @Field(() => Boolean, { nullable: true })
+  @IsOptional()
+  recordingConsent?: boolean;
 }
 
 @InputType()

@@ -1,4 +1,3 @@
-import { Appointment, AppointmentStatus, Notes } from '@argus/hepiusClient';
 import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -23,9 +22,11 @@ import {
   IEventOnDeletedMemberAppointments,
   IEventOnNewAppointment,
   IEventOnUpdatedAppointmentScores,
+  IEventUnconsentedAppointmentEnded,
   LoggerService,
 } from '../common';
 import { ISoftDelete } from '../db';
+import { Appointment, AppointmentStatus, Notes } from '@argus/hepiusClient';
 
 @Injectable()
 export class AppointmentService extends BaseService {
@@ -172,50 +173,63 @@ export class AppointmentService extends BaseService {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
     }
 
-    const { id, noShow, noShowReason, notes } = params;
+    const { noShow, recordingConsent, id, noShowReason } = params;
     let result;
     const update = omitBy(
       {
         status: AppointmentStatus.done,
         noShow,
         noShowReason,
+        recordingConsent,
       },
       isUndefined,
     );
 
-    if (notes === undefined) {
+    if (params.notes === undefined) {
       result = await this.appointmentModel
-        .findOneAndUpdate({ _id: id }, { $set: { ...update } }, { new: true })
+        .findOneAndUpdate({ _id: params.id }, { $set: { ...update } }, { new: true })
         .populate([{ path: 'notes', strictPopulate: false }]);
-    } else if (notes === null) {
+    } else if (params.notes === null) {
       if (existing.notes) {
         await this.deleteNotes({ notes: existing.notes });
       }
       result = await this.appointmentModel
-        .findOneAndUpdate({ _id: id }, { $set: { ...update, notes: null } }, { new: true })
+        .findOneAndUpdate({ _id: params.id }, { $set: { ...update, notes: null } }, { new: true })
         .populate('notes');
     } else {
       let notesId;
       if (existing.notes) {
         const result = await this.notesModel
-          .findByIdAndUpdate({ _id: existing.notes }, { $set: notes }, { upsert: true, new: true })
+          .findByIdAndUpdate(
+            { _id: existing.notes },
+            { $set: params.notes },
+            { upsert: true, new: true },
+          )
           .populate([{ path: 'notes', strictPopulate: false }]);
         notesId = result._id;
       } else {
-        const { _id } = await this.notesModel.create(notes);
+        const { _id } = await this.notesModel.create(params.notes);
         notesId = _id;
       }
       result = await this.appointmentModel
-        .findOneAndUpdate({ _id: id }, { $set: update, notes: notesId }, { new: true })
+        .findOneAndUpdate({ _id: params.id }, { $set: update, notes: notesId }, { new: true })
         .populate([{ path: 'notes', strictPopulate: false }]);
     }
 
-    if (notes?.scores) {
+    if (params.notes?.scores) {
       const eventParams: IEventOnUpdatedAppointmentScores = {
         memberId: existing.memberId,
-        scores: notes.scores,
+        scores: params.notes.scores,
       };
       this.eventEmitter.emit(EventType.onUpdatedAppointmentScores, eventParams);
+    }
+
+    if (!noShow && !recordingConsent) {
+      const eventParams: IEventUnconsentedAppointmentEnded = {
+        appointmentId: id,
+        memberId: existing.memberId.toString(),
+      };
+      this.eventEmitter.emit(EventType.onUnconsentedAppointmentEnded, eventParams);
     }
 
     return this.replaceId(result.toObject() as AppointmentDocument);

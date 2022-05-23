@@ -1,14 +1,3 @@
-import {
-  AppointmentMethod,
-  AppointmentStatus,
-  Barrier,
-  BarrierType,
-  BaseCare,
-  CarePlan,
-  CarePlanType,
-  Caregiver,
-  User,
-} from '@argus/hepiusClient';
 import { Language, Platform, StorageType } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
@@ -46,16 +35,6 @@ import {
   SheetOption,
   SummaryFileSuffix,
 } from '.';
-import {
-  BarrierDocument,
-  BarrierTypeDocument,
-  CarePlanDocument,
-  CarePlanTypeDocument,
-  RedFlag,
-  RedFlagDocument,
-  RedFlagType,
-  RedFlagTypeDocument,
-} from '../../src/care';
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import {
   CaregiverDocument,
@@ -71,7 +50,28 @@ import {
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
 } from '../../src/questionnaire';
+import {
+  AppointmentMethod,
+  AppointmentStatus,
+  Barrier,
+  BarrierType,
+  BaseCare,
+  CarePlan,
+  CarePlanType,
+  Caregiver,
+  User,
+} from '@argus/hepiusClient';
 import { UserDocument } from '../../src/user';
+import {
+  BarrierDocument,
+  BarrierTypeDocument,
+  CarePlanDocument,
+  CarePlanTypeDocument,
+  RedFlag,
+  RedFlagDocument,
+  RedFlagType,
+  RedFlagTypeDocument,
+} from '../../src/care';
 
 @Injectable()
 export class AnalyticsService {
@@ -674,6 +674,7 @@ export class AnalyticsService {
           activation_reason: appointment?.notesData?.scores?.adherenceText,
           wellbeing_score: appointment?.notesData?.scores?.wellbeing,
           wellbeing_reason: appointment?.notesData?.scores?.wellbeingText,
+          recorded_consent: appointment?.recordingConsent,
           customer_id,
           mbr_initials,
           appt_number: appointment.noShow ? undefined : count,
