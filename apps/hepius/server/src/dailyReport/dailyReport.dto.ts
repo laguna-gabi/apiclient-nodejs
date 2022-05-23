@@ -25,6 +25,7 @@ registerEnumType(DailyReportCategoryTypes, { name: 'DailyReportCategoryTypes' })
 export class DailyReportCategoriesInput {
   // hidden field for GQL - populated from member auth token
   memberId?: string;
+  journeyId?: string;
 
   @Field()
   @Matches(onlyDateRegex, { message: Errors.get(ErrorType.dailyReportMutationDateInvalid) })
@@ -40,6 +41,8 @@ export class DailyReportQueryInput {
   @Field({ nullable: true })
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId?: string;
+
+  journeyId?: string;
 
   @Field()
   @Matches(onlyDateRegex, { message: Errors.get(ErrorType.dailyReportQueryDateInvalid) })
@@ -69,6 +72,10 @@ export class DailyReport {
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)
   memberId: Types.ObjectId;
+
+  @Prop({ index: true, type: Types.ObjectId })
+  @Field(() => String)
+  journeyId: Types.ObjectId;
 
   @Prop()
   @Field()

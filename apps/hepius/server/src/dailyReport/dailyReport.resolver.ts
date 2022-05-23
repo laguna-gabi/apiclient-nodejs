@@ -25,12 +25,14 @@ import {
   Roles,
   getCorrelationId,
 } from '../common';
+import { JourneyService } from '../journey';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
 export class DailyReportResolver {
   constructor(
     private readonly dailyReportService: DailyReportService,
+    private readonly journeyService: JourneyService,
     readonly eventEmitter: EventEmitter2,
     readonly logger: LoggerService,
   ) {}
@@ -49,9 +51,11 @@ export class DailyReportResolver {
     )
     dailyReportCategoriesInput: DailyReportCategoriesInput,
   ): Promise<DailyReport> {
-    const dailyReportObject = await this.dailyReportService.setDailyReportCategories(
-      dailyReportCategoriesInput,
-    );
+    const recentJourney = await this.journeyService.getRecent(dailyReportCategoriesInput.memberId);
+    const dailyReportObject = await this.dailyReportService.setDailyReportCategories({
+      ...dailyReportCategoriesInput,
+      journeyId: recentJourney.id,
+    });
 
     if (
       primaryUserId &&
@@ -78,6 +82,7 @@ export class DailyReportResolver {
 
       await this.dailyReportService.setNotificationIndication(
         dailyReportCategoriesInput.memberId,
+        recentJourney.id,
         dailyReportCategoriesInput.date,
       );
     }
@@ -104,13 +109,19 @@ export class DailyReportResolver {
     )
     dailyReportQueryInput: DailyReportQueryInput,
   ): Promise<DailyReportResults> {
-    return {
-      data: await this.dailyReportService.getDailyReports(dailyReportQueryInput),
-      metadata: {
-        minDate: await this.dailyReportService.getOldestDailyReportRecord(
-          dailyReportQueryInput.memberId,
-        ),
-      },
-    };
+    try {
+      const recentJourney = await this.journeyService.getRecent(dailyReportQueryInput.memberId);
+      return {
+        data: await this.dailyReportService.getDailyReports({
+          ...dailyReportQueryInput,
+          journeyId: recentJourney.id,
+        }),
+        metadata: {
+          minDate: await this.dailyReportService.getOldestDailyReportRecord(recentJourney.id),
+        },
+      };
+    } catch (ex) {
+      return { data: [] };
+    }
   }
 }

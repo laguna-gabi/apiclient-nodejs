@@ -824,12 +824,13 @@ export const generateUpdateRecordingReviewParams = ({
 
 export const generateDailyReport = ({
   memberId = generateObjectId(),
+  journeyId = generateObjectId(),
   date = reformatDate(fakerDate.recent().toString(), general.dateFormatString),
   categories = [],
   statsOverThreshold = [],
   notificationSent = false,
 }: Partial<DailyReport> = {}): DailyReport => {
-  return { memberId, date, categories, statsOverThreshold, notificationSent };
+  return { memberId, journeyId, date, categories, statsOverThreshold, notificationSent };
 };
 
 export const generateUpdateClientSettings = ({

@@ -33,6 +33,7 @@ export class DailyReportService extends BaseService {
     return this.dailyReportModel
       .find({
         memberId: new Types.ObjectId(dailyReportCategoryQueryInput.memberId),
+        journeyId: new Types.ObjectId(dailyReportCategoryQueryInput.journeyId),
         date: {
           $gte: dailyReportCategoryQueryInput.startDate,
           $lte: dailyReportCategoryQueryInput.endDate,
@@ -44,19 +45,13 @@ export class DailyReportService extends BaseService {
   async setDailyReportCategories(
     dailyReportCategoryEntry: DailyReportCategoriesInput,
   ): Promise<DailyReport> {
-    let dailyReportRecord: DailyReport = await this.dailyReportModel.findOne({
+    const filterParams = {
       memberId: new Types.ObjectId(dailyReportCategoryEntry.memberId),
+      journeyId: new Types.ObjectId(dailyReportCategoryEntry.journeyId),
       date: dailyReportCategoryEntry.date,
-    });
-
-    if (!dailyReportRecord) {
-      // init object if one does not exist already in db
-      dailyReportRecord = {
-        date: dailyReportCategoryEntry.date,
-        memberId: new Types.ObjectId(dailyReportCategoryEntry.memberId),
-        categories: [],
-      };
-    }
+    };
+    let dailyReportRecord: DailyReport = await this.dailyReportModel.findOne(filterParams);
+    dailyReportRecord = dailyReportRecord ? dailyReportRecord : { ...filterParams, categories: [] };
 
     dailyReportCategoryEntry?.categories.forEach((categoryEntry) => {
       // Make sure to keep the internal `categories` array with unique single entry per category
@@ -80,10 +75,7 @@ export class DailyReportService extends BaseService {
       .map((entry) => entry.category);
 
     await this.dailyReportModel.findOneAndUpdate(
-      {
-        memberId: new Types.ObjectId(dailyReportCategoryEntry.memberId),
-        date: dailyReportCategoryEntry.date,
-      },
+      filterParams,
       { ...dailyReportRecord, deleted: false },
       {
         upsert: true,
@@ -95,9 +87,9 @@ export class DailyReportService extends BaseService {
   }
 
   // Description: fetch date of oldest daily report record for member
-  async getOldestDailyReportRecord(memberId: string): Promise<string> {
+  async getOldestDailyReportRecord(journeyId: string): Promise<string> {
     const oldestRecord: DailyReport[] = await this.dailyReportModel.aggregate([
-      { $match: { memberId: new Types.ObjectId(memberId) } },
+      { $match: { journeyId: new Types.ObjectId(journeyId) } },
       { $sort: { date: 1 } },
       { $limit: 1 },
       { $project: { date: 1 } },
@@ -120,10 +112,11 @@ export class DailyReportService extends BaseService {
   }
   // Description: to indicate that a notification was sent to primary user due to
   //              indications that the member (with memberId) is not feeling well
-  async setNotificationIndication(memberId: string, date: string) {
+  async setNotificationIndication(memberId: string, journeyId: string, date: string) {
     return this.dailyReportModel.updateOne(
       {
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
         date,
       },
       { $set: { notificationSent: true } },

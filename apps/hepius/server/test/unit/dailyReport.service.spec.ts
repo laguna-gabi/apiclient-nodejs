@@ -38,12 +38,14 @@ describe('DailyReportCategoryService', () => {
   describe('get', () => {
     it(`find repo method to be called with expected parameters`, async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const spyOnMockDailyReportCategoryModel = jest
         .spyOn(dailyReportModel, 'find')
         .mockReturnValueOnce(undefined);
-      await service.get({ memberId, startDate: '2020/01/01', endDate: '2020/01/02' });
+      await service.get({ memberId, journeyId, startDate: '2020/01/01', endDate: '2020/01/02' });
       expect(spyOnMockDailyReportCategoryModel).toBeCalledWith({
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
         date: {
           $gte: '2020/01/01',
           $lte: '2020/01/02',
@@ -54,6 +56,7 @@ describe('DailyReportCategoryService', () => {
 
   describe('setDailyReportCategories', () => {
     const memberId = generateId();
+    const journeyId = generateId();
 
     it.each([
       [
@@ -62,11 +65,13 @@ describe('DailyReportCategoryService', () => {
           date: '2015/01/01',
           categories: [{ rank: 4, category: DailyReportCategoryTypes.Pain }],
           memberId,
+          journeyId,
         } as DailyReportCategoriesInput, // <= new record
         null, // <= no existing record in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           categories: [{ rank: 4, category: DailyReportCategoryTypes.Pain }],
           statsOverThreshold: [],
         }, // <= expected
@@ -80,15 +85,18 @@ describe('DailyReportCategoryService', () => {
             { rank: 4, category: DailyReportCategoryTypes.Pain },
           ],
           memberId,
+          journeyId,
         } as DailyReportCategoriesInput, // <= new record
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           categories: [
             { rank: 2, category: DailyReportCategoryTypes.Mobility },
             { rank: 4, category: DailyReportCategoryTypes.Pain },
@@ -102,15 +110,18 @@ describe('DailyReportCategoryService', () => {
           date: '2015/01/01',
           categories: [{ rank: 1, category: DailyReportCategoryTypes.Pain }],
           memberId,
+          journeyId,
         } as DailyReportCategoriesInput, // <= new record
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           categories: [{ rank: 4, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           categories: [{ rank: 1, category: DailyReportCategoryTypes.Pain }],
           statsOverThreshold: [DailyReportCategoryTypes.Pain],
         }, // <= expected
@@ -125,15 +136,18 @@ describe('DailyReportCategoryService', () => {
             { rank: 1, category: DailyReportCategoryTypes.Mobility },
           ],
           memberId,
+          journeyId,
         } as DailyReportCategoriesInput, // <= new record
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           categories: [
             { rank: 1, category: DailyReportCategoryTypes.Pain },
             { rank: 1, category: DailyReportCategoryTypes.Mobility },
@@ -182,12 +196,14 @@ describe('DailyReportCategoryService', () => {
         .mockResolvedValue(undefined);
 
       const memberId = generateId();
+      const journeyId = generateId();
 
-      service.setNotificationIndication(memberId, '2020/01/01');
+      service.setNotificationIndication(memberId, journeyId, '2020/01/01');
 
       expect(spyOnDailyReportCategoryModel).toBeCalledWith(
         {
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           date: '2020/01/01',
         },
         { $set: { notificationSent: true } },
@@ -200,6 +216,7 @@ describe('DailyReportCategoryService', () => {
       expect(
         await service.getDailyReports({
           memberId: generateId(),
+          journeyId: generateId(),
           startDate: '2020/01/10',
           endDate: '2020/01/09',
         }),
@@ -208,9 +225,11 @@ describe('DailyReportCategoryService', () => {
 
     it(`to return a non-empty list`, async () => {
       const memberId = generateObjectId();
+      const journeyId = generateObjectId();
       jest.spyOn(service, 'get').mockResolvedValue([
         {
           memberId,
+          journeyId,
           date: '2020/01/09',
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
         },
@@ -218,12 +237,14 @@ describe('DailyReportCategoryService', () => {
       expect(
         await service.getDailyReports({
           memberId: generateId(),
+          journeyId: generateId(),
           startDate: '2020/01/09',
           endDate: '2020/01/10',
         }),
       ).toEqual([
         {
           memberId,
+          journeyId,
           date: '2020/01/09',
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
         },
@@ -234,10 +255,12 @@ describe('DailyReportCategoryService', () => {
   describe('deleteMemberDailyReports', () => {
     test.each([true, false])(`should delete members daily report`, async (hard) => {
       const memberId = generateId();
+      const journeyId = generateId();
       const deletedBy = generateId();
       const dailyReport: DailyReport = {
         date: '2015/01/01',
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
         categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
       };
       await dailyReportModel.create(dailyReport);
@@ -263,10 +286,12 @@ describe('DailyReportCategoryService', () => {
 
     it(`should be able to hard delete after soft delete`, async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const deletedBy = generateId();
       const dailyReport: DailyReport = {
         date: '2015/01/01',
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
         categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
       };
       await dailyReportModel.create(dailyReport);

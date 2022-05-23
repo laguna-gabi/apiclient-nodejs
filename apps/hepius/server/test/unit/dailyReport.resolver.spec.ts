@@ -16,10 +16,12 @@ import {
   DailyReportResolver,
   DailyReportService,
 } from '../../src/dailyReport';
+import { JourneyModule, JourneyService } from '../../src/journey';
 
 describe('DailyReportResolver', () => {
   let resolver: DailyReportResolver;
   let service: DailyReportService;
+  let jounreyService: JourneyService;
   let eventEmitter: EventEmitter2;
   let module: TestingModule;
   let memberId: string;
@@ -28,11 +30,12 @@ describe('DailyReportResolver', () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       providers: [DailyReportResolver, LoggerService],
-      imports: defaultModules().concat(DailyReportModule),
+      imports: defaultModules().concat(DailyReportModule, JourneyModule),
     }).compile();
 
     resolver = module.get<DailyReportResolver>(DailyReportResolver);
     service = module.get<DailyReportService>(DailyReportService);
+    jounreyService = module.get<JourneyService>(JourneyService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     mockLogger(module.get<LoggerService>(LoggerService));
 
@@ -46,11 +49,21 @@ describe('DailyReportResolver', () => {
 
   describe('setDailyReportCategories', () => {
     let eventEmitterSpy;
+    let spyOnJourneyServiceGetRecent: jest.SpyInstance;
+
+    beforeEach(() => {
+      spyOnJourneyServiceGetRecent = jest.spyOn(jounreyService, 'getRecent');
+    });
+
+    afterEach(() => {
+      spyOnJourneyServiceGetRecent.mockReset();
+    });
 
     afterEach(() => {
       eventEmitterSpy.mockReset();
     });
     memberId = generateId();
+    const journeyId = generateId();
 
     /* eslint-disable max-len */
     it.each([
@@ -59,6 +72,7 @@ describe('DailyReportResolver', () => {
         {
           statsOverThreshold: [DailyReportCategoryTypes.Pain], // <= single stat over threshold
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           categories: [],
           date: '2015/01/01',
         } as DailyReport, // <= daily report returned from service (updated record),
@@ -72,6 +86,7 @@ describe('DailyReportResolver', () => {
           date: '',
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
           memberId,
+          journeyId,
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
         {
           contentKey: LogInternalKey.memberNotFeelingWellMessage,
@@ -98,6 +113,7 @@ describe('DailyReportResolver', () => {
           date: '',
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
           memberId,
+          journeyId,
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
         null,
       ],
@@ -106,6 +122,7 @@ describe('DailyReportResolver', () => {
         {
           statsOverThreshold: [DailyReportCategoryTypes.Pain], // <= single stat over threshold
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           categories: [],
           date: '2015/01/01',
         } as DailyReport, // <= daily report returned from service (updated record),
@@ -119,6 +136,7 @@ describe('DailyReportResolver', () => {
           date: '',
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
           memberId,
+          journeyId,
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
         null,
       ],
@@ -136,6 +154,9 @@ describe('DailyReportResolver', () => {
           .spyOn(service, 'setDailyReportCategories')
           .mockResolvedValue(serviceSetDailyReportCategoryReturnedValue);
         eventEmitterSpy = jest.spyOn(eventEmitter, 'emit');
+        spyOnJourneyServiceGetRecent.mockResolvedValueOnce({
+          id: dailyReportCategoryInput.journeyId,
+        });
         await resolver.setDailyReportCategories(
           context.roles,
           context.primaryUserId,
@@ -170,6 +191,17 @@ describe('DailyReportResolver', () => {
   });
 
   describe('getDailyReports', () => {
+    let spyOnJourneyServiceGetRecent: jest.SpyInstance;
+
+    beforeAll(() => {
+      spyOnJourneyServiceGetRecent = jest.spyOn(jounreyService, 'getRecent');
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: generateId() });
+    });
+
+    afterAll(() => {
+      spyOnJourneyServiceGetRecent.mockReset();
+    });
+
     it.each([
       [
         'valid start/end dates and records exists in db',

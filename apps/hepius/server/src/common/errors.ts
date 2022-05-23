@@ -161,6 +161,7 @@ export enum ErrorType {
   // member journey
   journeyNotFound = 10501,
   journeyIdInvalid = 10502,
+  noActiveJourney = 10503,
 
   //member admission
   admissionDiagnosisIdNotFound = 10601,
@@ -432,6 +433,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.redFlagTypeNotFound.valueOf(), 'red flag type was not found'],
   [ErrorType.journeyNotFound.valueOf(), `journey ${notFoundPrefix}`],
   [ErrorType.journeyIdInvalid.valueOf(), `journey id ${objectIdFormat}`],
+  [ErrorType.noActiveJourney.valueOf(), `no active journey`],
   [ErrorType.admissionDiagnosisIdNotFound.valueOf(), `diagnosis ${notFoundPrefix}`],
   [
     ErrorType.admissionTreatmentRenderedIdNotFound.valueOf(),
