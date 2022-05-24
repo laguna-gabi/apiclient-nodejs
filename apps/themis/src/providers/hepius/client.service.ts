@@ -1,4 +1,4 @@
-import { Caregiver, MemberCommands } from '@argus/hepiusClient';
+import { Caregiver, HepiusMessagePatterns } from '@argus/hepiusClient';
 import { ServiceName } from '@argus/pandora';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -9,7 +9,7 @@ export class HepiusClientService {
 
   async getCaregiversByMemberId({ memberId }: { memberId: string }): Promise<Caregiver[]> {
     return this.hepiusClient
-      .send<Caregiver[]>({ cmd: MemberCommands.getCaregiversByMemberId }, { memberId })
+      .send<Caregiver[]>({ cmd: HepiusMessagePatterns.getCaregiversByMemberId }, { memberId })
       .toPromise();
   }
 }

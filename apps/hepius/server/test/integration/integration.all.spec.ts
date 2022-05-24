@@ -2,11 +2,12 @@ import {
   Appointment,
   AppointmentMethod,
   AppointmentStatus,
+  Barrier,
   CarePlan,
   CareStatus,
   Caregiver,
   CreateCarePlanParams,
-  MemberCommands,
+  HepiusMessagePatterns,
   User,
   UserRole,
 } from '@argus/hepiusClient';
@@ -1560,7 +1561,7 @@ describe('Integration tests: all', () => {
       expect(
         await handler.tcpClient
           .send<Caregiver[]>(
-            { cmd: MemberCommands.getCaregiversByMemberId },
+            { cmd: HepiusMessagePatterns.getCaregiversByMemberId },
             { memberId: member.id },
           )
           .toPromise(),
@@ -2301,24 +2302,32 @@ describe('Integration tests: all', () => {
       const memberRedFlag = memberRedFlags[0];
 
       // test barriers
+      const memberBarriersTcp: Barrier[] = await handler.tcpClient
+        .send<Barrier[]>({ cmd: HepiusMessagePatterns.getMemberBarriers }, { memberId })
+        .toPromise();
+
       delete barrier1.carePlans;
       delete barrier2.carePlans;
-      expect(memberBarriers).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...barrier1,
-            memberId,
-            redFlagId: memberRedFlag.id,
-            type: expect.objectContaining({ id: handler.barrierType.id }),
-          }),
-          expect.objectContaining({
-            ...barrier2,
-            memberId,
-            redFlagId: memberRedFlag.id,
-            type: expect.objectContaining({ id: handler.barrierType.id }),
-          }),
-        ]),
-      );
+
+      const barriersResult = [memberBarriers, memberBarriersTcp];
+      barriersResult.forEach((barrierResult) => {
+        expect(barrierResult).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              ...barrier1,
+              memberId,
+              redFlagId: memberRedFlag.id,
+              type: expect.objectContaining({ id: handler.barrierType.id }),
+            }),
+            expect.objectContaining({
+              ...barrier2,
+              memberId,
+              redFlagId: memberRedFlag.id,
+              type: expect.objectContaining({ id: handler.barrierType.id }),
+            }),
+          ]),
+        );
+      });
 
       // test the new custom care plan
       const carePlanTypes = await handler.queries.getCarePlanTypes();
@@ -2331,7 +2340,7 @@ describe('Integration tests: all', () => {
 
       // test care plans
       const memberCarePlansTcp: CarePlan[] = await handler.tcpClient
-        .send<CarePlan[]>({ cmd: MemberCommands.getMemberCarePlans }, { memberId })
+        .send<CarePlan[]>({ cmd: HepiusMessagePatterns.getMemberCarePlans }, { memberId })
         .toPromise();
 
       const carePlansResult = [memberCarePlans, memberCarePlansTcp];
