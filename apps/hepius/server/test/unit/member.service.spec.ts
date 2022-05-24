@@ -120,7 +120,7 @@ import {
 import { NotificationService } from '../../src/services';
 import { Todo, TodoDocument, TodoDto } from '../../src/todo';
 import { UserDocument, UserDto } from '../../src/user';
-import { confirmEmittedChangeSetEvent } from '../common';
+import { confirmEmittedChangeEvent } from '../common';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -1459,7 +1459,7 @@ describe('MemberService', () => {
 
       caregiverId = id;
 
-      confirmEmittedChangeSetEvent(
+      confirmEmittedChangeEvent(
         mockEventEmitterEmit,
         createChangeEvent({
           action: ChangeEventType.updated,
@@ -1498,7 +1498,7 @@ describe('MemberService', () => {
         updateCaregiverParams,
       )) as Caregiver & Audit;
 
-      confirmEmittedChangeSetEvent(
+      confirmEmittedChangeEvent(
         mockEventEmitterEmit,
         createChangeEvent({
           action: ChangeEventType.updated,
@@ -1527,7 +1527,7 @@ describe('MemberService', () => {
       await service.deleteCaregiver(id, memberId.toString());
       await service.deleteCaregiver(id, memberId.toString(), true);
 
-      confirmEmittedChangeSetEvent(
+      confirmEmittedChangeEvent(
         mockEventEmitterEmit,
         createChangeEvent({
           action: ChangeEventType.deleted,
@@ -2504,7 +2504,7 @@ describe('MemberService', () => {
       const addInsuranceParams = generateAddInsuranceParams({ memberId });
       const { id: insurancePlanId } = await service.addInsurance(addInsuranceParams);
 
-      confirmEmittedChangeSetEvent(
+      confirmEmittedChangeEvent(
         mockEventEmitterEmit,
         createChangeEvent({
           action: ChangeEventType.updated,
@@ -2549,7 +2549,7 @@ describe('MemberService', () => {
 
       await service.deleteInsurance(id, memberId.toString(), true);
 
-      confirmEmittedChangeSetEvent(
+      confirmEmittedChangeEvent(
         mockEventEmitterEmit,
         createChangeEvent({
           action: ChangeEventType.deleted,

@@ -1,9 +1,18 @@
-import { generateId, mockLogger, mockProcessWarnings, randomEnum } from '@argus/pandora';
+import {
+  ChangeEventType,
+  EntityName,
+  createChangeEvent,
+  generateId,
+  mockLogger,
+  mockProcessWarnings,
+  randomEnum,
+} from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { lorem } from 'faker';
 import { Model, Types, model } from 'mongoose';
 import {
   checkDelete,
+  confirmEmittedChangeEvent,
   dbConnect,
   dbDisconnect,
   defaultModules,
@@ -27,6 +36,7 @@ import {
 } from '../../src/care';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import { Barrier, BarrierDomain, CarePlan, CareStatus } from '@argus/hepiusClient';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('CareService', () => {
   let module: TestingModule;
@@ -34,6 +44,11 @@ describe('CareService', () => {
   let redFlagModel: Model<RedFlagDocument>;
   let barrierModel: Model<BarrierDocument>;
   let carePlanModel: Model<CarePlanDocument>;
+  let mockEventEmitterEmit: jest.SpyInstance;
+
+  afterEach(() => {
+    mockEventEmitterEmit.mockReset();
+  });
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -43,6 +58,7 @@ describe('CareService', () => {
 
     service = module.get<CareService>(CareService);
     mockLogger(module.get<LoggerService>(LoggerService));
+    mockEventEmitterEmit = jest.spyOn(module.get<EventEmitter2>(EventEmitter2), `emit`);
     redFlagModel = model<RedFlagDocument>(RedFlag.name, RedFlagDto);
     barrierModel = model<BarrierDocument>(Barrier.name, RedFlagDto);
     carePlanModel = model<CarePlanDocument>(CarePlan.name, RedFlagDto);
@@ -182,6 +198,15 @@ describe('CareService', () => {
             memberId: new Types.ObjectId(memberId),
             redFlagId: withRedFlag ? new Types.ObjectId(redFlagId) : undefined,
             type: new Types.ObjectId(type),
+          }),
+        );
+
+        confirmEmittedChangeEvent(
+          mockEventEmitterEmit,
+          createChangeEvent({
+            action: ChangeEventType.updated,
+            entity: EntityName.barrier,
+            memberId,
           }),
         );
       },

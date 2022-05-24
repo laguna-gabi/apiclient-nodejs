@@ -85,6 +85,7 @@ export enum ChangeEventType {
 export enum EntityName {
   caregiver = 'caregiver',
   insurance = 'insurance',
+  barrier = 'barrier',
 }
 
 export interface IChangeEvent {

@@ -12,10 +12,12 @@ import {
   RedFlagType,
   RedFlagTypeDto,
 } from '.';
-import { CommonModule } from '../common';
+import { CommonModule, LoggerService } from '../common';
 import { Barrier, BarrierType, CarePlan, CarePlanType } from '@argus/hepiusClient';
 import { CareTcpController } from './care.tcp.controller';
-
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ChangeEventFactoryProvider } from '../db';
+import { EntityName } from '@argus/pandora';
 @Module({
   imports: [
     CommonModule,
@@ -24,8 +26,15 @@ import { CareTcpController } from './care.tcp.controller';
       { name: BarrierType.name, schema: BarrierTypeDto },
       { name: RedFlag.name, schema: RedFlagDto },
       { name: RedFlagType.name, schema: RedFlagTypeDto },
-      { name: Barrier.name, schema: BarrierDto },
       { name: CarePlan.name, schema: CarePlanDto },
+    ]),
+    MongooseModule.forFeatureAsync([
+      {
+        name: Barrier.name,
+        imports: [CommonModule],
+        useFactory: ChangeEventFactoryProvider(EntityName.barrier, BarrierDto, 'memberId'),
+        inject: [EventEmitter2, LoggerService],
+      },
     ]),
   ],
   providers: [CareService, CareResolver],

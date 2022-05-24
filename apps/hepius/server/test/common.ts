@@ -327,7 +327,7 @@ export const removeChangeType = (changeParams): BaseCategory => {
   return dupParams;
 };
 
-export const confirmEmittedChangeSetEvent = (
+export const confirmEmittedChangeEvent = (
   mockEventEmitterEmit: jest.SpyInstance,
   expectedChangeEvent: IChangeEvent,
 ) => {
