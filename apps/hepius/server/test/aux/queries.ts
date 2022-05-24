@@ -1078,6 +1078,8 @@ export class Queries {
               notes
               createdBy
               dueDate
+              completionNote
+              completionReason
             }
           }
         `,

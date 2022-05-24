@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema } from '@nestjs/mongoose';
 import { Identifier } from '.';
 import { Types } from 'mongoose';
@@ -19,11 +19,21 @@ export enum BarrierDomain {
   logistical = 'logistical',
   emotional = 'emotional',
 }
+registerEnumType(BarrierDomain, { name: 'BarrierCategory' });
 
 export enum CareStatus {
   active = 'active',
   completed = 'completed',
 }
+registerEnumType(CareStatus, { name: 'CareStatus' });
+
+export enum CarePlanCompletionReason {
+  noLongerAppropriate = 'noLongerAppropriate',
+  refusedByMember = 'refusedByMember',
+  memberDischarged = 'memberDischarged',
+  completedSuccessfully = 'completedSuccessfully',
+}
+registerEnumType(CarePlanCompletionReason, { name: 'CarePlanCompletionReason' });
 
 /********∏******************************************************************************************
  ********************************* Return params for gql methods **********************************
@@ -85,6 +95,14 @@ export class CarePlan extends BaseCare {
   @Prop({ type: Date })
   @Field(() => Date, { nullable: true })
   dueDate?: Date;
+
+  @Prop({ type: String, enum: CarePlanCompletionReason })
+  @Field(() => CarePlanCompletionReason, { nullable: true })
+  completionReason?: CarePlanCompletionReason;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  completionNote?: string;
 }
 
 @ObjectType()

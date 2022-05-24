@@ -555,10 +555,12 @@ describe('CareService', () => {
 
         const updateParams = generateUpdateCarePlanParams({ id });
         const result = await service.updateCarePlan(updateParams);
-        expect(result.status).toEqual(updateParams.status);
-        expect(result.notes).toEqual(updateParams.notes);
-        expect(result.dueDate).toEqual(updateParams.dueDate);
-        expect(result.completedAt).toEqual(expect.any(Date));
+        expect(result).toEqual(
+          expect.objectContaining({
+            ...updateParams,
+            completedAt: expect.any(Date),
+          }),
+        );
       });
 
       test.each(['notes', 'status'])(

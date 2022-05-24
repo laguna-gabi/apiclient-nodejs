@@ -1,13 +1,11 @@
-import { Field, InputType, registerEnumType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { ErrorType, Errors } from '../common';
 import * as mongooseDelete from 'mongoose-delete';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
-import { Barrier, BarrierDomain, BarrierType, CareStatus, IsObjectId } from '@argus/hepiusClient';
+import { Barrier, BarrierType, CareStatus, IsObjectId } from '@argus/hepiusClient';
 
-registerEnumType(CareStatus, { name: 'CareStatus' });
-registerEnumType(BarrierDomain, { name: 'BarrierCategory' });
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/

@@ -3,6 +3,7 @@ import {
   AppointmentStatus,
   BarrierDomain,
   BaseCarePlanParams,
+  CarePlanCompletionReason,
   CarePlanTypeInput,
   CareStatus,
   CreateCarePlanParams,
@@ -1112,12 +1113,16 @@ export const generateUpdateCarePlanParams = ({
   notes = lorem.words(4),
   status = CareStatus.completed,
   dueDate = fakerDate.soon(3),
+  completionReason = randomEnum(CarePlanCompletionReason) as CarePlanCompletionReason,
+  completionNote = lorem.words(4),
 }: Partial<UpdateCarePlanParams> = {}) => {
   return {
     id,
     notes,
     status,
     dueDate,
+    completionReason,
+    completionNote,
   };
 };
 

@@ -220,11 +220,13 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
 
     /* eslint-disable max-len */
     test.each`
-      input                       | error
-      ${{ id: 123 }}              | ${{ missingFieldError: stringError }}
-      ${{ notes: 123 }}           | ${{ missingFieldError: stringError }}
-      ${{ status: 'not-valid' }}  | ${{ missingFieldError: 'does not exist in "CareStatus" enum.' }}
-      ${{ dueDate: 'not-valid' }} | ${{ missingFieldError: 'must be a Date instance' }}
+      input                                | error
+      ${{ id: 123 }}                       | ${{ missingFieldError: stringError }}
+      ${{ notes: 123 }}                    | ${{ missingFieldError: stringError }}
+      ${{ completionNote: 123 }}           | ${{ missingFieldError: stringError }}
+      ${{ completionReason: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "CarePlanCompletionReason" enum.' }}
+      ${{ status: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "CareStatus" enum.' }}
+      ${{ dueDate: 'not-valid' }}          | ${{ missingFieldError: 'must be a Date instance' }}
     `(`should fail to update a care plan since $input is not valid`, async (params) => {
       const updateCarePlanParams: UpdateCarePlanParams = generateUpdateCarePlanParams({
         id: generateId(),

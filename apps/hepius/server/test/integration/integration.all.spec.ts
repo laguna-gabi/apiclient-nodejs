@@ -2162,6 +2162,8 @@ describe('Integration tests: all', () => {
               ...memberCarePlans[0],
               notes: updateCarePlanParams.notes,
               status: updateCarePlanParams.status,
+              completionNote: updateCarePlanParams.completionNote,
+              completionReason: updateCarePlanParams.completionReason,
               dueDate: updateCarePlanParams.dueDate.toISOString(),
             }),
           ]),
