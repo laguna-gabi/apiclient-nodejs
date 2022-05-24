@@ -176,9 +176,7 @@ export const PinoHttpConfig = {
   quietReqLogger: true,
   level: LogType.debug,
   prettyPrint:
-    !process.env.NODE_ENV ||
-    process.env.NODE_ENV === Environments.test ||
-    process.env.NODE_ENV === Environments.localhost
+    !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
       ? {
           colorize: true,
           translateTime: 'SYS:dd/mm/yyyy, H:M:ss',

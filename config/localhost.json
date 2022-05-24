@@ -1,0 +1,12 @@
+{
+  "db": {
+    "connection": "mongodb://local-mongodb:27017"
+  },
+  "hosts": {
+    "localstack": "http://localstack:4566"
+  },
+  "containers": {
+    "mongo": "local-mongodb",
+    "aws": "localstack"
+  }
+}

@@ -12,7 +12,7 @@ import { Injectable, NotImplementedException, OnModuleDestroy, OnModuleInit } fr
 import { OnEvent } from '@nestjs/event-emitter';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
 import { SQS } from 'aws-sdk';
-import { aws } from 'config';
+import { aws, containers, hosts } from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { ConductorService } from '.';
@@ -28,7 +28,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit, OnMod
     process.env.NODE_ENV === Environments.test ||
     process.env.NODE_ENV === Environments.localhost
       ? {
-          endpoint: 'http://localhost:4566',
+          endpoint: hosts.localstack,
         }
       : {}),
   });
@@ -70,7 +70,10 @@ export class QueueService extends HealthIndicator implements OnModuleInit, OnMod
         ? aws.queue.notification
         : await this.configsService.getConfig(queueNameNotifications);
     const { QueueUrl: queueUrl } = await this.sqs.getQueueUrl({ QueueName: queueName }).promise();
-    this.notificationsQueueUrl = queueUrl;
+    this.notificationsQueueUrl =
+      process.env.NODE_ENV === Environments.localhost
+        ? queueUrl.replace('localhost', containers.aws)
+        : queueUrl;
 
     const dlQueueName =
       !process.env.NODE_ENV ||
@@ -81,12 +84,18 @@ export class QueueService extends HealthIndicator implements OnModuleInit, OnMod
     const { QueueUrl: dlQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: dlQueueName })
       .promise();
-    this.notificationsDLQUrl = dlQueueUrl;
+    this.notificationsDLQUrl =
+      process.env.NODE_ENV === Environments.localhost
+        ? dlQueueUrl.replace('localhost', containers.aws)
+        : dlQueueUrl;
 
     // register and start consumer for NotificationQ
     this.consumer = Consumer.create({
       region: aws.region,
-      queueUrl,
+      queueUrl:
+        process.env.NODE_ENV !== Environments.localhost
+          ? queueUrl
+          : queueUrl.replace('localhost', containers.aws),
       handleMessage: async (message) => {
         /**
          * we need to always catch exceptions coming from message, since if we don't, it'll

@@ -91,7 +91,7 @@ we are using docker to work locally with `mongodb` our database and `localstack`
 
    > **_Troubleshooting_**: if the docker fails to start you could check the logs running: `docker-compose logs -f`.<br/>
    > Its possible that all the docker volumes are full you could run the following to clear all the volumes: `docker-compose down && docker volume rm $(docker volume ls -q)`.
-
+4. to load all mServices as docker containers run `yarn setup:services` - the command will run a `dockerize` mService level Nx target to build a service image and later will run the `services` docker compose up command
 **_How to view the db locally?_**
 
 > 1. Download and install [mongodb compass](https://www.mongodb.com/try/download/compass)/[robomongo](https://robomongo.org/download) or any other mongodb visualizer you like

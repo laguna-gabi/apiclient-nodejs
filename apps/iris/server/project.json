@@ -81,6 +81,12 @@
         "command": "ts-node -P ./tsconfig.base.json ./ci/uploadCoverage.ts iris coverage/apps/iris/"
       }
     },
+    "dockerize": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "nx build iris; docker build -f ./apps/iris/server/Dockerfile -t iris ."
+      }
+    },
     "deploy": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {

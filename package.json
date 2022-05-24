@@ -11,7 +11,8 @@
     "analytics:dump:prod": "export NODE_ENV=production && yarn analytics:dump",
     "migrate:up": "nx command hepius --cmd=migration --options='up'",
     "hepius": "nx serve hepius",
-    "hepius:dev": "export NODE_ENV=develop && nx serve hepius"
+    "hepius:dev": "export NODE_ENV=develop && nx serve hepius",
+    "setup:services": "./apps/hepius/server/scripts/setup.services.sh"
   },
   "dependencies": {
     "@apollo/gateway": "^0.48.1",
