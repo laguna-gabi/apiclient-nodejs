@@ -1,6 +1,6 @@
 import { DynamicFactCallback, EventHandler, FactOptions } from 'json-rules-engine';
 import { DynamicFacts } from './facts';
-import { Caregiver } from '@argus/hepiusClient';
+import { Barrier, CarePlan, Caregiver } from '@argus/hepiusClient';
 
 // todo: fix "any"
 export enum TargetEntity {
@@ -96,25 +96,4 @@ export interface MemberInfo {
   appointmentsToBeScheduled?: number;
   livesAlone?: boolean;
   nested?: { example: number };
-}
-
-// todo: get the real statuses from common
-export enum BarrierStatus {
-  active,
-  overcome,
-  suspended,
-}
-
-// todo: get the real types from common
-export interface Barrier {
-  id: string;
-  type: string;
-  status: BarrierStatus;
-}
-
-// todo: get the real types from common
-export interface CarePlan {
-  id: string;
-  type: string;
-  status: BarrierStatus;
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HepiusClientService } from '../providers';
-import { Action, BarrierStatus, EngineAction, MemberFacts, TargetEntity } from '../rules/types';
+import { Action, EngineAction, MemberFacts, TargetEntity } from '../rules/types';
 import { LoggerService } from '../common';
 
 export const mockFactsObject: MemberFacts = {
@@ -11,11 +11,7 @@ export const mockFactsObject: MemberFacts = {
     livesAlone: true,
     nested: { example: 1 },
   },
-  barriers: [
-    { id: '1', type: 'appointment-follow-up-unclear', status: BarrierStatus.active },
-    { id: '2', type: 'loneliness', status: BarrierStatus.active },
-    { id: '3', type: 'not-satisfied', status: BarrierStatus.active },
-  ],
+  barriers: [],
   carePlans: [],
   caregivers: [],
 };

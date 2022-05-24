@@ -1,8 +1,5 @@
 import {
   Action,
-  Barrier,
-  BarrierStatus,
-  CarePlan,
   EngineAction,
   EventParams,
   MemberFacts,
@@ -10,7 +7,7 @@ import {
   TargetEntity,
 } from '../src/rules/types';
 import { Almanac, EngineResult, Event, RuleResult } from 'json-rules-engine';
-import { Caregiver } from '@argus/hepiusClient';
+import { Barrier, CarePlan, Caregiver } from '@argus/hepiusClient';
 import { generateId } from '@argus/pandora';
 
 export const generateEngineResult = ({
@@ -109,7 +106,7 @@ export const generateCarePlanEventParams = ({
   };
 };
 
-export const generateBarrierEvent = ({ type = generateId() }: { type?: string }): Event => {
+export const generateBarrierEvent = ({ type = generateId() }: { type?: string } = {}): Event => {
   return {
     type: TargetEntity.barrier,
     params: generateBarrierEventParams({ type }),
@@ -126,28 +123,5 @@ export const generateCarePlanEvent = ({
   return {
     type: TargetEntity.carePlan,
     params: generateCarePlanEventParams({ type, parentEntityType }),
-  };
-};
-
-// todo: get shared entities from common
-export const generateBarrier = ({
-  type = generateId(),
-  id = generateId(),
-}: {
-  type?: string;
-  id?: string;
-}): Barrier => {
-  return {
-    id,
-    type,
-    status: BarrierStatus.active,
-  };
-};
-
-export const generateCarePlan = ({ type = generateId() }: { type?: string }): CarePlan => {
-  return {
-    id: generateId(),
-    type,
-    status: BarrierStatus.active,
   };
 };

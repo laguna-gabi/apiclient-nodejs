@@ -2,15 +2,19 @@ import { generateId, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { StateResolverModule, StateResolverService } from '../../src/stateResolver';
 import {
-  generateBarrier,
   generateBarrierEvent,
-  generateCarePlan,
   generateCarePlanEvent,
   generateEngineResult,
   generateMemberFacts,
 } from '../generators';
 import { Action, EngineAction, LookupResult, TargetEntity } from '../../src/rules/types';
 import { ErrorType, Errors } from '../../src/common/errors';
+import {
+  mockGenerateBarrier,
+  mockGenerateBarrierType,
+  mockGenerateCarePlan,
+  mockGenerateCarePlanType,
+} from '@argus/hepiusClient';
 
 describe(StateResolverService.name, () => {
   let module: TestingModule;
@@ -35,7 +39,7 @@ describe(StateResolverService.name, () => {
       const memberId = generateId();
       const memberFacts = generateMemberFacts({
         memberInfo: { id: memberId },
-        barriers: [generateBarrier({ type: barrierType1 })],
+        barriers: [mockGenerateBarrier({ type: mockGenerateBarrierType({ id: barrierType1 }) })],
       });
       const barrierEvents = [
         generateBarrierEvent({ type: barrierType1 }),
@@ -65,8 +69,10 @@ describe(StateResolverService.name, () => {
       const barrierType = generateId();
       const memberFacts = generateMemberFacts({
         memberInfo: { id: memberId },
-        barriers: [generateBarrier({ type: barrierType })],
-        carePlans: [generateCarePlan({ type: carePlanType1 })],
+        barriers: [mockGenerateBarrier({ type: mockGenerateBarrierType({ id: barrierType }) })],
+        carePlans: [
+          mockGenerateCarePlan({ type: mockGenerateCarePlanType({ id: carePlanType1 }) }),
+        ],
       });
       const carePlanType2 = generateId();
       const carePlanEvents = [
@@ -99,8 +105,15 @@ describe(StateResolverService.name, () => {
       const barrierId = generateId();
       const memberFacts = generateMemberFacts({
         memberInfo: { id: memberId },
-        barriers: [generateBarrier({ type: barrierType, id: barrierId })],
-        carePlans: [generateCarePlan({ type: carePlanType1 })],
+        barriers: [
+          mockGenerateBarrier({
+            type: mockGenerateBarrierType({ id: barrierType }),
+            id: barrierId,
+          }),
+        ],
+        carePlans: [
+          mockGenerateCarePlan({ type: mockGenerateCarePlanType({ id: carePlanType1 }) }),
+        ],
       });
       const carePlanEvent = generateCarePlanEvent({
         type: carePlanType1,
@@ -120,8 +133,15 @@ describe(StateResolverService.name, () => {
       const barrierId = generateId();
       const memberFacts = generateMemberFacts({
         memberInfo: { id: memberId },
-        barriers: [generateBarrier({ type: barrierType, id: barrierId })],
-        carePlans: [generateCarePlan({ type: carePlanType1 })],
+        barriers: [
+          mockGenerateBarrier({
+            type: mockGenerateBarrierType({ id: barrierType }),
+            id: barrierId,
+          }),
+        ],
+        carePlans: [
+          mockGenerateCarePlan({ type: mockGenerateCarePlanType({ id: carePlanType1 }) }),
+        ],
       });
       const carePlanEvent = generateCarePlanEvent({
         parentEntityType: barrierType,
@@ -139,7 +159,9 @@ describe(StateResolverService.name, () => {
       const barrierType = generateId();
       const memberFacts = generateMemberFacts({
         memberInfo: { id: memberId },
-        carePlans: [generateCarePlan({ type: carePlanType1 })],
+        carePlans: [
+          mockGenerateCarePlan({ type: mockGenerateCarePlanType({ id: carePlanType1 }) }),
+        ],
       });
       const carePlanEvent = generateCarePlanEvent({
         type: carePlanType1,
@@ -160,7 +182,7 @@ describe(StateResolverService.name, () => {
       const memberId = generateId();
       const memberFacts = generateMemberFacts({
         memberInfo: { id: memberId },
-        barriers: [generateBarrier({ type: barrierType1 })],
+        barriers: [mockGenerateBarrier({ type: mockGenerateBarrierType({ id: barrierType1 }) })],
       });
       const barrierEvent = generateBarrierEvent({ type: barrierType1 });
 
@@ -174,9 +196,9 @@ describe(StateResolverService.name, () => {
       const memberId = generateId();
       const memberFacts = generateMemberFacts({
         memberInfo: { id: memberId },
-        barriers: [generateBarrier({})],
+        barriers: [mockGenerateBarrier()],
       });
-      const barrierEvent = generateBarrierEvent({});
+      const barrierEvent = generateBarrierEvent();
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore (private method)

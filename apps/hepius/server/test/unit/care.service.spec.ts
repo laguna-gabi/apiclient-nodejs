@@ -1,4 +1,4 @@
-import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings, randomEnum } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { lorem } from 'faker';
 import { Model, Types, model } from 'mongoose';
@@ -15,7 +15,6 @@ import {
   generateUpdateCarePlanParams,
   generateUpdateRedFlagParams,
   loadSessionClient,
-  randomEnum,
 } from '..';
 import {
   BarrierDocument,

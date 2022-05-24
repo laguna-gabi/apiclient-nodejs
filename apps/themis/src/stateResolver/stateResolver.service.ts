@@ -79,14 +79,14 @@ export class StateResolverService {
     let found = false;
     for (const carePlan of currentState.carePlans) {
       // todo: figure out how to populate the type of the parent, if needs to be unique only in context
-      if (carePlan.type === eventParams.type) {
+      if (carePlan.type.id === eventParams.type) {
         found = true;
         break;
       }
     }
 
     const parentBarrier = currentState.barriers.find(
-      (barrier) => barrier.type === eventParams.parentEntityType,
+      (barrier) => barrier.type.id === eventParams.parentEntityType,
     );
     if (!parentBarrier) {
       throw new Error(Errors.get(ErrorType.parentNotFound));
@@ -100,7 +100,7 @@ export class StateResolverService {
     eventParams: EventParams,
   ): Promise<LookupResult> {
     for (const barrier of currentState.barriers) {
-      if (barrier.type === eventParams.type) {
+      if (barrier.type.id === eventParams.type) {
         return { found: true };
       }
     }

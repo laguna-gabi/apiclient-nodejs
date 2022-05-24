@@ -14,6 +14,7 @@ import {
   generatePhone,
   mockLogger,
   mockProcessWarnings,
+  randomEnum,
 } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -52,7 +53,6 @@ import {
   mockGenerateMemberConfig,
   mockGenerateOrg,
   mockGenerateUser,
-  randomEnum,
 } from '..';
 import {
   ErrorType,

@@ -34,6 +34,7 @@ import {
   generateObjectId,
   generatePhone,
   generateZipCode,
+  randomEnum,
 } from '@argus/pandora';
 import { general, graphql, hosts } from 'config';
 import { add, addDays, format, sub, subDays } from 'date-fns';
@@ -1595,15 +1596,6 @@ export const generateAddInsuranceParams = ({
 }: Partial<AddInsuranceParams> = {}): AddInsuranceParams => {
   return { name, type, memberId, startDate, endDate };
 };
-
-/*************************************************************************************************
- ******************************************** Helpers ********************************************
- ************************************************************************************************/
-export function randomEnum<T>(enumType: T): string {
-  const enumValues = Object.keys(enumType);
-  const randomIndex = Math.floor(Math.random() * enumValues.length);
-  return enumValues[randomIndex];
-}
 
 export function getIsAssignableToMember(questionnaireType: QuestionnaireType): boolean {
   return (
