@@ -17,9 +17,5 @@ async function bootstrap() {
     'Main',
     bootstrap.name,
   );
-
-  // manual run
-  // const engine = app.get(EngineService);
-  // await engine.handleEvent({ memberId: '11111' });
 }
 bootstrap();

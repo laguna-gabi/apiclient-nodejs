@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { RulesService } from '../rules';
 import { FetcherService } from '../fetcher';
 import { StateResolverService } from '../stateResolver';
+import { IChangeEvent } from '@argus/pandora';
+import { EventType } from '../common';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class EngineService {
@@ -11,7 +14,8 @@ export class EngineService {
     private stateResolverService: StateResolverService,
   ) {}
 
-  async handleEvent(event) {
+  @OnEvent(EventType.onChangeEvent, { async: false })
+  async handleEvent(event: IChangeEvent) {
     const memberId = event.memberId;
     const memberFacts = await this.fetcherService.fetchData(memberId);
     const engineResult = await this.rulesService.run(memberFacts);

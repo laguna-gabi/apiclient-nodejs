@@ -7,5 +7,6 @@ import { StateResolverModule } from '../stateResolver';
 @Module({
   imports: [RulesModule, FetcherModule, StateResolverModule],
   providers: [EngineService],
+  exports: [EngineService],
 })
 export class EngineModule {}

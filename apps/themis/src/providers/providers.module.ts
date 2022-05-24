@@ -29,6 +29,6 @@ import { HepiusClientService } from './hepius/client.service';
     ]),
   ],
   providers: [ConfigsService, QueueService, HepiusClientService],
-  exports: [ConfigsService, HepiusClientService],
+  exports: [ConfigsService, QueueService, HepiusClientService],
 })
 export class ProvidersModule {}

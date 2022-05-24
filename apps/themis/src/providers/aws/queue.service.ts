@@ -1,10 +1,13 @@
-import { Environments, formatEx } from '@argus/pandora';
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Environments, IChangeEvent, formatEx } from '@argus/pandora';
+import { Injectable, NotAcceptableException, OnModuleInit } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { HealthIndicatorResult } from '@nestjs/terminus';
 import { SQS } from 'aws-sdk';
 import { aws, hosts } from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { ConfigsService, ExternalConfigs } from '.';
-import { LoggerService } from '../../common';
+import { EventType, LoggerService } from '../../common';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class QueueService implements OnModuleInit {
@@ -21,6 +24,7 @@ export class QueueService implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly logger: LoggerService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -61,7 +65,21 @@ export class QueueService implements OnModuleInit {
     this.consumer.start();
   }
 
-  private async handleMessage(message: SQSMessage): Promise<void> {
-    console.log(message);
+  isHealthy(): HealthIndicatorResult {
+    return {
+      changeEventQueueUrl: { status: this.changeEventQueueUrl ? 'up' : 'down' },
+    };
+  }
+
+  async handleMessage(message: SQSMessage): Promise<void> {
+    this.logger.info({ MessageId: message.MessageId }, QueueService.name, this.handleMessage.name);
+
+    const changeEvent: IChangeEvent = JSON.parse(message.Body);
+
+    if (!Types.ObjectId.isValid(changeEvent.memberId)) {
+      throw new NotAcceptableException();
+    }
+
+    await this.eventEmitter.emitAsync(EventType.onChangeEvent, changeEvent);
   }
 }

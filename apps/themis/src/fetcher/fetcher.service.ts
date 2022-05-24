@@ -28,6 +28,7 @@ export class FetcherService {
     // for now - fake data
     return {
       ...mockFactsObject,
+      memberInfo: { ...mockFactsObject.memberInfo, id: memberId },
       caregivers: await this.hepiusClientService.getCaregiversByMemberId({ memberId }),
     };
   }
