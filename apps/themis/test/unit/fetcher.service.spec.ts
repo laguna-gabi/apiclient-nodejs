@@ -1,7 +1,11 @@
 import { generateId, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { FetcherModule, FetcherService } from '../../src/fetcher';
-import { Caregiver, mockGenerateCaregiver } from '@argus/hepiusClient';
+import {
+  mockGenerateBarrier,
+  mockGenerateCarePlan,
+  mockGenerateCaregiver,
+} from '@argus/hepiusClient';
 import { HepiusClientService } from '../../src/providers';
 import { generateEngineAction } from '../generators';
 import { TargetEntity } from '../../src/rules/types';
@@ -26,30 +30,54 @@ describe(FetcherService.name, () => {
 
   describe('fetchData', () => {
     let mockHepiusClientServiceGetCaregiversByMemberId: jest.SpyInstance;
+    let mockHepiusClientServiceGetMemberBarriers: jest.SpyInstance;
+    let mockHepiusClientServiceGetMemberCarePlans: jest.SpyInstance;
 
     beforeAll(() => {
       mockHepiusClientServiceGetCaregiversByMemberId = jest.spyOn(
         hepiusClientService,
         `getCaregiversByMemberId`,
       );
+      mockHepiusClientServiceGetMemberBarriers = jest.spyOn(
+        hepiusClientService,
+        `getMemberBarriers`,
+      );
+      mockHepiusClientServiceGetMemberCarePlans = jest.spyOn(
+        hepiusClientService,
+        `getMemberCarePlans`,
+      );
     });
 
     afterEach(() => {
       mockHepiusClientServiceGetCaregiversByMemberId.mockReset();
+      mockHepiusClientServiceGetMemberBarriers.mockReset();
+      mockHepiusClientServiceGetMemberCarePlans.mockReset();
     });
 
-    it(`should fetch ${Caregiver.name} data for member by id`, async () => {
+    it(`should fetch data for member by id`, async () => {
       const memberId = generateId();
+      const carePlan = mockGenerateCarePlan();
+      const barrier = mockGenerateBarrier();
       const caregiver = mockGenerateCaregiver();
 
+      mockHepiusClientServiceGetMemberCarePlans.mockResolvedValue([carePlan]);
+      mockHepiusClientServiceGetMemberBarriers.mockResolvedValue([barrier]);
       mockHepiusClientServiceGetCaregiversByMemberId.mockResolvedValue([caregiver]);
 
       const facts = await service.fetchData(memberId);
 
+      expect(mockHepiusClientServiceGetMemberCarePlans).toHaveBeenCalledWith({
+        memberId,
+      });
+      expect(mockHepiusClientServiceGetMemberBarriers).toHaveBeenCalledWith({
+        memberId,
+      });
       expect(mockHepiusClientServiceGetCaregiversByMemberId).toHaveBeenCalledWith({
         memberId,
       });
 
+      expect(facts.carePlans).toEqual([carePlan]);
+      expect(facts.barriers).toEqual([barrier]);
       expect(facts.caregivers).toEqual([caregiver]);
     });
   });

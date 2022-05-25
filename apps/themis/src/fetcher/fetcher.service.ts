@@ -30,6 +30,8 @@ export class FetcherService {
       ...mockFactsObject,
       memberInfo: { ...mockFactsObject.memberInfo, id: memberId },
       caregivers: await this.hepiusClientService.getCaregiversByMemberId({ memberId }),
+      barriers: await this.hepiusClientService.getMemberBarriers({ memberId }),
+      carePlans: await this.hepiusClientService.getMemberCarePlans({ memberId }),
     };
   }
 
