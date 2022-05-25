@@ -16,7 +16,8 @@ describe('live: twilio', () => {
     await twilio.onModuleInit();
   });
 
-  describe('getPhoneType', () => {
+  describe.skip('getPhoneType', () => {
+    //when running this, remove `process.env.NODE_ENV === environments.production` in `getPhoneType` method.
     it('should return landline on a landline phone', async () => {
       const result = await twilio.getPhoneType('+18476757942');
       expect(result).toEqual('landline');

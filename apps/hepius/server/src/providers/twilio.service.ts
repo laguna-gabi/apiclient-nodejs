@@ -1,4 +1,4 @@
-import { formatEx } from '@argus/pandora';
+import { Environments, formatEx } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { twilio } from 'config';
 import { Twilio, jwt } from 'twilio';
@@ -52,10 +52,14 @@ export class TwilioService implements OnModuleInit {
 
   async getPhoneType(phone: string): Promise<PhoneType> {
     try {
-      const { carrier } = await this.client.lookups
-        .phoneNumbers(phone)
-        .fetch({ type: ['carrier'] });
-      return carrier.type;
+      if (process.env.NODE_ENV === Environments.production) {
+        const { carrier } = await this.client.lookups
+          .phoneNumbers(phone)
+          .fetch({ type: ['carrier'] });
+        return carrier.type;
+      } else {
+        return 'mobile';
+      }
     } catch (ex) {
       this.logger.error({}, TwilioService.name, this.getPhoneType.name, formatEx(ex));
     }
