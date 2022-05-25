@@ -29,6 +29,13 @@ import { SubmitCareWizardParams } from '../../src/care/wizard.dto';
 import { Identifiers, RegisterForNotificationParams } from '../../src/common';
 import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
+  Admission,
+  ChangeMemberDnaParams,
+  GraduateMemberParams,
+  SetGeneralNotesParams,
+  UpdateJourneyParams,
+} from '../../src/journey';
+import {
   AddCaregiverParams,
   CancelNotifyParams,
   CompleteMultipartUploadParams,
@@ -50,14 +57,6 @@ import {
   UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '../../src/member';
-import {
-  Admission,
-  ChangeMemberDnaParams,
-  GraduateMemberParams,
-  SetGeneralNotesParams,
-  UpdateJourneyParams,
-} from '../../src/journey';
-
 import { CreateOrgParams } from '../../src/org';
 import {
   CreateQuestionnaireParams,
@@ -1007,6 +1006,7 @@ export class Mutations {
               phone
               recordingType
               deletedMedia
+              consent
               review {
                 userId
                 content

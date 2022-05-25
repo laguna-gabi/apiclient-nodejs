@@ -673,7 +673,7 @@ export class MemberService extends BaseService {
    ******************************************** Recording ******************************************
    ************************************************************************************************/
   async updateRecording(updateRecordingParams: UpdateRecordingParams, userId): Promise<Recording> {
-    const { start, end, memberId, id, phone, answered, appointmentId, recordingType } =
+    const { start, end, memberId, id, phone, answered, appointmentId, recordingType, consent } =
       updateRecordingParams;
     const member = await this.memberModel.findById(memberId, { _id: 1 });
     if (!member) {
@@ -690,6 +690,7 @@ export class MemberService extends BaseService {
         phone,
         answered,
         recordingType,
+        consent,
         appointmentId: appointmentId ? new Types.ObjectId(appointmentId) : null,
       },
       isNil,

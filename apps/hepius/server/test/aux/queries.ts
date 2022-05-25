@@ -714,6 +714,8 @@ export class Queries {
               answered
               phone
               deletedMedia
+              recordingType
+              consent
             }
           }
         `,

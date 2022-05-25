@@ -1050,6 +1050,8 @@ describe('Integration tests: all', () => {
         expect(rec1.end).toEqual(rec2.end);
         expect(rec1.answered).toEqual(rec2.answered);
         expect(rec1.phone).toEqual(rec2.phone);
+        expect(rec1.recordingType).toEqual(rec2.recordingType);
+        expect(rec1.consent).toEqual(rec2.consent);
       };
 
       const { member: member1, user: user1 } = await creators.createMemberUserAndOptionalOrg();

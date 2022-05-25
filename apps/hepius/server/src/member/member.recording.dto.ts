@@ -31,11 +31,14 @@ export class UpdateRecordingParams {
   @Field(() => String, { nullable: true })
   phone?: string;
 
+  @Field(() => RecordingType, { nullable: true })
+  recordingType?: RecordingType;
+
   @Field(() => String, { nullable: true })
   appointmentId?: string;
 
-  @Field(() => RecordingType, { nullable: true })
-  recordingType?: RecordingType;
+  @Field(() => Boolean, { nullable: true })
+  consent?: boolean;
 }
 
 @InputType({ isAbstract: true })
@@ -111,6 +114,10 @@ export class Recording {
   @Prop({ type: Boolean })
   @Field(() => Boolean, { nullable: true })
   deletedMedia?: boolean;
+
+  @Prop({ type: Boolean })
+  @Field(() => Boolean, { nullable: true })
+  consent?: boolean;
 
   @Prop({ type: RecordingReview })
   @Field(() => RecordingReview, { nullable: true })

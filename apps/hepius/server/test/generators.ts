@@ -73,7 +73,7 @@ import {
   CreateRedFlagParamsWizard,
   SubmitCareWizardParams,
 } from '../src/care/wizard.dto';
-import { ChangeType, ItemType, momentFormats, reformatDate } from '../src/common';
+import { ChangeType, ItemType, RecordingType, momentFormats, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
@@ -812,10 +812,22 @@ export const generateUpdateRecordingParams = ({
   answered = true,
   phone = generatePhone(),
   appointmentId,
-  recordingType,
+  recordingType = RecordingType.phone,
+  consent = true,
 }: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
   const obj = id ? { id } : {};
-  return { ...obj, memberId, userId, start, end, answered, phone, appointmentId, recordingType };
+  return {
+    ...obj,
+    memberId,
+    userId,
+    start,
+    end,
+    answered,
+    phone,
+    appointmentId,
+    recordingType,
+    consent,
+  };
 };
 
 export const generateUpdateRecordingReviewParams = ({
