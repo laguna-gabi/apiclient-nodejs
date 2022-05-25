@@ -1,4 +1,4 @@
-import { generateId, mockProcessWarnings } from '@argus/pandora';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { FetcherModule, FetcherService } from '../../src/fetcher';
 import {
@@ -9,6 +9,7 @@ import {
 import { HepiusClientService } from '../../src/providers';
 import { generateEngineAction } from '../generators';
 import { TargetEntity } from '../../src/rules/types';
+import { LoggerService } from '../../src/common';
 
 describe(FetcherService.name, () => {
   let module: TestingModule;
@@ -21,6 +22,7 @@ describe(FetcherService.name, () => {
       imports: [FetcherModule],
     }).compile();
     service = module.get<FetcherService>(FetcherService);
+    mockLogger(module.get<LoggerService>(LoggerService));
     hepiusClientService = module.get<HepiusClientService>(HepiusClientService);
   });
 

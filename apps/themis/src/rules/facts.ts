@@ -1,4 +1,5 @@
 import { DynamicFact } from './types';
+import { Barrier, Caregiver } from '@argus/hepiusClient';
 
 export enum DynamicFacts {
   caregiversCount = 'caregiversCount',
@@ -9,21 +10,15 @@ export const dynamicFacts: DynamicFact[] = [
   {
     id: DynamicFacts.caregiversCount,
     calculationMethod: async (params, almanac) => {
-      const memberCaregivers = await almanac.factValue('caregivers');
-      // todo: remove when defining types
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      const memberCaregivers: Caregiver[] = await almanac.factValue('caregivers');
       return memberCaregivers.length;
     },
   },
   {
     id: DynamicFacts.barrierTypes,
     calculationMethod: async (params, almanac) => {
-      const barriers = await almanac.factValue('barriers');
-      // todo: remove when defining types
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      return barriers.map((barrier) => barrier.type);
+      const barriers: Barrier[] = await almanac.factValue('barriers');
+      return barriers.map((barrier) => barrier.type.id);
     },
   },
 ];

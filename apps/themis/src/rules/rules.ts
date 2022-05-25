@@ -60,31 +60,6 @@ export const engineRules: EngineRule[] = [
     },
   },
   {
-    name: 'loneliness2',
-    active: true,
-    conditions: {
-      any: [
-        {
-          fact: 'memberInfo',
-          operator: Operator.equal,
-          value: true,
-          path: '$.livesAlone',
-        },
-        {
-          fact: DynamicFacts.caregiversCount,
-          operator: Operator.lessThan,
-          value: 2,
-        },
-      ],
-    },
-    event: {
-      type: TargetEntity.barrier,
-      params: {
-        type: 'loneliness2',
-      },
-    },
-  },
-  {
     name: 'content-about-combating-loneliness',
     active: true,
     conditions: {
