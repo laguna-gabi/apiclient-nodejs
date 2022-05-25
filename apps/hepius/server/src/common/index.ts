@@ -1,6 +1,7 @@
 export * from './errors';
 export * from './events';
 export * from './customValidators';
+export * from './alert.dto';
 export * from './interfaces.dto';
 export * from './decorators';
 export * from './constants';

@@ -84,7 +84,8 @@ describe('Integration tests : getMembers', () => {
 
     await creators.createAndValidateAppointment({ member });
     const appointment = await appointmentsActions.scheduleAppointment({ member });
-    await creators.createAndValidateTask(member.id, handler.mutations.createActionItem);
+    await creators.createAndValidateActionItem(member.id, handler.mutations.createActionItem);
+    await creators.createAndValidateActionItem(member.id, handler.mutations.createActionItem);
 
     const requestHeaders = generateRequestHeaders(member.authId);
     const memberResult = await handler.queries.getMember({
@@ -105,7 +106,7 @@ describe('Integration tests : getMembers', () => {
         adherence: memberResult.scores.adherence,
         wellbeing: memberResult.scores.wellbeing,
         createdAt: memberResult.createdAt,
-        actionItemsCount: 1,
+        actionItemsCount: 2,
         primaryUser: expect.objectContaining({
           id: primaryUser.id,
           firstName: primaryUser.firstName,

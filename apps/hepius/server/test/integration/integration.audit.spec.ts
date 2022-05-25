@@ -11,9 +11,9 @@ import {
   generateAddCaregiverParams,
   generateAvailabilityInput,
   generateCarePlanTypeInput,
+  generateCreateActionItemParams,
   generateCreateCarePlanParams,
   generateCreateMemberParams,
-  generateCreateTaskParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateCreateUserParams,
@@ -45,8 +45,6 @@ import { delay, reformatDate } from '../../src/common';
 import { Communication, CommunicationDocument } from '../../src/communication';
 import { DailyReport, DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
-  ActionItem,
-  ActionItemDocument,
   CaregiverDocument,
   ControlMember,
   ControlMemberDocument,
@@ -55,9 +53,13 @@ import {
   Member,
   MemberDocument,
   ReplaceUserForMemberParams,
-  TaskStatus,
 } from '../../src/member';
-import { JourneyDocument } from '../../src/journey';
+import {
+  ActionItem,
+  ActionItemDocument,
+  ActionItemStatus,
+  JourneyDocument,
+} from '../../src/journey';
 import {
   Questionnaire,
   QuestionnaireDocument,
@@ -285,7 +287,7 @@ describe('Integration tests : Audit', () => {
   describe(ActionItem.name, () => {
     it('should update createdBy and updatedBy fields for action item api', async () => {
       const { id } = await handler.mutations.createActionItem({
-        createTaskParams: {
+        createActionItemParams: {
           memberId: handler.patientZero.id,
           title: lorem.sentence(),
           deadline: addDays(new Date(), 1),
@@ -298,7 +300,7 @@ describe('Integration tests : Audit', () => {
       ).toBeTruthy();
 
       await handler.mutations.updateActionItemStatus({
-        updateTaskStatusParams: { id, status: TaskStatus.reached },
+        updateActionItemStatusParams: { id, status: ActionItemStatus.reached },
         requestHeaders: generateRequestHeaders(user2.authId),
       });
 
@@ -446,14 +448,19 @@ describe('Integration tests : Audit', () => {
       await delay(2000); // wait for event to finish
 
       // Create Action Item for Member (user2) - this will update the list of actions items
-      const createTaskParams = generateCreateTaskParams({ memberId });
-      await handler.mutations.createActionItem({
-        createTaskParams,
+      const createActionItemParams = generateCreateActionItemParams({ memberId });
+      const { id: actionItemId } = await handler.mutations.createActionItem({
+        createActionItemParams,
         requestHeaders: generateRequestHeaders(user2.authId),
       });
 
       expect(
-        await checkAuditValues<MemberDocument>(memberId, handler.memberModel, undefined, user2.id),
+        await checkAuditValues<ActionItemDocument>(
+          actionItemId,
+          handler.actionItemModel,
+          user2.id,
+          user2.id,
+        ),
       ).toBeTruthy();
 
       // Set general notes for Member (user1) - this will update the general notes / nurse notes fields

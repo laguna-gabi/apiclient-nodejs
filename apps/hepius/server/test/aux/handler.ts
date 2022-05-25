@@ -70,9 +70,6 @@ import {
   DailyReportService,
 } from '../../src/dailyReport';
 import {
-  ActionItem,
-  ActionItemDocument,
-  ActionItemDto,
   CaregiverDocument,
   CaregiverDto,
   ControlMember,
@@ -86,7 +83,15 @@ import {
   MemberDto,
   MemberService,
 } from '../../src/member';
-import { Journey, JourneyDocument, JourneyDto, JourneyService } from '../../src/journey';
+import {
+  ActionItem,
+  ActionItemDocument,
+  ActionItemDto,
+  Journey,
+  JourneyDocument,
+  JourneyDto,
+  JourneyService,
+} from '../../src/journey';
 import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
 import {

@@ -1,6 +1,7 @@
 import { BaseInternationalization, Language } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { AlertType, Member } from '../../src/member';
+import { Member } from '../../src/member';
+import { AlertType } from '../../src/common';
 
 @Injectable()
 export class Internationalization extends BaseInternationalization implements OnModuleInit {

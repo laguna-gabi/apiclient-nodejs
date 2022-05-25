@@ -29,7 +29,6 @@ import {
   generateAppointmentComposeParams,
   generateCommunication,
   generateCreateMemberParams,
-  generateCreateTaskParams,
   generateDeleteMemberParams,
   generateEndAppointmentParams,
   generateGetMemberUploadJournalAudioLinkParams,
@@ -46,7 +45,6 @@ import {
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
-  generateUpdateTaskStatusParams,
   mockGenerateAlert,
   mockGenerateJourney,
   mockGenerateMember,
@@ -86,7 +84,6 @@ import {
   MemberModule,
   MemberResolver,
   MemberService,
-  TaskStatus,
 } from '../../src/member';
 import { GraduateMemberParams, JourneyService } from '../../src/journey';
 import {
@@ -992,53 +989,6 @@ describe('MemberResolver', () => {
       await expect(
         resolver.getMemberDownloadRecordingLink({ id: generateId(), memberId: generateId() }),
       ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
-    });
-  });
-
-  describe('createActionItem', () => {
-    let spyOnServiceInsertActionItem;
-    beforeEach(() => {
-      spyOnServiceInsertActionItem = jest.spyOn(service, 'insertActionItem');
-    });
-
-    afterEach(() => {
-      spyOnServiceInsertActionItem.mockReset();
-    });
-
-    it('should create an action item', async () => {
-      spyOnServiceInsertActionItem.mockImplementationOnce(async () => ({
-        id: generateId(),
-      }));
-
-      const params = generateCreateTaskParams();
-      await resolver.createActionItem(params);
-
-      expect(spyOnServiceInsertActionItem).toBeCalledTimes(1);
-      expect(spyOnServiceInsertActionItem).toBeCalledWith({
-        createTaskParams: params,
-        status: TaskStatus.pending,
-      });
-    });
-  });
-
-  describe('updateActionItemStatus', () => {
-    let spyOnServiceUpdateActionItemStatus;
-    beforeEach(() => {
-      spyOnServiceUpdateActionItemStatus = jest.spyOn(service, 'updateActionItemStatus');
-    });
-
-    afterEach(() => {
-      spyOnServiceUpdateActionItemStatus.mockReset();
-    });
-
-    it('should create an action item', async () => {
-      spyOnServiceUpdateActionItemStatus.mockImplementationOnce(async () => mockGenerateMember());
-
-      const updateActionItemStatus = generateUpdateTaskStatusParams();
-      await resolver.updateActionItemStatus(updateActionItemStatus);
-
-      expect(spyOnServiceUpdateActionItemStatus).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateActionItemStatus).toBeCalledWith(updateActionItemStatus);
     });
   });
 
@@ -2564,12 +2514,15 @@ describe('MemberResolver', () => {
 
   describe('getAlerts', () => {
     let spyOnServiceGetAlerts;
+    let spyOnServiceGetUserMembers;
     beforeEach(() => {
       spyOnServiceGetAlerts = jest.spyOn(service, 'getAlerts');
+      spyOnServiceGetUserMembers = jest.spyOn(service, 'getUserMembers');
     });
 
     afterEach(() => {
       spyOnServiceGetAlerts.mockReset();
+      spyOnServiceGetUserMembers.mockReset();
     });
 
     it('should call getAlerts', async () => {
@@ -2577,12 +2530,14 @@ describe('MemberResolver', () => {
       const lastQueryAlert = date.past(1);
       const alert = mockGenerateAlert();
 
+      const members = [mockGenerateMember()];
+      spyOnServiceGetUserMembers.mockResolvedValue(members);
       spyOnServiceGetAlerts.mockResolvedValue([alert]);
 
       const alerts = await resolver.getAlerts(userId, lastQueryAlert);
 
       expect(spyOnServiceGetAlerts).toBeCalledTimes(1);
-      expect(spyOnServiceGetAlerts).toBeCalledWith(userId, lastQueryAlert);
+      expect(spyOnServiceGetAlerts).toBeCalledWith(userId, members, lastQueryAlert);
       expect(alerts).toEqual([alert]);
     });
   });

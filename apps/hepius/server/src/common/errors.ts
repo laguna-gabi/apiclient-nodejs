@@ -24,8 +24,6 @@ export enum ErrorType {
   memberDateOfBirth = 9204,
   memberDischargeDate = 9205,
   memberEmailFormat = 9206,
-  memberTaskDeadline = 9208,
-  memberActionItemIdNotFound = 9209,
   memberNotFound = 9210,
   memberPrimaryUserIdNotInUsers = 9211,
   memberAdmitDate = 9212,
@@ -162,6 +160,8 @@ export enum ErrorType {
   journeyNotFound = 10501,
   journeyIdInvalid = 10502,
   noActiveJourney = 10503,
+  journeyActionItemIdNotFound = 10504,
+  journeyActionItemDeadline = 10505,
 
   //member admission
   admissionDiagnosisIdNotFound = 10601,
@@ -223,8 +223,6 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberDateOfBirth.valueOf(), `dateOfBirth ${dateInstanceFormat}`],
   [ErrorType.memberDischargeDate.valueOf(), `dischargeDate ${dateInstanceFormat}`],
   [ErrorType.memberEmailFormat.valueOf(), emailFormat],
-  [ErrorType.memberTaskDeadline.valueOf(), `deadline ${dateTimeInstanceFormat}`],
-  [ErrorType.memberActionItemIdNotFound.valueOf(), `action item ${notFoundPrefix}`],
   [ErrorType.memberNotFound.valueOf(), `member ${notFoundPrefix}`],
   [ErrorType.memberPrimaryUserIdNotInUsers.valueOf(), 'primaryUserId must exists in usersIds list'],
   [ErrorType.memberAdmitDate.valueOf(), `admitDate ${dateInstanceFormat}`],
@@ -434,6 +432,8 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.journeyNotFound.valueOf(), `journey ${notFoundPrefix}`],
   [ErrorType.journeyIdInvalid.valueOf(), `journey id ${objectIdFormat}`],
   [ErrorType.noActiveJourney.valueOf(), `no active journey`],
+  [ErrorType.journeyActionItemIdNotFound.valueOf(), `journey action item ${notFoundPrefix}`],
+  [ErrorType.journeyActionItemDeadline.valueOf(), `deadline ${dateTimeInstanceFormat}`],
   [ErrorType.admissionDiagnosisIdNotFound.valueOf(), `diagnosis ${notFoundPrefix}`],
   [
     ErrorType.admissionTreatmentRenderedIdNotFound.valueOf(),

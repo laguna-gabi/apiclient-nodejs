@@ -8,13 +8,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { services } from 'config';
 import * as mongooseDelete from 'mongoose-delete';
 import {
-  ActionItem,
-  ActionItemDto,
   CaregiverDto,
   ControlMember,
   ControlMemberDto,
-  DismissedAlert,
-  DismissedAlertDto,
   Insurance,
   InsuranceDto,
   Journal,
@@ -31,7 +27,7 @@ import {
   Recording,
 } from '.';
 import { AppointmentDto } from '../appointment';
-import { CommonModule, LoggerService } from '../common';
+import { CommonModule, DismissedAlert, DismissedAlertDto, LoggerService } from '../common';
 import { CommunicationModule } from '../communication';
 import { ChangeEventFactoryProvider, useFactoryOptions } from '../db';
 import { ConfigsService, ExternalConfigs, ProvidersModule } from '../providers';
@@ -56,7 +52,6 @@ import { JourneyModule } from '../journey';
       { name: DismissedAlert.name, schema: DismissedAlertDto },
       { name: Journal.name, schema: JournalDto },
       { name: Todo.name, schema: TodoDto },
-      { name: ActionItem.name, schema: ActionItemDto },
       { name: Member.name, schema: MemberDto },
     ]),
     MongooseModule.forFeatureAsync([

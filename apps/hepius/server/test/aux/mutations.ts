@@ -29,18 +29,10 @@ import { SubmitCareWizardParams } from '../../src/care/wizard.dto';
 import { Identifiers, RegisterForNotificationParams } from '../../src/common';
 import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
-  Admission,
-  ChangeMemberDnaParams,
-  GraduateMemberParams,
-  SetGeneralNotesParams,
-  UpdateJourneyParams,
-} from '../../src/journey';
-import {
   AddCaregiverParams,
   CancelNotifyParams,
   CompleteMultipartUploadParams,
   CreateMemberParams,
-  CreateTaskParams,
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
   Journal,
@@ -55,8 +47,17 @@ import {
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
-  UpdateTaskStatusParams,
 } from '../../src/member';
+import {
+  Admission,
+  ChangeMemberDnaParams,
+  CreateActionItemParams,
+  GraduateMemberParams,
+  SetGeneralNotesParams,
+  UpdateActionItemStatusParams,
+  UpdateJourneyParams,
+} from '../../src/journey';
+
 import { CreateOrgParams } from '../../src/org';
 import {
   CreateQuestionnaireParams,
@@ -451,12 +452,12 @@ export class Mutations {
   };
 
   createActionItem = async ({
-    createTaskParams,
+    createActionItemParams,
     missingFieldError,
     invalidFieldsErrors,
     requestHeaders = this.defaultUserRequestHeaders,
   }: {
-    createTaskParams: CreateTaskParams;
+    createActionItemParams: CreateActionItemParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
     requestHeaders?;
@@ -464,13 +465,13 @@ export class Mutations {
     const { createActionItem } = await this.client
       .request(
         gql`
-          mutation CreateActionItem($createTaskParams: CreateTaskParams!) {
-            createActionItem(createTaskParams: $createTaskParams) {
+          mutation CreateActionItem($createActionItemParams: CreateActionItemParams!) {
+            createActionItem(createActionItemParams: $createActionItemParams) {
               id
             }
           }
         `,
-        { createTaskParams },
+        { createActionItemParams },
         requestHeaders,
       )
       .catch((ex) => {
@@ -485,12 +486,12 @@ export class Mutations {
   };
 
   updateActionItemStatus = async ({
-    updateTaskStatusParams,
+    updateActionItemStatusParams,
     missingFieldError,
     invalidFieldsErrors,
     requestHeaders = this.defaultUserRequestHeaders,
   }: {
-    updateTaskStatusParams: UpdateTaskStatusParams;
+    updateActionItemStatusParams: UpdateActionItemStatusParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
     requestHeaders?;
@@ -498,11 +499,13 @@ export class Mutations {
     const { updateActionItemStatus } = await this.client
       .request(
         gql`
-          mutation UpdateActionItemStatus($updateTaskStatusParams: UpdateTaskStatusParams!) {
-            updateActionItemStatus(updateTaskStatusParams: $updateTaskStatusParams)
+          mutation updateActionItemStatus(
+            $updateActionItemStatusParams: UpdateActionItemStatusParams!
+          ) {
+            updateActionItemStatus(updateActionItemStatusParams: $updateActionItemStatusParams)
           }
         `,
-        { updateTaskStatusParams },
+        { updateActionItemStatusParams },
         requestHeaders,
       )
       .catch((ex) => {

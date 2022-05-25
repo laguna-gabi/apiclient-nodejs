@@ -9,9 +9,18 @@ import {
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
 import { isNil, omitBy } from 'lodash';
-import { Types } from 'mongoose';
-import { ErrorType, Errors, IsNotPlatformWeb } from '.';
+import { Model, Types } from 'mongoose';
+import {
+  Alert,
+  DismissedAlert,
+  DismissedAlertDocument,
+  ErrorType,
+  Errors,
+  IsNotPlatformWeb,
+} from '.';
 import { IsObjectId } from '@argus/hepiusClient';
+import { differenceInMilliseconds, sub } from 'date-fns';
+import { InjectModel } from '@nestjs/mongoose';
 
 /**************************************************************************************************
  *************************** Enum registration for external gql methods ***************************
@@ -73,6 +82,49 @@ export abstract class BaseService {
 
   removeNotNullable(object, keys: string[]) {
     return omitBy(object, (val, key: string) => keys.includes(key) && isNil(val));
+  }
+}
+
+export abstract class AlertService extends BaseService {
+  protected constructor(
+    @InjectModel(DismissedAlert.name)
+    readonly dismissAlertModel: Model<DismissedAlertDocument>,
+  ) {
+    super();
+  }
+
+  abstract entityToAlerts(member): Promise<Alert[]>;
+
+  async getAlerts(userId: string, members, lastQueryAlert?: Date): Promise<Alert[]> {
+    const alerts = (
+      await Promise.all(members?.map(async (member) => this.entityToAlerts(member)))
+    ).flat();
+
+    const dismissedAlertsIds = (await this.getUserDismissedAlerts(userId)).map(
+      (dismissedAlerts) => dismissedAlerts.alertId,
+    );
+
+    return alerts
+      .filter((alert: Alert) => alert?.date > sub(new Date(), { days: 30 }))
+      .map((alert) => {
+        alert.dismissed = dismissedAlertsIds?.includes(alert.id);
+        alert.isNew = !lastQueryAlert || lastQueryAlert < alert.date;
+
+        return alert;
+      })
+      .sort((a1: Alert, a2: Alert) => {
+        return differenceInMilliseconds(a2.date, a1.date);
+      });
+  }
+
+  async dismissAlert(userId: string, alertId: string) {
+    return this.dismissAlertModel.findOneAndUpdate({ alertId, userId }, undefined, {
+      upsert: true,
+    });
+  }
+
+  private async getUserDismissedAlerts(userId: string): Promise<DismissedAlert[]> {
+    return this.dismissAlertModel.find({ userId });
   }
 }
 

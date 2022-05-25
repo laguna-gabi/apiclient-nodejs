@@ -33,7 +33,6 @@ import {
   generateAddInsuranceParams,
   generateCreateMemberParams,
   generateCreateQuestionnaireParams,
-  generateCreateTaskParams,
   generateCreateUserParams,
   generateDateOnly,
   generateDeleteMemberParams,
@@ -49,7 +48,6 @@ import {
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateRecordingReviewParams,
-  generateUpdateTaskStatusParams,
   loadSessionClient,
   mockGenerateDispatch,
   mockGenerateJourney,
@@ -58,6 +56,10 @@ import {
 } from '..';
 import { AppointmentDocument, AppointmentDto, AppointmentModule } from '../../src/appointment';
 import {
+  AlertType,
+  DismissedAlert,
+  DismissedAlertDocument,
+  DismissedAlertDto,
   ErrorType,
   Errors,
   LoggerService,
@@ -67,18 +69,11 @@ import {
 } from '../../src/common';
 import { Audit } from '../../src/db';
 import {
-  ActionItem,
-  ActionItemDocument,
-  ActionItemDto,
-  AlertType,
   CaregiverDocument,
   CaregiverDto,
   ControlMember,
   ControlMemberDocument,
   ControlMemberDto,
-  DismissedAlert,
-  DismissedAlertDocument,
-  DismissedAlertDto,
   Honorific,
   ImageFormat,
   Insurance,
@@ -101,7 +96,6 @@ import {
   Recording,
   RecordingDocument,
   Sex,
-  TaskStatus,
   UpdateMemberParams,
 } from '../../src/member';
 import { Journey, JourneyDocument, JourneyDto, ReadmissionRisk } from '../../src/journey';
@@ -130,7 +124,6 @@ describe('MemberService', () => {
   let controlMemberModel: Model<ControlMemberDocument & defaultTimestampsDbValues>;
   let modelUser: Model<UserDocument>;
   let modelOrg: Model<OrgDocument>;
-  let modelActionItem: Model<ActionItemDocument>;
   let modelJournal: Model<JournalDocument>;
   let modelAppointment: Model<AppointmentDocument>;
   let modelDismissedAlert: Model<DismissedAlertDocument>;
@@ -164,7 +157,6 @@ describe('MemberService', () => {
     );
     modelUser = model<UserDocument>(User.name, UserDto);
     modelOrg = model<OrgDocument>(Org.name, OrgDto);
-    modelActionItem = model<ActionItemDocument>(ActionItem.name, ActionItemDto);
     modelJournal = model<JournalDocument>(Journal.name, JournalDto);
     modelAppointment = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     modelDismissedAlert = model<DismissedAlertDocument>(DismissedAlert.name, DismissedAlertDto);
@@ -399,15 +391,6 @@ describe('MemberService', () => {
       const memberId = createdMember.id;
       await modelJourney.create(mockGenerateJourney({ memberId }));
 
-      await service.insertActionItem({
-        createTaskParams: generateCreateTaskParams({ memberId }),
-        status: TaskStatus.pending,
-      });
-      await service.insertActionItem({
-        createTaskParams: generateCreateTaskParams({ memberId }),
-        status: TaskStatus.pending,
-      });
-
       const result = await service.getByOrg(orgId);
       const member = await service.get(memberId);
       const memberConfig = await service.getMemberConfig(memberId);
@@ -424,7 +407,7 @@ describe('MemberService', () => {
           adherence: 0,
           wellbeing: 0,
           createdAt: member.createdAt,
-          actionItemsCount: 2,
+          actionItemsCount: 0,
           primaryUser: expect.any(Object),
           nextAppointment: undefined,
           appointmentsCount: 0,
@@ -930,14 +913,9 @@ describe('MemberService', () => {
       );
     });
 
-    test.each([true, false])('should delete member, member config & actionItems', async (hard) => {
+    test.each([true, false])('should delete member and member config', async (hard) => {
       const memberId = await generateMember();
       const userId = generateId();
-
-      const { id: actionItemId } = await service.insertActionItem({
-        createTaskParams: generateCreateTaskParams({ memberId }),
-        status: TaskStatus.pending,
-      });
 
       const result = await service.deleteMember(
         generateDeleteMemberParams({ id: memberId, hard }),
@@ -952,20 +930,15 @@ describe('MemberService', () => {
       });
       // @ts-ignore
       const memberConfigDeletedResult = await memberConfigModel.findWithDeleted({ memberId });
-      // @ts-ignore
-      const ActionItemsDeletedResult = await modelActionItem.findWithDeleted({ _id: actionItemId });
       /* eslint-enable @typescript-eslint/ban-ts-comment */
 
       if (hard) {
-        [memberDeletedResult, memberConfigDeletedResult, ActionItemsDeletedResult].forEach(
-          (result) => {
-            expect(result).toEqual([]);
-          },
-        );
+        [memberDeletedResult, memberConfigDeletedResult].forEach((result) => {
+          expect(result).toEqual([]);
+        });
       } else {
         await checkDelete(memberDeletedResult, { _id: new Types.ObjectId(memberId) }, userId);
         await checkDelete(memberConfigDeletedResult, { memberId }, userId);
-        await checkDelete(ActionItemsDeletedResult, { _id: actionItemId }, userId);
       }
     });
 
@@ -986,10 +959,6 @@ describe('MemberService', () => {
     it('should be able to hard delete after soft delete', async () => {
       const memberId = await generateMember();
       const userId = generateId();
-      const { id: actionItemId } = await service.insertActionItem({
-        createTaskParams: generateCreateTaskParams({ memberId }),
-        status: TaskStatus.pending,
-      });
       const params = generateUpdateRecordingParams({ memberId });
       const params2 = generateUpdateRecordingParams({ memberId });
       const { id: recordingId } = await service.updateRecording(params, params.userId);
@@ -1020,8 +989,6 @@ describe('MemberService', () => {
         memberId: new Types.ObjectId(memberId),
       });
       // @ts-ignore
-      const actionItemsDeletedResult = await modelActionItem.findWithDeleted({ _id: actionItemId });
-      // @ts-ignore
       const recordingDeletedResult = await modelRecording.findWithDeleted({
         memberId: new Types.ObjectId(memberId),
       });
@@ -1041,7 +1008,6 @@ describe('MemberService', () => {
         { memberId: new Types.ObjectId(memberId) },
         userId,
       );
-      await checkDelete(actionItemsDeletedResult, { _id: actionItemId }, userId);
       await checkDelete(recordingDeletedResult, { memberId: new Types.ObjectId(memberId) }, userId);
       await checkDelete(caregiverDeletedResult, { memberId: new Types.ObjectId(memberId) }, userId);
       await checkDelete(journalDeletedResult, { memberId: new Types.ObjectId(memberId) }, userId);
@@ -1062,10 +1028,6 @@ describe('MemberService', () => {
         memberId: new Types.ObjectId(memberId),
       });
       // @ts-ignore
-      const actionItemsDeletedResultHard = await modelActionItem.findWithDeleted({
-        _id: actionItemId,
-      });
-      // @ts-ignore
       const recordingDeletedResultHard = await modelRecording.findWithDeleted({ id: recordingId });
       // @ts-ignore
       const caregiverDeletedResultHard = await modelCaregiver.findWithDeleted({ _id: caregiverId });
@@ -1075,7 +1037,6 @@ describe('MemberService', () => {
       [
         memberDeletedResultHard,
         memberConfigDeletedResultHard,
-        actionItemsDeletedResultHard,
         recordingDeletedResultHard,
         caregiverDeletedResultHard,
         journalDeletedResultHard,
@@ -1195,36 +1156,6 @@ describe('MemberService', () => {
       });
 
       expect(afterObject.address).toEqual({ ...beforeObject.address, city });
-    });
-  });
-
-  describe('insertActionItem', () => {
-    it('should insert an action item', async () => {
-      const createTaskParams = generateCreateTaskParams();
-      const { id } = await service.insertActionItem({
-        createTaskParams,
-        status: TaskStatus.pending,
-      });
-
-      expect(id).toEqual(expect.any(Types.ObjectId));
-    });
-  });
-
-  describe('updateActionItemStatus', () => {
-    it('should update an existing action item status', async () => {
-      const createTaskParams = generateCreateTaskParams();
-      const { id } = await service.insertActionItem({
-        createTaskParams,
-        status: TaskStatus.pending,
-      });
-
-      await service.updateActionItemStatus({ id, status: TaskStatus.reached });
-    });
-
-    it('should not be able to update status for a non existing action item', async () => {
-      await expect(
-        service.updateActionItemStatus(generateUpdateTaskStatusParams()),
-      ).rejects.toThrow(Errors.get(ErrorType.memberActionItemIdNotFound));
     });
   });
 
@@ -1642,7 +1573,7 @@ describe('MemberService', () => {
           { _id: new Types.ObjectId(userId) },
           { lean: true },
         );
-        expect(await service.getAlerts(userId, lastQueryAlert)).toEqual([]);
+        expect(await service.getAlerts(userId, [], lastQueryAlert)).toEqual([]);
       });
 
       it('should get alerts', async () => {
@@ -1652,7 +1583,7 @@ describe('MemberService', () => {
           { _id: new Types.ObjectId(userId) },
           { lean: true },
         );
-        expect(await service.getAlerts(userId, lastQueryAlert)).toEqual([
+        expect(await service.getAlerts(userId, [member1, member2], lastQueryAlert)).toEqual([
           {
             date: member2.createdAt,
             dismissed: false,
@@ -1719,7 +1650,7 @@ describe('MemberService', () => {
           { lean: true, new: true },
         );
 
-        expect(await service.getAlerts(userId, lastQueryAlert)).toEqual([
+        expect(await service.getAlerts(userId, [member1, member2], lastQueryAlert)).toEqual([
           {
             date: member2.createdAt,
             dismissed: false,
@@ -1777,70 +1708,6 @@ describe('MemberService', () => {
     });
 
     describe('entity based alerts', () => {
-      it('should return pending post deadline action item alerts', async () => {
-        mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
-        // create a new member
-        const memberId = await generateMember();
-
-        const member = await service.get(memberId);
-
-        // add an overdue Action Item - out of range (over 30 days since deadline)
-        await service.insertActionItem({
-          createTaskParams: generateCreateTaskParams({
-            memberId,
-            deadline: sub(new Date(), { days: 31 }),
-          }),
-          status: TaskStatus.pending,
-        });
-
-        // add an overdue Action Item - within range (less than 30 days since deadline)
-        const createTaskParams = generateCreateTaskParams({
-          memberId,
-          deadline: sub(new Date(), { days: 29 }),
-        });
-        const actionItemId = await service.insertActionItem({
-          createTaskParams,
-          status: TaskStatus.pending,
-        });
-
-        // add a `reached` Action Item (should not trigger an alert)
-        await service.insertActionItem({
-          createTaskParams: generateCreateTaskParams({ memberId }),
-          status: TaskStatus.reached,
-        });
-
-        const alerts = await service.getAlerts(member.primaryUserId.toString());
-
-        expect(alerts).toEqual([
-          {
-            id: `${memberId}_${AlertType.memberAssigned}`,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberAssigned, {
-              member,
-            }),
-            memberId: member.id.toString(),
-            type: AlertType.memberAssigned,
-            date: member.createdAt,
-            dismissed: false,
-            isNew: true,
-          },
-          {
-            id: `${actionItemId.id}_${AlertType.actionItemOverdue}`,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.actionItemOverdue, {
-              member,
-            }),
-            memberId: member.id.toString(),
-            type: AlertType.actionItemOverdue,
-            date: createTaskParams.deadline,
-            dismissed: false,
-            isNew: true,
-          },
-        ]);
-      });
-
       it('should return appointment reviewed alerts', async () => {
         mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
         // create a new member
@@ -1870,7 +1737,7 @@ describe('MemberService', () => {
           member.primaryUserId.toString(),
         );
 
-        const alerts = await service.getAlerts(member.primaryUserId.toString());
+        const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
 
         expect(alerts).toEqual([
           {
@@ -1919,7 +1786,7 @@ describe('MemberService', () => {
           { $set: { end: endDate } },
         );
 
-        const alerts = await service.getAlerts(member.primaryUserId.toString());
+        const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
 
         expect(alerts).toEqual([
           {
@@ -1996,7 +1863,7 @@ describe('MemberService', () => {
           }),
         );
 
-        const alerts = await service.getAlerts(member.primaryUserId.toString());
+        const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
 
         if (expectedScore !== undefined) {
           expectedAlerts.push({
@@ -2052,7 +1919,7 @@ describe('MemberService', () => {
 
         const todo = await modelTodo.create(mockTodo);
 
-        const alerts = await service.getAlerts(member.primaryUserId.toString());
+        const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
 
         expect(alerts).toEqual(
           expect.arrayContaining([
@@ -2092,7 +1959,7 @@ describe('MemberService', () => {
 
       const todo = await modelTodo.create(mockTodo);
 
-      const alerts = await service.getAlerts(member.primaryUserId.toString());
+      const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
 
       expect(alerts).toEqual(
         expect.not.arrayContaining([

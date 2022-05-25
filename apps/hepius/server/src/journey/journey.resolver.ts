@@ -10,17 +10,21 @@ import {
 } from '../common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
+  ActionItem,
+  ActionItemStatus,
   Admission,
   AdmissionService,
   ChangeMemberDnaParams,
+  CreateActionItemParams,
   DietaryHelper,
   DietaryMatcher,
   Journey,
   JourneyService,
   SetGeneralNotesParams,
+  UpdateActionItemStatusParams,
   UpdateJourneyParams,
 } from '.';
-import { UserRole } from '@argus/hepiusClient';
+import { Identifier, UserRole } from '@argus/hepiusClient';
 import { camelCase } from 'lodash';
 
 @UseInterceptors(LoggingInterceptor)
@@ -91,6 +95,43 @@ export class JourneyResolver {
     return this.journeyService.setGeneralNotes(setGeneralNotesParams);
   }
 
+  /*************************************************************************************************
+   ****************************************** Action items *****************************************
+   ************************************************************************************************/
+
+  @Mutation(() => Identifier)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async createActionItem(
+    @Args(camelCase(CreateActionItemParams.name))
+    createActionItemParams: CreateActionItemParams,
+  ) {
+    return this.journeyService.insertActionItem({
+      createActionItemParams,
+      status: ActionItemStatus.pending,
+    });
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.coach, UserRole.nurse)
+  async updateActionItemStatus(
+    @Args(camelCase(UpdateActionItemStatusParams.name))
+    updateActionItemStatusParams: UpdateActionItemStatusParams,
+  ) {
+    return this.journeyService.updateActionItemStatus(updateActionItemStatusParams);
+  }
+
+  @Query(() => [ActionItem])
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getActionItems(
+    @Args(
+      'memberId',
+      { type: () => String, nullable: false },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid), { nullable: true }),
+    )
+    memberId: string,
+  ) {
+    return this.journeyService.getActionItems(memberId);
+  }
   /************************************************************************************************
    ****************************************** Admission *******************************************
    ************************************************************************************************/

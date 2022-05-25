@@ -14,8 +14,8 @@ import {
   BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
   generateCancelNotifyParams,
+  generateCreateActionItemParams,
   generateCreateMemberParams,
-  generateCreateTaskParams,
   generateDateOnly,
   generateDeleteDischargeDocumentParams,
   generateDeleteMemberParams,
@@ -30,10 +30,10 @@ import {
   generateReplaceUserForMemberParams,
   generateRequestHeaders,
   generateUniqueUrl,
+  generateUpdateActionItemStatusParams,
   generateUpdateJournalTextParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
-  generateUpdateTaskStatusParams,
   urls,
 } from '..';
 import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
@@ -761,18 +761,18 @@ describe('Validations - member', () => {
     describe('createActionItem', () => {
       /* eslint-disable max-len */
       test.each`
-        field         | taskType        | error
+        field         | actionItemType  | error
         ${'memberId'} | ${'actionItem'} | ${`Field "memberId" of required type "String!" was not provided.`}
         ${'title'}    | ${'actionItem'} | ${`Field "title" of required type "String!" was not provided.`}
         ${'deadline'} | ${'actionItem'} | ${`Field "deadline" of required type "DateTime!" was not provided.`}
       `(
         /* eslint-enable max-len */
-        `should fail to create $taskType since mandatory field $field is missing`,
+        `should fail to create $actionItemType since mandatory field $field is missing`,
         async (params) => {
-          const createTaskParams = generateCreateTaskParams();
-          delete createTaskParams[params.field];
+          const createActionItemParams = generateCreateActionItemParams();
+          delete createActionItemParams[params.field];
           await handler.mutations.createActionItem({
-            createTaskParams,
+            createActionItemParams,
             missingFieldError: params.error,
           });
         },
@@ -780,16 +780,16 @@ describe('Validations - member', () => {
 
       /* eslint-disable max-len */
       test.each`
-        input                        | taskType        | error
+        input                        | actionItemType  | error
         ${{ memberId: 123 }}         | ${'actionItem'} | ${{ missingFieldError: stringError }}
         ${{ title: 123 }}            | ${'actionItem'} | ${{ missingFieldError: stringError }}
-        ${{ deadline: 'not-valid' }} | ${'actionItem'} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberTaskDeadline)] }}
+        ${{ deadline: 'not-valid' }} | ${'actionItem'} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyActionItemDeadline)] }}
       `(
         /* eslint-enable max-len */
-        `should fail to create $taskType since setting $input is not a valid type`,
+        `should fail to create $actionItemType since setting $input is not a valid type`,
         async (params) => {
-          const createTaskParams = generateCreateTaskParams({ ...params.input });
-          await handler.mutations.createActionItem({ createTaskParams, ...params.error });
+          const createActionItemParams = generateCreateActionItemParams({ ...params.input });
+          await handler.mutations.createActionItem({ createActionItemParams, ...params.error });
         },
       );
     });
@@ -797,17 +797,17 @@ describe('Validations - member', () => {
     describe('updateActionItemStatus', () => {
       /* eslint-disable max-len */
       test.each`
-        field       | taskType        | error
+        field       | actionItemType  | error
         ${'id'}     | ${'actionItem'} | ${`Field "id" of required type "String!" was not provided.`}
-        ${'status'} | ${'actionItem'} | ${`Field "status" of required type "TaskStatus!" was not provided.`}
+        ${'status'} | ${'actionItem'} | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
       `(
         /* eslint-enable max-len */
-        `should fail to update $taskType since mandatory field $field is missing`,
+        `should fail to update $actionItemType since mandatory field $field is missing`,
         async (params) => {
-          const updateTaskStatusParams = generateUpdateTaskStatusParams();
-          delete updateTaskStatusParams[params.field];
+          const updateActionItemStatusParams = generateUpdateActionItemStatusParams();
+          delete updateActionItemStatusParams[params.field];
           await handler.mutations.updateActionItemStatus({
-            updateTaskStatusParams,
+            updateActionItemStatusParams,
             missingFieldError: params.error,
           });
         },
@@ -815,17 +815,22 @@ describe('Validations - member', () => {
 
       /* eslint-disable max-len */
       test.each`
-        input              | taskType        | error
+        input              | actionItemType  | error
         ${{ id: 123 }}     | ${'actionItem'} | ${stringError}
-        ${{ status: 123 }} | ${'actionItem'} | ${'Enum "TaskStatus" cannot represent non-string value'}
-      `(`should fail to update $taskType since $input is not a valid type`, async (params) => {
-        /* eslint-enable max-len */
-        const updateTaskStatusParams = generateUpdateTaskStatusParams({ ...params.input });
-        await handler.mutations.updateActionItemStatus({
-          updateTaskStatusParams,
-          missingFieldError: params.error,
-        });
-      });
+        ${{ status: 123 }} | ${'actionItem'} | ${'Enum "ActionItemStatus" cannot represent non-string value'}
+      `(
+        `should fail to update $actionItemType since $input is not a valid type`,
+        async (params) => {
+          /* eslint-enable max-len */
+          const updateActionItemStatusParams = generateUpdateActionItemStatusParams({
+            ...params.input,
+          });
+          await handler.mutations.updateActionItemStatus({
+            updateActionItemStatusParams,
+            missingFieldError: params.error,
+          });
+        },
+      );
     });
   });
 

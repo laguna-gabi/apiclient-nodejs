@@ -72,12 +72,6 @@ export const FRAGMENT_MEMBER = gql`
     zipCode
     utcDelta
     dischargeDate
-    actionItems {
-      id
-      title
-      status
-      deadline
-    }
     fellowName
     drg
     authId

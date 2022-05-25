@@ -1,6 +1,13 @@
-import { generateSetGeneralNotesParams, generateUpdateJourneyParams } from '../generators';
+import {
+  generateCreateActionItemParams,
+  generateSetGeneralNotesParams,
+  generateUpdateActionItemStatusParams,
+  generateUpdateJourneyParams,
+  mockGenerateMember,
+} from '../generators';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
+  ActionItemStatus,
   AdmissionService,
   JourneyModule,
   JourneyResolver,
@@ -138,6 +145,53 @@ describe(JourneyResolver.name, () => {
 
       expect(spyOnServiceSetGeneralNotes).toBeCalledTimes(1);
       expect(spyOnServiceSetGeneralNotes).toBeCalledWith(params);
+    });
+  });
+
+  describe('createActionItem', () => {
+    let spyOnServiceInsertActionItem;
+    beforeEach(() => {
+      spyOnServiceInsertActionItem = jest.spyOn(service, 'insertActionItem');
+    });
+
+    afterEach(() => {
+      spyOnServiceInsertActionItem.mockReset();
+    });
+
+    it('should create an action item', async () => {
+      spyOnServiceInsertActionItem.mockImplementationOnce(async () => ({
+        id: generateId(),
+      }));
+
+      const params = generateCreateActionItemParams();
+      await resolver.createActionItem(params);
+
+      expect(spyOnServiceInsertActionItem).toBeCalledTimes(1);
+      expect(spyOnServiceInsertActionItem).toBeCalledWith({
+        createActionItemParams: params,
+        status: ActionItemStatus.pending,
+      });
+    });
+  });
+
+  describe('updateActionItemStatus', () => {
+    let spyOnServiceUpdateActionItemStatus;
+    beforeEach(() => {
+      spyOnServiceUpdateActionItemStatus = jest.spyOn(service, 'updateActionItemStatus');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdateActionItemStatus.mockReset();
+    });
+
+    it('should create an action item', async () => {
+      spyOnServiceUpdateActionItemStatus.mockImplementationOnce(async () => mockGenerateMember());
+
+      const updateActionItemStatus = generateUpdateActionItemStatusParams();
+      await resolver.updateActionItemStatus(updateActionItemStatus);
+
+      expect(spyOnServiceUpdateActionItemStatus).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateActionItemStatus).toBeCalledWith(updateActionItemStatus);
     });
   });
 });

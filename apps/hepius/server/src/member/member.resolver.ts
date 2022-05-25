@@ -51,6 +51,7 @@ import { getTimezoneOffset } from 'date-fns-tz';
 import { camelCase } from 'lodash';
 import { lookup } from 'zipcode-to-timezone';
 import {
+  Alert,
   Client,
   ErrorType,
   Errors,
@@ -89,14 +90,12 @@ import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
 import { UserService } from '../user';
 import {
   AddCaregiverParams,
-  Alert,
   AppointmentCompose,
   AudioType,
   CancelNotifyParams,
   ChatMessageOrigin,
   CompleteMultipartUploadParams,
   CreateMemberParams,
-  CreateTaskParams,
   DeleteDischargeDocumentParams,
   DeleteMemberGeneralDocumentParams,
   DeleteMemberParams,
@@ -123,14 +122,12 @@ import {
   RecordingOutput,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
-  TaskStatus,
   UpdateCaregiverParams,
   UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateRecordingReviewParams,
-  UpdateTaskStatusParams,
 } from './index';
 
 @UseInterceptors(LoggingInterceptor)
@@ -608,31 +605,6 @@ export class MemberResolver extends MemberBase {
   }
 
   /*************************************************************************************************
-   ****************************************** Action items *****************************************
-   ************************************************************************************************/
-
-  @Mutation(() => Identifier)
-  @Roles(UserRole.coach, UserRole.nurse)
-  async createActionItem(
-    @Args(camelCase(CreateTaskParams.name))
-    createTaskParams: CreateTaskParams,
-  ) {
-    return this.memberService.insertActionItem({
-      createTaskParams,
-      status: TaskStatus.pending,
-    });
-  }
-
-  @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
-  async updateActionItemStatus(
-    @Args(camelCase(UpdateTaskStatusParams.name))
-    updateTaskStatusParams: UpdateTaskStatusParams,
-  ) {
-    return this.memberService.updateActionItemStatus(updateTaskStatusParams);
-  }
-
-  /*************************************************************************************************
    ******************************************** Journal ********************************************
    ************************************************************************************************/
 
@@ -1020,7 +992,11 @@ export class MemberResolver extends MemberBase {
     @Client('_id') userId: string,
     @Client('lastQueryAlert') lastQueryAlert: Date,
   ): Promise<Alert[]> {
-    return this.memberService.getAlerts(userId, lastQueryAlert);
+    const members = await this.memberService.getUserMembers({ primaryUserId: userId });
+    const memberAlerts = await this.memberService.getAlerts(userId, members, lastQueryAlert);
+    const journeyAlerts = await this.journeyService.getAlerts(userId, members, lastQueryAlert);
+
+    return memberAlerts.concat(journeyAlerts);
   }
 
   /************************************************************************************************

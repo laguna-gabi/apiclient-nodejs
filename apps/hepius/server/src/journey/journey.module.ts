@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
+  ActionItem,
+  ActionItemDto,
   Admission,
   AdmissionDto,
   AdmissionService,
@@ -20,11 +22,13 @@ import {
   TreatmentRendered,
   TreatmentRenderedDto,
 } from '.';
-import { CommonModule } from '../common';
+import { CommonModule, DismissedAlert, DismissedAlertDto } from '../common';
+import { ProvidersModule } from '../providers';
 
 @Module({
   imports: [
     CommonModule,
+    ProvidersModule,
     MongooseModule.forFeature([
       { name: Journey.name, schema: JourneyDto },
       { name: Diagnosis.name, schema: DiagnosisDto },
@@ -33,6 +37,8 @@ import { CommonModule } from '../common';
       { name: ExternalAppointment.name, schema: ExternalAppointmentDto },
       { name: Dietary.name, schema: DietaryDto },
       { name: Admission.name, schema: AdmissionDto },
+      { name: ActionItem.name, schema: ActionItemDto },
+      { name: DismissedAlert.name, schema: DismissedAlertDto },
     ]),
   ],
   providers: [JourneyResolver, JourneyService, AdmissionService, DietaryHelper],

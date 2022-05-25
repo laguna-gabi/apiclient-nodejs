@@ -1,5 +1,8 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { Prop, Schema } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
+import * as mongooseDelete from 'mongoose-delete';
 import { IsDate } from 'class-validator';
 import { ErrorType, Errors } from '../common';
 import { Identifier } from '@argus/hepiusClient';
@@ -7,23 +10,18 @@ import { Identifier } from '@argus/hepiusClient';
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
-export enum TaskStatus {
+export enum ActionItemStatus {
   pending = 'pending',
   reached = 'reached',
 }
 
-export enum ChatMessageOrigin {
-  fromUser = 'fromUser',
-  fromMember = 'fromMember',
-}
-
-registerEnumType(TaskStatus, { name: 'TaskStatus' });
+registerEnumType(ActionItemStatus, { name: 'ActionItemStatus' });
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
 @InputType({ isAbstract: true })
-export class CreateTaskParams {
+export class CreateActionItemParams {
   @Field(() => String)
   memberId: string;
 
@@ -31,34 +29,50 @@ export class CreateTaskParams {
   title: string;
 
   @Field(() => Date)
-  @IsDate({ message: Errors.get(ErrorType.memberTaskDeadline) })
+  @IsDate({ message: Errors.get(ErrorType.journeyActionItemDeadline) })
   deadline: Date;
 }
 
 @InputType({ isAbstract: true })
-export class UpdateTaskStatusParams {
+export class UpdateActionItemStatusParams {
   @Field(() => String)
   id: string;
 
-  @Field(() => TaskStatus)
-  status: TaskStatus;
+  @Field(() => ActionItemStatus)
+  status: ActionItemStatus;
 }
 
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
-@ObjectType({ isAbstract: true })
+@ObjectType()
 @Schema({ versionKey: false, timestamps: true })
-export class Task extends Identifier {
+export class ActionItem extends Identifier {
+  @Prop({ index: true, type: Types.ObjectId })
+  @Field(() => String)
+  memberId: Types.ObjectId;
+
+  @Prop({ index: true, type: Types.ObjectId })
+  @Field(() => String)
+  journeyId: Types.ObjectId;
+
   @Prop()
   @Field(() => String)
   title: string;
 
-  @Prop({ type: String, enum: TaskStatus })
-  @Field(() => TaskStatus)
-  status: TaskStatus;
+  @Prop({ type: String, enum: ActionItemStatus })
+  @Field(() => ActionItemStatus)
+  status: ActionItemStatus;
 
   @Prop({ type: Date })
   @Field(() => Date)
   deadline: Date;
 }
+
+/**************************************************************************************************
+ **************************************** Exported Schemas ****************************************
+ *************************************************************************************************/
+export type ActionItemDocument = ActionItem & Document & ISoftDelete<ActionItem>;
+export const ActionItemDto = audit(
+  SchemaFactory.createForClass(ActionItem).plugin(mongooseDelete, useFactoryOptions),
+);

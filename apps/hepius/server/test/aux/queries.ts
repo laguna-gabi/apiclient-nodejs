@@ -14,7 +14,7 @@ import {
   MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
-import { Admission, DietaryMatcher, Journey } from '../../src/journey';
+import { ActionItem, Admission, DietaryMatcher, Journey } from '../../src/journey';
 import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
@@ -1487,5 +1487,37 @@ export class Queries {
       });
 
     return result?.getRecentJourney;
+  };
+
+  getActionItems = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId: string;
+    invalidFieldsError?: string;
+  }): Promise<ActionItem[]> => {
+    const result = await this.client
+      .request(
+        gql`
+          query getActionItems($memberId: String!) {
+            getActionItems(memberId: $memberId) {
+              id
+              memberId
+              journeyId
+              title
+              status
+              deadline
+            }
+          }
+        `,
+        { memberId },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
+        return;
+      });
+
+    return result?.getActionItems;
   };
 }

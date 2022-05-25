@@ -28,11 +28,11 @@ import {
   dbConnect,
   dbDisconnect,
   generateAvailabilityInput,
+  generateCreateActionItemParams,
   generateCreateBarrierParamsWizard,
   generateCreateCarePlanParamsWizard,
   generateCreateMemberParams,
   generateCreateRedFlagParamsWizard,
-  generateCreateTaskParams,
   generateCreateUserParams,
   generateDateOnly,
   generateNotesParams,
@@ -312,7 +312,7 @@ const setGeneralNotes = async (memberId: string) => {
 };
 
 const createActionItem = async (memberId: string) => {
-  const createTaskParams = generateCreateTaskParams({ memberId });
-  const { id } = await mutations.createActionItem({ createTaskParams });
-  console.log(`${id} : created an action item '${createTaskParams.title}' for member`);
+  const createActionItemParams = generateCreateActionItemParams({ memberId });
+  const { id } = await mutations.createActionItem({ createActionItemParams });
+  console.log(`${id} : created an action item '${createActionItemParams.title}' for member`);
 };

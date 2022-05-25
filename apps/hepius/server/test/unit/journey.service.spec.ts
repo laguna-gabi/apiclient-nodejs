@@ -2,13 +2,20 @@ import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import { MemberModule } from '../../src/member';
-import { JourneyService, ReadmissionRisk, UpdateJourneyParams } from '../../src/journey';
+import {
+  ActionItemStatus,
+  JourneyService,
+  ReadmissionRisk,
+  UpdateJourneyParams,
+} from '../../src/journey';
 import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  generateCreateActionItemParams,
   generateCreateJourneyParams,
   generateSetGeneralNotesParams,
+  generateUpdateActionItemStatusParams,
   generateUpdateJourneyParams,
 } from '../index';
 import { Types } from 'mongoose';
@@ -388,6 +395,78 @@ describe(JourneyService.name, () => {
       const result3 = await service.getRecent(memberId);
       expect(result3.nurseNotes).toEqual(params3.nurseNotes);
       expect(result3.generalNotes).toEqual(params2.note);
+    });
+  });
+
+  describe('insertActionItem', () => {
+    it('should insert an action item', async () => {
+      const memberId = generateId();
+      await service.create(generateCreateJourneyParams({ memberId }));
+      const createActionItemParams = generateCreateActionItemParams({ memberId });
+      const { id } = await service.insertActionItem({
+        createActionItemParams: createActionItemParams,
+        status: ActionItemStatus.pending,
+      });
+
+      expect(id).toEqual(expect.any(Types.ObjectId));
+    });
+  });
+
+  describe('updateActionItemStatus', () => {
+    it('should update an existing action item status', async () => {
+      const memberId = generateId();
+      await service.create(generateCreateJourneyParams({ memberId }));
+      const createActionItemParams = generateCreateActionItemParams({ memberId });
+      const { id } = await service.insertActionItem({
+        createActionItemParams: createActionItemParams,
+        status: ActionItemStatus.pending,
+      });
+
+      const status = ActionItemStatus.reached;
+      await service.updateActionItemStatus({ id, status });
+      const results = await service.getActionItems(memberId);
+      expect(results[0].status).toEqual(status);
+    });
+
+    it('should not be able to update status for a non existing action item', async () => {
+      await expect(
+        service.updateActionItemStatus(generateUpdateActionItemStatusParams()),
+      ).rejects.toThrow(Errors.get(ErrorType.journeyActionItemIdNotFound));
+    });
+  });
+
+  describe('getActionItems', () => {
+    it('should get existing action items', async () => {
+      const memberId = generateId();
+      await service.create(generateCreateJourneyParams({ memberId }));
+      const createActionItemParams1 = generateCreateActionItemParams({ memberId });
+      const createActionItemParams2 = generateCreateActionItemParams({ memberId });
+      await service.insertActionItem({
+        createActionItemParams: createActionItemParams1,
+        status: ActionItemStatus.pending,
+      });
+      await service.insertActionItem({
+        createActionItemParams: createActionItemParams2,
+        status: ActionItemStatus.reached,
+      });
+
+      const results = await service.getActionItems(memberId);
+      expect(results.length).toEqual(2);
+      expect(results[0]).toMatchObject({
+        ...createActionItemParams2,
+        status: ActionItemStatus.reached,
+      });
+      expect(results[1]).toMatchObject({
+        ...createActionItemParams1,
+        status: ActionItemStatus.pending,
+      });
+    });
+
+    it('should return empty array on non existing action items per member', async () => {
+      const memberId = generateId();
+      await service.create(generateCreateJourneyParams({ memberId }));
+      const results = await service.getActionItems(memberId);
+      expect(results.length).toEqual(0);
     });
   });
 });

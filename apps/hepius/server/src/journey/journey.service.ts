@@ -1,5 +1,9 @@
 import {
-  BaseService,
+  Alert,
+  AlertService,
+  AlertType,
+  DismissedAlert,
+  DismissedAlertDocument,
   ErrorType,
   Errors,
   EventType,
@@ -22,15 +26,28 @@ import {
 import { Identifier } from '@argus/hepiusClient';
 import { OnEvent } from '@nestjs/event-emitter';
 import { isEmpty, isNil, omitBy } from 'lodash';
+import {
+  ActionItem,
+  ActionItemDocument,
+  ActionItemStatus,
+  CreateActionItemParams,
+  UpdateActionItemStatusParams,
+} from './';
+import { Internationalization } from '../providers';
 
 @Injectable()
-export class JourneyService extends BaseService {
+export class JourneyService extends AlertService {
   constructor(
     @InjectModel(Journey.name)
     private readonly journeyModel: Model<JourneyDocument> & ISoftDelete<JourneyDocument>,
+    @InjectModel(ActionItem.name)
+    private readonly actionItemModel: Model<ActionItemDocument> & ISoftDelete<ActionItemDocument>,
+    @InjectModel(DismissedAlert.name)
+    readonly dismissAlertModel: Model<DismissedAlertDocument>,
+    private readonly internationalization: Internationalization,
     readonly logger: LoggerService,
   ) {
-    super();
+    super(dismissAlertModel);
   }
 
   async create(params: CreateJourneyParams): Promise<Identifier> {
@@ -125,12 +142,19 @@ export class JourneyService extends BaseService {
 
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteJourney(params: IEventDeleteMember) {
-    await deleteMemberObjects<Model<JourneyDocument> & ISoftDelete<JourneyDocument>>({
+    const data = {
       params,
-      model: this.journeyModel,
       logger: this.logger,
       methodName: this.deleteJourney.name,
       serviceName: JourneyService.name,
+    };
+    await deleteMemberObjects<Model<JourneyDocument> & ISoftDelete<JourneyDocument>>({
+      model: this.journeyModel,
+      ...data,
+    });
+    await deleteMemberObjects<Model<ActionItemDocument> & ISoftDelete<ActionItemDocument>>({
+      model: this.actionItemModel,
+      ...data,
     });
   }
 
@@ -147,6 +171,79 @@ export class JourneyService extends BaseService {
     );
     const recent = await this.getRecent(setGeneralNotesParams.memberId);
     await this.journeyModel.findByIdAndUpdate(recent.id, { $set: setParams });
+  }
+
+  /*************************************************************************************************
+   ****************************************** Action item ******************************************
+   ************************************************************************************************/
+
+  async insertActionItem({
+    createActionItemParams,
+    status,
+  }: {
+    createActionItemParams: CreateActionItemParams;
+    status: ActionItemStatus;
+  }): Promise<Identifier> {
+    const recentJourney = await this.getRecent(createActionItemParams.memberId);
+    const identifiers = {
+      memberId: new Types.ObjectId(createActionItemParams.memberId),
+      journeyId: new Types.ObjectId(recentJourney.id),
+    };
+    delete createActionItemParams.memberId;
+    const { _id } = await this.actionItemModel.create({
+      ...createActionItemParams,
+      status,
+      ...identifiers,
+    });
+
+    return { id: _id };
+  }
+
+  async updateActionItemStatus(
+    updateActionItemStatusParams: UpdateActionItemStatusParams,
+  ): Promise<void> {
+    const { id, status } = updateActionItemStatusParams;
+
+    const result = await this.actionItemModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(id) },
+      { $set: { status } },
+    );
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.journeyActionItemIdNotFound));
+    }
+  }
+
+  async getActionItems(memberId: string): Promise<ActionItem[]> {
+    const results = await this.actionItemModel
+      .find({ memberId: new Types.ObjectId(memberId) })
+      .sort({ updatedAt: -1 });
+    return results.map((result) => this.replaceId(result));
+  }
+
+  async entityToAlerts(member): Promise<Alert[]> {
+    return this.actionItemsToAlerts(member);
+  }
+
+  private async actionItemsToAlerts(member): Promise<Alert[]> {
+    const actionItems = await this.actionItemModel.find({
+      memberId: new Types.ObjectId(member.id),
+    });
+    return actionItems
+      .filter(
+        (actionItem) =>
+          actionItem.status === ActionItemStatus.pending && actionItem.deadline < new Date(),
+      )
+      .map(
+        (actionItem) =>
+          ({
+            id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
+            type: AlertType.actionItemOverdue,
+            date: actionItem.deadline,
+            text: this.internationalization.getAlerts(AlertType.actionItemOverdue, { member }),
+            memberId: member.id,
+          } as Alert),
+      );
   }
 
   /*************************************************************************************************

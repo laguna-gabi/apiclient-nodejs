@@ -73,19 +73,24 @@ import {
   CreateRedFlagParamsWizard,
   SubmitCareWizardParams,
 } from '../src/care/wizard.dto';
-import { ChangeType, ItemType, RecordingType, momentFormats, reformatDate } from '../src/common';
+import {
+  Alert,
+  AlertType,
+  ChangeType,
+  ItemType,
+  RecordingType,
+  momentFormats,
+  reformatDate,
+} from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
   AddCaregiverParams,
   AddInsuranceParams,
-  Alert,
-  AlertType,
   AppointmentCompose,
   AudioFormat,
   CancelNotifyParams,
   CreateMemberParams,
-  CreateTaskParams,
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
   DischargeDocumentType,
@@ -102,17 +107,16 @@ import {
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   Sex,
-  TaskStatus,
   UpdateCaregiverParams,
   UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateRecordingReviewParams,
-  UpdateTaskStatusParams,
   defaultMemberParams,
 } from '../src/member';
 import {
+  ActionItemStatus,
   Activity,
   AdmitSource,
   AdmitType,
@@ -123,6 +127,7 @@ import {
   ChangeAdmissionTreatmentRenderedParams,
   ChangeMemberDnaParams,
   ClinicalStatus,
+  CreateActionItemParams,
   CreateJourneyParams,
   DiagnosisSeverity,
   DietaryCategory,
@@ -136,6 +141,7 @@ import {
   ReadmissionRisk,
   SecondaryDiagnosisType,
   SetGeneralNotesParams,
+  UpdateActionItemStatusParams,
   UpdateJourneyParams,
   WarningSigns,
   WoundCare,
@@ -534,18 +540,18 @@ export const generateUpdateMemberConfigParams = ({
   };
 };
 
-export const generateCreateTaskParams = ({
+export const generateCreateActionItemParams = ({
   memberId = generateId(),
   title = lorem.words(2),
   deadline = fakerDate.soon(3),
-}: Partial<CreateTaskParams> = {}): CreateTaskParams => {
+}: Partial<CreateActionItemParams> = {}): CreateActionItemParams => {
   return { memberId, title, deadline };
 };
 
-export const generateUpdateTaskStatusParams = ({
+export const generateUpdateActionItemStatusParams = ({
   id = generateId(),
-  status = TaskStatus.reached,
-}: Partial<UpdateTaskStatusParams> = {}): UpdateTaskStatusParams => {
+  status = ActionItemStatus.reached,
+}: Partial<UpdateActionItemStatusParams> = {}): UpdateActionItemStatusParams => {
   return { id, status };
 };
 
@@ -1267,7 +1273,10 @@ export const mockGenerateQuestionnaireItem = ({
   range = type === ItemType.range
     ? {
         min: { value: 0, label: lorem.words(3) },
-        max: { value: datatype.number({ min: 1, max: 10 }), label: lorem.words(3) },
+        max: {
+          value: datatype.number({ min: 1, max: 10 }),
+          label: lorem.words(3),
+        },
       }
     : null,
   alertCondition,

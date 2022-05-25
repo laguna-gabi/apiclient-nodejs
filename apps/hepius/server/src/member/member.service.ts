@@ -3,25 +3,19 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { articlesByDrg, queryDaysLimit } from 'config';
-import { add, differenceInMilliseconds, sub } from 'date-fns';
+import { add, sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
+import { Alert, AlertType, DismissedAlert, DismissedAlertDocument } from '../../src/common';
 import {
-  ActionItem,
-  ActionItemDocument,
   AddCaregiverParams,
   AddInsuranceParams,
-  Alert,
-  AlertType,
   AppointmentCompose,
   CaregiverDocument,
   ControlMember,
   ControlMemberDocument,
-  CreateTaskParams,
   DeleteMemberParams,
-  DismissedAlert,
-  DismissedAlertDocument,
   EmbeddedMemberProperties,
   Insurance,
   InsuranceDocument,
@@ -39,18 +33,16 @@ import {
   RecordingOutput,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
-  TaskStatus,
   UpdateCaregiverParams,
   UpdateJournalParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateRecordingReviewParams,
-  UpdateTaskStatusParams,
 } from './index';
 import { AppointmentDocument } from '../appointment';
 import {
-  BaseService,
+  AlertService,
   DbErrors,
   ErrorType,
   Errors,
@@ -74,12 +66,10 @@ import { Todo, TodoDocument, TodoStatus } from '../todo';
 import { Appointment, AppointmentStatus, Caregiver, Identifier } from '@argus/hepiusClient';
 
 @Injectable()
-export class MemberService extends BaseService {
+export class MemberService extends AlertService {
   constructor(
     @InjectModel(Member.name)
     private readonly memberModel: Model<MemberDocument> & ISoftDelete<MemberDocument>,
-    @InjectModel(ActionItem.name)
-    private readonly actionItemModel: Model<ActionItemDocument> & ISoftDelete<ActionItemDocument>,
     @InjectModel(Journal.name)
     private readonly journalModel: Model<JournalDocument> & ISoftDelete<JournalDocument>,
     @InjectModel(MemberConfig.name)
@@ -91,8 +81,6 @@ export class MemberService extends BaseService {
     private readonly controlMemberModel: Model<ControlMemberDocument>,
     @InjectModel(Caregiver.name)
     private readonly caregiverModel: Model<CaregiverDocument> & ISoftDelete<CaregiverDocument>,
-    @InjectModel(DismissedAlert.name)
-    private readonly dismissAlertModel: Model<DismissedAlertDocument>,
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
     @InjectModel(Todo.name)
@@ -100,13 +88,15 @@ export class MemberService extends BaseService {
       ISoftDelete<TodoDocument>,
     @InjectModel(Insurance.name)
     private readonly insuranceModel: Model<InsuranceDocument> & ISoftDelete<InsuranceDocument>,
+    @InjectModel(DismissedAlert.name)
+    readonly dismissAlertModel: Model<DismissedAlertDocument>,
     private readonly storageService: StorageService,
     private readonly notificationService: NotificationService,
     private readonly internationalization: Internationalization,
     private readonly questionnaireService: QuestionnaireService,
     readonly logger: LoggerService,
   ) {
-    super();
+    super(dismissAlertModel);
   }
 
   async insert(
@@ -236,6 +226,14 @@ export class MemberService extends BaseService {
         },
       },
       { $addFields: { recentJourney: { $last: '$journeysRes' } } },
+      {
+        $lookup: {
+          from: 'actionitems',
+          localField: 'recentJourney._id',
+          foreignField: 'journeyId',
+          as: 'actionItems',
+        },
+      },
       {
         $project: {
           id: '$_id',
@@ -418,22 +416,11 @@ export class MemberService extends BaseService {
   ) {
     await member.delete(new Types.ObjectId(deletedBy));
     await memberConfig.delete(new Types.ObjectId(deletedBy));
-    await Promise.all(
-      member.actionItems.map(async (actionItemId) => {
-        const actionItem = await this.actionItemModel.findOneWithDeleted({ _id: actionItemId });
-        await actionItem.delete(new Types.ObjectId(deletedBy));
-      }),
-    );
   }
 
   private async hardDeleteMember(member: MemberDocument) {
     await this.memberModel.deleteOne({ _id: new Types.ObjectId(member.id) });
     await this.memberConfigModel.deleteOne({ memberId: new Types.ObjectId(member.id) });
-    await Promise.all(
-      member.actionItems.map(async (actionItem) => {
-        await this.actionItemModel.deleteOne({ _id: actionItem });
-      }),
-    );
   }
 
   private async deleteMemberRelatedData(params: IEventDeleteMember) {
@@ -491,6 +478,14 @@ export class MemberService extends BaseService {
     return this.controlMemberModel.find().populate({ path: 'org' });
   }
 
+  async getUserMembers({
+    primaryUserId,
+  }: {
+    primaryUserId: string;
+  }): Promise<ControlMemberDocument[]> {
+    return this.memberModel.find({ primaryUserId: new Types.ObjectId(primaryUserId) });
+  }
+
   async isControlByPhone(phone: string): Promise<boolean> {
     const controlMember = await this.controlMemberModel.findOne({
       $or: [{ phone }, { phoneSecondary: phone }],
@@ -517,43 +512,6 @@ export class MemberService extends BaseService {
         this.handleAppointmentScoreUpdated.name,
         formatEx(ex),
       );
-    }
-  }
-
-  /*************************************************************************************************
-   ****************************************** Action item ******************************************
-   ************************************************************************************************/
-
-  async insertActionItem({
-    createTaskParams,
-    status,
-  }: {
-    createTaskParams: CreateTaskParams;
-    status: TaskStatus;
-  }): Promise<Identifier> {
-    const { memberId } = createTaskParams;
-    delete createTaskParams.memberId;
-
-    const { _id } = await this.actionItemModel.create({ ...createTaskParams, status });
-
-    await this.memberModel.updateOne(
-      { _id: new Types.ObjectId(memberId) },
-      { $push: { actionItems: _id } },
-    );
-
-    return { id: _id };
-  }
-
-  async updateActionItemStatus(updateTaskStatusParams: UpdateTaskStatusParams): Promise<void> {
-    const { id, status } = updateTaskStatusParams;
-
-    const result = await this.actionItemModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id) },
-      { $set: { status } },
-    );
-
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.memberActionItemIdNotFound));
     }
   }
 
@@ -891,51 +849,10 @@ export class MemberService extends BaseService {
   }
 
   /*************************************************************************************************
-   ******************************************* Alerts **********************************************
-   ************************************************************************************************/
-  async dismissAlert(userId: string, alertId: string) {
-    return this.dismissAlertModel.findOneAndUpdate({ alertId, userId }, undefined, {
-      upsert: true,
-    });
-  }
-
-  async getAlerts(userId: string, lastQueryAlert?: Date): Promise<Alert[]> {
-    const members = await this.memberModel.find({ primaryUserId: new Types.ObjectId(userId) });
-
-    // --------------------------------------------------------------------------------------------
-    // Collect Alerts
-    // --------------------------------------------------------------------------------------------
-    // Generate Notification (Dispatch) based Alerts
-    const alerts = (
-      await Promise.all(members?.map(async (member) => this.entityToAlerts(member)))
-    ).flat();
-
-    // --------------------------------------------------------------------------------------------
-    // Add metadata (dismissed? / isNew?)
-    // --------------------------------------------------------------------------------------------
-    // Get all user's dismissed alerts
-    const dismissedAlertsIds = (await this.getUserDismissedAlerts(userId)).map(
-      (dismissedAlerts) => dismissedAlerts.alertId,
-    );
-
-    return alerts
-      .filter((alert: Alert) => alert?.date > sub(new Date(), { days: 30 }))
-      .map((alert) => {
-        alert.dismissed = dismissedAlertsIds?.includes(alert.id);
-        alert.isNew = !lastQueryAlert || lastQueryAlert < alert.date;
-
-        return alert;
-      })
-      .sort((a1: Alert, a2: Alert) => {
-        return differenceInMilliseconds(a2.date, a1.date);
-      });
-  }
-
-  /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
 
-  private async entityToAlerts(member: Member): Promise<Alert[]> {
+  async entityToAlerts(member: Member): Promise<Alert[]> {
     let alerts: Alert[] = [];
 
     // collect member alerts (AlertType.memberAssigned)
@@ -943,9 +860,6 @@ export class MemberService extends BaseService {
 
     // collect actionItemOverdue alerts
     alerts = alerts.concat(await this.notificationDispatchToAlerts(member));
-
-    // collect actionItemOverdue alerts
-    alerts = alerts.concat(await this.actionItemsToAlerts(member));
 
     // Collect appointment related alerts
     alerts = alerts.concat(await this.appointmentsItemsToAlerts(member));
@@ -1032,25 +946,6 @@ export class MemberService extends BaseService {
     return [reviewAppointmentAlerts, appointmentSubmitOverdueAlerts].flat();
   }
 
-  private async actionItemsToAlerts(member: Member): Promise<Alert[]> {
-    const actionItems = await this.actionItemModel.find({ _id: { $in: member.actionItems } });
-    return actionItems
-      .filter(
-        (actionItem) =>
-          actionItem.status === TaskStatus.pending && actionItem.deadline < new Date(),
-      )
-      .map(
-        (actionItem) =>
-          ({
-            id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
-            type: AlertType.actionItemOverdue,
-            date: actionItem.deadline,
-            text: this.internationalization.getAlerts(AlertType.actionItemOverdue, { member }),
-            memberId: member.id,
-          } as Alert),
-      );
-  }
-
   private async questionnaireToAlerts(member: Member): Promise<Alert[]> {
     const templates = new Map<string, Questionnaire>();
     const qrs = await this.questionnaireService.getQuestionnaireResponseByMemberId(member.id);
@@ -1113,10 +1008,6 @@ export class MemberService extends BaseService {
     );
   }
 
-  private async getUserDismissedAlerts(userId: string): Promise<DismissedAlert[]> {
-    return this.dismissAlertModel.find({ userId });
-  }
-
   private calculateAppointments = (
     member: Member,
   ): { appointmentsCount: number; nextAppointment: Date } => {
@@ -1152,12 +1043,9 @@ export class MemberService extends BaseService {
       populate: 'notes',
     };
 
-    const options = { sort: { updatedAt: -1 } };
-
     return this.memberModel
       .findOne({ _id: id })
       .populate({ path: 'org' })
-      .populate({ path: 'actionItems', options })
       .populate({ path: 'users', populate: subPopulate });
   }
 

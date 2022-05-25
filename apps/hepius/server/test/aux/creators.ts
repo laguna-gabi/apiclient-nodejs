@@ -3,15 +3,16 @@ import { v4 } from 'uuid';
 import { AppointmentsIntegrationActions, Handler } from '.';
 import {
   generateAppointmentLink,
+  generateCreateActionItemParams,
   generateCreateMemberParams,
-  generateCreateTaskParams,
   generateCreateUserParams,
   generateEndAppointmentParams,
   generateOrgParams,
   generateRequestHeaders,
 } from '..';
 import { EndAppointmentParams } from '../../src/appointment';
-import { CreateTaskParams, Member, defaultMemberParams } from '../../src/member';
+import { Member, defaultMemberParams } from '../../src/member';
+import { CreateActionItemParams } from '../../src/journey';
 import { Org } from '../../src/org';
 import { CreateUserParams } from '../../src/user';
 import { Appointment, AppointmentStatus, User, UserRole } from '@argus/hepiusClient';
@@ -166,14 +167,14 @@ export class Creators {
     return executeEndAppointment(); //triple checking end appointment with params
   };
 
-  createAndValidateTask = async (
+  createAndValidateActionItem = async (
     memberId: string,
     method,
-  ): Promise<{ id: string; createTaskParams: CreateTaskParams }> => {
-    const createTaskParams = generateCreateTaskParams({ memberId });
-    const { id } = await method({ createTaskParams });
+  ): Promise<{ id: string; createActionItemParams: CreateActionItemParams }> => {
+    const createActionItemParams = generateCreateActionItemParams({ memberId });
+    const { id } = await method({ createActionItemParams });
     expect(id).toEqual(expect.any(String));
 
-    return { id, createTaskParams };
+    return { id, createActionItemParams };
   };
 }

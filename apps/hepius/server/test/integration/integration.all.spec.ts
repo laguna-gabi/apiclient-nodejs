@@ -29,6 +29,7 @@ import {
   generateAvailabilityInput,
   generateCarePlanTypeInput,
   generateChangeMemberDnaParams,
+  generateCreateActionItemParams,
   generateCreateBarrierParams,
   generateCreateBarrierParamsWizard,
   generateCreateCarePlanParams,
@@ -70,6 +71,7 @@ import {
 import { buildLHPQuestionnaire } from '../../cmd/static';
 import { RequestAppointmentParams, ScheduleAppointmentParams } from '../../src/appointment';
 import {
+  AlertType,
   ChangeType,
   ErrorType,
   Errors,
@@ -82,17 +84,19 @@ import {
 } from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
-  AlertType,
-  CreateTaskParams,
   Member,
   Recording,
   RecordingOutput,
   ReplaceUserForMemberParams,
-  Task,
-  TaskStatus,
   UpdateJournalTextParams,
 } from '../../src/member';
-import { ChangeMemberDnaParams, DischargeTo } from '../../src/journey';
+import {
+  ActionItem,
+  ActionItemStatus,
+  ChangeMemberDnaParams,
+  CreateActionItemParams,
+  DischargeTo,
+} from '../../src/journey';
 import { Internationalization } from '../../src/providers';
 import {
   CreateQuestionnaireParams,
@@ -161,16 +165,16 @@ describe('Integration tests: all', () => {
       userId: resultNurse2.id,
     });
 
-    const { createTaskParams: ai1, id: idAi1 } = await creators.createAndValidateTask(
+    const { createActionItemParams: ai1, id: idAi1 } = await creators.createAndValidateActionItem(
       member.id,
       handler.mutations.createActionItem,
     );
-    const { createTaskParams: ai2, id: idAi2 } = await creators.createAndValidateTask(
+    const { createActionItemParams: ai2, id: idAi2 } = await creators.createAndValidateActionItem(
       member.id,
       handler.mutations.createActionItem,
     );
-    await updateTaskStatus(idAi1, handler.mutations.updateActionItemStatus);
-    await updateTaskStatus(idAi2, handler.mutations.updateActionItemStatus);
+    await updateActionItemStatus(idAi1, handler.mutations.updateActionItemStatus);
+    await updateActionItemStatus(idAi2, handler.mutations.updateActionItemStatus);
 
     const resultMember = await handler.queries.getMember({
       id: member.id,
@@ -191,8 +195,9 @@ describe('Integration tests: all', () => {
     expect(resultMember.scores).toEqual(appointmentNurse2.notes.scores);
 
     //action items are desc sorted, so the last inserted action item is the 1st in the list
-    compareTasks(resultMember.actionItems[0], ai2);
-    compareTasks(resultMember.actionItems[1], ai1);
+    const actionItems = await handler.queries.getActionItems({ memberId: member.id });
+    compareActionItem(actionItems[0], ai2);
+    compareActionItem(actionItems[1], ai1);
   });
 
   /**
@@ -569,6 +574,10 @@ describe('Integration tests: all', () => {
       // submit QR for member
       await submitQR(member.id);
 
+      await handler.mutations.createActionItem({
+        createActionItemParams: generateCreateActionItemParams({ memberId: member.id }),
+      });
+
       // delete member
       const deleteMemberParams = generateDeleteMemberParams({ id: member.id, hard });
       const result = await handler.mutations.deleteMember({ deleteMemberParams });
@@ -633,6 +642,9 @@ describe('Integration tests: all', () => {
         memberId: member.id,
       });
       expect(memberCarePlans.length).toEqual(0);
+
+      const actionItems = await handler.queries.getActionItems({ memberId: member.id });
+      expect(actionItems.length).toEqual(0);
     });
   });
 
@@ -1281,12 +1293,28 @@ describe('Integration tests: all', () => {
       notification2,
       notification3,
       requestHeadersUser,
-      internationalization: Internationalization;
+      internationalization: Internationalization,
+      actionItem: ActionItem;
 
     beforeAll(async () => {
       // Fixtures: generate 2 members with the same primary user
       const { member, user, org } = await creators.createMemberUserAndOptionalOrg();
       member1 = member;
+      // add an overdue Action Item - within range (less than 30 days since deadline)
+      await handler.mutations.createActionItem({
+        createActionItemParams: generateCreateActionItemParams({
+          memberId: member1.id,
+          deadline: sub(new Date(), { days: 29 }),
+        }),
+      });
+      actionItem = (await handler.queries.getActionItems({ memberId: member1.id }))[0];
+      // add a `reached` Action Item (should not trigger an alert)
+      await handler.mutations.createActionItem({
+        createActionItemParams: generateCreateActionItemParams({
+          memberId: member1.id,
+          deadline: sub(new Date(), { days: 31 }),
+        }),
+      });
       const { id } = await handler.mutations.createMember({
         memberParams: generateCreateMemberParams({ orgId: org.id, userId: user.id }),
       });
@@ -1371,6 +1399,15 @@ describe('Integration tests: all', () => {
           memberId: member2.id.toString(),
           type: AlertType.memberNotFeelingWellMessage,
         },
+        {
+          date: actionItem.deadline,
+          dismissed: false,
+          id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
+          isNew: true,
+          text: internationalization.getAlerts(AlertType.actionItemOverdue, { member: member1 }),
+          memberId: member1.id.toString(),
+          type: AlertType.actionItemOverdue,
+        },
       ]);
     });
 
@@ -1428,6 +1465,15 @@ describe('Integration tests: all', () => {
           memberId: member2.id.toString(),
           type: AlertType.memberNotFeelingWellMessage,
         },
+        {
+          date: actionItem.deadline,
+          dismissed: false,
+          id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
+          isNew: true,
+          text: internationalization.getAlerts(AlertType.actionItemOverdue, { member: member1 }),
+          memberId: member1.id.toString(),
+          type: AlertType.actionItemOverdue,
+        },
       ]);
     });
 
@@ -1483,6 +1529,15 @@ describe('Integration tests: all', () => {
           }),
           memberId: member2.id.toString(),
           type: AlertType.memberNotFeelingWellMessage,
+        },
+        {
+          date: actionItem.deadline,
+          dismissed: false,
+          id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
+          isNew: false,
+          text: internationalization.getAlerts(AlertType.actionItemOverdue, { member: member1 }),
+          memberId: member1.id.toString(),
+          type: AlertType.actionItemOverdue,
         },
       ]);
     });
@@ -2950,15 +3005,18 @@ describe('Integration tests: all', () => {
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/
 
-  const updateTaskStatus = async (id: string, method) => {
-    const updateTaskStatusParams = { id, status: TaskStatus.reached };
-    await method({ updateTaskStatusParams });
+  const updateActionItemStatus = async (id: string, method) => {
+    const updateActionItemStatusParams = { id, status: ActionItemStatus.reached };
+    await method({ updateActionItemStatusParams });
   };
 
-  const compareTasks = (task: Task, createTaskParams: CreateTaskParams) => {
-    expect(task.title).toEqual(createTaskParams.title);
-    expect(task.status).toEqual(TaskStatus.reached);
-    expect(new Date(task.deadline)).toEqual(createTaskParams.deadline);
+  const compareActionItem = (
+    actionItem: ActionItem,
+    createActionItemParams: CreateActionItemParams,
+  ) => {
+    expect(actionItem.title).toEqual(createActionItemParams.title);
+    expect(actionItem.status).toEqual(ActionItemStatus.reached);
+    expect(new Date(actionItem.deadline)).toEqual(createActionItemParams.deadline);
   };
 
   const createAndValidateAvailabilities = async (count: number): Promise<Identifiers> => {
