@@ -1,7 +1,12 @@
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { LoggingInterceptor } from '../common';
 import { MessagePattern, Transport } from '@nestjs/microservices';
-import { Barrier, CarePlan, HepiusMessagePatterns } from '@argus/hepiusClient';
+import {
+  Barrier,
+  CarePlan,
+  CreateCarePlanParams,
+  HepiusMessagePatterns,
+} from '@argus/hepiusClient';
 import { CareService } from './care.service';
 
 @UseInterceptors(LoggingInterceptor)
@@ -17,5 +22,10 @@ export class CareTcpController {
   @MessagePattern({ cmd: HepiusMessagePatterns.getMemberBarriers }, Transport.TCP)
   async getMemberBarriers({ memberId }: { memberId: string }): Promise<Barrier[]> {
     return this.careService.getMemberBarriers(memberId);
+  }
+
+  @MessagePattern({ cmd: HepiusMessagePatterns.createCarePlan }, Transport.TCP)
+  async createCarePlan(createCarePlanParams: CreateCarePlanParams): Promise<CarePlan> {
+    return this.careService.createCarePlan(createCarePlanParams);
   }
 }

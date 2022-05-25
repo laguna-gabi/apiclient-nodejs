@@ -47,8 +47,8 @@ export class BaseCare extends Identifier {
   memberId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId })
-  @Field(() => String)
-  createdBy: Types.ObjectId;
+  @Field(() => String, { nullable: true })
+  createdBy?: Types.ObjectId;
 
   @Field(() => Date)
   createdAt: Date;

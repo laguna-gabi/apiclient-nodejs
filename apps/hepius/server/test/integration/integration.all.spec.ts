@@ -2171,7 +2171,50 @@ describe('Integration tests: all', () => {
         );
       });
 
-      it('should create an additional care plan to an existing barrier', async () => {
+      it('should create an additional care plan to an existing barrier - TCP', async () => {
+        const {
+          member: { id: memberId },
+          user: { authId },
+        } = await creators.createMemberUserAndOptionalOrg();
+        await submitMockCareWizard(handler, memberId);
+
+        const memberBarriers = await handler.queries.getMemberBarriers({
+          memberId,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+        expect(memberBarriers.length).toEqual(1);
+        const barrierId = memberBarriers[0].id;
+
+        const createCarePlanParams: CreateCarePlanParams = generateCreateCarePlanParams({
+          memberId,
+          barrierId,
+          type: generateCarePlanTypeInput({ id: handler.carePlanType.id }),
+        });
+
+        const { id } = await handler.tcpClient
+          .send<CarePlan>({ cmd: HepiusMessagePatterns.createCarePlan }, createCarePlanParams)
+          .toPromise();
+
+        // get again to verify the update
+        const memberCarePlans = await handler.queries.getMemberCarePlans({
+          memberId,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+        expect(memberCarePlans.length).toEqual(2);
+
+        expect(memberCarePlans).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              ...createCarePlanParams,
+              dueDate: createCarePlanParams.dueDate.toISOString(),
+              type: expect.objectContaining({ id: handler.carePlanType.id }),
+              id,
+            }),
+          ]),
+        );
+      });
+
+      it('should create an additional care plan to an existing barrier - GQL', async () => {
         const {
           member: { id: memberId },
           user: { authId },

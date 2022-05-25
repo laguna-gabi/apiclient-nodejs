@@ -119,9 +119,7 @@ export class CareResolver {
   async createCarePlan(
     @Args(camelCase(CreateCarePlanParams.name)) createCarePlanParams: CreateCarePlanParams,
   ): Promise<CarePlan> {
-    return this.careService.createCarePlan({
-      ...createCarePlanParams,
-    });
+    return this.careService.createCarePlan(createCarePlanParams);
   }
 
   @Mutation(() => CarePlan)
