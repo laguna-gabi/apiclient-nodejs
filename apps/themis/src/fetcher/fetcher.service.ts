@@ -2,19 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { HepiusClientService } from '../providers';
 import { Action, EngineAction, MemberFacts, TargetEntity } from '../rules/types';
 import { LoggerService } from '../common';
-
-export const mockFactsObject: MemberFacts = {
-  memberInfo: {
-    id: '123',
-    scheduledAppointments: 0,
-    appointmentsToBeScheduled: 0,
-    livesAlone: true,
-    nested: { example: 1 },
-  },
-  barriers: [],
-  carePlans: [],
-  caregivers: [],
-};
+import { formatEx } from '@argus/pandora';
+import { CreateCarePlanParams } from '@argus/hepiusClient';
 
 @Injectable()
 export class FetcherService {
@@ -22,40 +11,40 @@ export class FetcherService {
     private readonly hepiusClientService: HepiusClientService,
     private logger: LoggerService,
   ) {}
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async fetchData(memberId: string): Promise<MemberFacts> {
-    // todo: get data from server (hepius)
-    // for now - fake data
     return {
-      ...mockFactsObject,
-      memberInfo: { ...mockFactsObject.memberInfo, id: memberId },
+      member: { id: memberId },
       caregivers: await this.hepiusClientService.getCaregiversByMemberId({ memberId }),
       barriers: await this.hepiusClientService.getMemberBarriers({ memberId }),
       carePlans: await this.hepiusClientService.getMemberCarePlans({ memberId }),
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async applyChanges(engineActions: EngineAction[]) {
     this.logger.info({ engineActions }, FetcherService.name, this.applyChanges.name);
 
     await Promise.all(
       engineActions.map((action) => {
-        switch (action.targetEntity) {
-          case TargetEntity.barrier: {
-            this.handleBarrierAction(action);
-            break;
+        try {
+          switch (action.targetEntity) {
+            case TargetEntity.barrier: {
+              this.handleBarrierAction(action);
+              break;
+            }
+            case TargetEntity.carePlan: {
+              this.handleCarePlanAction(action);
+              break;
+            }
           }
-          case TargetEntity.carePlan: {
-            this.handleCarePlanAction(action);
-            break;
-          }
+        } catch (ex) {
+          this.logger.error({ action }, FetcherService.name, this.applyChanges.name, formatEx(ex));
         }
       }),
     );
   }
 
   async handleBarrierAction(barrierAction: EngineAction) {
+    this.logger.info({ action: barrierAction }, FetcherService.name, this.handleBarrierAction.name);
     if (barrierAction.action == Action.create) {
       // todo: get createBarrierParams params from common
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -64,22 +53,24 @@ export class FetcherService {
         type: barrierAction.entityType,
       };
 
-      // todo: send to hepius - waiting for tcp endpints
+      // todo: send to hepius - waiting for tcp endpoints
     }
   }
 
   async handleCarePlanAction(carePlanAction: EngineAction) {
-    if (carePlanAction.action == Action.create) {
-      // todo: get createCarePlanParams params from common
+    this.logger.info(
+      { action: carePlanAction },
+      FetcherService.name,
+      this.handleCarePlanAction.name,
+    );
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const createCarePlanParams = {
+    if (carePlanAction.action == Action.create) {
+      const createCarePlanParams: CreateCarePlanParams = {
         memberId: carePlanAction.memberId,
-        type: carePlanAction.entityType,
+        type: { id: carePlanAction.entityType },
         barrierId: carePlanAction.parentEntityId,
       };
-
-      // todo: send to hepius - waiting for tcp endpints
+      await this.hepiusClientService.createCarePlan(createCarePlanParams);
     }
   }
 }

@@ -2,6 +2,7 @@ import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { FetcherModule, FetcherService } from '../../src/fetcher';
 import {
+  CreateCarePlanParams,
   mockGenerateBarrier,
   mockGenerateCarePlan,
   mockGenerateCaregiver,
@@ -85,31 +86,66 @@ describe(FetcherService.name, () => {
   });
 
   describe('applyChanges', () => {
-    let mockFetcherHandleBarrierAction: jest.SpyInstance;
-    let mockFetcherHandleCarePlanAction: jest.SpyInstance;
+    let mockHepiusClientServiceCreateCarePlan: jest.SpyInstance;
 
     beforeAll(() => {
-      mockFetcherHandleBarrierAction = jest.spyOn(service, `handleBarrierAction`);
-      mockFetcherHandleCarePlanAction = jest.spyOn(service, `handleCarePlanAction`);
+      mockHepiusClientServiceCreateCarePlan = jest.spyOn(hepiusClientService, `createCarePlan`);
+      mockHepiusClientServiceCreateCarePlan.mockResolvedValue(undefined);
     });
 
     afterEach(() => {
-      mockFetcherHandleCarePlanAction.mockReset();
-      mockFetcherHandleBarrierAction.mockReset();
+      mockHepiusClientServiceCreateCarePlan.mockReset();
     });
 
-    it(`should fetch call the right handler for every action`, async () => {
-      const barrierAction = generateEngineAction({
-        targetEntity: TargetEntity.barrier,
+    describe('applyChanges', () => {
+      let mockFetcherHandleBarrierAction: jest.SpyInstance;
+      let mockFetcherHandleCarePlanAction: jest.SpyInstance;
+
+      beforeAll(() => {
+        mockFetcherHandleBarrierAction = jest.spyOn(service, `handleBarrierAction`);
+        mockFetcherHandleCarePlanAction = jest.spyOn(service, `handleCarePlanAction`);
       });
+
+      afterEach(() => {
+        mockFetcherHandleBarrierAction.mockReset();
+        mockFetcherHandleCarePlanAction.mockReset();
+      });
+
+      afterAll(() => {
+        mockFetcherHandleBarrierAction.mockRestore();
+        mockFetcherHandleCarePlanAction.mockRestore();
+      });
+
+      it(`should call the right handler for every action`, async () => {
+        const barrierAction = generateEngineAction({
+          targetEntity: TargetEntity.barrier,
+        });
+        const carePlanAction = generateEngineAction({
+          targetEntity: TargetEntity.carePlan,
+        });
+
+        await service.applyChanges([barrierAction, carePlanAction]);
+
+        expect(mockFetcherHandleBarrierAction).toHaveBeenCalledWith(barrierAction);
+        expect(mockFetcherHandleCarePlanAction).toHaveBeenCalledWith(carePlanAction);
+      });
+    });
+
+    it(`should create care plan on handleCarePlanAction with the right params`, async () => {
       const carePlanAction = generateEngineAction({
         targetEntity: TargetEntity.carePlan,
+        parentEntity: TargetEntity.barrier,
+        parentEntityId: generateId(),
       });
 
-      await service.applyChanges([barrierAction, carePlanAction]);
+      const createCarePlanParams: CreateCarePlanParams = {
+        memberId: carePlanAction.memberId,
+        type: { id: carePlanAction.entityType },
+        barrierId: carePlanAction.parentEntityId,
+      };
+      await service.handleCarePlanAction(carePlanAction);
 
-      expect(mockFetcherHandleBarrierAction).toHaveBeenCalledWith(barrierAction);
-      expect(mockFetcherHandleCarePlanAction).toHaveBeenCalledWith(carePlanAction);
+      expect(mockHepiusClientServiceCreateCarePlan).toHaveBeenCalledWith(createCarePlanParams);
     });
   });
 });

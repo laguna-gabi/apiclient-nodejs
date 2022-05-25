@@ -8,7 +8,7 @@ export const engineRules: EngineRule[] = [
     conditions: {
       any: [
         {
-          fact: 'memberInfo',
+          fact: 'member',
           operator: Operator.equal,
           value: true,
           path: '$.livesAlone',
@@ -33,19 +33,19 @@ export const engineRules: EngineRule[] = [
     conditions: {
       all: [
         {
-          fact: 'memberInfo',
+          fact: 'member',
           operator: Operator.equal,
           value: 0,
           path: '$.scheduledAppointments',
         },
         {
-          fact: 'memberInfo',
+          fact: 'member',
           operator: Operator.equal,
           value: 0,
           path: '$.appointmentsToBeScheduled',
         },
         {
-          fact: 'memberInfo',
+          fact: 'member',
           operator: Operator.equal,
           value: 1,
           path: '$.nested.example',
@@ -77,6 +77,27 @@ export const engineRules: EngineRule[] = [
         type: 'content-about-combating-loneliness',
         parentEntity: TargetEntity.barrier,
         parentEntityType: 'loneliness',
+      },
+    },
+  },
+  {
+    name: 'test-real',
+    active: true,
+    conditions: {
+      all: [
+        {
+          fact: DynamicFacts.barrierTypes,
+          operator: Operator.contains,
+          value: '628e1a509f92db6d2ba0bf86',
+        },
+      ],
+    },
+    event: {
+      type: TargetEntity.carePlan,
+      params: {
+        type: '628e1a509f92db6d2ba0bf51',
+        parentEntity: TargetEntity.barrier,
+        parentEntityType: '628e1a509f92db6d2ba0bf86',
       },
     },
   },

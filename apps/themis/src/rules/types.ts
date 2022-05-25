@@ -84,16 +84,13 @@ export type TopLevelCondition = AllConditions | AnyConditions;
 
 // todo: setup with real types
 export interface MemberFacts {
-  memberInfo: MemberInfo;
+  member: Member;
   caregivers: Caregiver[];
   barriers: Barrier[];
   carePlans: CarePlan[];
 }
 
-export interface MemberInfo {
+// todo: setup with real member
+export interface Member {
   id: string;
-  scheduledAppointments?: number;
-  appointmentsToBeScheduled?: number;
-  livesAlone?: boolean;
-  nested?: { example: number };
 }

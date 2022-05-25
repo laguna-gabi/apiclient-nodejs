@@ -39,7 +39,7 @@ export class StateResolverService {
           const { found, parentId } = await this.lookup(targetEntity, eventParams);
           if (!found) {
             const engineAction: EngineAction = {
-              memberId: memberFacts.memberInfo.id,
+              memberId: memberFacts.member.id,
               action: Action.create,
               targetEntity,
               entityType,

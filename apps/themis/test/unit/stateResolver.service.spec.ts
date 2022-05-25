@@ -38,7 +38,7 @@ describe(StateResolverService.name, () => {
       const barrierType2 = generateId();
       const memberId = generateId();
       const memberFacts = generateMemberFacts({
-        memberInfo: { id: memberId },
+        member: { id: memberId },
         barriers: [mockGenerateBarrier({ type: mockGenerateBarrierType({ id: barrierType1 }) })],
       });
       const barrierEvents = [
@@ -68,7 +68,7 @@ describe(StateResolverService.name, () => {
       const memberId = generateId();
       const barrierType = generateId();
       const memberFacts = generateMemberFacts({
-        memberInfo: { id: memberId },
+        member: { id: memberId },
         barriers: [mockGenerateBarrier({ type: mockGenerateBarrierType({ id: barrierType }) })],
         carePlans: [
           mockGenerateCarePlan({ type: mockGenerateCarePlanType({ id: carePlanType1 }) }),
@@ -104,7 +104,7 @@ describe(StateResolverService.name, () => {
       const barrierType = generateId();
       const barrierId = generateId();
       const memberFacts = generateMemberFacts({
-        memberInfo: { id: memberId },
+        member: { id: memberId },
         barriers: [
           mockGenerateBarrier({
             type: mockGenerateBarrierType({ id: barrierType }),
@@ -132,7 +132,7 @@ describe(StateResolverService.name, () => {
       const barrierType = generateId();
       const barrierId = generateId();
       const memberFacts = generateMemberFacts({
-        memberInfo: { id: memberId },
+        member: { id: memberId },
         barriers: [
           mockGenerateBarrier({
             type: mockGenerateBarrierType({ id: barrierType }),
@@ -158,7 +158,7 @@ describe(StateResolverService.name, () => {
       const memberId = generateId();
       const barrierType = generateId();
       const memberFacts = generateMemberFacts({
-        memberInfo: { id: memberId },
+        member: { id: memberId },
         carePlans: [
           mockGenerateCarePlan({ type: mockGenerateCarePlanType({ id: carePlanType1 }) }),
         ],
@@ -181,7 +181,7 @@ describe(StateResolverService.name, () => {
       const barrierType1 = generateId();
       const memberId = generateId();
       const memberFacts = generateMemberFacts({
-        memberInfo: { id: memberId },
+        member: { id: memberId },
         barriers: [mockGenerateBarrier({ type: mockGenerateBarrierType({ id: barrierType1 }) })],
       });
       const barrierEvent = generateBarrierEvent({ type: barrierType1 });
@@ -195,7 +195,7 @@ describe(StateResolverService.name, () => {
     it(`should return false when barrier was not found`, async () => {
       const memberId = generateId();
       const memberFacts = generateMemberFacts({
-        memberInfo: { id: memberId },
+        member: { id: memberId },
         barriers: [mockGenerateBarrier()],
       });
       const barrierEvent = generateBarrierEvent();

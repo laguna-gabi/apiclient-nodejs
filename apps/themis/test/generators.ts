@@ -2,8 +2,8 @@ import {
   Action,
   EngineAction,
   EventParams,
+  Member,
   MemberFacts,
-  MemberInfo,
   TargetEntity,
 } from '../src/rules/types';
 import { Almanac, EngineResult, Event, RuleResult } from 'json-rules-engine';
@@ -67,9 +67,9 @@ export const generateMemberFacts = ({
   barriers = [],
   carePlans = [],
   caregivers = [],
-  memberInfo,
+  member,
 }: {
-  memberInfo?: MemberInfo;
+  member?: Member;
   caregivers?: Caregiver[];
   barriers?: Barrier[];
   carePlans?: CarePlan[];
@@ -78,7 +78,7 @@ export const generateMemberFacts = ({
     barriers,
     carePlans,
     caregivers,
-    memberInfo,
+    member,
   };
 };
 
