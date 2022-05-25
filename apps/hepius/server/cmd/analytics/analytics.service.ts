@@ -523,14 +523,13 @@ export class AnalyticsService {
         ? reformatDate(member.memberDetails.dischargeDate, momentFormats.mysqlDate)
         : undefined,
       los: this.calculateLos(member.memberDetails.admitDate, member.memberDetails.dischargeDate),
-      days_since_discharge: differenceInDays(
-        new Date(),
-        Date.parse(member.memberDetails.dischargeDate),
-      ),
+      days_since_discharge: member.memberDetails.dischargeDate
+        ? differenceInDays(new Date(), Date.parse(member.memberDetails.dischargeDate))
+        : undefined,
       active: daysSinceDischarge < GraduationPeriod,
-      graduated: member.recentJourney.isGraduated,
+      graduated: !!member.recentJourney?.isGraduated,
       graduation_date:
-        member.recentJourney.graduationDate &&
+        member.recentJourney?.graduationDate &&
         reformatDate(member.recentJourney.graduationDate.toString(), momentFormats.mysqlDate),
       dc_summary_load_date: dcSummaryLoadDate
         ? reformatDate(dcSummaryLoadDate.toString(), momentFormats.mysqlDate)
@@ -565,8 +564,8 @@ export class AnalyticsService {
           `${member.memberDetails.primaryUser.firstName} ${member.memberDetails.primaryUser.lastName}`
         : undefined,
       coach_id: member.memberDetails.primaryUserId?.toString(),
-      general_notes: member.recentJourney.generalNotes,
-      nurse_notes: member.recentJourney.nurseNotes,
+      general_notes: member.recentJourney?.generalNotes,
+      nurse_notes: member.recentJourney?.nurseNotes,
       marital_status: member.memberDetails.maritalStatus,
       height: member.memberDetails.height,
       weight: member.memberDetails.weight,
@@ -629,7 +628,7 @@ export class AnalyticsService {
       : undefined;
     // eslint-disable-next-line max-len
     const graduation_date =
-      member.recentJourney.graduationDate &&
+      member.recentJourney?.graduationDate &&
       reformatDate(member.recentJourney.graduationDate.toString(), momentFormats.mysqlDate);
     const results = [];
 
@@ -639,7 +638,7 @@ export class AnalyticsService {
       customer_id: member._id.toString(),
       mbr_initials,
       appt_number: 0,
-      graduated: member.recentJourney.isGraduated,
+      graduated: member.recentJourney?.isGraduated,
       graduation_date,
     });
 

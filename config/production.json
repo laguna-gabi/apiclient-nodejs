@@ -30,7 +30,7 @@
     "name": "iris"
   },
   "analytics": {
-    "host": "ec2-44-199-251-231.compute-1.amazonaws.com",
+    "host": "ec2-52-54-164-168.compute-1.amazonaws.com",
     "database": "laguna"
   }
 }

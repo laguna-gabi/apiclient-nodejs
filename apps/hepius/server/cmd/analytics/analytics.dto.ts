@@ -193,7 +193,7 @@ export class MemberData {
   deceased_date?: string;
   @Column('float', { nullable: true })
   deceased_days_from_dc?: number;
-  @Column('float')
+  @Column('float', { nullable: true })
   deceased_flag: boolean;
 }
 

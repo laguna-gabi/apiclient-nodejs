@@ -672,7 +672,6 @@ describe('Commands: AnalyticsService', () => {
           primaryUserId: undefined,
           org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
-        recentJourney: { ...mockActiveJourney, firstLoggedInAt: undefined },
         isControlMember: true,
       } as MemberDataAggregate);
 
