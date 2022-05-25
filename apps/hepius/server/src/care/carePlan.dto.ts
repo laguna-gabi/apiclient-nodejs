@@ -43,6 +43,16 @@ export class UpdateCarePlanParams {
   completionNote?: string;
 }
 
+@InputType()
+export class DeleteCarePlanParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.carePlanIdInvalid) })
+  id: string;
+
+  @Field(() => String, { nullable: true })
+  deletionNote?: string;
+}
+
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/

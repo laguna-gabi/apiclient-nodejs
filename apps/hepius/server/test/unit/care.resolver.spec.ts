@@ -8,6 +8,7 @@ import {
   generateCreateCarePlanParams,
   generateCreateCarePlanParamsWizard,
   generateCreateRedFlagParamsWizard,
+  generateDeleteCarePlanParams,
   generateSubmitCareWizardParams,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
@@ -189,11 +190,13 @@ describe('CareResolver', () => {
 
       const userId = generateId();
       const id = generateId();
-      const result = await resolver.deleteCarePlan(userId, id);
+      const deleteCarePlanParams = generateDeleteCarePlanParams({ id });
+
+      const result = await resolver.deleteCarePlan(userId, deleteCarePlanParams);
       expect(result).toBeTruthy();
 
       expect(spyOnServiceDeleteCarePlan).toBeCalledTimes(1);
-      expect(spyOnServiceDeleteCarePlan).toBeCalledWith(id, userId);
+      expect(spyOnServiceDeleteCarePlan).toBeCalledWith(deleteCarePlanParams, userId);
     });
   });
 

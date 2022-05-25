@@ -7,6 +7,7 @@ import {
   CarePlanTypeDocument,
   CreateBarrierParams,
   CreateRedFlagParams,
+  DeleteCarePlanParams,
   RedFlag,
   RedFlagDocument,
   RedFlagType,
@@ -274,7 +275,7 @@ export class CareService extends BaseService {
       },
       isNil,
     );
-    const result = this.carePlanModel.findOneAndUpdate(
+    const result = await this.carePlanModel.findOneAndUpdate(
       { _id: new Types.ObjectId(updateCarePlanParams.id) },
       { $set: updateParams },
       { new: true },
@@ -316,8 +317,16 @@ export class CareService extends BaseService {
     return this.carePlanTypeModel.find({});
   }
 
-  async deleteCarePlan(id: string, deletedBy: string): Promise<boolean> {
-    const result = await this.carePlanModel.findById(new Types.ObjectId(id));
+  async deleteCarePlan(
+    deleteCarePlanParams: DeleteCarePlanParams,
+    deletedBy: string,
+  ): Promise<boolean> {
+    const deleteParams: Partial<DeleteCarePlanParams> = omitBy(deleteCarePlanParams, isNil);
+    const result = await this.carePlanModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(deleteCarePlanParams.id) },
+      { $set: deleteParams },
+      { new: true },
+    );
     if (!result) {
       throw new Error(Errors.get(ErrorType.carePlanNotFound));
     }

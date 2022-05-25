@@ -40,6 +40,7 @@ import {
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateDateOnly,
+  generateDeleteCarePlanParams,
   generateDeleteMemberParams,
   generateGetTodoDonesParams,
   generateOrgParams,
@@ -2270,7 +2271,8 @@ describe('Integration tests: all', () => {
         expect(memberCarePlans.length).toEqual(1);
         const carePlanId = memberCarePlans[0].id;
 
-        await handler.mutations.deleteCarePlan({ id: carePlanId });
+        const deleteCarePlanParams = generateDeleteCarePlanParams({ id: carePlanId });
+        await handler.mutations.deleteCarePlan({ deleteCarePlanParams });
 
         const memberCarePlansAfter = await handler.queries.getMemberCarePlans({
           memberId,

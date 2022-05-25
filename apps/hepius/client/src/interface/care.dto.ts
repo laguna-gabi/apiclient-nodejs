@@ -96,6 +96,10 @@ export class CarePlan extends BaseCare {
   @Field(() => Date, { nullable: true })
   dueDate?: Date;
 
+  @Prop()
+  @Field(() => String, { nullable: true })
+  deletionNote?: string;
+
   @Prop({ type: String, enum: CarePlanCompletionReason })
   @Field(() => CarePlanCompletionReason, { nullable: true })
   completionReason?: CarePlanCompletionReason;

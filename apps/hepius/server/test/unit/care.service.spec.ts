@@ -20,6 +20,7 @@ import {
   generateCreateBarrierParams,
   generateCreateCarePlanParams,
   generateCreateRedFlagParams,
+  generateDeleteCarePlanParams,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
   generateUpdateRedFlagParams,
@@ -635,19 +636,20 @@ describe('CareService', () => {
         const carePlanBefore = await service.getCarePlan(id);
         expect(carePlanBefore).not.toBeNull();
 
-        await service.deleteCarePlan(id, userId);
+        const deleteParams = generateDeleteCarePlanParams({ id });
+        await service.deleteCarePlan(deleteParams, userId);
         /* eslint-disable @typescript-eslint/ban-ts-comment*/
         // @ts-ignore
         const carePlanAfter = await carePlanModel.findWithDeleted({
-          id,
+          _id: new Types.ObjectId(id),
         });
         checkDelete(carePlanAfter, { id }, userId);
       });
 
       it('should throw exception when trying to delete a non existing care plan', async () => {
-        await expect(service.deleteCarePlan(generateId(), generateId())).rejects.toThrow(
-          Errors.get(ErrorType.carePlanNotFound),
-        );
+        await expect(
+          service.deleteCarePlan(generateDeleteCarePlanParams(), generateId()),
+        ).rejects.toThrow(Errors.get(ErrorType.carePlanNotFound));
       });
     });
 

@@ -63,6 +63,7 @@ import { AvailabilityInput } from '../src/availability';
 import {
   CreateBarrierParams,
   CreateRedFlagParams,
+  DeleteCarePlanParams,
   UpdateBarrierParams,
   UpdateCarePlanParams,
   UpdateRedFlagParams,
@@ -1124,6 +1125,16 @@ export const generateUpdateCarePlanParams = ({
     dueDate,
     completionReason,
     completionNote,
+  };
+};
+
+export const generateDeleteCarePlanParams = ({
+  id,
+  deletionNote = lorem.words(4),
+}: Partial<DeleteCarePlanParams> = {}) => {
+  return {
+    id,
+    deletionNote,
   };
 };
 

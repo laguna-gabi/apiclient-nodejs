@@ -19,6 +19,7 @@ import {
 import { AvailabilityInput } from '../../src/availability';
 import {
   CreateBarrierParams,
+  DeleteCarePlanParams,
   RedFlag,
   UpdateBarrierParams,
   UpdateCarePlanParams,
@@ -1852,19 +1853,19 @@ export class Mutations {
   };
 
   deleteCarePlan = async ({
-    id,
+    deleteCarePlanParams,
     requestHeaders = this.defaultUserRequestHeaders,
   }: {
-    id: string;
+    deleteCarePlanParams: DeleteCarePlanParams;
     requestHeaders?;
   }): Promise<boolean> => {
     const { deleteCarePlan } = await this.client.request(
       gql`
-        mutation deleteCarePlan($id: String!) {
-          deleteCarePlan(id: $id)
+        mutation deleteCarePlan($deleteCarePlanParams: DeleteCarePlanParams!) {
+          deleteCarePlan(deleteCarePlanParams: $deleteCarePlanParams)
         }
       `,
-      { id },
+      { deleteCarePlanParams },
       requestHeaders,
     );
 

@@ -3,6 +3,7 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   CareService,
   CreateBarrierParams,
+  DeleteCarePlanParams,
   RedFlag,
   RedFlagType,
   UpdateBarrierParams,
@@ -147,14 +148,9 @@ export class CareResolver {
   @Roles(UserRole.coach, UserRole.nurse)
   async deleteCarePlan(
     @Client('_id') userId,
-    @Args(
-      'id',
-      { type: () => String },
-      new IsValidObjectId(Errors.get(ErrorType.carePlanIdInvalid)),
-    )
-    id: string,
+    @Args(camelCase(DeleteCarePlanParams.name)) deleteCarePlanParams: DeleteCarePlanParams,
   ) {
-    return this.careService.deleteCarePlan(id, userId);
+    return this.careService.deleteCarePlan(deleteCarePlanParams, userId);
   }
 
   @Mutation(() => Identifiers)
