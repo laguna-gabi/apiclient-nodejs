@@ -1,10 +1,16 @@
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
-import { Test, TestingModule } from '@nestjs/testing';
-import { RulesModule, RulesService } from '../../src/rules';
-import { generateMemberFacts } from '../generators';
-import { EngineEvent, TargetEntity } from '../../src/rules/types';
-import { LoggerService } from '../../src/common';
 import { mockGenerateBarrier, mockGenerateBarrierType } from '@argus/hepiusClient';
+import { Test, TestingModule } from '@nestjs/testing';
+import {
+  BarrierType,
+  CarePlanType,
+  EngineEvent,
+  RulesModule,
+  RulesService,
+  TargetEntity,
+} from '../../src/rules';
+import { generateMemberFacts } from '../generators';
+import { LoggerService } from '../../src/common';
 
 describe(RulesService.name, () => {
   let module: TestingModule;
@@ -26,12 +32,13 @@ describe(RulesService.name, () => {
 
   describe('rules', () => {
     describe('carePlan rules', () => {
-      // todo: change to real rule names and entity types
-      describe('content-about-combating-loneliness', () => {
+      describe(CarePlanType.extendCareCircle, () => {
         it(`should create an event when the rule is satisfied`, async () => {
           const memberFacts = generateMemberFacts({
             barriers: [
-              mockGenerateBarrier({ type: mockGenerateBarrierType({ id: 'loneliness' }) }),
+              mockGenerateBarrier({
+                type: mockGenerateBarrierType({ id: BarrierType.behaviorLoneliness }),
+              }),
             ],
           });
 
@@ -39,9 +46,9 @@ describe(RulesService.name, () => {
           const event: EngineEvent = {
             type: TargetEntity.carePlan,
             params: {
-              type: 'content-about-combating-loneliness',
+              type: CarePlanType.extendCareCircle,
               parentEntity: TargetEntity.barrier,
-              parentEntityType: 'loneliness',
+              parentEntityType: BarrierType.behaviorLoneliness,
             },
           };
           expect(engineResult.events).toEqual(expect.arrayContaining([event]));
@@ -56,9 +63,9 @@ describe(RulesService.name, () => {
           const event: EngineEvent = {
             type: TargetEntity.carePlan,
             params: {
-              type: 'content-about-combating-loneliness',
+              type: CarePlanType.extendCareCircle,
               parentEntity: TargetEntity.barrier,
-              parentEntityType: 'loneliness',
+              parentEntityType: BarrierType.behaviorLoneliness,
             },
           };
           expect(engineResult.events).not.toEqual(expect.arrayContaining([event]));

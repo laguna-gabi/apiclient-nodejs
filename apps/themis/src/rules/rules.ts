@@ -1,103 +1,33 @@
 import { EngineRule, Operator, TargetEntity } from './types';
 import { DynamicFacts } from './facts';
 
+export enum BarrierType {
+  behaviorLoneliness = '620e5dc8e2e136b29768387a',
+}
+
+export enum CarePlanType {
+  extendCareCircle = '620cb5dbeba7107aef491064',
+}
+
 export const engineRules: EngineRule[] = [
   {
-    name: 'loneliness',
-    active: true,
-    conditions: {
-      any: [
-        {
-          fact: 'member',
-          operator: Operator.equal,
-          value: true,
-          path: '$.livesAlone',
-        },
-        {
-          fact: DynamicFacts.caregiversCount,
-          operator: Operator.lessThan,
-          value: 2,
-        },
-      ],
-    },
-    event: {
-      type: TargetEntity.barrier,
-      params: {
-        type: 'loneliness',
-      },
-    },
-  },
-  {
-    name: 'appointment-follow-up-unclear',
-    active: true,
-    conditions: {
-      all: [
-        {
-          fact: 'member',
-          operator: Operator.equal,
-          value: 0,
-          path: '$.scheduledAppointments',
-        },
-        {
-          fact: 'member',
-          operator: Operator.equal,
-          value: 0,
-          path: '$.appointmentsToBeScheduled',
-        },
-        {
-          fact: 'member',
-          operator: Operator.equal,
-          value: 1,
-          path: '$.nested.example',
-        },
-      ],
-    },
-    event: {
-      type: TargetEntity.barrier,
-      params: {
-        type: 'appointment-follow-up-unclear',
-      },
-    },
-  },
-  {
-    name: 'content-about-combating-loneliness',
+    name: 'extending-care-circle',
     active: true,
     conditions: {
       all: [
         {
           fact: DynamicFacts.barrierTypes,
           operator: Operator.contains,
-          value: 'loneliness',
+          value: BarrierType.behaviorLoneliness,
         },
       ],
     },
     event: {
       type: TargetEntity.carePlan,
       params: {
-        type: 'content-about-combating-loneliness',
+        type: CarePlanType.extendCareCircle,
         parentEntity: TargetEntity.barrier,
-        parentEntityType: 'loneliness',
-      },
-    },
-  },
-  {
-    name: 'test-real',
-    active: true,
-    conditions: {
-      all: [
-        {
-          fact: DynamicFacts.barrierTypes,
-          operator: Operator.contains,
-          value: '628e1a509f92db6d2ba0bf86',
-        },
-      ],
-    },
-    event: {
-      type: TargetEntity.carePlan,
-      params: {
-        type: '628e1a509f92db6d2ba0bf51',
-        parentEntity: TargetEntity.barrier,
-        parentEntityType: '628e1a509f92db6d2ba0bf86',
+        parentEntityType: BarrierType.behaviorLoneliness,
       },
     },
   },

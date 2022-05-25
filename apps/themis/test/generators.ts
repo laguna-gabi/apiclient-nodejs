@@ -22,7 +22,7 @@ export const generateEngineResult = ({
   failureEvents?: Event[];
   results?: RuleResult[];
   failureResults?: RuleResult[];
-}): EngineResult => {
+} = {}): EngineResult => {
   return {
     almanac,
     events,
@@ -39,18 +39,18 @@ export const generateEngineAction = ({
   parentEntity,
   parentEntityId,
   parentEntityType,
-  targetEntity,
+  targetEntity = TargetEntity.barrier,
   memberId = generateId(),
 }: {
   memberId?: string;
   action?: Action;
   id?: string;
-  targetEntity: TargetEntity;
+  targetEntity?: TargetEntity;
   entityType?: string;
   parentEntity?: TargetEntity;
   parentEntityType?: string;
   parentEntityId?: string;
-}): EngineAction => {
+} = {}): EngineAction => {
   return {
     memberId,
     action,

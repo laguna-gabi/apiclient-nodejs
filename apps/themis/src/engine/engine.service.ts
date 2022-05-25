@@ -19,7 +19,6 @@ export class EngineService {
     const memberId = event.memberId;
     const memberFacts = await this.fetcherService.fetchData(memberId);
     const engineResult = await this.rulesService.run(memberFacts);
-    // todo: remove (it's just for debugging)
     const engineActions = await this.stateResolverService.calcChanges(engineResult, memberFacts);
     await this.fetcherService.applyChanges(engineActions);
   }
