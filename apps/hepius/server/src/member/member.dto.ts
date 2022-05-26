@@ -27,7 +27,7 @@ import {
 import { graphql, twilio } from 'config';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
-import { ActionItem, ReadmissionRisk, ReadmissionRiskHistory } from '../journey';
+import { ReadmissionRisk, ReadmissionRiskHistory } from '../journey';
 import {
   ErrorType,
   Errors,
@@ -641,16 +641,6 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   dischargeDate?: string;
-
-  /**
-   * will be @deprecated soon
-   * use journey.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Prop({ type: [{ type: Types.ObjectId, ref: ActionItem.name }], isNaN: true })
-  @Field(() => [ActionItem], { nullable: true, deprecationReason })
-  actionItems?: ActionItem[];
 
   @Prop({ isNaN: true })
   @Field(() => Scores, { nullable: true })
