@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { compare } from 'compare-versions';
 import { Model } from 'mongoose';
 import {
+  CheckMobileVersionParams,
+  CheckMobileVersionResponse,
   CreateMobileVersionParams,
   MobileVersion,
   MobileVersionDocument,
@@ -47,5 +50,30 @@ export class MobileVersionService {
       { version: { $in: versions }, platform },
       { $set: { faultyVersion: true } },
     );
+  }
+
+  async checkMobileVersion(
+    checkMobileVersionParams: CheckMobileVersionParams,
+  ): Promise<CheckMobileVersionResponse> {
+    const { version, platform } = checkMobileVersionParams;
+
+    const [[latestVersion], minVersion, mobileVersion] = await Promise.all([
+      this.mobileVersionModel.find({ platform }).sort({ _id: -1 }).limit(1),
+      this.mobileVersionModel.findOne({ minVersion: true, platform }),
+      this.mobileVersionModel.findOne({ version, platform }),
+    ]);
+
+    if (!mobileVersion) {
+      throw new BadRequestException(Errors.get(ErrorType.configurationMobileVersionNotFound));
+    }
+
+    const forceUpdate = mobileVersion.faultyVersion || compare(version, minVersion.version, '<');
+    const updateAvailable = forceUpdate || compare(version, latestVersion.version, '<');
+
+    return {
+      latestVersion: latestVersion.version,
+      forceUpdate,
+      updateAvailable,
+    };
   }
 }

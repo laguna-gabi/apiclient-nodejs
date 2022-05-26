@@ -1,10 +1,12 @@
 import { Platform, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
+import { datatype } from 'faker';
 import { Model, model } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  generateCheckMobileVersionParams,
   generateCreateMobileVersionParams,
   generateUpdateFaultyMobileVersionsParams,
   generateUpdateMinMobileVersionParams,
@@ -242,6 +244,94 @@ describe('MobileVersionService', () => {
           );
         }),
       );
+    });
+  });
+
+  describe('checkMobileVersion', () => {
+    it('should check mobile version', async () => {
+      const params = [
+        generateCreateMobileVersionParams({
+          version: `1.${datatype.number(99)}.${datatype.number(99)}`,
+          platform: Platform.android,
+        }),
+        generateCreateMobileVersionParams({
+          version: `2.${datatype.number(99)}.${datatype.number(99)}`,
+          platform: Platform.android,
+        }),
+        generateCreateMobileVersionParams({
+          version: `3.${datatype.number(99)}.${datatype.number(99)}`,
+          platform: Platform.android,
+        }),
+        generateCreateMobileVersionParams({
+          version: `4.${datatype.number(99)}.${datatype.number(99)}`,
+          platform: Platform.android,
+        }),
+        generateCreateMobileVersionParams({
+          version: `5.${datatype.number(99)}.${datatype.number(99)}`,
+          platform: Platform.android,
+        }),
+      ];
+
+      await Promise.all(
+        params.map(async (createMobileVersionParams) => {
+          await service.createMobileVersion(createMobileVersionParams);
+
+          const mobileVersion = await mobileVersionModel.findOne({
+            version: createMobileVersionParams.version,
+          });
+
+          expect(mobileVersion).toEqual(
+            expect.objectContaining({
+              ...createMobileVersionParams,
+              minVersion: false,
+              faultyVersion: false,
+            }),
+          );
+        }),
+      );
+
+      const updateMinMobileVersionParams: UpdateMinMobileVersionParams =
+        generateUpdateMinMobileVersionParams({
+          version: params[1].version,
+          platform: Platform.android,
+        });
+      await service.updateMinMobileVersion(updateMinMobileVersionParams);
+
+      const updateFaultyVersionsParams: UpdateFaultyMobileVersionsParams =
+        generateUpdateFaultyMobileVersionsParams({
+          versions: [params[3].version],
+          platform: Platform.android,
+        });
+      await service.updateFaultyMobileVersions(updateFaultyVersionsParams);
+
+      await Promise.all(
+        [
+          { version: params[0].version, forceUpdate: true, updateAvailable: true },
+          { version: params[1].version, forceUpdate: false, updateAvailable: true },
+          { version: params[2].version, forceUpdate: false, updateAvailable: true },
+          { version: params[3].version, forceUpdate: true, updateAvailable: true },
+          { version: params[4].version, forceUpdate: false, updateAvailable: false },
+        ].map(async ({ version, forceUpdate, updateAvailable }) => {
+          const checkMobileVersionParams = generateCheckMobileVersionParams({
+            version,
+            platform: Platform.android,
+          });
+          const result = await service.checkMobileVersion(checkMobileVersionParams);
+          expect(result).toEqual(
+            expect.objectContaining({
+              latestVersion: params[4].version,
+              forceUpdate,
+              updateAvailable,
+            }),
+          );
+        }),
+      );
+    });
+
+    it('should fail to check mobile version if version does not exist', async () => {
+      await expect(
+        service.updateMinMobileVersion(generateCheckMobileVersionParams()),
+      ).rejects.toThrow(Errors.get(ErrorType.configurationMobileVersionNotFound));
     });
   });
 });

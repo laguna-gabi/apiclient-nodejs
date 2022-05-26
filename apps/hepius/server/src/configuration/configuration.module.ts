@@ -1,7 +1,13 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CommonModule } from '../common';
-import { MobileVersion, MobileVersionDto, MobileVersionResolver, MobileVersionService } from '.';
+import {
+  ConfigurationController,
+  MobileVersion,
+  MobileVersionDto,
+  MobileVersionResolver,
+  MobileVersionService,
+} from '.';
 
 @Module({
   imports: [
@@ -9,6 +15,6 @@ import { MobileVersion, MobileVersionDto, MobileVersionResolver, MobileVersionSe
     MongooseModule.forFeature([{ name: MobileVersion.name, schema: MobileVersionDto }]),
   ],
   providers: [MobileVersionResolver, MobileVersionService],
-  controllers: [],
+  controllers: [ConfigurationController],
 })
 export class ConfigurationModule {}

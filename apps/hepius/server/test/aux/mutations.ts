@@ -78,6 +78,11 @@ import {
   FRAGMENT_JOURNEY,
   FRAGMENT_MEMBER,
 } from './fragments';
+import {
+  CreateMobileVersionParams,
+  UpdateFaultyMobileVersionsParams,
+  UpdateMinMobileVersionParams,
+} from '../../src/configuration';
 
 export class Mutations {
   constructor(
@@ -2005,5 +2010,101 @@ export class Mutations {
       });
 
     return createBarrier;
+  };
+
+  createMobileVersion = async ({
+    createMobileVersionParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    createMobileVersionParams: CreateMobileVersionParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }) => {
+    const { createMobileVersion } = await this.client
+      .request(
+        gql`
+          mutation createMobileVersion($createMobileVersionParams: CreateMobileVersionParams!) {
+            createMobileVersion(createMobileVersionParams: $createMobileVersionParams)
+          }
+        `,
+        { createMobileVersionParams },
+        this.defaultAdminRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return createMobileVersion;
+  };
+
+  updateMinMobileVersion = async ({
+    updateMinMobileVersionParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateMinMobileVersionParams: UpdateMinMobileVersionParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }) => {
+    const { updateMinMobileVersion } = await this.client
+      .request(
+        gql`
+          mutation updateMinMobileVersion(
+            $updateMinMobileVersionParams: UpdateMinMobileVersionParams!
+          ) {
+            updateMinMobileVersion(updateMinMobileVersionParams: $updateMinMobileVersionParams)
+          }
+        `,
+        { updateMinMobileVersionParams },
+        this.defaultAdminRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return updateMinMobileVersion;
+  };
+
+  updateFaultyMobileVersions = async ({
+    updateFaultyMobileVersionsParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateFaultyMobileVersionsParams: UpdateFaultyMobileVersionsParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }) => {
+    const { updateFaultyMobileVersions } = await this.client
+      .request(
+        gql`
+          mutation updateFaultyMobileVersions(
+            $updateFaultyMobileVersionsParams: UpdateFaultyMobileVersionsParams!
+          ) {
+            updateFaultyMobileVersions(
+              updateFaultyMobileVersionsParams: $updateFaultyMobileVersionsParams
+            )
+          }
+        `,
+        { updateFaultyMobileVersionsParams },
+        this.defaultAdminRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return updateFaultyMobileVersions;
   };
 }

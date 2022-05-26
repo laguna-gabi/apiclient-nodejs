@@ -59,16 +59,16 @@ export class CheckMobileVersionParams {
  ****************************************** Return params *****************************************
  *************************************************************************************************/
 export class CheckMobileVersionResponse {
-  updateAvailable: boolean;
+  latestVersion: string;
 
   forceUpdate: boolean;
 
-  version: string;
+  updateAvailable: boolean;
 }
 
 @Schema({ versionKey: false, timestamps: true })
 export class MobileVersion {
-  @Prop({ index: true, unique: true })
+  @Prop()
   version: string;
 
   @Prop({ type: String, enum: Platform })
@@ -85,4 +85,7 @@ export class MobileVersion {
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type MobileVersionDocument = MobileVersion & Document;
-export const MobileVersionDto = SchemaFactory.createForClass(MobileVersion);
+export const MobileVersionDto = SchemaFactory.createForClass(MobileVersion).index(
+  { version: 1, platform: 1 },
+  { unique: true },
+);

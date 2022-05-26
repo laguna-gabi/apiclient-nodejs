@@ -84,6 +84,8 @@ import {
 } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
+  CheckMobileVersionParams,
+  CheckMobileVersionResponse,
   CreateMobileVersionParams,
   MobileVersion,
   UpdateFaultyMobileVersionsParams,
@@ -1657,6 +1659,22 @@ export const generateUpdateFaultyMobileVersionsParams = ({
   platform = Platform.android,
 }: Partial<UpdateFaultyMobileVersionsParams> = {}): UpdateFaultyMobileVersionsParams => {
   return { versions, platform };
+};
+
+export const generateCheckMobileVersionParams = ({
+  version = generateMobileVersion(),
+  build = generateMobileVersion(),
+  platform = Platform.android,
+}: Partial<CheckMobileVersionParams> = {}): CheckMobileVersionParams => {
+  return { version, build, platform };
+};
+
+export const mockGenerateCheckMobileVersionResponse = ({
+  latestVersion = generateMobileVersion(),
+  forceUpdate = false,
+  updateAvailable = false,
+}: Partial<CheckMobileVersionResponse> = {}): CheckMobileVersionResponse => {
+  return { latestVersion, forceUpdate, updateAvailable };
 };
 
 export const mockGenerateMobileVersion = ({
