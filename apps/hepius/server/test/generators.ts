@@ -83,38 +83,13 @@ import {
   reformatDate,
 } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
-import { DailyReport } from '../src/dailyReport';
 import {
-  AddCaregiverParams,
-  AddInsuranceParams,
-  AppointmentCompose,
-  AudioFormat,
-  CancelNotifyParams,
-  CreateMemberParams,
-  DeleteDischargeDocumentParams,
-  DeleteMemberParams,
-  DischargeDocumentType,
-  GetMemberUploadJournalAudioLinkParams,
-  GetMemberUploadJournalImageLinkParams,
-  Honorific,
-  ImageFormat,
-  InternalCreateMemberParams,
-  MaritalStatus,
-  Member,
-  MemberConfig,
-  NotifyContentParams,
-  NotifyParams,
-  ReplaceMemberOrgParams,
-  ReplaceUserForMemberParams,
-  Sex,
-  UpdateCaregiverParams,
-  UpdateJournalTextParams,
-  UpdateMemberConfigParams,
-  UpdateMemberParams,
-  UpdateRecordingParams,
-  UpdateRecordingReviewParams,
-  defaultMemberParams,
-} from '../src/member';
+  CreateMobileVersionParams,
+  MobileVersion,
+  UpdateFaultyMobileVersionsParams,
+  UpdateMinMobileVersionParams,
+} from '../src/configuration';
+import { DailyReport } from '../src/dailyReport';
 import {
   ActionItemStatus,
   Activity,
@@ -146,6 +121,37 @@ import {
   WarningSigns,
   WoundCare,
 } from '../src/journey';
+import {
+  AddCaregiverParams,
+  AddInsuranceParams,
+  AppointmentCompose,
+  AudioFormat,
+  CancelNotifyParams,
+  CreateMemberParams,
+  DeleteDischargeDocumentParams,
+  DeleteMemberParams,
+  DischargeDocumentType,
+  GetMemberUploadJournalAudioLinkParams,
+  GetMemberUploadJournalImageLinkParams,
+  Honorific,
+  ImageFormat,
+  InternalCreateMemberParams,
+  MaritalStatus,
+  Member,
+  MemberConfig,
+  NotifyContentParams,
+  NotifyParams,
+  ReplaceMemberOrgParams,
+  ReplaceUserForMemberParams,
+  Sex,
+  UpdateCaregiverParams,
+  UpdateJournalTextParams,
+  UpdateMemberConfigParams,
+  UpdateMemberParams,
+  UpdateRecordingParams,
+  UpdateRecordingReviewParams,
+  defaultMemberParams,
+} from '../src/member';
 import { CreateOrgParams, Org, OrgType } from '../src/org';
 import {
   Answer,
@@ -1631,6 +1637,37 @@ export const generateAddInsuranceParams = ({
   return { name, type, memberId, startDate, endDate };
 };
 
+export const generateCreateMobileVersionParams = ({
+  version = generateMobileVersion(),
+  platform = Platform.android,
+  minVersion,
+}: Partial<CreateMobileVersionParams> = {}): CreateMobileVersionParams => {
+  return { version, platform, minVersion };
+};
+
+export const generateUpdateMinMobileVersionParams = ({
+  version = generateMobileVersion(),
+  platform = Platform.android,
+}: Partial<UpdateMinMobileVersionParams> = {}): UpdateMinMobileVersionParams => {
+  return { version, platform };
+};
+
+export const generateUpdateFaultyMobileVersionsParams = ({
+  versions = [generateMobileVersion(), generateMobileVersion(), generateMobileVersion()],
+  platform = Platform.android,
+}: Partial<UpdateFaultyMobileVersionsParams> = {}): UpdateFaultyMobileVersionsParams => {
+  return { versions, platform };
+};
+
+export const mockGenerateMobileVersion = ({
+  version = generateMobileVersion(),
+  platform = Platform.android,
+  minVersion = false,
+  faultyVersion = false,
+}: Partial<MobileVersion> = {}): MobileVersion => {
+  return { version, platform, minVersion, faultyVersion };
+};
+
 export function getIsAssignableToMember(questionnaireType: QuestionnaireType): boolean {
   return (
     questionnaireType === QuestionnaireType.phq9 ||
@@ -1641,3 +1678,5 @@ export function getIsAssignableToMember(questionnaireType: QuestionnaireType): b
 
 const generateFellowName = () => `${name.firstName()} ${name.lastName()}`;
 const generateHealthPlan = () => datatype.string(10);
+const generateMobileVersion = () =>
+  `${datatype.number(99)}.${datatype.number(99)}.${datatype.number(99)}`;

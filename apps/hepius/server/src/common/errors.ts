@@ -184,6 +184,9 @@ export enum ErrorType {
   insuranceStartDate = 10701,
   insuranceEndDate = 10702,
   insuranceEndAfterStart = 10703,
+
+  // configuration
+  configurationMobileVersionNotFound = 10801,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -475,6 +478,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.insuranceStartDate.valueOf(), `start ${dateTimeInstanceFormat}`],
   [ErrorType.insuranceEndDate.valueOf(), `end ${dateTimeInstanceFormat}`],
   [ErrorType.insuranceEndAfterStart.valueOf(), 'insurance end date must be after start date'],
+  [ErrorType.configurationMobileVersionNotFound.valueOf(), 'mobile version not found'],
 ]);
 
 export const DbErrors = {

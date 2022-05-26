@@ -9,20 +9,21 @@ import { GraphQLError } from 'graphql';
 import { AppointmentModule } from './appointment';
 import { AuthModule, AuthService } from './auth';
 import { AvailabilityModule } from './availability';
+import { CareModule } from './care';
 import { Errors, JsonBodyMiddleware, RawBodyMiddleware } from './common';
 import { CommunicationModule } from './communication';
+import { ConfigurationModule } from './configuration';
 import { DailyReportModule } from './dailyReport';
 import { DbModule } from './db';
 import { HealthController } from './health/health.controller';
+import { JourneyModule } from './journey';
 import { MemberModule } from './member';
 import { OrgModule } from './org';
 import { ProvidersModule } from './providers';
+import { QuestionnaireModule } from './questionnaire';
 import { ServiceModule } from './services';
 import { TodoModule } from './todo';
 import { UserModule } from './user';
-import { CareModule } from './care';
-import { QuestionnaireModule } from './questionnaire';
-import { JourneyModule } from './journey';
 
 const badRequestException = 'Bad Request Exception';
 
@@ -35,6 +36,7 @@ const badRequestException = 'Bad Request Exception';
     UserModule,
     AppointmentModule,
     OrgModule,
+    ConfigurationModule,
     AvailabilityModule,
     DailyReportModule,
     TodoModule,
