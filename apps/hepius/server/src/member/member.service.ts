@@ -125,8 +125,8 @@ export class MemberService extends AlertService {
       const member = await this.getById(object._id);
 
       return {
-        member: this.replaceId(member.toObject()),
-        memberConfig: this.replaceId(memberConfig.toObject()),
+        member: member.toObject(),
+        memberConfig: memberConfig.toObject(),
       };
     } catch (ex) {
       throw new Error(
@@ -171,7 +171,7 @@ export class MemberService extends AlertService {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
 
-    return this.replaceId(member);
+    return member;
   }
 
   async get(id: string): Promise<Member> {
@@ -544,7 +544,7 @@ export class MemberService extends AlertService {
     }
 
     memberConfig.articlesPath = await this.getArticlesPath(id);
-    return this.replaceId(memberConfig);
+    return memberConfig;
   }
 
   @OnEvent(EventType.onNewMemberCommunication, { async: true })
@@ -765,7 +765,7 @@ export class MemberService extends AlertService {
       throw new Error(Errors.get(ErrorType.memberReplaceUserAlreadyExists));
     }
     // return the old member (with the old primaryUserId)
-    return this.replaceId(member);
+    return member;
   }
 
   async replaceMemberOrg(replaceMemberOrgParams: ReplaceMemberOrgParams): Promise<Member> {
@@ -781,7 +781,7 @@ export class MemberService extends AlertService {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
 
-    return this.replaceId(member);
+    return member;
   }
 
   /*************************************************************************************************
@@ -789,12 +789,10 @@ export class MemberService extends AlertService {
    ************************************************************************************************/
 
   async addCaregiver(addCaregiverParams: AddCaregiverParams): Promise<Caregiver> {
-    return this.replaceId(
-      await this.caregiverModel.create({
-        ...addCaregiverParams,
-        memberId: new Types.ObjectId(addCaregiverParams.memberId),
-      }),
-    );
+    return this.caregiverModel.create({
+      ...addCaregiverParams,
+      memberId: new Types.ObjectId(addCaregiverParams.memberId),
+    });
   }
 
   async deleteCaregiver(id: string, deletedBy: string, hard?: boolean) {
@@ -834,13 +832,11 @@ export class MemberService extends AlertService {
    **************************************** Insurance Plans ****************************************
    ************************************************************************************************/
 
-  async addInsurance(addInsuranceParams: AddInsuranceParams): Promise<Caregiver> {
-    return this.replaceId(
-      await this.insuranceModel.create({
-        ...addInsuranceParams,
-        memberId: new Types.ObjectId(addInsuranceParams.memberId),
-      }),
-    );
+  async addInsurance(addInsuranceParams: AddInsuranceParams): Promise<Insurance> {
+    return this.insuranceModel.create({
+      ...addInsuranceParams,
+      memberId: new Types.ObjectId(addInsuranceParams.memberId),
+    });
   }
 
   async deleteInsurance(id: string, deletedBy: string, hard?: boolean) {

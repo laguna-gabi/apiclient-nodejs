@@ -41,7 +41,6 @@ import {
   generateOrgParams,
   generateReplaceMemberOrgParams,
   generateScheduleAppointmentParams,
-  generateSubmitQuestionnaireResponseParams,
   generateUpdateCaregiverParams,
   generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
@@ -320,8 +319,8 @@ describe('MemberService', () => {
       expect(result.length).toEqual(2);
       expect(result).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ id: memberId1a }),
-          expect.objectContaining({ id: memberId1b }),
+          expect.objectContaining({ id: new Types.ObjectId(memberId1a) }),
+          expect.objectContaining({ id: new Types.ObjectId(memberId1b) }),
         ]),
       );
     });
@@ -338,9 +337,9 @@ describe('MemberService', () => {
       expect(result.length).toBeGreaterThan(3);
       expect(result).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ id: memberId1a }),
-          expect.objectContaining({ id: memberId1b }),
-          expect.objectContaining({ id: memberId2 }),
+          expect.objectContaining({ id: new Types.ObjectId(memberId1a) }),
+          expect.objectContaining({ id: new Types.ObjectId(memberId1b) }),
+          expect.objectContaining({ id: new Types.ObjectId(memberId2) }),
         ]),
       );
     }, 10000);
@@ -358,7 +357,7 @@ describe('MemberService', () => {
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(
         expect.objectContaining({
-          id: memberId,
+          id: new Types.ObjectId(memberId),
           name: `${member.firstName} ${member.lastName}`,
           phone: member.phone,
           phoneType: 'mobile',
@@ -399,7 +398,7 @@ describe('MemberService', () => {
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(
         expect.objectContaining({
-          id: memberId,
+          id: new Types.ObjectId(memberId),
           name: `${member.firstName} ${member.lastName}`,
           phone: member.phone,
           phoneType,
@@ -596,7 +595,7 @@ describe('MemberService', () => {
       expect(result).toEqual(
         expect.arrayContaining([
           {
-            memberId: member1.id,
+            memberId: new Types.ObjectId(member1.id),
             userId: primaryUserId,
             memberName: `${member1.firstName} ${member1.lastName}`,
             userName: `${primaryUserParams.firstName} ${primaryUserParams.lastName}`,
@@ -605,7 +604,7 @@ describe('MemberService', () => {
             status: AppointmentStatus.scheduled,
           },
           {
-            memberId: member2.id,
+            memberId: new Types.ObjectId(member2.id),
             userId: primaryUserId,
             memberName: `${member2.firstName} ${member2.lastName}`,
             userName: `${primaryUserParams.firstName} ${primaryUserParams.lastName}`,
@@ -645,7 +644,7 @@ describe('MemberService', () => {
       expect(result).toEqual(
         expect.arrayContaining([
           {
-            memberId: member.id,
+            memberId: new Types.ObjectId(member.id),
             userId: primaryUserId,
             memberName: `${member.firstName} ${member.lastName}`,
             userName: `${primaryUserParams.firstName} ${primaryUserParams.lastName}`,
@@ -716,7 +715,11 @@ describe('MemberService', () => {
       const result = await service.getMembersAppointments(orgId);
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(
-        expect.objectContaining({ memberId, userId: member.primaryUserId, start: startDate2 }),
+        expect.objectContaining({
+          memberId: new Types.ObjectId(memberId),
+          userId: member.primaryUserId,
+          start: startDate2,
+        }),
       );
     });
 
@@ -929,7 +932,9 @@ describe('MemberService', () => {
         _id: new Types.ObjectId(memberId),
       });
       // @ts-ignore
-      const memberConfigDeletedResult = await memberConfigModel.findWithDeleted({ memberId });
+      const memberConfigDeletedResult = await memberConfigModel.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
       /* eslint-enable @typescript-eslint/ban-ts-comment */
 
       if (hard) {
@@ -938,7 +943,11 @@ describe('MemberService', () => {
         });
       } else {
         await checkDelete(memberDeletedResult, { _id: new Types.ObjectId(memberId) }, userId);
-        await checkDelete(memberConfigDeletedResult, { memberId }, userId);
+        await checkDelete(
+          memberConfigDeletedResult,
+          { memberId: new Types.ObjectId(memberId) },
+          userId,
+        );
       }
     });
 
@@ -1855,13 +1864,11 @@ describe('MemberService', () => {
           }),
         );
 
-        const qr = await modelQuestionnaireResponse.create(
-          generateSubmitQuestionnaireResponseParams({
-            questionnaireId,
-            memberId,
-            answers: [{ code: 'q1', value: answer }],
-          }),
-        );
+        const qr = await modelQuestionnaireResponse.create({
+          questionnaireId,
+          memberId: new Types.ObjectId(memberId),
+          answers: [{ code: 'q1', value: answer }],
+        });
 
         const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
 
@@ -1878,7 +1885,7 @@ describe('MemberService', () => {
                 assessmentScore: expectedScore,
               },
             ),
-            memberId: member.id.toString(),
+            memberId,
             type: AlertType.assessmentSubmitScoreOverThreshold,
             date: qr.createdAt,
             dismissed: false,
@@ -1888,7 +1895,7 @@ describe('MemberService', () => {
 
         expectedAlerts.push({
           id: `${memberId}_${AlertType.memberAssigned}`,
-          memberId: member.id.toString(),
+          memberId,
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           text: service.internationalization.getAlerts(AlertType.memberAssigned, { member }),
@@ -2084,7 +2091,7 @@ describe('MemberService', () => {
       const id = await generateMember();
       const CreatedConfigMember = await service.getMemberConfig(id);
 
-      expect(id).toEqual(CreatedConfigMember.memberId);
+      expect(id).toEqual(CreatedConfigMember.memberId.toString());
     });
 
     it('should fail to fetch member config on non existing member', async () => {
@@ -2099,7 +2106,7 @@ describe('MemberService', () => {
 
       expect(memberConfig).toEqual(
         expect.objectContaining({
-          memberId: id,
+          memberId: new Types.ObjectId(id),
           externalUserId: expect.any(String),
           platform: Platform.web,
         }),
@@ -2150,7 +2157,11 @@ describe('MemberService', () => {
       const memberId = await generateMember();
       const params = generateUpdateRecordingParams({ memberId, id: v4() });
       const result = await service.updateRecording(params, params.userId);
-      expect(result).toEqual(expect.objectContaining(omitBy(params, isNil)));
+      expect(result).toEqual(
+        expect.objectContaining(
+          omitBy({ ...params, memberId: new Types.ObjectId(params.memberId) }, isNil),
+        ),
+      );
     });
 
     it('should create a member recording with undefined id on 1st time', async () => {
@@ -2158,7 +2169,11 @@ describe('MemberService', () => {
       const params = generateUpdateRecordingParams({ memberId });
       params.id = undefined;
       const result = await service.updateRecording(params, params.userId);
-      expect(result).toEqual(expect.objectContaining(omitBy(params, isNil)));
+      expect(result).toEqual(
+        expect.objectContaining(
+          omitBy({ ...params, memberId: new Types.ObjectId(params.memberId) }, isNil),
+        ),
+      );
     });
 
     it('should update a member recording', async () => {
@@ -2169,7 +2184,11 @@ describe('MemberService', () => {
       const recordings = await service.getRecordings(memberId);
       expect(recordings.length).toEqual(1);
       expect(recordings[0].id).toEqual(recording.id);
-      expect(recordings[0]).toEqual(expect.objectContaining(omitBy(params, isNil)));
+      expect(recordings[0]).toEqual(
+        expect.objectContaining(
+          omitBy({ ...params, memberId: new Types.ObjectId(params.memberId) }, isNil),
+        ),
+      );
     });
 
     test.each(['start', 'end', 'userId', 'phone', 'answered', 'recordingType', 'appointmentId'])(

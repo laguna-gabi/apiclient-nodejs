@@ -7,7 +7,12 @@ import {
   User,
 } from '@argus/hepiusClient';
 import { ExternalKey } from '@argus/irisClient';
-import { CancelNotificationType, Language, NotificationType } from '@argus/pandora';
+import {
+  CancelNotificationType,
+  DefaultSchemaOptions,
+  Language,
+  NotificationType,
+} from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
@@ -578,7 +583,7 @@ export class DeleteMemberGeneralDocumentParams extends BaseMemberGeneralDocument
  *************************************************************************************************/
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
@@ -870,7 +875,7 @@ export class MultipartUploadInfo {
  ********************************************* Control ********************************************
  *************************************************************************************************/
 
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class ControlMember extends Member {}
 
 /**************************************************************************************************
