@@ -820,6 +820,7 @@ export const generateUpdateRecordingParams = ({
   appointmentId,
   recordingType = RecordingType.phone,
   consent = true,
+  identityVerification = true,
 }: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
   const obj = id ? { id } : {};
   return {
@@ -833,6 +834,7 @@ export const generateUpdateRecordingParams = ({
     appointmentId,
     recordingType,
     consent,
+    identityVerification,
   };
 };
 

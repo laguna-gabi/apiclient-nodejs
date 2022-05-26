@@ -1061,12 +1061,14 @@ describe('Validations - member', () => {
     });
 
     test.each`
-      input                | error
-      ${{ id: 123 }}       | ${stringError}
-      ${{ memberId: 123 }} | ${stringError}
-      ${{ userId: 123 }}   | ${stringError}
-      ${{ answered: 123 }} | ${'Boolean cannot represent a non boolean value'}
-      ${{ phone: 123 }}    | ${stringError}
+      input                            | error
+      ${{ id: 123 }}                   | ${stringError}
+      ${{ memberId: 123 }}             | ${stringError}
+      ${{ userId: 123 }}               | ${stringError}
+      ${{ answered: 123 }}             | ${'Boolean cannot represent a non boolean value'}
+      ${{ phone: 123 }}                | ${stringError}
+      ${{ consent: 123 }}              | ${'Boolean cannot represent a non boolean value'}
+      ${{ identityVerification: 123 }} | ${'Boolean cannot represent a non boolean value'}
     `(`should fail to update recording since $input is not a valid type`, async (params) => {
       const updateRecordingParams = generateUpdateRecordingParams({ ...params.input });
       await handler.mutations.updateRecording({

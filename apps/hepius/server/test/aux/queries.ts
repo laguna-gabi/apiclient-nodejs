@@ -716,6 +716,7 @@ export class Queries {
               deletedMedia
               recordingType
               consent
+              identityVerification
             }
           }
         `,

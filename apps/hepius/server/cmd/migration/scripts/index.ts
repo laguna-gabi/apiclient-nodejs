@@ -43,3 +43,4 @@ export * as m20220519170602 from './20220519170602-remove-active-flag-from-journ
 export * as m20220519163111 from './20220519163111-append-current-journey-id-to-daily-reports';
 export * as m20220523145848 from './20220523145848-add-consent-to-recordings';
 export * as m20220523132327 from './20220523132327-action-items-append-journey';
+export * as m20220526092554 from './20220526092554-add-identity-verification-to-recording';

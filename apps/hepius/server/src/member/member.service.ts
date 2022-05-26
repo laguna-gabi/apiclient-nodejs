@@ -631,8 +631,18 @@ export class MemberService extends AlertService {
    ******************************************** Recording ******************************************
    ************************************************************************************************/
   async updateRecording(updateRecordingParams: UpdateRecordingParams, userId): Promise<Recording> {
-    const { start, end, memberId, id, phone, answered, appointmentId, recordingType, consent } =
-      updateRecordingParams;
+    const {
+      start,
+      end,
+      memberId,
+      id,
+      phone,
+      answered,
+      appointmentId,
+      recordingType,
+      consent,
+      identityVerification,
+    } = updateRecordingParams;
     const member = await this.memberModel.findById(memberId, { _id: 1 });
     if (!member) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
@@ -649,6 +659,7 @@ export class MemberService extends AlertService {
         answered,
         recordingType,
         consent,
+        identityVerification,
         appointmentId: appointmentId ? new Types.ObjectId(appointmentId) : null,
       },
       isNil,

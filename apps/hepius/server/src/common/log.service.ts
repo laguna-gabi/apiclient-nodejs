@@ -30,6 +30,7 @@ export class LoggerService extends BaseLogger {
     // member recordings
     'recordingIds',
     'concent',
+    'identityVerification',
     // appointment
     'updatedAppointmentAction',
     'notBefore',

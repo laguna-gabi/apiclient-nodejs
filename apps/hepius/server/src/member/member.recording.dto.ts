@@ -39,6 +39,9 @@ export class UpdateRecordingParams {
 
   @Field(() => Boolean, { nullable: true })
   consent?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  identityVerification?: boolean;
 }
 
 @InputType({ isAbstract: true })
@@ -118,6 +121,10 @@ export class Recording {
   @Prop({ type: Boolean })
   @Field(() => Boolean, { nullable: true })
   consent?: boolean;
+
+  @Prop({ type: Boolean })
+  @Field(() => Boolean, { nullable: true })
+  identityVerification?: boolean;
 
   @Prop({ type: RecordingReview })
   @Field(() => RecordingReview, { nullable: true })

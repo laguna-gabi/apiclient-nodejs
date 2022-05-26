@@ -1010,6 +1010,7 @@ export class Mutations {
               recordingType
               deletedMedia
               consent
+              identityVerification
               review {
                 userId
                 content
