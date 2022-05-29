@@ -6,6 +6,7 @@ import * as mongooseDelete from 'mongoose-delete';
 import { IsDate } from 'class-validator';
 import { ErrorType, Errors } from '../common';
 import { Identifier } from '@argus/hepiusClient';
+import { DefaultSchemaOptions } from '@argus/pandora';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -46,7 +47,7 @@ export class UpdateActionItemStatusParams {
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class ActionItem extends Identifier {
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)

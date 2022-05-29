@@ -139,7 +139,7 @@ describe(JourneyService.name, () => {
       const { id: updateResultId } = await service.update(
         generateUpdateJourneyParams({ memberId }),
       );
-      expect(id).toEqual(updateResultId);
+      expect(id.toString()).toEqual(updateResultId);
     });
 
     it('should return existing journey when no update params provided(with id)', async () => {

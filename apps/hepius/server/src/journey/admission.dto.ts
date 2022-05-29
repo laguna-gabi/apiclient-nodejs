@@ -13,6 +13,7 @@ import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '@argus/hepiusClient';
 import { IsOptional, Matches } from 'class-validator';
+import { DefaultSchemaOptions } from '@argus/pandora';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -306,7 +307,7 @@ export class BaseCategory {
 
 @ObjectType()
 @InputType('DiagnosisInput')
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Diagnosis extends BaseCategory {
   @Prop({ isNan: true })
   @Field({ nullable: true })
@@ -343,7 +344,7 @@ export class Diagnosis extends BaseCategory {
 
 @ObjectType()
 @InputType('TreatmentRenderedInput')
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class TreatmentRendered extends BaseCategory {
   @Prop({ isNan: true })
   @Field({ nullable: true })
@@ -360,7 +361,7 @@ export class TreatmentRendered extends BaseCategory {
 
 @ObjectType()
 @InputType('MedicationInput')
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Medication extends BaseCategory {
   @Prop({ type: String, enum: MedicationStatus, isNan: true })
   @Field(() => MedicationStatus, { nullable: true })
@@ -397,7 +398,7 @@ export class Medication extends BaseCategory {
 
 @ObjectType()
 @InputType('ExternalAppointmentInput')
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class ExternalAppointment extends BaseCategory {
   @Prop({ type: String, enum: ExternalAppointmentStatus, isNan: true })
   @Field(() => ExternalAppointmentStatus, { nullable: true })
@@ -470,7 +471,7 @@ export class WoundCare {
 
 @ObjectType()
 @InputType('DietaryInput')
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Dietary extends BaseCategory {
   @Prop({ type: String, enum: DietaryCategory, isNan: true })
   @Field(() => DietaryCategory, { nullable: true })
@@ -650,7 +651,7 @@ export const singleAdmissionItems = [
 ];
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Admission extends Identifier {
   @Prop({ type: Types.ObjectId, index: true })
   memberId: Types.ObjectId;

@@ -62,26 +62,22 @@ export class JourneyService extends AlertService {
       throw new Error(Errors.get(ErrorType.journeyNotFound));
     }
 
-    return this.replaceId(result.toObject());
+    return result.toObject();
   }
 
   async getRecent(memberId: string): Promise<Journey> {
     const [result] = await this.journeyModel
       .find({ memberId: new Types.ObjectId(memberId) })
       .sort({ _id: -1 })
-      .limit(1)
-      .lean();
+      .limit(1);
     if (!result) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
-    return this.replaceId(result);
+    return result;
   }
 
   async getAll({ memberId }: { memberId: string }): Promise<Journey[]> {
-    const results = await this.journeyModel
-      .find({ memberId: new Types.ObjectId(memberId) })
-      .sort({ _id: -1 });
-    return results.map((result) => this.replaceId(result));
+    return this.journeyModel.find({ memberId: new Types.ObjectId(memberId) }).sort({ _id: -1 });
   }
 
   async update(updateJourneyParams: UpdateJourneyParams): Promise<Journey> {
@@ -94,7 +90,7 @@ export class JourneyService extends AlertService {
     }
 
     if (isEmpty(setParams)) {
-      return this.replaceId(exisingRecord);
+      return exisingRecord;
     } else {
       let result = await this.journeyModel.findByIdAndUpdate(
         exisingRecord.id,
@@ -110,7 +106,7 @@ export class JourneyService extends AlertService {
           setParams,
         );
       }
-      return this.replaceId(result.toObject());
+      return result.toObject();
     }
   }
 
@@ -215,10 +211,9 @@ export class JourneyService extends AlertService {
   }
 
   async getActionItems(memberId: string): Promise<ActionItem[]> {
-    const results = await this.actionItemModel
+    return this.actionItemModel
       .find({ memberId: new Types.ObjectId(memberId) })
       .sort({ updatedAt: -1 });
-    return results.map((result) => this.replaceId(result));
   }
 
   async entityToAlerts(member): Promise<Alert[]> {

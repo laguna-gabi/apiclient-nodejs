@@ -6,6 +6,7 @@ import * as mongooseDelete from 'mongoose-delete';
 import { Identifier, IsObjectId } from '@argus/hepiusClient';
 import { IsOptional } from 'class-validator';
 import { ErrorType, Errors, IsNoteOrNurseNoteProvided } from '../common';
+import { DefaultSchemaOptions } from '@argus/pandora';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -74,7 +75,7 @@ export class SetGeneralNotesParams {
  *************************************************************************************************/
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Journey extends Identifier {
   @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String)

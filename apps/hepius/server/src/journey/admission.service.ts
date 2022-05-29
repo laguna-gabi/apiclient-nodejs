@@ -89,12 +89,7 @@ export class AdmissionService extends BaseService {
 
   async get(memberId: string): Promise<Admission[]> {
     const result = await this.admissionModel.find({ memberId: new Types.ObjectId(memberId) });
-    return Promise.all(
-      result.map(async (item) => {
-        const populateAllRes = await this.populateAll(item);
-        return this.replaceId(this.replaceSubIds(populateAllRes));
-      }),
-    );
+    return Promise.all(result.map(async (item) => this.populateAll(item)));
   }
 
   async change(changeMemberDnaParams: ChangeMemberDnaParams): Promise<Admission> {
@@ -161,7 +156,7 @@ export class AdmissionService extends BaseService {
       result = await this.updateSingleItem(noNilSingleItems, id);
     }
 
-    return this.replaceId(this.replaceSubIds(result));
+    return result;
   }
 
   @OnEvent(EventType.onDeletedMember, { async: true })
@@ -298,7 +293,7 @@ export class AdmissionService extends BaseService {
         result = await result.populate(admissionCategory);
       }),
     );
-    return this.replaceSubIds(result.toObject());
+    return result.toObject();
   }
 
   private async updateSingleItem(object, id?: string): Promise<Admission> {
@@ -311,25 +306,5 @@ export class AdmissionService extends BaseService {
       result = await this.admissionModel.create(object);
     }
     return this.populateAll(result);
-  }
-
-  /**
-   * @param object any db object
-   * changing internal _id on sub array objects, for example :
-   * {memberId, diagnoses: [{_id: "some_id"}]} will be {memberId, diagnoses: [{id: "some_id"}]}
-   */
-  private replaceSubIds(object) {
-    Object.keys(object).map((key) => {
-      if (object[key] instanceof Array) {
-        object[key].map((item) => {
-          if (item._id) {
-            item.id = new Types.ObjectId(item._id);
-            delete item._id;
-          }
-        });
-      }
-    });
-
-    return object;
   }
 }
