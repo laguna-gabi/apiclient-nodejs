@@ -9,7 +9,7 @@ import {
 import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { SQS } from 'aws-sdk';
-import { aws, hosts } from 'config';
+import { aws, containers, hosts } from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { ConfigsService, ExternalConfigs, StorageService } from '.';
@@ -20,7 +20,9 @@ export class QueueService implements OnModuleInit {
   private readonly sqs = new SQS({
     region: aws.region,
     apiVersion: '2012-11-05',
-    ...(!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+    ...(!process.env.NODE_ENV ||
+    process.env.NODE_ENV === Environments.test ||
+    process.env.NODE_ENV === Environments.localhost
       ? { endpoint: hosts.localstack }
       : {}),
   });
@@ -47,31 +49,46 @@ export class QueueService implements OnModuleInit {
     }
 
     const notificationsName =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+      !process.env.NODE_ENV ||
+      process.env.NODE_ENV === Environments.test ||
+      process.env.NODE_ENV === Environments.localhost
         ? aws.queue.notification
         : await this.configsService.getConfig(queueNameNotifications);
     const { QueueUrl: notificationsQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: notificationsName })
       .promise();
-    this.notificationsQueueUrl = notificationsQueueUrl;
+    this.notificationsQueueUrl =
+      process.env.NODE_ENV === Environments.localhost
+        ? notificationsQueueUrl.replace('localhost', containers.aws)
+        : notificationsQueueUrl;
 
     const imageName =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+      !process.env.NODE_ENV ||
+      process.env.NODE_ENV === Environments.test ||
+      process.env.NODE_ENV === Environments.localhost
         ? aws.queue.image
         : await this.configsService.getConfig(queueNameImage);
     const { QueueUrl: imageQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: imageName })
       .promise();
-    this.imageQueueUrl = imageQueueUrl;
+    this.imageQueueUrl =
+      process.env.NODE_ENV === Environments.localhost
+        ? imageQueueUrl.replace('localhost', containers.aws)
+        : imageQueueUrl;
 
     const changeEventName =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+      !process.env.NODE_ENV ||
+      process.env.NODE_ENV === Environments.test ||
+      process.env.NODE_ENV === Environments.localhost
         ? aws.queue.changeEvent
         : await this.configsService.getConfig(queueNameChangeEvent);
     const { QueueUrl: changeEventsQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: changeEventName })
       .promise();
-    this.changeEventQueueUrl = changeEventsQueueUrl;
+    this.changeEventQueueUrl =
+      process.env.NODE_ENV === Environments.localhost
+        ? changeEventsQueueUrl.replace('localhost', containers.aws)
+        : changeEventsQueueUrl;
 
     // register and start consumer for ImageQ
     this.consumer = Consumer.create({

@@ -37,7 +37,9 @@ export class ConfigsService extends BaseConfigs implements MongooseOptionsFactor
 
   async createMongooseOptions(): Promise<MongooseModuleOptions> {
     const uri =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+      !process.env.NODE_ENV ||
+      process.env.NODE_ENV === Environments.test ||
+      process.env.NODE_ENV === Environments.localhost
         ? `${db.connection}/${ServiceName.hepius}`
         : await this.getConfig(ExternalConfigs.db.connection.hepius);
     return { uri };

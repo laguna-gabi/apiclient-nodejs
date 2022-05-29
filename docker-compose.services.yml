@@ -12,3 +12,14 @@ services:
       - "3001:3001"
     volumes:
      - $HOME/.aws:/root/.aws:ro
+  hepius:
+    image: hepius
+    container_name: hepius
+    restart: always
+    environment:
+      - NODE_ENV=localhost
+    ports:
+      - "3000:3000"
+      - "4000:4000"
+    volumes:
+     - $HOME/.aws:/root/.aws:ro

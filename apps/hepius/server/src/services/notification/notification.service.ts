@@ -1,7 +1,7 @@
 import { Environments, formatEx } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { services } from 'config';
+import { containers, services } from 'config';
 import { LoggerService } from '../../common';
 import { ConfigsService, ExternalConfigs } from '../../providers/aws';
 import { Dispatch } from './notification.dto';
@@ -17,8 +17,10 @@ export class NotificationService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     this.namespace =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? `http://localhost:${services.iris.port}`
+      !process.env.NODE_ENV ||
+      process.env.NODE_ENV === Environments.test ||
+      process.env.NODE_ENV === Environments.localhost
+        ? `http://${containers.iris}:${services.iris.port}`
         : `http://${await this.configsService.getConfig(ExternalConfigs.host.iris)}:${
             services.iris.port
           }`;

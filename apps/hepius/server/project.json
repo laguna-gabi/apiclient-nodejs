@@ -94,6 +94,12 @@
         "command": "ts-node -P ./tsconfig.base.json ./ci/deploy.ts hepius {args.slackChannel}"
       }
     },
+    "dockerize": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "nx build hepius; docker build -f ./apps/hepius/server/Dockerfile -t hepius ."
+      }
+    },
     "command-build": {
       "executor": "@nrwl/node:webpack",
       "outputs": ["{options.outputPath}"],

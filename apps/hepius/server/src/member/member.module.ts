@@ -5,7 +5,7 @@ import { Module } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MongooseModule } from '@nestjs/mongoose';
-import { services } from 'config';
+import { containers, services } from 'config';
 import * as mongooseDelete from 'mongoose-delete';
 import {
   CaregiverDto,
@@ -93,8 +93,10 @@ import { JourneyModule } from '../journey';
         imports: [ProvidersModule],
         useFactory: async (configsService: ConfigsService) => {
           const host =
-            !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-              ? `localhost`
+            !process.env.NODE_ENV ||
+            process.env.NODE_ENV === Environments.test ||
+            process.env.NODE_ENV === Environments.localhost
+              ? containers.poseidon
               : await configsService.getConfig(ExternalConfigs.host.poseidon);
           return {
             transport: Transport.TCP,

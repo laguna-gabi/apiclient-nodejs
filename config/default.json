@@ -132,5 +132,13 @@
   },
   "eventEmitter": {
     "maxListeners": 50
+  },
+  "containers": {
+    "mongo": "localhost",
+    "aws": "localhost",
+    "iris": "localhost",
+    "hepius": "localhost",
+    "poseidon": "localhost",
+    "themis": "localhost"
   }
 }

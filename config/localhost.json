@@ -7,6 +7,10 @@
   },
   "containers": {
     "mongo": "local-mongodb",
-    "aws": "localstack"
+    "aws": "localstack",
+    "iris": "iris",
+    "hepius": "hepius",
+    "poseidon": "poseidon",
+    "themis": "themis"
   }
 }
