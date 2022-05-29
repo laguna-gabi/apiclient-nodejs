@@ -20,8 +20,6 @@ import {
   Insurance,
   InsuranceDocument,
   InternalCreateMemberParams,
-  Journal,
-  JournalDocument,
   Member,
   MemberConfig,
   MemberConfigDocument,
@@ -34,7 +32,6 @@ import {
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   UpdateCaregiverParams,
-  UpdateJournalParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -63,15 +60,13 @@ import { Internationalization, StorageService } from '../providers';
 import { Questionnaire, QuestionnaireAlerts, QuestionnaireService } from '../questionnaire';
 import { NotificationService } from '../services';
 import { Todo, TodoDocument, TodoStatus } from '../todo';
-import { Appointment, AppointmentStatus, Caregiver, Identifier } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, Caregiver } from '@argus/hepiusClient';
 
 @Injectable()
 export class MemberService extends AlertService {
   constructor(
     @InjectModel(Member.name)
     private readonly memberModel: Model<MemberDocument> & ISoftDelete<MemberDocument>,
-    @InjectModel(Journal.name)
-    private readonly journalModel: Model<JournalDocument> & ISoftDelete<JournalDocument>,
     @InjectModel(MemberConfig.name)
     private readonly memberConfigModel: Model<MemberConfigDocument> &
       ISoftDelete<MemberConfigDocument>,
@@ -441,11 +436,6 @@ export class MemberService extends AlertService {
       ...data,
     });
 
-    await deleteMemberObjects<Model<JournalDocument> & ISoftDelete<JournalDocument>>({
-      model: this.journalModel,
-      ...data,
-    });
-
     await deleteMemberObjects<Model<InsuranceDocument> & ISoftDelete<InsuranceDocument>>({
       model: this.insuranceModel,
       ...data,
@@ -565,66 +555,6 @@ export class MemberService extends AlertService {
         formatEx(ex),
       );
     }
-  }
-
-  /*************************************************************************************************
-   ******************************************** Journal ********************************************
-   ************************************************************************************************/
-
-  async createJournal(memberId: string): Promise<Identifier> {
-    const { _id } = await this.journalModel.create({ memberId: new Types.ObjectId(memberId) });
-    return { id: _id };
-  }
-
-  async updateJournal(updateJournalParams: UpdateJournalParams): Promise<Journal> {
-    const { id, memberId } = updateJournalParams;
-    delete updateJournalParams.id;
-    delete updateJournalParams.memberId;
-
-    const result = await this.journalModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id), memberId: new Types.ObjectId(memberId) },
-      { $set: updateJournalParams },
-      { new: true },
-    );
-
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
-    }
-
-    return result;
-  }
-
-  async getJournal(id: string, memberId: string): Promise<Journal> {
-    const result = await this.journalModel.findOne({
-      _id: new Types.ObjectId(id),
-      memberId: new Types.ObjectId(memberId),
-    });
-
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
-    }
-
-    return result;
-  }
-
-  async getJournals(memberId: string): Promise<Journal[]> {
-    return this.journalModel.find({
-      memberId: new Types.ObjectId(memberId),
-      text: { $exists: true },
-    });
-  }
-
-  async deleteJournal(id: string, memberId: string): Promise<Journal> {
-    const result = await this.journalModel.findOneAndDelete({
-      _id: new Types.ObjectId(id),
-      memberId: new Types.ObjectId(memberId),
-    });
-
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
-    }
-
-    return result;
   }
 
   /*************************************************************************************************

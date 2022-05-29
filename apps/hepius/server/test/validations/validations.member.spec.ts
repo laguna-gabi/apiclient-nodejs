@@ -875,7 +875,7 @@ describe('Validations - member', () => {
 
     test.each`
       input            | invalid
-      ${{ id: '123' }} | ${[Errors.get(ErrorType.memberJournalIdInvalid)]}
+      ${{ id: '123' }} | ${[Errors.get(ErrorType.journeyJournalIdInvalid)]}
     `(`should fail to update journal since $input is not a valid type`, async (params) => {
       const updateJournalTextParams = generateUpdateJournalTextParams({ ...params.input });
       await handler.mutations.updateJournalText({
@@ -907,7 +907,7 @@ describe('Validations - member', () => {
 
     test.each`
       field    | error
-      ${'123'} | ${Errors.get(ErrorType.memberJournalIdInvalid)}
+      ${'123'} | ${Errors.get(ErrorType.journeyJournalIdInvalid)}
     `(`should fail to get recordings by member id - value $field is invalid`, async (params) => {
       await handler.mutations.deleteJournal({
         id: params.field,
@@ -959,7 +959,7 @@ describe('Validations - member', () => {
 
     test.each`
       input            | invalid
-      ${{ id: '123' }} | ${[Errors.get(ErrorType.memberJournalIdInvalid)]}
+      ${{ id: '123' }} | ${[Errors.get(ErrorType.journeyJournalIdInvalid)]}
     `(
       `should fail to get journal upload image link since $input is not a valid type`,
       async (params) => {

@@ -7,14 +7,19 @@ import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
   DischargeDocumentsLinks,
-  GetMemberUploadJournalAudioLinkParams,
-  GetMemberUploadJournalImageLinkParams,
   Member,
   MultipartUploadInfo,
   MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
-import { ActionItem, Admission, DietaryMatcher, Journey } from '../../src/journey';
+import {
+  ActionItem,
+  Admission,
+  DietaryMatcher,
+  GetMemberUploadJournalAudioLinkParams,
+  GetMemberUploadJournalImageLinkParams,
+  Journey,
+} from '../../src/journey';
 import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';

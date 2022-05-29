@@ -83,19 +83,14 @@ import {
   reformatDate,
 } from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
-import {
-  Member,
-  Recording,
-  RecordingOutput,
-  ReplaceUserForMemberParams,
-  UpdateJournalTextParams,
-} from '../../src/member';
+import { Member, Recording, RecordingOutput, ReplaceUserForMemberParams } from '../../src/member';
 import {
   ActionItem,
   ActionItemStatus,
   ChangeMemberDnaParams,
   CreateActionItemParams,
   DischargeTo,
+  UpdateJournalTextParams,
 } from '../../src/journey';
 import { Internationalization } from '../../src/providers';
 import {
@@ -1282,7 +1277,7 @@ describe('Integration tests: all', () => {
       await handler.queries.getJournal({
         requestHeaders,
         id: journalId,
-        invalidFieldsError: Errors.get(ErrorType.memberJournalNotFound),
+        invalidFieldsError: Errors.get(ErrorType.journeyJournalNotFound),
       });
     });
   });

@@ -1,9 +1,13 @@
 import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
-import { MemberModule } from '../../src/member';
 import {
   ActionItemStatus,
+  ImageFormat,
+  Journal,
+  JournalDocument,
+  JournalDto,
+  JourneyModule,
   JourneyService,
   ReadmissionRisk,
   UpdateJourneyParams,
@@ -14,24 +18,28 @@ import {
   defaultModules,
   generateCreateActionItemParams,
   generateCreateJourneyParams,
+  generateGetMemberUploadJournalImageLinkParams,
   generateSetGeneralNotesParams,
   generateUpdateActionItemStatusParams,
+  generateUpdateJournalTextParams,
   generateUpdateJourneyParams,
 } from '../index';
-import { Types } from 'mongoose';
+import { Model, Types, model } from 'mongoose';
 import { lorem } from 'faker';
 
 describe(JourneyService.name, () => {
   let module: TestingModule;
   let service: JourneyService;
+  let modelJournal: Model<JournalDocument>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      imports: defaultModules().concat(MemberModule),
+      imports: defaultModules().concat(JourneyModule),
     }).compile();
 
     service = module.get<JourneyService>(JourneyService);
+    modelJournal = model<JournalDocument>(Journal.name, JournalDto);
     mockLogger(module.get<LoggerService>(LoggerService));
 
     await dbConnect();
@@ -467,6 +475,255 @@ describe(JourneyService.name, () => {
       await service.create(generateCreateJourneyParams({ memberId }));
       const results = await service.getActionItems(memberId);
       expect(results.length).toEqual(0);
+    });
+  });
+
+  describe('createJournal', () => {
+    it('should create journal', async () => {
+      const memberId = generateId();
+      const journeyId = generateId();
+
+      const { id } = await service.createJournal(memberId, journeyId);
+      const result = await modelJournal.findById(id);
+
+      expect(result).toMatchObject({
+        _id: id,
+        memberId: new Types.ObjectId(memberId),
+        published: false,
+      });
+    });
+  });
+
+  describe('updateJournal', () => {
+    it('should update journal', async () => {
+      const memberId = generateId();
+      const journeyId = generateId();
+
+      const { id } = await service.createJournal(memberId, journeyId);
+      const updateJournalTextParams = generateUpdateJournalTextParams({ id });
+
+      const journal = await service.updateJournal({
+        ...updateJournalTextParams,
+        memberId,
+        journeyId,
+      });
+      const result = await modelJournal.findById(id);
+
+      expect(result).toMatchObject(journal);
+    });
+
+    it(`should throw an error on update journal if another member`, async () => {
+      const { id } = await service.createJournal(generateId(), generateId());
+      await expect(
+        service.updateJournal({
+          ...generateUpdateJournalTextParams({ id }),
+          memberId: generateId(),
+          journeyId: generateId(),
+        }),
+      ).rejects.toThrow(Error(Errors.get(ErrorType.journeyJournalNotFound)));
+    });
+
+    it(`should throw an error on update journal when id doesn't exists`, async () => {
+      await expect(
+        service.updateJournal({
+          ...generateUpdateJournalTextParams(),
+          memberId: generateId(),
+          journeyId: generateId(),
+        }),
+      ).rejects.toThrow(Error(Errors.get(ErrorType.journeyJournalNotFound)));
+    });
+  });
+
+  describe('updateJournalImageFormat', () => {
+    it('should update journal imageFormat', async () => {
+      const memberId = generateId();
+      const journeyId = generateId();
+
+      const { id } = await service.createJournal(memberId, journeyId);
+      const updateJournalImageFormatParams = generateGetMemberUploadJournalImageLinkParams({ id });
+
+      const journal = await service.updateJournal({
+        ...updateJournalImageFormatParams,
+        memberId,
+        journeyId,
+      });
+      const result = await modelJournal.findById(id);
+
+      expect(result).toMatchObject(journal);
+    });
+
+    it(`should throw an error on update journal image format if another member`, async () => {
+      const journeyId = generateId();
+      const { id } = await service.createJournal(generateId(), journeyId);
+      await expect(
+        service.updateJournal({
+          id,
+          imageFormat: ImageFormat.png,
+          memberId: generateId(),
+          journeyId,
+        }),
+      ).rejects.toThrow(Error(Errors.get(ErrorType.journeyJournalNotFound)));
+    });
+
+    it(`should throw an error on update journal image format when id doesn't exists`, async () => {
+      await expect(
+        service.updateJournal({
+          id: generateId(),
+          imageFormat: ImageFormat.png,
+          memberId: generateId(),
+          journeyId: generateId(),
+        }),
+      ).rejects.toThrow(Error(Errors.get(ErrorType.journeyJournalNotFound)));
+    });
+  });
+
+  describe('getJournal', () => {
+    it('should get journal', async () => {
+      const memberId = generateId();
+      const journeyId = generateId();
+
+      const { id } = await service.createJournal(memberId, journeyId);
+      const updateJournalTextParams = generateUpdateJournalTextParams({ id });
+
+      await service.updateJournal({ ...updateJournalTextParams, memberId, journeyId });
+
+      const result = await modelJournal.findById(id);
+      const journal = await service.getJournal(id, journeyId);
+
+      expect(result).toMatchObject({
+        _id: new Types.ObjectId(journal.id),
+        memberId: new Types.ObjectId(journal.memberId),
+        published: journal.published,
+        text: journal.text,
+        updatedAt: journal.updatedAt,
+      });
+    });
+
+    it(`should throw an error on get journal if another member access it`, async () => {
+      const { id } = await service.createJournal(generateId(), generateId());
+      await expect(service.getJournal(id, generateId())).rejects.toThrow(
+        Error(Errors.get(ErrorType.journeyJournalNotFound)),
+      );
+    });
+
+    it(`should throw an error on get journal when id doesn't exists`, async () => {
+      await expect(service.getJournal(generateId(), generateId())).rejects.toThrow(
+        Error(Errors.get(ErrorType.journeyJournalNotFound)),
+      );
+    });
+  });
+
+  describe('getJournals', () => {
+    it('should get journals by journeyId', async () => {
+      const memberId = generateId();
+      const journeyId = generateId();
+
+      const { id: journalId1 } = await service.createJournal(memberId, journeyId);
+      const { id: journalId2 } = await service.createJournal(memberId, journeyId);
+      const updateJournalTextParams1 = generateUpdateJournalTextParams({ id: journalId1 });
+      const updateJournalTextParams2 = generateUpdateJournalTextParams({ id: journalId2 });
+
+      await service.updateJournal({ ...updateJournalTextParams1, memberId, journeyId });
+      await service.updateJournal({ ...updateJournalTextParams2, memberId, journeyId });
+
+      const journals = await service.getJournals(journeyId);
+
+      expect(journals).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: new Types.ObjectId(journalId1),
+            memberId: new Types.ObjectId(memberId),
+            published: false,
+            text: updateJournalTextParams1.text,
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+          }),
+          expect.objectContaining({
+            _id: new Types.ObjectId(journalId2),
+            memberId: new Types.ObjectId(memberId),
+            published: false,
+            text: updateJournalTextParams2.text,
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+          }),
+        ]),
+      );
+    });
+
+    it(`should not get journals by memberId if text doesn't exists`, async () => {
+      const memberId = generateId();
+      const journeyId = generateId();
+      const { id } = await service.createJournal(memberId, journeyId);
+
+      const journals = await service.getJournals(journeyId);
+
+      expect(journals).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: new Types.ObjectId(id),
+            memberId: new Types.ObjectId(memberId),
+            published: false,
+            text: expect.any(String),
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+          }),
+        ]),
+      );
+    });
+
+    it(`should return empty array if member doesn't have journals`, async () => {
+      const memberId = generateId();
+      const journals = await service.getJournals(memberId);
+
+      expect(journals).toEqual([]);
+    });
+
+    it('should create and get journal for the same journey', async () => {
+      const memberId = generateId();
+      const journeyId1 = generateId();
+      const journeyId2 = generateId();
+      await service.createJournal(memberId, journeyId1);
+      const { id } = await service.createJournal(memberId, journeyId2);
+
+      await service.updateJournal({
+        ...generateUpdateJournalTextParams({ id }),
+        memberId,
+        journeyId: journeyId2,
+      });
+
+      const journals = await service.getJournals(journeyId2);
+      expect(journals.length).toEqual(1);
+      expect(journals[0].id).toEqual(id.toString());
+    });
+  });
+
+  describe('deleteJournal', () => {
+    it('should delete journal', async () => {
+      const memberId = generateId();
+      const journeyId = generateId();
+      const { id } = await service.createJournal(memberId, journeyId);
+
+      await service.getJournal(id, journeyId);
+      const journalDelete = await service.deleteJournal(id, memberId);
+
+      expect(journalDelete).toBeTruthy();
+
+      await expect(service.getJournal(id, journeyId)).rejects.toThrow(
+        Error(Errors.get(ErrorType.journeyJournalNotFound)),
+      );
+    });
+
+    it(`should throw an error on delete journal if another member`, async () => {
+      const { id } = await service.createJournal(generateId(), generateId());
+      await expect(service.deleteJournal(id, generateId())).rejects.toThrow(
+        Error(Errors.get(ErrorType.journeyJournalNotFound)),
+      );
+    });
+
+    it(`should throw an error on delete journal when id doesn't exists`, async () => {
+      await expect(service.deleteJournal(generateId(), generateId())).rejects.toThrow(
+        Error(Errors.get(ErrorType.journeyJournalNotFound)),
+      );
     });
   });
 });

@@ -13,8 +13,6 @@ import {
   ControlMemberDto,
   Insurance,
   InsuranceDto,
-  Journal,
-  JournalDto,
   Member,
   MemberConfig,
   MemberConfigDto,
@@ -50,7 +48,6 @@ import { JourneyModule } from '../journey';
     MongooseModule.forFeature([
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
-      { name: Journal.name, schema: JournalDto },
       { name: Todo.name, schema: TodoDto },
       { name: Member.name, schema: MemberDto },
     ]),

@@ -3,6 +3,8 @@ import {
   Client,
   ErrorType,
   Errors,
+  EventType,
+  IEventOnPublishedJournal,
   IsValidObjectId,
   LoggerService,
   LoggingInterceptor,
@@ -14,18 +16,29 @@ import {
   ActionItemStatus,
   Admission,
   AdmissionService,
+  AudioType,
   ChangeMemberDnaParams,
   CreateActionItemParams,
   DietaryHelper,
   DietaryMatcher,
+  GetMemberUploadJournalAudioLinkParams,
+  GetMemberUploadJournalImageLinkParams,
+  ImageType,
+  Journal,
+  JournalUploadAudioLink,
+  JournalUploadImageLink,
   Journey,
   JourneyService,
   SetGeneralNotesParams,
   UpdateActionItemStatusParams,
+  UpdateJournalTextParams,
   UpdateJourneyParams,
 } from '.';
-import { Identifier, UserRole } from '@argus/hepiusClient';
+import { Identifier, MemberRole, UserRole } from '@argus/hepiusClient';
 import { camelCase } from 'lodash';
+import { StorageType } from '@argus/pandora';
+import { StorageService } from '../providers';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Journey)
@@ -34,6 +47,8 @@ export class JourneyResolver {
     readonly journeyService: JourneyService,
     readonly admissionService: AdmissionService,
     readonly dietaryMatcher: DietaryHelper,
+    readonly storageService: StorageService,
+    readonly eventEmitter: EventEmitter2,
     readonly logger: LoggerService,
   ) {}
 
@@ -163,5 +178,333 @@ export class JourneyResolver {
   @Roles(UserRole.coach, UserRole.nurse)
   async getAdmissionsDietaryMatcher() {
     return this.dietaryMatcher.get();
+  }
+
+  /*************************************************************************************************
+   ******************************************** Journal ********************************************
+   ************************************************************************************************/
+
+  @Mutation(() => Identifier)
+  @Roles(MemberRole.member)
+  async createJournal(@Client('roles') roles, @Client('_id') memberId) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.journeyService.createJournal(memberId, journeyId);
+  }
+
+  @Mutation(() => Journal)
+  @Roles(MemberRole.member)
+  async updateJournalText(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args(camelCase(UpdateJournalTextParams.name)) updateJournalTextParams: UpdateJournalTextParams,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    const journal = await this.journeyService.updateJournal({
+      ...updateJournalTextParams,
+      memberId,
+      journeyId,
+      published: false,
+    });
+
+    return this.addMemberDownloadJournalLinks(journal);
+  }
+
+  @Query(() => Journal)
+  @Roles(MemberRole.member)
+  async getJournal(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    const journal = await this.journeyService.getJournal(id, journeyId);
+
+    return this.addMemberDownloadJournalLinks(journal);
+  }
+
+  @Query(() => [Journal])
+  @Roles(MemberRole.member)
+  async getJournals(@Client('roles') roles, @Client('_id') memberId) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    const journals = await this.journeyService.getJournals(journeyId);
+
+    return Promise.all(
+      journals.map(async (journal) => {
+        return this.addMemberDownloadJournalLinks(journal);
+      }),
+    );
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(MemberRole.member)
+  async deleteJournal(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.journeyJournalIdInvalid)),
+    )
+    id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { imageFormat, audioFormat } = await this.journeyService.deleteJournal(id, memberId);
+
+    if (imageFormat) {
+      await Promise.all([
+        this.storageService.deleteFile({
+          id: `${id}${ImageType.SmallImage}.${imageFormat}`,
+          memberId,
+          storageType: StorageType.journals,
+        }),
+        this.storageService.deleteFile({
+          id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+          memberId,
+          storageType: StorageType.journals,
+        }),
+      ]);
+    }
+
+    if (audioFormat) {
+      await this.storageService.deleteFile({
+        memberId,
+        storageType: StorageType.journals,
+        id: `${id}${AudioType}.${audioFormat}`,
+      });
+    }
+
+    return true;
+  }
+
+  @Query(() => JournalUploadImageLink)
+  @Roles(MemberRole.member)
+  async getMemberUploadJournalImageLink(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args(camelCase(GetMemberUploadJournalImageLinkParams.name))
+    getMemberUploadJournalImageLinkParams: GetMemberUploadJournalImageLinkParams,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { id, imageFormat } = getMemberUploadJournalImageLinkParams;
+
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    await this.journeyService.updateJournal({
+      id,
+      memberId,
+      journeyId,
+      imageFormat,
+      published: false,
+    });
+    const normalImageLink = await this.storageService.getUploadUrl({
+      storageType: StorageType.journals,
+      memberId,
+      id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+    });
+
+    return { normalImageLink };
+  }
+
+  @Query(() => JournalUploadAudioLink)
+  @Roles(MemberRole.member)
+  async getMemberUploadJournalAudioLink(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args(camelCase(GetMemberUploadJournalAudioLinkParams.name))
+    getMemberUploadJournalAudioLinkParams: GetMemberUploadJournalAudioLinkParams,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { id, audioFormat } = getMemberUploadJournalAudioLinkParams;
+
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    await this.journeyService.updateJournal({
+      id,
+      memberId,
+      journeyId,
+      audioFormat,
+      published: false,
+    });
+    const audioLink = await this.storageService.getUploadUrl({
+      storageType: StorageType.journals,
+      memberId,
+      id: `${id}${AudioType}.${audioFormat}`,
+    });
+
+    return { audioLink };
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(MemberRole.member)
+  async deleteJournalImage(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.journeyJournalIdInvalid)),
+    )
+    id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { imageFormat } = await this.journeyService.getJournal(id, memberId);
+
+    if (!imageFormat) {
+      throw new Error(Errors.get(ErrorType.journeyJournalImageNotFound));
+    }
+
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    await this.journeyService.updateJournal({
+      id,
+      memberId,
+      journeyId,
+      imageFormat: null,
+      published: false,
+    });
+    await Promise.all([
+      this.storageService.deleteFile({
+        id: `${id}${ImageType.SmallImage}.${imageFormat}`,
+        memberId,
+        storageType: StorageType.journals,
+      }),
+      this.storageService.deleteFile({
+        id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+        memberId,
+        storageType: StorageType.journals,
+      }),
+    ]);
+
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(MemberRole.member)
+  async deleteJournalAudio(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.journeyJournalIdInvalid)),
+    )
+    id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { audioFormat } = await this.journeyService.getJournal(id, memberId);
+
+    if (!audioFormat) {
+      throw new Error(Errors.get(ErrorType.journeyJournalAudioNotFound));
+    }
+
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    await this.journeyService.updateJournal({
+      id,
+      memberId,
+      journeyId,
+      audioFormat: null,
+      published: false,
+    });
+    return this.storageService.deleteFile({
+      memberId,
+      storageType: StorageType.journals,
+      id: `${id}${AudioType}.${audioFormat}`,
+    });
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  @Roles(MemberRole.member)
+  async publishJournal(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    const { imageFormat, audioFormat, text } = await this.journeyService.updateJournal({
+      id,
+      memberId,
+      journeyId,
+      published: true,
+    });
+
+    let journalImageDownloadLink;
+    let journalAudioDownloadLink;
+    if (imageFormat) {
+      journalImageDownloadLink = await this.storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId,
+        id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+      });
+    }
+    if (audioFormat) {
+      journalAudioDownloadLink = await this.storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId,
+        id: `${id}${AudioType}.${audioFormat}`,
+      });
+    }
+
+    const event: IEventOnPublishedJournal = {
+      memberId,
+      text,
+      journalImageDownloadLink,
+      journalAudioDownloadLink,
+    };
+    this.eventEmitter.emit(EventType.onPublishedJournal, event);
+  }
+
+  private async addMemberDownloadJournalLinks(journal: Journal) {
+    const { id, memberId, imageFormat, audioFormat } = journal;
+    let normalImageLink: string;
+    let smallImageLink: string;
+    let audioLink: string;
+
+    if (imageFormat) {
+      [normalImageLink, smallImageLink] = await Promise.all([
+        this.storageService.getDownloadUrl({
+          storageType: StorageType.journals,
+          memberId: memberId.toString(),
+          id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+        }),
+        this.storageService.getDownloadUrl({
+          storageType: StorageType.journals,
+          memberId: memberId.toString(),
+          id: `${id}${ImageType.SmallImage}.${imageFormat}`,
+        }),
+      ]);
+    }
+    if (audioFormat) {
+      audioLink = await this.storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId: memberId.toString(),
+        id: `${id}${AudioType}.${audioFormat}`,
+      });
+    }
+    journal.journalDownloadLinks = { normalImageLink, smallImageLink, audioLink };
+
+    return journal;
   }
 }

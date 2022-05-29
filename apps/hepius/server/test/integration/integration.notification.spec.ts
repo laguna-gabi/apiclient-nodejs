@@ -84,13 +84,8 @@ import {
   reformatDate,
 } from '../../src/common';
 import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
-import {
-  AudioFormat,
-  CancelNotifyParams,
-  ImageFormat,
-  NotifyParams,
-  UpdateJournalTextParams,
-} from '../../src/member';
+import { CancelNotifyParams, NotifyParams } from '../../src/member';
+import { AudioFormat, ImageFormat, UpdateJournalTextParams } from '../../src/journey';
 import {
   AlertConditionType,
   CreateQuestionnaireParams,

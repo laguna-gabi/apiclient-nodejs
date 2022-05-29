@@ -4,7 +4,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Db } from 'mongodb';
 import { AppModule } from '../../../src/app.module';
-import { Journal } from '../../../src/member';
+import { Journal } from '../../../src/journey';
 
 // ------------------------------------------------------------------------------------------------
 // Description: migrate `up`

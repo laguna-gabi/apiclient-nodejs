@@ -1,5 +1,4 @@
 export * from './member.interfaces';
-export * from './journal.dto';
 export * from './member.dto';
 export * from './memberConfig.dto';
 export * from './member.recording.dto';

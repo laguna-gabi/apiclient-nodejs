@@ -42,7 +42,7 @@ registerEnumType(AudioFormat, { name: 'AudioFormat' });
 @InputType()
 export class UpdateJournalTextParams {
   @Field(() => String)
-  @IsObjectId({ message: Errors.get(ErrorType.memberJournalIdInvalid) })
+  @IsObjectId({ message: Errors.get(ErrorType.journeyJournalIdInvalid) })
   id: string;
 
   @Field(() => String)
@@ -53,7 +53,7 @@ export class UpdateJournalTextParams {
 @InputType()
 export class GetMemberUploadJournalImageLinkParams {
   @Field(() => String)
-  @IsObjectId({ message: Errors.get(ErrorType.memberJournalIdInvalid) })
+  @IsObjectId({ message: Errors.get(ErrorType.journeyJournalIdInvalid) })
   id: string;
 
   @Field(() => ImageFormat)
@@ -71,15 +71,11 @@ export class GetMemberUploadJournalAudioLinkParams {
 
 export class UpdateJournalParams {
   id: string;
-
   memberId: string;
-
+  journeyId: string;
   text?: string;
-
   imageFormat?: ImageFormat;
-
   audioFormat?: AudioFormat;
-
   published?: boolean;
 }
 
@@ -117,6 +113,9 @@ export class Journal extends Identifier {
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)
   memberId: Types.ObjectId;
+
+  @Prop({ index: true, type: Types.ObjectId })
+  journeyId: Types.ObjectId;
 
   @Prop()
   @Field(() => String, { nullable: true })

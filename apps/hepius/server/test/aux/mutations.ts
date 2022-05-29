@@ -35,7 +35,6 @@ import {
   CreateMemberParams,
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
-  Journal,
   Member,
   NotifyContentParams,
   NotifyParams,
@@ -43,7 +42,6 @@ import {
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   UpdateCaregiverParams,
-  UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -53,8 +51,10 @@ import {
   ChangeMemberDnaParams,
   CreateActionItemParams,
   GraduateMemberParams,
+  Journal,
   SetGeneralNotesParams,
   UpdateActionItemStatusParams,
+  UpdateJournalTextParams,
   UpdateJourneyParams,
 } from '../../src/journey';
 

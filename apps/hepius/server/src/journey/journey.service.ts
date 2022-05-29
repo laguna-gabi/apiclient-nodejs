@@ -31,7 +31,10 @@ import {
   ActionItemDocument,
   ActionItemStatus,
   CreateActionItemParams,
+  Journal,
+  JournalDocument,
   UpdateActionItemStatusParams,
+  UpdateJournalParams,
 } from './';
 import { Internationalization } from '../providers';
 
@@ -42,6 +45,8 @@ export class JourneyService extends AlertService {
     private readonly journeyModel: Model<JourneyDocument> & ISoftDelete<JourneyDocument>,
     @InjectModel(ActionItem.name)
     private readonly actionItemModel: Model<ActionItemDocument> & ISoftDelete<ActionItemDocument>,
+    @InjectModel(Journal.name)
+    private readonly journalModel: Model<JournalDocument> & ISoftDelete<JournalDocument>,
     @InjectModel(DismissedAlert.name)
     readonly dismissAlertModel: Model<DismissedAlertDocument>,
     private readonly internationalization: Internationalization,
@@ -152,6 +157,10 @@ export class JourneyService extends AlertService {
       model: this.actionItemModel,
       ...data,
     });
+    await deleteMemberObjects<Model<JournalDocument> & ISoftDelete<JournalDocument>>({
+      model: this.journalModel,
+      ...data,
+    });
   }
 
   /*************************************************************************************************
@@ -239,6 +248,74 @@ export class JourneyService extends AlertService {
             memberId: member.id,
           } as Alert),
       );
+  }
+
+  /*************************************************************************************************
+   ******************************************** Journal ********************************************
+   ************************************************************************************************/
+
+  async createJournal(memberId: string, journeyId: string): Promise<Identifier> {
+    const { _id } = await this.journalModel.create({
+      memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
+    });
+    return { id: _id };
+  }
+
+  async updateJournal(updateJournalParams: UpdateJournalParams): Promise<Journal> {
+    const { id, memberId, journeyId } = updateJournalParams;
+    delete updateJournalParams.id;
+    delete updateJournalParams.memberId;
+    delete updateJournalParams.journeyId;
+
+    const result = await this.journalModel.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(id),
+        memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
+      },
+      { $set: updateJournalParams },
+      { new: true },
+    );
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.journeyJournalNotFound));
+    }
+
+    return result;
+  }
+
+  async getJournal(id: string, journeyId: string): Promise<Journal> {
+    const result = await this.journalModel.findOne({
+      _id: new Types.ObjectId(id),
+      journeyId: new Types.ObjectId(journeyId),
+    });
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.journeyJournalNotFound));
+    }
+
+    return result;
+  }
+
+  async getJournals(journeyId: string): Promise<Journal[]> {
+    return this.journalModel.find({
+      journeyId: new Types.ObjectId(journeyId),
+      text: { $exists: true },
+    });
+  }
+
+  async deleteJournal(id: string, memberId: string): Promise<Journal> {
+    const result = await this.journalModel.findOneAndDelete({
+      _id: new Types.ObjectId(id),
+      memberId: new Types.ObjectId(memberId),
+    });
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.journeyJournalNotFound));
+    }
+
+    return result;
   }
 
   /*************************************************************************************************

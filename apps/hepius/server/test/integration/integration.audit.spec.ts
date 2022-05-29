@@ -48,8 +48,6 @@ import {
   CaregiverDocument,
   ControlMember,
   ControlMemberDocument,
-  Journal,
-  JournalDocument,
   Member,
   MemberDocument,
   ReplaceUserForMemberParams,
@@ -58,6 +56,8 @@ import {
   ActionItem,
   ActionItemDocument,
   ActionItemStatus,
+  Journal,
+  JournalDocument,
   JourneyDocument,
 } from '../../src/journey';
 import {

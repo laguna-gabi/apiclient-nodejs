@@ -22,7 +22,7 @@ import {
   RedFlagTypeDto,
 } from '../src/care';
 import { delay } from '../src/common';
-import { UpdateJournalTextParams } from '../src/member';
+import { UpdateJournalTextParams } from '../src/journey';
 import { UserService } from '../src/user';
 import {
   dbConnect,

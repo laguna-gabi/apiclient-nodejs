@@ -13,6 +13,7 @@ export enum EventType {
   onUpdatedMemberPlatform = 'onUpdatedMemberPlatform',
   onReplacedUserForMember = 'onReplacedUserForMember',
   onDeletedMember = 'onDeletedMember',
+  onPublishedJournal = 'onPublishedJournal',
 
   //user
   onNewUser = 'onNewUser',
@@ -71,6 +72,13 @@ export interface IEventOnReplacedUserForMember {
   oldUserId: string;
   member: Member;
   platform: Platform;
+}
+
+export interface IEventOnPublishedJournal {
+  memberId: string;
+  text: string;
+  journalImageDownloadLink?: string;
+  journalAudioDownloadLink?: string;
 }
 
 /*************************************************************************************************

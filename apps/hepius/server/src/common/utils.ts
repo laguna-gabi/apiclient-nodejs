@@ -15,17 +15,13 @@ import { IEventDeleteMember, LoggerService } from '.';
 import { BarrierDocument, CarePlanDocument, RedFlagDocument } from '../care';
 import { DailyReportDocument } from '../dailyReport';
 import { ISoftDelete } from '../db';
-import {
-  CaregiverDocument,
-  InsuranceDocument,
-  JournalDocument,
-  RecordingDocument,
-} from '../member';
+import { CaregiverDocument, InsuranceDocument, RecordingDocument } from '../member';
 import {
   AdmissionDocument,
   DiagnosisDocument,
   DietaryDocument,
   ExternalAppointmentDocument,
+  JournalDocument,
   JourneyDocument,
   MedicationDocument,
   TreatmentRenderedDocument,

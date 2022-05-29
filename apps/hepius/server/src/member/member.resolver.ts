@@ -60,6 +60,7 @@ import {
   IEventMember,
   IEventNotifyQueue,
   IEventOnAlertForQRSubmit,
+  IEventOnPublishedJournal,
   IEventOnReceivedChatMessage,
   IEventOnReceivedTextMessage,
   IEventOnReplacedUserForMember,
@@ -91,7 +92,6 @@ import { UserService } from '../user';
 import {
   AddCaregiverParams,
   AppointmentCompose,
-  AudioType,
   CancelNotifyParams,
   ChatMessageOrigin,
   CompleteMultipartUploadParams,
@@ -101,12 +101,6 @@ import {
   DeleteMemberParams,
   DischargeDocumentsLinks,
   GetMemberUploadGeneralDocumentLinkParams,
-  GetMemberUploadJournalAudioLinkParams,
-  GetMemberUploadJournalImageLinkParams,
-  ImageType,
-  Journal,
-  JournalUploadAudioLink,
-  JournalUploadImageLink,
   Member,
   MemberBase,
   MemberConfig,
@@ -123,7 +117,6 @@ import {
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   UpdateCaregiverParams,
-  UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -608,257 +601,17 @@ export class MemberResolver extends MemberBase {
    ******************************************** Journal ********************************************
    ************************************************************************************************/
 
-  @Mutation(() => Identifier)
-  @Roles(MemberRole.member)
-  async createJournal(@Client('roles') roles, @Client('_id') memberId) {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-    return this.memberService.createJournal(memberId);
-  }
+  @OnEvent(EventType.onPublishedJournal, { async: true })
+  async handlePublishJournal(params: IEventOnPublishedJournal) {
+    this.logger.info(params, MemberResolver.name, this.handlePublishJournal.name);
 
-  @Mutation(() => Journal)
-  @Roles(MemberRole.member)
-  async updateJournalText(
-    @Client('roles') roles,
-    @Client('_id') memberId,
-    @Args(camelCase(UpdateJournalTextParams.name)) updateJournalTextParams: UpdateJournalTextParams,
-  ) {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-    const journal = await this.memberService.updateJournal({
-      ...updateJournalTextParams,
-      memberId,
-      published: false,
-    });
+    const { memberId, text, journalImageDownloadLink, journalAudioDownloadLink } = params;
 
-    return this.addMemberDownloadJournalLinks(journal);
-  }
-
-  @Query(() => Journal)
-  @Roles(MemberRole.member)
-  async getJournal(
-    @Client('roles') roles,
-    @Client('_id') memberId,
-    @Args('id', { type: () => String }) id: string,
-  ) {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-    const journal = await this.memberService.getJournal(id, memberId);
-
-    return this.addMemberDownloadJournalLinks(journal);
-  }
-
-  @Query(() => [Journal])
-  @Roles(MemberRole.member)
-  async getJournals(@Client('roles') roles, @Client('_id') memberId) {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-    const journals = await this.memberService.getJournals(memberId);
-
-    return Promise.all(
-      journals.map(async (journal) => {
-        return this.addMemberDownloadJournalLinks(journal);
-      }),
-    );
-  }
-
-  @Mutation(() => Boolean)
-  @Roles(MemberRole.member)
-  async deleteJournal(
-    @Client('roles') roles,
-    @Client('_id') memberId,
-    @Args(
-      'id',
-      { type: () => String },
-      new IsValidObjectId(Errors.get(ErrorType.memberJournalIdInvalid)),
-    )
-    id: string,
-  ) {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-    const { imageFormat, audioFormat } = await this.memberService.deleteJournal(id, memberId);
-
-    if (imageFormat) {
-      await Promise.all([
-        this.storageService.deleteFile({
-          id: `${id}${ImageType.SmallImage}.${imageFormat}`,
-          memberId,
-          storageType: StorageType.journals,
-        }),
-        this.storageService.deleteFile({
-          id: `${id}${ImageType.NormalImage}.${imageFormat}`,
-          memberId,
-          storageType: StorageType.journals,
-        }),
-      ]);
-    }
-
-    if (audioFormat) {
-      await this.storageService.deleteFile({
-        memberId,
-        storageType: StorageType.journals,
-        id: `${id}${AudioType}.${audioFormat}`,
-      });
-    }
-
-    return true;
-  }
-
-  @Query(() => JournalUploadImageLink)
-  @Roles(MemberRole.member)
-  async getMemberUploadJournalImageLink(
-    @Client('roles') roles,
-    @Client('_id') memberId,
-    @Args(camelCase(GetMemberUploadJournalImageLinkParams.name))
-    getMemberUploadJournalImageLinkParams: GetMemberUploadJournalImageLinkParams,
-  ) {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-    const { id, imageFormat } = getMemberUploadJournalImageLinkParams;
-
-    await this.memberService.updateJournal({ id, memberId, imageFormat, published: false });
-    const normalImageLink = await this.storageService.getUploadUrl({
-      storageType: StorageType.journals,
-      memberId,
-      id: `${id}${ImageType.NormalImage}.${imageFormat}`,
-    });
-
-    return { normalImageLink };
-  }
-
-  @Query(() => JournalUploadAudioLink)
-  @Roles(MemberRole.member)
-  async getMemberUploadJournalAudioLink(
-    @Client('roles') roles,
-    @Client('_id') memberId,
-    @Args(camelCase(GetMemberUploadJournalAudioLinkParams.name))
-    getMemberUploadJournalAudioLinkParams: GetMemberUploadJournalAudioLinkParams,
-  ) {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-    const { id, audioFormat } = getMemberUploadJournalAudioLinkParams;
-
-    await this.memberService.updateJournal({ id, memberId, audioFormat, published: false });
-    const audioLink = await this.storageService.getUploadUrl({
-      storageType: StorageType.journals,
-      memberId,
-      id: `${id}${AudioType}.${audioFormat}`,
-    });
-
-    return { audioLink };
-  }
-
-  @Mutation(() => Boolean)
-  @Roles(MemberRole.member)
-  async deleteJournalImage(
-    @Client('roles') roles,
-    @Client('_id') memberId,
-    @Args(
-      'id',
-      { type: () => String },
-      new IsValidObjectId(Errors.get(ErrorType.memberJournalIdInvalid)),
-    )
-    id: string,
-  ) {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-    const { imageFormat } = await this.memberService.getJournal(id, memberId);
-
-    if (!imageFormat) {
-      throw new Error(Errors.get(ErrorType.memberJournalImageNotFound));
-    }
-
-    await this.memberService.updateJournal({ id, memberId, imageFormat: null, published: false });
-    await Promise.all([
-      this.storageService.deleteFile({
-        id: `${id}${ImageType.SmallImage}.${imageFormat}`,
-        memberId,
-        storageType: StorageType.journals,
-      }),
-      this.storageService.deleteFile({
-        id: `${id}${ImageType.NormalImage}.${imageFormat}`,
-        memberId,
-        storageType: StorageType.journals,
-      }),
-    ]);
-
-    return true;
-  }
-
-  @Mutation(() => Boolean)
-  @Roles(MemberRole.member)
-  async deleteJournalAudio(
-    @Client('roles') roles,
-    @Client('_id') memberId,
-    @Args(
-      'id',
-      { type: () => String },
-      new IsValidObjectId(Errors.get(ErrorType.memberJournalIdInvalid)),
-    )
-    id: string,
-  ) {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-    const { audioFormat } = await this.memberService.getJournal(id, memberId);
-
-    if (!audioFormat) {
-      throw new Error(Errors.get(ErrorType.memberJournalAudioNotFound));
-    }
-
-    await this.memberService.updateJournal({ id, memberId, audioFormat: null, published: false });
-    return this.storageService.deleteFile({
-      memberId,
-      storageType: StorageType.journals,
-      id: `${id}${AudioType}.${audioFormat}`,
-    });
-  }
-
-  @Mutation(() => Boolean, { nullable: true })
-  @Roles(MemberRole.member)
-  async publishJournal(
-    @Client('roles') roles,
-    @Client('_id') memberId,
-    @Args('id', { type: () => String }) id: string,
-  ) {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-    const { imageFormat, audioFormat, text } = await this.memberService.updateJournal({
-      id,
-      memberId,
-      published: true,
-    });
     const member = await this.memberService.get(memberId);
     const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
       memberId,
       userId: member.primaryUserId.toString(),
     });
-
-    let journalImageDownloadLink;
-    let journalAudioDownloadLink;
-    if (imageFormat) {
-      journalImageDownloadLink = await this.storageService.getDownloadUrl({
-        storageType: StorageType.journals,
-        memberId,
-        id: `${id}${ImageType.NormalImage}.${imageFormat}`,
-      });
-    }
-    if (audioFormat) {
-      journalAudioDownloadLink = await this.storageService.getDownloadUrl({
-        storageType: StorageType.journals,
-        memberId,
-        id: `${id}${AudioType}.${audioFormat}`,
-      });
-    }
 
     const dispatch: IInternalDispatch = {
       correlationId: getCorrelationId(this.logger),
@@ -877,38 +630,6 @@ export class MemberResolver extends MemberBase {
       journalAudioDownloadLink,
     };
     await this.notifyCreateDispatch(dispatch);
-  }
-
-  private async addMemberDownloadJournalLinks(journal: Journal) {
-    const { id, memberId, imageFormat, audioFormat } = journal;
-    let normalImageLink: string;
-    let smallImageLink: string;
-    let audioLink: string;
-
-    if (imageFormat) {
-      [normalImageLink, smallImageLink] = await Promise.all([
-        this.storageService.getDownloadUrl({
-          storageType: StorageType.journals,
-          memberId: memberId.toString(),
-          id: `${id}${ImageType.NormalImage}.${imageFormat}`,
-        }),
-        this.storageService.getDownloadUrl({
-          storageType: StorageType.journals,
-          memberId: memberId.toString(),
-          id: `${id}${ImageType.SmallImage}.${imageFormat}`,
-        }),
-      ]);
-    }
-    if (audioFormat) {
-      audioLink = await this.storageService.getDownloadUrl({
-        storageType: StorageType.journals,
-        memberId: memberId.toString(),
-        id: `${id}${AudioType}.${audioFormat}`,
-      });
-    }
-    journal.journalDownloadLinks = { normalImageLink, smallImageLink, audioLink };
-
-    return journal;
   }
 
   /*************************************************************************************************
