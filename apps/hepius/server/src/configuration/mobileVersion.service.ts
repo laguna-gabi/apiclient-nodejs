@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Platform } from '@argus/pandora';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { compare } from 'compare-versions';
+import compareVersions, { compare } from 'compare-versions';
 import { Model } from 'mongoose';
 import {
   CheckMobileVersionParams,
@@ -57,23 +58,27 @@ export class MobileVersionService {
   ): Promise<CheckMobileVersionResponse> {
     const { version, platform } = checkMobileVersionParams;
 
-    const [[latestVersion], minVersion, mobileVersion] = await Promise.all([
-      this.mobileVersionModel.find({ platform }).sort({ _id: -1 }).limit(1),
+    const latestVersion = await this.getLatestVersion(platform);
+    const [minVersion, mobileVersion] = await Promise.all([
       this.mobileVersionModel.findOne({ minVersion: true, platform }),
       this.mobileVersionModel.findOne({ version, platform }),
     ]);
 
-    if (!mobileVersion) {
-      throw new BadRequestException(Errors.get(ErrorType.configurationMobileVersionNotFound));
-    }
-
-    const forceUpdate = mobileVersion.faultyVersion || compare(version, minVersion.version, '<');
-    const updateAvailable = forceUpdate || compare(version, latestVersion.version, '<');
+    const forceUpdate = mobileVersion?.faultyVersion || compare(version, minVersion.version, '<');
+    const updateAvailable = forceUpdate || compare(version, latestVersion, '<');
 
     return {
-      latestVersion: latestVersion.version,
+      latestVersion,
       forceUpdate,
       updateAvailable,
     };
+  }
+
+  private async getLatestVersion(platform: Platform): Promise<string> {
+    const mobileVersions = await this.mobileVersionModel.find({ platform });
+    return mobileVersions
+      .map((mobileVersion) => mobileVersion.version)
+      .sort(compareVersions)
+      .at(-1);
   }
 }

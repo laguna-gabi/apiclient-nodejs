@@ -310,7 +310,13 @@ describe('MobileVersionService', () => {
           { version: params[1].version, forceUpdate: false, updateAvailable: true },
           { version: params[2].version, forceUpdate: false, updateAvailable: true },
           { version: params[3].version, forceUpdate: true, updateAvailable: true },
-          { version: params[4].version, forceUpdate: false, updateAvailable: false },
+          {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            version: await service.getLatestVersion(Platform.android),
+            forceUpdate: expect.any(Boolean),
+            updateAvailable: false,
+          },
         ].map(async ({ version, forceUpdate, updateAvailable }) => {
           const checkMobileVersionParams = generateCheckMobileVersionParams({
             version,
@@ -319,19 +325,15 @@ describe('MobileVersionService', () => {
           const result = await service.checkMobileVersion(checkMobileVersionParams);
           expect(result).toEqual(
             expect.objectContaining({
-              latestVersion: params[4].version,
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              latestVersion: await service.getLatestVersion(Platform.android),
               forceUpdate,
               updateAvailable,
             }),
           );
         }),
       );
-    });
-
-    it('should fail to check mobile version if version does not exist', async () => {
-      await expect(
-        service.updateMinMobileVersion(generateCheckMobileVersionParams()),
-      ).rejects.toThrow(Errors.get(ErrorType.configurationMobileVersionNotFound));
     });
   });
 });
