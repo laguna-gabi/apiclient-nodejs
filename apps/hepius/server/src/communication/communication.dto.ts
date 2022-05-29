@@ -5,6 +5,7 @@ import { Document, Types } from 'mongoose';
 import { ErrorType, Errors } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
+import { DefaultSchemaOptions } from '@argus/pandora';
 
 /**************************************************************************************************
  **************************************** Internal params *****************************************
@@ -48,7 +49,7 @@ export class GetCommunicationParams {
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Communication {
   @Prop({ type: Types.ObjectId, index: true })
   memberId: Types.ObjectId;
