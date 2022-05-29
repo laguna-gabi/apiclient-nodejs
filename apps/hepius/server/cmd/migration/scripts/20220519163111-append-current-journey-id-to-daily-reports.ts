@@ -15,7 +15,7 @@ export const up = async () => {
   //Be careful with this: at the time this aggregation run, we only have one journey per member.
   await Promise.all(
     journeys.map(async (journey) => {
-      await dailyReportModel.updateOne(
+      await dailyReportModel.updateMany(
         { memberId: journey.memberId },
         { $set: { journeyId: journey._id } },
         { upsert: false },
