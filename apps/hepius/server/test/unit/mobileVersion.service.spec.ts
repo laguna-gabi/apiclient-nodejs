@@ -310,13 +310,6 @@ describe('MobileVersionService', () => {
           { version: params[1].version, forceUpdate: false, updateAvailable: true },
           { version: params[2].version, forceUpdate: false, updateAvailable: true },
           { version: params[3].version, forceUpdate: true, updateAvailable: true },
-          {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            version: await service.getLatestVersion(Platform.android),
-            forceUpdate: expect.any(Boolean),
-            updateAvailable: false,
-          },
         ].map(async ({ version, forceUpdate, updateAvailable }) => {
           const checkMobileVersionParams = generateCheckMobileVersionParams({
             version,
