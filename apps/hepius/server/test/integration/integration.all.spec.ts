@@ -462,6 +462,19 @@ describe('Integration tests: all', () => {
     expect(primaryUserId).toEqual(userId);
   });
 
+  it('should throw an error when there is no user from the same org', async () => {
+    const org = await creators.createAndValidateOrg();
+    const memberParams = generateCreateMemberParams({ orgId: org.id });
+    handler.featureFlagService.spyOnFeatureFlagControlGroup.mockImplementationOnce(
+      async () => false,
+    );
+
+    await handler.mutations.createMember({
+      memberParams,
+      invalidFieldsErrors: [Errors.get(ErrorType.userNoUsersFound)],
+    });
+  });
+
   /* eslint-disable max-len */
   test.each`
     title | method

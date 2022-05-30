@@ -391,6 +391,11 @@ export class UserService extends BaseService {
         },
       },
     ]);
+
+    if (users.length === 0) {
+      throw new Error(Errors.get(ErrorType.userNoUsersFound));
+    }
+
     for (let index = 0; index < users.length; index++) {
       const currentMembers = [];
       users[index].journeys.forEach((journey) => {

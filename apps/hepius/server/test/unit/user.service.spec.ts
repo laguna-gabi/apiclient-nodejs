@@ -331,6 +331,10 @@ describe('UserService', () => {
   describe('getAvailableUser', () => {
     // eslint-disable-next-line max-len
     it('admin user should not be returned as available user on default user role filtering', async () => {
+      // create user as setup
+      const user = generateCreateUserParams();
+      await service.insert(user);
+      // create admin user
       const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.admin] });
       const insertedUser = await service.insert(adminOnlyUser);
       await userModel.updateOne(
@@ -349,6 +353,10 @@ describe('UserService', () => {
 
     // eslint-disable-next-line max-len
     it('nurse user should not be returned as available user on default user role filtering', async () => {
+      // create user as setup
+      const user = generateCreateUserParams();
+      await service.insert(user);
+      // create nurse user
       const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.nurse] });
       const insertedUser = await service.insert(adminOnlyUser);
       await userModel.updateOne(
@@ -358,11 +366,16 @@ describe('UserService', () => {
       );
 
       const availableUserId = await service.getAvailableUser();
-
       expect(availableUserId).not.toEqual(insertedUser.id);
 
       // clean up
       await userModel.deleteOne({ _id: new Types.ObjectId(insertedUser.id) });
+    });
+
+    it('should throw an exception when there are no users', async () => {
+      await expect(service.getAvailableUser(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.userNoUsersFound),
+      );
     });
   });
 
