@@ -188,6 +188,7 @@ export enum ErrorType {
 
   // configuration
   configurationMobileVersionNotFound = 10801,
+  configurationMobileVersionInvalidVersion = 10802,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -481,6 +482,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.insuranceEndDate.valueOf(), `end ${dateTimeInstanceFormat}`],
   [ErrorType.insuranceEndAfterStart.valueOf(), 'insurance end date must be after start date'],
   [ErrorType.configurationMobileVersionNotFound.valueOf(), 'mobile version not found'],
+  [ErrorType.configurationMobileVersionInvalidVersion.valueOf(), 'invalid mobile version'],
 ]);
 
 export const DbErrors = {

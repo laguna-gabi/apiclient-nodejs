@@ -1,10 +1,9 @@
 import { Platform } from '@argus/pandora';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import compareVersions, { compare } from 'compare-versions';
+import compareVersions, { compare, validate } from 'compare-versions';
 import { Model } from 'mongoose';
 import {
-  CheckMobileVersionParams,
   CheckMobileVersionResponse,
   CreateMobileVersionParams,
   MobileVersion,
@@ -53,10 +52,16 @@ export class MobileVersionService {
     );
   }
 
-  async checkMobileVersion(
-    checkMobileVersionParams: CheckMobileVersionParams,
-  ): Promise<CheckMobileVersionResponse> {
-    const { version, platform } = checkMobileVersionParams;
+  async checkMobileVersion(params: {
+    version: string;
+    platform: Platform;
+    build: string;
+  }): Promise<CheckMobileVersionResponse> {
+    const { version, platform } = params;
+
+    if (!validate(version)) {
+      throw new BadRequestException(Errors.get(ErrorType.configurationMobileVersionInvalidVersion));
+    }
 
     const latestVersion = await this.getLatestVersion(platform);
     const [minVersion, mobileVersion] = await Promise.all([

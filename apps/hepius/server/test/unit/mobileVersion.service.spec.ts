@@ -329,4 +329,13 @@ describe('MobileVersionService', () => {
       );
     });
   });
+
+  it('should fail to check mobile version if invalid version', async () => {
+    const checkMobileVersionParams = generateCheckMobileVersionParams({
+      version: 'invalidVersion',
+    });
+    await await expect(service.checkMobileVersion(checkMobileVersionParams)).rejects.toThrow(
+      Errors.get(ErrorType.configurationMobileVersionInvalidVersion),
+    );
+  });
 });

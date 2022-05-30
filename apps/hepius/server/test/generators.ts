@@ -84,7 +84,6 @@ import {
 } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
-  CheckMobileVersionParams,
   CheckMobileVersionResponse,
   CreateMobileVersionParams,
   MobileVersion,
@@ -1662,12 +1661,11 @@ export const generateUpdateFaultyMobileVersionsParams = ({
 
 export const generateCheckMobileVersionParams = ({
   version = generateMobileVersion(),
-  build = generateMobileVersion(),
   platform = Platform.android,
-}: Partial<CheckMobileVersionParams> = {}): CheckMobileVersionParams => {
-  return { version, build, platform };
+  build = generateMobileVersion(),
+} = {}) => {
+  return { version, platform, build };
 };
-
 export const mockGenerateCheckMobileVersionResponse = ({
   latestVersion = generateMobileVersion(),
   forceUpdate = false,
@@ -1685,6 +1683,9 @@ export const mockGenerateMobileVersion = ({
   return { version, platform, minVersion, faultyVersion };
 };
 
+export const generateMobileVersion = () =>
+  `${datatype.number(99)}.${datatype.number(99)}.${datatype.number(99)}`;
+
 export function getIsAssignableToMember(questionnaireType: QuestionnaireType): boolean {
   return (
     questionnaireType === QuestionnaireType.phq9 ||
@@ -1695,5 +1696,3 @@ export function getIsAssignableToMember(questionnaireType: QuestionnaireType): b
 
 const generateFellowName = () => `${name.firstName()} ${name.lastName()}`;
 const generateHealthPlan = () => datatype.string(10);
-const generateMobileVersion = () =>
-  `${datatype.number(99)}.${datatype.number(99)}.${datatype.number(99)}`;

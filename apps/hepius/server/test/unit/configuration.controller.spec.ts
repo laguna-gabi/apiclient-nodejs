@@ -1,10 +1,6 @@
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { Platform, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  defaultModules,
-  generateCheckMobileVersionParams,
-  mockGenerateCheckMobileVersionResponse,
-} from '..';
+import { defaultModules, generateMobileVersion, mockGenerateCheckMobileVersionResponse } from '..';
 import { LoggerService } from '../../src/common';
 import {
   ConfigurationController,
@@ -35,24 +31,22 @@ describe('ConfigurationController', () => {
   describe('mobile version', () => {
     describe('check', () => {
       let spyOnMobileVersionServiceCheck;
-
       beforeEach(() => {
         spyOnMobileVersionServiceCheck = jest.spyOn(mobileVersionService, 'checkMobileVersion');
       });
-
       afterEach(() => {
         spyOnMobileVersionServiceCheck.mockReset();
       });
 
       it('should check mobile version', async () => {
-        const CheckMobileVersionParams = generateCheckMobileVersionParams();
+        const version = generateMobileVersion();
+        const platform = Platform.android;
+        const build = generateMobileVersion();
         const CheckMobileVersionResponse = mockGenerateCheckMobileVersionResponse();
         spyOnMobileVersionServiceCheck.mockImplementationOnce(() => CheckMobileVersionResponse);
-
-        const result = await controller.checkMobileVersion(CheckMobileVersionParams);
-
+        const result = await controller.checkMobileVersion(version, platform, build);
         expect(spyOnMobileVersionServiceCheck).toBeCalledTimes(1);
-        expect(spyOnMobileVersionServiceCheck).toBeCalledWith(CheckMobileVersionParams);
+        expect(spyOnMobileVersionServiceCheck).toBeCalledWith({ version, platform, build });
         expect(result).toEqual(CheckMobileVersionResponse);
       });
     });
