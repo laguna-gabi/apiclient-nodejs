@@ -25,7 +25,8 @@ import {
   Appointment,
   AppointmentStatus,
   BarrierDomain,
-  CareStatus,
+  BarrierStatus,
+  CarePlanStatus,
   Notes,
   Relationship,
   User,
@@ -380,8 +381,6 @@ export class BaseCareData {
   created: string;
   @Column('datetime')
   updated: string;
-  @Column('varchar', { length: 50 })
-  status: CareStatus;
   @Column('varchar', { length: 300, nullable: true })
   notes: string;
   @Column('datetime', { nullable: true })
@@ -404,6 +403,8 @@ export class BarrierTypeData {
 export class BarrierData extends BaseCareData {
   @Column('varchar', { length: 50 })
   redFlagId: string;
+  @Column('varchar', { length: 50 })
+  status: BarrierStatus;
 }
 
 @Entity({ name: RedFlagTypeTable })
@@ -446,6 +447,8 @@ export class CarePlanData extends BaseCareData {
   barrierId: string;
   @Column('datetime', { nullable: true })
   dueDate?: string;
+  @Column('varchar', { length: 50 })
+  status: CarePlanStatus;
 }
 
 export type AnalyticsData = CoachData | MemberData | AppointmentsMemberData;

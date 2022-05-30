@@ -3,8 +3,9 @@ import {
   AppointmentMethod,
   AppointmentStatus,
   Barrier,
+  BarrierStatus,
   CarePlan,
-  CareStatus,
+  CarePlanStatus,
   Caregiver,
   CreateCarePlanParams,
   HepiusMessagePatterns,
@@ -2069,7 +2070,7 @@ describe('Integration tests: all', () => {
         const updateBarrierParams = generateUpdateBarrierParams({
           id: barrierId,
           notes: 'new notes',
-          status: CareStatus.completed,
+          status: BarrierStatus.completed,
         });
         const result = await handler.mutations.updateBarrier({
           updateBarrierParams,
@@ -2089,7 +2090,7 @@ describe('Integration tests: all', () => {
             expect.objectContaining({
               ...memberBarriers[0],
               notes: 'new notes',
-              status: CareStatus.completed,
+              status: BarrierStatus.completed,
             }),
           ]),
         );
@@ -2162,7 +2163,7 @@ describe('Integration tests: all', () => {
         const updateCarePlanParams = generateUpdateCarePlanParams({
           id: carePlanId,
           notes: 'new notes',
-          status: CareStatus.completed,
+          status: CarePlanStatus.completed,
         });
         const result = await handler.mutations.updateCarePlan({
           updateCarePlanParams,
@@ -2184,7 +2185,6 @@ describe('Integration tests: all', () => {
               notes: updateCarePlanParams.notes,
               status: updateCarePlanParams.status,
               completionNote: updateCarePlanParams.completionNote,
-              completionReason: updateCarePlanParams.completionReason,
               dueDate: updateCarePlanParams.dueDate.toISOString(),
             }),
           ]),

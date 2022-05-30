@@ -5,13 +5,7 @@ import { ErrorType, Errors } from '../common';
 import { IsDate, IsOptional } from 'class-validator';
 import * as mongooseDelete from 'mongoose-delete';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
-import {
-  CarePlan,
-  CarePlanCompletionReason,
-  CarePlanType,
-  CareStatus,
-  IsObjectId,
-} from '@argus/hepiusClient';
+import { CarePlan, CarePlanStatus, CarePlanType, IsObjectId } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -26,17 +20,13 @@ export class UpdateCarePlanParams {
   @Field(() => String, { nullable: true })
   notes?: string;
 
-  @Field(() => CareStatus, { nullable: true })
-  status?: CareStatus;
+  @Field(() => CarePlanStatus, { nullable: true })
+  status?: CarePlanStatus;
 
   @IsOptional()
   @IsDate()
   @Field(() => Date, { nullable: true })
   dueDate?: Date;
-
-  @Prop({ type: String, enum: CarePlanCompletionReason })
-  @Field(() => CarePlanCompletionReason, { nullable: true })
-  completionReason?: CarePlanCompletionReason;
 
   @Prop()
   @Field(() => String, { nullable: true })

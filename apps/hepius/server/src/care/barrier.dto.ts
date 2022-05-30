@@ -4,7 +4,7 @@ import { Document } from 'mongoose';
 import { ErrorType, Errors } from '../common';
 import * as mongooseDelete from 'mongoose-delete';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
-import { Barrier, BarrierType, CareStatus, IsObjectId } from '@argus/hepiusClient';
+import { Barrier, BarrierStatus, BarrierType, IsObjectId } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -40,8 +40,8 @@ export class UpdateBarrierParams {
   @Field(() => String, { nullable: true })
   notes?: string;
 
-  @Field(() => CareStatus, { nullable: true })
-  status?: CareStatus;
+  @Field(() => BarrierStatus, { nullable: true })
+  status?: BarrierStatus;
 
   @Field(() => String, { nullable: true })
   @IsObjectId({ message: Errors.get(ErrorType.barrierTypeInvalid) })

@@ -1086,7 +1086,6 @@ export class Queries {
               createdBy
               dueDate
               completionNote
-              completionReason
             }
           }
         `,

@@ -2,10 +2,10 @@ import {
   AppointmentMethod,
   AppointmentStatus,
   BarrierDomain,
+  BarrierStatus,
   BaseCarePlanParams,
-  CarePlanCompletionReason,
+  CarePlanStatus,
   CarePlanTypeInput,
-  CareStatus,
   CreateCarePlanParams,
   MemberRole,
   Notes,
@@ -1092,7 +1092,7 @@ export const generateCreateBarrierParams = ({
 export const generateUpdateBarrierParams = ({
   id,
   notes = lorem.words(4),
-  status = CareStatus.completed,
+  status = BarrierStatus.completed,
   type,
 }: Partial<UpdateBarrierParams> = {}) => {
   return {
@@ -1139,9 +1139,8 @@ export const generateCreateCarePlanParams = ({
 export const generateUpdateCarePlanParams = ({
   id,
   notes = lorem.words(4),
-  status = CareStatus.completed,
+  status = CarePlanStatus.completed,
   dueDate = fakerDate.soon(3),
-  completionReason = randomEnum(CarePlanCompletionReason) as CarePlanCompletionReason,
   completionNote = lorem.words(4),
 }: Partial<UpdateCarePlanParams> = {}) => {
   return {
@@ -1149,7 +1148,6 @@ export const generateUpdateCarePlanParams = ({
     notes,
     status,
     dueDate,
-    completionReason,
     completionNote,
   };
 };
@@ -1228,7 +1226,7 @@ export const mockDbBarrier = () => {
     memberId: generateObjectId(),
     createdAt,
     updatedAt,
-    status: CareStatus.active,
+    status: BarrierStatus.active,
     notes: lorem.words(),
     completedAt: updatedAt,
     type: generateObjectId(),
@@ -1254,7 +1252,7 @@ export const mockDbCarePlan = () => {
     memberId: generateObjectId(),
     createdAt,
     updatedAt,
-    status: CareStatus.active,
+    status: CarePlanStatus.active,
     notes: lorem.words(),
     completedAt: updatedAt,
     type: generateObjectId(),

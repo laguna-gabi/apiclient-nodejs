@@ -31,11 +31,12 @@ import { ISoftDelete } from '../db';
 import {
   Barrier,
   BarrierDomain,
+  BarrierStatus,
   BarrierType,
   CarePlan,
+  CarePlanStatus,
   CarePlanType,
   CarePlanTypeInput,
-  CareStatus,
   CreateCarePlanParams,
 } from '@argus/hepiusClient';
 
@@ -163,7 +164,7 @@ export class CareService extends BaseService {
       {
         ...updateBarrierParams,
         type: type ? new Types.ObjectId(type) : undefined,
-        completedAt: status === CareStatus.completed ? new Date(Date.now()) : undefined,
+        completedAt: status === BarrierStatus.completed ? new Date(Date.now()) : undefined,
       },
       isNil,
     );
@@ -271,7 +272,9 @@ export class CareService extends BaseService {
       {
         ...updateCarePlanParams,
         completedAt:
-          updateCarePlanParams.status === CareStatus.completed ? new Date(Date.now()) : undefined,
+          updateCarePlanParams.status === CarePlanStatus.completed
+            ? new Date(Date.now())
+            : undefined,
       },
       isNil,
     );

@@ -36,7 +36,13 @@ import {
   RedFlagDto,
 } from '../../src/care';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
-import { Barrier, BarrierDomain, CarePlan, CareStatus } from '@argus/hepiusClient';
+import {
+  Barrier,
+  BarrierDomain,
+  BarrierStatus,
+  CarePlan,
+  CarePlanStatus,
+} from '@argus/hepiusClient';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('CareService', () => {
@@ -195,7 +201,7 @@ describe('CareService', () => {
         expect(result).toEqual(
           expect.objectContaining({
             ...params,
-            status: CareStatus.active,
+            status: BarrierStatus.active,
             memberId: new Types.ObjectId(memberId),
             redFlagId: withRedFlag ? new Types.ObjectId(redFlagId) : undefined,
             type: new Types.ObjectId(type),
@@ -275,7 +281,7 @@ describe('CareService', () => {
       expect(result).toEqual([
         expect.objectContaining({
           ...params,
-          status: CareStatus.active,
+          status: BarrierStatus.active,
           memberId: new Types.ObjectId(memberId),
 
           redFlagId: new Types.ObjectId(redFlagId),
@@ -284,7 +290,7 @@ describe('CareService', () => {
         }),
         expect.objectContaining({
           ...params2,
-          status: CareStatus.active,
+          status: BarrierStatus.active,
           memberId: new Types.ObjectId(memberId),
           redFlagId: new Types.ObjectId(redFlagId),
           type: expect.objectContaining({ id: type }),
@@ -437,7 +443,7 @@ describe('CareService', () => {
         expect(result).toEqual(
           expect.objectContaining({
             ...params,
-            status: CareStatus.active,
+            status: CarePlanStatus.active,
             memberId: new Types.ObjectId(params.memberId),
             barrierId: new Types.ObjectId(params.barrierId),
           }),
@@ -461,7 +467,7 @@ describe('CareService', () => {
         expect(result).toEqual(
           expect.objectContaining({
             ...params,
-            status: CareStatus.active,
+            status: CarePlanStatus.active,
             memberId: new Types.ObjectId(params.memberId),
 
             barrierId: new Types.ObjectId(params.barrierId),

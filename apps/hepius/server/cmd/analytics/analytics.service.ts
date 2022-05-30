@@ -344,6 +344,7 @@ export class AnalyticsService {
       this.initBaseFields(barrier, input);
       barrier.type = input.type.toString();
       barrier.redFlagId = input.redFlagId.toString();
+      barrier.status = input.status;
       return barrier;
     });
   }
@@ -399,6 +400,7 @@ export class AnalyticsService {
       this.initBaseFields(carePlan, input);
       carePlan.type = input.type.toString();
       carePlan.barrierId = input.barrierId?.toString();
+      carePlan.status = input.status;
       carePlan.dueDate = reformatDate(input.dueDate?.toString(), momentFormats.mysqlDateTime);
       return carePlan;
     });
@@ -411,7 +413,6 @@ export class AnalyticsService {
     data.member_id = baseCare.memberId.toString();
     data.created = reformatDate(baseCare.createdAt.toString(), momentFormats.mysqlDateTime);
     data.updated = reformatDate(baseCare.updatedAt.toString(), momentFormats.mysqlDateTime);
-    data.status = baseCare.status;
     data.notes = baseCare.notes;
     data.completed = reformatDate(baseCare.completedAt?.toString(), momentFormats.mysqlDateTime);
     return data;

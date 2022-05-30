@@ -21,19 +21,20 @@ export enum BarrierDomain {
 }
 registerEnumType(BarrierDomain, { name: 'BarrierCategory' });
 
-export enum CareStatus {
+export enum BarrierStatus {
   active = 'active',
   completed = 'completed',
 }
-registerEnumType(CareStatus, { name: 'CareStatus' });
+registerEnumType(BarrierStatus, { name: 'BarrierStatus' });
 
-export enum CarePlanCompletionReason {
+export enum CarePlanStatus {
+  active = 'active',
+  completed = 'completed',
   noLongerAppropriate = 'noLongerAppropriate',
   refusedByMember = 'refusedByMember',
   memberDischarged = 'memberDischarged',
-  completedSuccessfully = 'completedSuccessfully',
 }
-registerEnumType(CarePlanCompletionReason, { name: 'CarePlanCompletionReason' });
+registerEnumType(CarePlanStatus, { name: 'CarePlanStatus' });
 
 /********∏******************************************************************************************
  ********************************* Return params for gql methods **********************************
@@ -55,10 +56,6 @@ export class BaseCare extends Identifier {
 
   @Field(() => Date)
   updatedAt: Date;
-
-  @Prop({ index: true, type: String, enum: CareStatus, default: CareStatus.active })
-  @Field(() => CareStatus)
-  status: CareStatus;
 
   @Prop()
   @Field(() => String, { nullable: true })
@@ -96,13 +93,13 @@ export class CarePlan extends BaseCare {
   @Field(() => Date, { nullable: true })
   dueDate?: Date;
 
+  @Prop({ type: String, enum: CarePlanStatus, default: CarePlanStatus.active })
+  @Field(() => CarePlanStatus)
+  status: CarePlanStatus;
+
   @Prop()
   @Field(() => String, { nullable: true })
   deletionNote?: string;
-
-  @Prop({ type: String, enum: CarePlanCompletionReason })
-  @Field(() => CarePlanCompletionReason, { nullable: true })
-  completionReason?: CarePlanCompletionReason;
 
   @Prop()
   @Field(() => String, { nullable: true })
@@ -135,6 +132,10 @@ export class Barrier extends BaseCare {
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String, { nullable: true })
   redFlagId?: Types.ObjectId;
+
+  @Prop({ type: String, enum: BarrierStatus, default: BarrierStatus.active })
+  @Field(() => BarrierStatus)
+  status: BarrierStatus;
 }
 
 /**
