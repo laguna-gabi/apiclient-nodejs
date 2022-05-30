@@ -218,7 +218,7 @@ export class AppointmentService extends BaseService {
 
     if (params.notes?.scores) {
       const eventParams: IEventOnUpdatedAppointmentScores = {
-        memberId: existing.memberId,
+        memberId: existing.memberId.toString(),
         scores: params.notes.scores,
       };
       this.eventEmitter.emit(EventType.onUpdatedAppointmentScores, eventParams);

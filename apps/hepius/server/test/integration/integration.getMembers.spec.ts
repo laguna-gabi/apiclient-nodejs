@@ -103,8 +103,6 @@ describe('Integration tests : getMembers', () => {
         phone: memberResult.phone,
         phoneType: member.phoneType,
         dischargeDate: memberResult.dischargeDate,
-        adherence: memberResult.scores.adherence,
-        wellbeing: memberResult.scores.wellbeing,
         createdAt: memberResult.createdAt,
         actionItemsCount: 2,
         primaryUser: expect.objectContaining({
@@ -134,10 +132,14 @@ describe('Integration tests : getMembers', () => {
       requestHeaders: generateRequestHeaders(member.authId),
     });
 
+    const appointment = await creators.createAndValidateAppointment({ member });
     const membersResult = await handler.queries.getMembers({ orgId: org.id });
 
     const journey = await handler.queries.getRecentJourney({ memberId: member.id });
+    expect(journey.scores.adherence).toBeGreaterThanOrEqual(1);
+    expect(journey.scores.wellbeing).toBeGreaterThanOrEqual(1);
     expect(journey.id).toEqual(recentJourney.id.toString());
+    expect(appointment.notes.scores).toEqual(journey.scores);
 
     expect(membersResult.members.length).toEqual(1);
     expect(membersResult.members[0]).toEqual(
@@ -146,6 +148,8 @@ describe('Integration tests : getMembers', () => {
         firstLoggedInAt: journey.firstLoggedInAt,
         isGraduated: journey.isGraduated,
         graduationDate: journey.graduationDate,
+        adherence: journey.scores.adherence,
+        wellbeing: journey.scores.wellbeing,
       }),
     );
   });

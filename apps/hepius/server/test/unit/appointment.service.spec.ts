@@ -575,7 +575,7 @@ describe('AppointmentService', () => {
       await service.end(endAppointmentParams);
 
       const eventParams: IEventOnUpdatedAppointmentScores = {
-        memberId: generateObjectId(appointmentParams.memberId),
+        memberId: appointmentParams.memberId,
         scores: notes.scores,
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedAppointmentScores, eventParams);

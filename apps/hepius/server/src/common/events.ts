@@ -1,5 +1,4 @@
 import { Platform, QueueType } from '@argus/pandora';
-import { Types } from 'mongoose';
 import { HealthPersona, QuestionnaireType } from '../questionnaire';
 import { UpdatedAppointmentAction } from '.';
 import { AppointmentDocument } from '../appointment';
@@ -123,7 +122,7 @@ export interface IEventOnUpdatedAppointment extends IEventMember {
 }
 
 export interface IEventOnUpdatedAppointmentScores {
-  memberId: Types.ObjectId;
+  memberId: string;
   scores: Scores;
 }
 

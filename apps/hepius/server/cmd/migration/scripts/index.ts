@@ -45,3 +45,4 @@ export * as m20220523145848 from './20220523145848-add-consent-to-recordings';
 export * as m20220523132327 from './20220523132327-action-items-append-journey';
 export * as m20220526092554 from './20220526092554-add-identity-verification-to-recording';
 export * as m20220526150137 from './20220526150137-journal-append-journey';
+export * as m20220529143244 from './20220529143244-move-scores-data-to-journey';

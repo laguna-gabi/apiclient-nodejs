@@ -8,6 +8,7 @@ import {
   Errors,
   EventType,
   IEventDeleteMember,
+  IEventOnUpdatedAppointmentScores,
   LoggerService,
   deleteMemberObjects,
 } from '../common';
@@ -37,6 +38,7 @@ import {
   UpdateJournalParams,
 } from './';
 import { Internationalization } from '../providers';
+import { formatEx } from '@argus/pandora';
 
 @Injectable()
 export class JourneyService extends AlertService {
@@ -316,6 +318,28 @@ export class JourneyService extends AlertService {
     }
 
     return result;
+  }
+
+  /*************************************************************************************************
+   ********************************************* Scores *********************************************
+   ************************************************************************************************/
+
+  @OnEvent(EventType.onUpdatedAppointmentScores, { async: true })
+  async handleAppointmentScoreUpdated(params: IEventOnUpdatedAppointmentScores) {
+    this.logger.info(params, JourneyService.name, this.handleAppointmentScoreUpdated.name);
+    const recentJourney = await this.getRecent(params.memberId);
+    try {
+      await this.journeyModel.findByIdAndUpdate(new Types.ObjectId(recentJourney.id), {
+        $set: { scores: params.scores },
+      });
+    } catch (ex) {
+      this.logger.error(
+        params,
+        JourneyService.name,
+        this.handleAppointmentScoreUpdated.name,
+        formatEx(ex),
+      );
+    }
   }
 
   /*************************************************************************************************

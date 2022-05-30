@@ -3,7 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
-import { Identifier, IsObjectId } from '@argus/hepiusClient';
+import { Identifier, IsObjectId, Scores } from '@argus/hepiusClient';
 import { IsOptional } from 'class-validator';
 import { ErrorType, Errors, IsNoteOrNurseNoteProvided } from '../common';
 import { DefaultSchemaOptions } from '@argus/pandora';
@@ -120,6 +120,10 @@ export class Journey extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   nurseNotes?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => Scores, { nullable: true })
+  scores?: Scores;
 }
 
 /**************************************************************************************************

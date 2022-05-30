@@ -175,6 +175,7 @@ describe('Integration tests: all', () => {
       id: member.id,
       requestHeaders: generateRequestHeaders(member.authId),
     });
+    const resultJourney = await handler.queries.getRecentJourney({ memberId: member.id });
 
     const compareAppointmentsOfUsers = (receivedAppointment: Appointment, users: User[]) => {
       const all = users.reduce((prev, next) => prev.concat(next.appointments), []);
@@ -187,7 +188,7 @@ describe('Integration tests: all', () => {
     compareAppointmentsOfUsers(appointmentNurse2, resultMember.users);
     compareAppointmentsOfUsers(appointmentPrimaryUser, resultMember.users);
 
-    expect(resultMember.scores).toEqual(appointmentNurse2.notes.scores);
+    expect(resultJourney.scores).toEqual(appointmentNurse2.notes.scores);
 
     //action items are desc sorted, so the last inserted action item is the 1st in the list
     const actionItems = await handler.queries.getActionItems({ memberId: member.id });

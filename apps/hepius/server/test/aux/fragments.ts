@@ -15,12 +15,6 @@ export const FRAGMENT_MEMBER = gql`
       city
       state
     }
-    scores {
-      adherence
-      adherenceText
-      wellbeing
-      wellbeingText
-    }
     org {
       id
       name
@@ -223,5 +217,11 @@ export const FRAGMENT_JOURNEY = gql`
     graduationDate
     generalNotes
     nurseNotes
+    scores {
+      adherence
+      adherenceText
+      wellbeing
+      wellbeingText
+    }
   }
 `;

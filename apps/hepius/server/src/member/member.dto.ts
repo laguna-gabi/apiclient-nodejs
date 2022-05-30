@@ -1,11 +1,4 @@
-import {
-  AppointmentStatus,
-  Identifier,
-  IsObjectId,
-  MemberRole,
-  Scores,
-  User,
-} from '@argus/hepiusClient';
+import { AppointmentStatus, Identifier, IsObjectId, MemberRole, User } from '@argus/hepiusClient';
 import { ExternalKey } from '@argus/irisClient';
 import {
   CancelNotificationType,
@@ -646,10 +639,6 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   dischargeDate?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => Scores, { nullable: true })
-  scores?: Scores;
 
   /**
    * will be @deprecated soon

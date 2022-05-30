@@ -47,7 +47,6 @@ import {
   IEventDeleteMember,
   IEventOnNewAppointment,
   IEventOnNewMemberCommunication,
-  IEventOnUpdatedAppointmentScores,
   IEventUnconsentedAppointmentEnded,
   IEventUpdateHealthPersona,
   LoggerService,
@@ -236,8 +235,8 @@ export class MemberService extends AlertService {
           phone: '$phone',
           phoneType: '$phoneType',
           dischargeDate: { $ifNull: ['$dischargeDate', undefined] },
-          adherence: { $ifNull: ['$scores.adherence', 0] },
-          wellbeing: { $ifNull: ['$scores.wellbeing', 0] },
+          adherence: { $ifNull: ['$recentJourney.scores.adherence', 0] },
+          wellbeing: { $ifNull: ['$recentJourney.scores.wellbeing', 0] },
           createdAt: '$createdAt',
           actionItemsCount: { $size: '$actionItems' },
           primaryUserId: '$primaryUserId',
@@ -481,28 +480,6 @@ export class MemberService extends AlertService {
       $or: [{ phone }, { phoneSecondary: phone }],
     });
     return !isNil(controlMember);
-  }
-
-  /*************************************************************************************************
-   ********************************************* Scores *********************************************
-   ************************************************************************************************/
-
-  @OnEvent(EventType.onUpdatedAppointmentScores, { async: true })
-  async handleAppointmentScoreUpdated(params: IEventOnUpdatedAppointmentScores) {
-    this.logger.info(params, MemberService.name, this.handleAppointmentScoreUpdated.name);
-    try {
-      await this.memberModel.updateOne(
-        { _id: params.memberId },
-        { $set: { scores: params.scores } },
-      );
-    } catch (ex) {
-      this.logger.error(
-        params,
-        MemberService.name,
-        this.handleAppointmentScoreUpdated.name,
-        formatEx(ex),
-      );
-    }
   }
 
   /************************************************************************************************
