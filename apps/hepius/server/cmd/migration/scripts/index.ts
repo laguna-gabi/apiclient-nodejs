@@ -41,8 +41,9 @@ export * as m20220516160354 from './20220516160354-move-graduate-data-to-journey
 export * as m20220517145649 from './20220517145649-move-notes-data-to-journey';
 export * as m20220519170602 from './20220519170602-remove-active-flag-from-journey';
 export * as m20220519163111 from './20220519163111-append-current-journey-id-to-daily-reports';
-export * as m20220523145848 from './20220523145848-add-consent-to-recordings';
 export * as m20220523132327 from './20220523132327-action-items-append-journey';
+export * as m20220523145848 from './20220523145848-add-consent-to-recordings';
+export * as m20220523164734 from './20220523164734-remove-consent-from-appotintment';
 export * as m20220526092554 from './20220526092554-add-identity-verification-to-recording';
 export * as m20220526150137 from './20220526150137-journal-append-journey';
 export * as m20220529143244 from './20220529143244-move-scores-data-to-journey';

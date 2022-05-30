@@ -1,4 +1,5 @@
-import { StorageType, formatEx } from '@argus/pandora';
+import { Appointment, AppointmentStatus, Caregiver } from '@argus/hepiusClient';
+import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
@@ -8,6 +9,27 @@ import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
 import { Alert, AlertType, DismissedAlert, DismissedAlertDocument } from '../../src/common';
+import { AppointmentDocument } from '../appointment';
+import {
+  AlertService,
+  DbErrors,
+  ErrorType,
+  Errors,
+  EventType,
+  IEventDeleteMember,
+  IEventOnNewAppointment,
+  IEventOnNewMemberCommunication,
+  IEventUpdateHealthPersona,
+  LoggerService,
+  defaultTimestampsDbValues,
+  deleteMemberObjects,
+  extractEmbeddedSetObject,
+} from '../common';
+import { ISoftDelete } from '../db';
+import { Internationalization, StorageService } from '../providers';
+import { Questionnaire, QuestionnaireAlerts, QuestionnaireService } from '../questionnaire';
+import { NotificationService } from '../services';
+import { Todo, TodoDocument, TodoStatus } from '../todo';
 import {
   AddCaregiverParams,
   AddInsuranceParams,
@@ -37,29 +59,6 @@ import {
   UpdateRecordingParams,
   UpdateRecordingReviewParams,
 } from './index';
-import { AppointmentDocument } from '../appointment';
-import {
-  AlertService,
-  DbErrors,
-  ErrorType,
-  Errors,
-  EventType,
-  IEventDeleteMember,
-  IEventOnNewAppointment,
-  IEventOnNewMemberCommunication,
-  IEventUnconsentedAppointmentEnded,
-  IEventUpdateHealthPersona,
-  LoggerService,
-  defaultTimestampsDbValues,
-  deleteMemberObjects,
-  extractEmbeddedSetObject,
-} from '../common';
-import { ISoftDelete } from '../db';
-import { Internationalization, StorageService } from '../providers';
-import { Questionnaire, QuestionnaireAlerts, QuestionnaireService } from '../questionnaire';
-import { NotificationService } from '../services';
-import { Todo, TodoDocument, TodoStatus } from '../todo';
-import { Appointment, AppointmentStatus, Caregiver } from '@argus/hepiusClient';
 
 @Injectable()
 export class MemberService extends AlertService {
@@ -325,46 +324,6 @@ export class MemberService extends AlertService {
         params,
         MemberService.name,
         this.handleAddUserToMemberList.name,
-        formatEx(ex),
-      );
-    }
-  }
-
-  @OnEvent(EventType.onUnconsentedAppointmentEnded, { async: true })
-  async handleUnconsentedAppointmentEnded(params: IEventUnconsentedAppointmentEnded) {
-    this.logger.info(params, MemberService.name, this.handleUnconsentedAppointmentEnded.name);
-    try {
-      const { appointmentId, memberId } = params;
-      const recordingsToDeleteMedia = await this.recordingModel.find({
-        appointmentId: new Types.ObjectId(appointmentId),
-        answered: true,
-      });
-      const recordingIds = recordingsToDeleteMedia.map((doc) => doc.id);
-      if (recordingIds.length >= 1) {
-        await Promise.all(
-          recordingIds.map(async (recordingId) =>
-            this.storageService.deleteFile({
-              memberId,
-              storageType: StorageType.recordings,
-              id: recordingId,
-            }),
-          ),
-        );
-      }
-      await this.recordingModel.updateMany(
-        {
-          appointmentId: new Types.ObjectId(appointmentId),
-          answered: true,
-        },
-        {
-          deletedMedia: true,
-        },
-      );
-    } catch (ex) {
-      this.logger.error(
-        params,
-        MemberService.name,
-        this.handleUnconsentedAppointmentEnded.name,
         formatEx(ex),
       );
     }

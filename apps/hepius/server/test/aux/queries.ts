@@ -718,7 +718,6 @@ export class Queries {
               end
               answered
               phone
-              deletedMedia
               recordingType
               consent
               identityVerification

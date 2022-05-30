@@ -1013,7 +1013,6 @@ export class Mutations {
               answered
               phone
               recordingType
-              deletedMedia
               consent
               identityVerification
               review {

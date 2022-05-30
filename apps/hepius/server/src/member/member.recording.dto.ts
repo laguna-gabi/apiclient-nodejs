@@ -116,10 +116,6 @@ export class Recording {
 
   @Prop({ type: Boolean })
   @Field(() => Boolean, { nullable: true })
-  deletedMedia?: boolean;
-
-  @Prop({ type: Boolean })
-  @Field(() => Boolean, { nullable: true })
   consent?: boolean;
 
   @Prop({ type: Boolean })

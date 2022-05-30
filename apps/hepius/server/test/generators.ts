@@ -589,9 +589,8 @@ export const generateEndAppointmentParams = ({
   noShow = true,
   noShowReason = lorem.sentence(),
   notes = generateNotesParams(),
-  recordingConsent = true,
 }: Partial<EndAppointmentParams> = {}): EndAppointmentParams => {
-  return { id, noShow, noShowReason, notes, recordingConsent };
+  return { id, noShow, noShowReason, notes };
 };
 
 export const generateNotesParams = ({
