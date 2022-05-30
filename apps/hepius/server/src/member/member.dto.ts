@@ -476,26 +476,21 @@ export class NotificationMetadata {
   appointmentId?: string;
 }
 
-@Schema({ versionKey: false, timestamps: true })
 @InputType()
 export class NotifyParams {
-  @Prop()
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
-  @Prop()
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId: string;
 
-  @Prop({ type: String, enum: NotificationType })
   @IsNotChat({ message: Errors.get(ErrorType.notificationChatNotSupported) })
   @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
   @Field(() => NotificationType)
   type: NotificationType;
 
-  @Prop()
   @Field(() => NotificationMetadata)
   metadata: NotificationMetadata;
 }
