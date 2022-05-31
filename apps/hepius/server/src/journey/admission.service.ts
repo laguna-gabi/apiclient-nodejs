@@ -153,7 +153,10 @@ export class AdmissionService extends BaseService {
     });
     const noNilSingleItems = omitBy(singleItems, isNil);
     if (!isEmpty(noNilSingleItems)) {
-      result = await this.updateSingleItem(noNilSingleItems, id);
+      result = await this.updateSingleItem(
+        { ...noNilSingleItems, memberId: new Types.ObjectId(memberId) },
+        id,
+      );
     }
 
     return result;
