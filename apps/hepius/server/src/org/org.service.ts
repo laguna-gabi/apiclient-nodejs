@@ -16,8 +16,8 @@ export class OrgService extends BaseService {
 
   async insert(createOrgParams: CreateOrgParams): Promise<Identifier> {
     try {
-      const { _id } = await this.orgModel.create(createOrgParams);
-      return { id: _id.toString() };
+      const { id } = await this.orgModel.create(createOrgParams);
+      return { id };
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.orgAlreadyExists) : ex,
