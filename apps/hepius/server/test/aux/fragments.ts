@@ -140,6 +140,8 @@ export const FRAGMENT_ADMISSION = gql`
     drg
     drgDesc
     warningSigns
+    createdAt
+    updatedAt
     activity {
       general
       lifting

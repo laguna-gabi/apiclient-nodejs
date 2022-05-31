@@ -741,6 +741,12 @@ export class Admission extends Identifier {
   @Prop({ type: [{ type: Types.ObjectId, ref: Dietary.name }], isNaN: true })
   @Field(() => [Dietary], { nullable: true })
   dietaries?: Dietary[];
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => Date)
+  updatedAt: Date;
 }
 
 @ObjectType()

@@ -2776,6 +2776,8 @@ describe('Integration tests: all', () => {
       warningSigns: expect.any(Array),
       activity: expect.objectContaining({ stairs: expect.any(Array) }),
       woundCare: expect.objectContaining({ general: expect.any(Array) }),
+      createdAt: expect.any(String),
+      updatedAt: expect.any(String),
     };
 
     expect(memberAdmissions.length).toEqual(2);
@@ -2933,6 +2935,8 @@ describe('Integration tests: all', () => {
         warningSigns: expect.any(Array),
         activity: expect.objectContaining({ stairs: expect.any(Array) }),
         woundCare: expect.objectContaining({ general: expect.any(Array) }),
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
       }),
     );
   });
