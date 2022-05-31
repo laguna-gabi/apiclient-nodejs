@@ -392,10 +392,6 @@ export class UserService extends BaseService {
       },
     ]);
 
-    if (users.length === 0) {
-      throw new Error(Errors.get(ErrorType.userNoUsersFound));
-    }
-
     for (let index = 0; index < users.length; index++) {
       const currentMembers = [];
       users[index].journeys.forEach((journey) => {
@@ -418,6 +414,11 @@ export class UserService extends BaseService {
       channel: SlackChannel.notifications,
     };
     this.eventEmitter.emit(GlobalEventType.notifySlack, params);
+
+    if (users.length === 0) {
+      throw new Error(Errors.get(ErrorType.userNoUsersFound));
+    }
+
     await this.userModel.updateOne(
       { _id: users[0]._id },
       { $set: { lastMemberAssignedAt: new Date() } },
