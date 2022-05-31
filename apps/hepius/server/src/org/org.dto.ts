@@ -1,4 +1,5 @@
 import { Identifier } from '@argus/hepiusClient';
+import { DefaultSchemaOptions } from '@argus/pandora';
 import { Field, InputType, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Min } from 'class-validator';
@@ -44,7 +45,7 @@ export class CreateOrgParams {
  *************************************************************************************************/
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Org extends Identifier {
   @Prop({ type: String, enum: OrgType })
   @Field(() => OrgType)

@@ -27,12 +27,12 @@ export class OrgService extends BaseService {
 
   async get(id: string): Promise<Org | null> {
     const org = await this.orgModel.findById(id);
-    return this.replaceId(org);
+    return org;
   }
 
   async getByCode(code: string): Promise<Org | null> {
     const org = await this.orgModel.findOne({ code });
-    return org ? this.replaceId(org.toObject()) : null;
+    return org ? org.toObject() : null;
   }
 
   async getOrgs(): Promise<Org[]> {
