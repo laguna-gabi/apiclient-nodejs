@@ -17,7 +17,7 @@ export class AvailabilityService {
     });
 
     const result = await this.availabilityModel.insertMany(items);
-    return { ids: result.map((item) => item._id.toString()) };
+    return { ids: result.map((item) => item.id) };
   }
 
   async delete(id: string, deletedBy: string): Promise<boolean> {

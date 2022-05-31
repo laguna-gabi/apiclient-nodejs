@@ -4,6 +4,7 @@ import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '@argus/hepiusClient';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
+import { DefaultSchemaOptions } from '@argus/pandora';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -21,7 +22,7 @@ export class AvailabilityInput {
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Availability extends Identifier {
   @Prop({ type: Date })
   @Field(() => Date)
