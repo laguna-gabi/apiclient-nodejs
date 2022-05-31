@@ -108,6 +108,8 @@ export class ExtraTodoParams {
   end?: Date;
 
   status?: TodoStatus;
+
+  journeyId?: string;
 }
 
 @InputType()
@@ -128,6 +130,8 @@ export class CreateActionTodoParams {
 
   @Field(() => Resource, { nullable: true })
   resource?: Resource;
+
+  journeyId?: string;
 }
 
 @InputType()
@@ -154,6 +158,8 @@ export class CreateTodoDoneParams {
   done: Date;
 
   memberId: string;
+
+  journeyId?: string;
 }
 
 @InputType()
@@ -170,6 +176,8 @@ export class GetTodoDonesParams {
     message: Errors.get(ErrorType.todoEndAfterStart),
   })
   end: Date;
+
+  journeyId?: string;
 }
 
 /********∏******************************************************************************************
@@ -182,6 +190,9 @@ export class Todo extends Identifier {
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)
   memberId: Types.ObjectId;
+
+  @Prop({ index: true, type: Types.ObjectId })
+  journeyId: Types.ObjectId;
 
   @Prop()
   @Field(() => String, { nullable: true })
@@ -230,6 +241,9 @@ export class TodoDone extends Identifier {
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)
   memberId: Types.ObjectId;
+
+  @Prop({ index: true, type: Types.ObjectId })
+  journeyId: Types.ObjectId;
 
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)

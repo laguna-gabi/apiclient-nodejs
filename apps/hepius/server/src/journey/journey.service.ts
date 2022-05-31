@@ -1,3 +1,18 @@
+import { Identifier } from '@argus/hepiusClient';
+import { formatEx } from '@argus/pandora';
+import { Injectable } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
+import { InjectModel } from '@nestjs/mongoose';
+import { isEmpty, isNil, omitBy } from 'lodash';
+import { Model, Types } from 'mongoose';
+import {
+  CreateJourneyParams,
+  GraduateMemberParams,
+  Journey,
+  JourneyDocument,
+  SetGeneralNotesParams,
+  UpdateJourneyParams,
+} from '.';
 import {
   Alert,
   AlertService,
@@ -12,21 +27,8 @@ import {
   LoggerService,
   deleteMemberObjects,
 } from '../common';
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
 import { ISoftDelete } from '../db';
-import {
-  CreateJourneyParams,
-  GraduateMemberParams,
-  Journey,
-  JourneyDocument,
-  SetGeneralNotesParams,
-  UpdateJourneyParams,
-} from '.';
-import { Identifier } from '@argus/hepiusClient';
-import { OnEvent } from '@nestjs/event-emitter';
-import { isEmpty, isNil, omitBy } from 'lodash';
+import { Internationalization } from '../providers';
 import {
   ActionItem,
   ActionItemDocument,
@@ -37,8 +39,6 @@ import {
   UpdateActionItemStatusParams,
   UpdateJournalParams,
 } from './';
-import { Internationalization } from '../providers';
-import { formatEx } from '@argus/pandora';
 
 @Injectable()
 export class JourneyService extends AlertService {
@@ -228,12 +228,19 @@ export class JourneyService extends AlertService {
   }
 
   async entityToAlerts(member): Promise<Alert[]> {
-    return this.actionItemsToAlerts(member);
+    let alerts: Alert[] = [];
+
+    // collect actionItems alerts
+    alerts = alerts.concat(await this.actionItemsToAlerts(member));
+
+    return alerts;
   }
 
   private async actionItemsToAlerts(member): Promise<Alert[]> {
+    const { id: journeyId } = await this.getRecent(member.id);
     const actionItems = await this.actionItemModel.find({
       memberId: new Types.ObjectId(member.id),
+      journeyId: new Types.ObjectId(journeyId),
     });
     return actionItems
       .filter(

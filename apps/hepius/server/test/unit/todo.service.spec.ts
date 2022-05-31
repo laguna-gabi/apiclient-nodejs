@@ -1,3 +1,4 @@
+import { User } from '@argus/hepiusClient';
 import { generateId, generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { add } from 'date-fns';
@@ -9,13 +10,28 @@ import {
   dbDisconnect,
   defaultModules,
   generateCreateActionTodoParams,
+  generateCreateMemberParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
+  generateCreateUserParams,
   generateGetTodoDonesParams,
+  generateOrgParams,
   generateUpdateTodoParams,
   loadSessionClient,
+  mockGenerateJourney,
+  mockGenerateTodo,
 } from '..';
-import { ErrorType, Errors, LoggerService } from '../../src/common';
+import {
+  AlertType,
+  ErrorType,
+  Errors,
+  LoggerService,
+  defaultTimestampsDbValues,
+} from '../../src/common';
+import { Journey, JourneyDocument, JourneyDto } from '../../src/journey';
+import { MemberModule, MemberService } from '../../src/member';
+import { Org, OrgDocument, OrgDto, OrgModule } from '../../src/org';
+import { NotificationService } from '../../src/services';
 import {
   CreateActionTodoParams,
   CreateTodoDoneParams,
@@ -32,24 +48,33 @@ import {
   TodoStatus,
   UpdateTodoParams,
 } from '../../src/todo';
+import { UserDocument, UserDto } from '../../src/user';
 
 describe('TodoService', () => {
   let module: TestingModule;
   let service: TodoService;
-  let todoModel: Model<TodoDocument>;
+  let memberService: MemberService;
+  let todoModel: Model<TodoDocument & defaultTimestampsDbValues>;
   let todoDoneModel: Model<TodoDoneDocument>;
+  let modelJourney: Model<JourneyDocument & defaultTimestampsDbValues>;
+  let modelUser: Model<UserDocument>;
+  let modelOrg: Model<OrgDocument>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      imports: defaultModules().concat(TodoModule),
+      imports: defaultModules().concat(TodoModule, MemberModule, OrgModule),
     }).compile();
 
     service = module.get<TodoService>(TodoService);
+    memberService = module.get<MemberService>(MemberService);
     mockLogger(module.get<LoggerService>(LoggerService));
 
-    todoModel = model<TodoDocument>(Todo.name, TodoDto);
+    todoModel = model<TodoDocument & defaultTimestampsDbValues>(Todo.name, TodoDto);
     todoDoneModel = model<TodoDoneDocument>(TodoDone.name, TodoDoneDto);
+    modelJourney = model<JourneyDocument & defaultTimestampsDbValues>(Journey.name, JourneyDto);
+    modelUser = model<UserDocument>(User.name, UserDto);
+    modelOrg = model<OrgDocument>(Org.name, OrgDto);
 
     await dbConnect();
   });
@@ -62,11 +87,13 @@ describe('TodoService', () => {
   describe('createTodo', () => {
     it('should create todo', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       loadSessionClient(memberId);
 
       const params: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       const todo = await service.createTodo(params);
@@ -78,6 +105,7 @@ describe('TodoService', () => {
           ...params,
           _id: generateObjectId(todo.id),
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(memberId),
@@ -91,11 +119,13 @@ describe('TodoService', () => {
   describe('createActionTodo', () => {
     it('should create action todo', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       loadSessionClient(memberId);
 
       const params: CreateActionTodoParams = generateCreateActionTodoParams({
         memberId,
+        journeyId,
       });
 
       const todo = await service.createActionTodo(params);
@@ -107,6 +137,7 @@ describe('TodoService', () => {
           ...params,
           _id: generateObjectId(todo.id),
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(memberId),
@@ -120,14 +151,17 @@ describe('TodoService', () => {
   describe('getTodos', () => {
     it('should get todos', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const userId = generateId();
 
       const params1: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       const params2: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       loadSessionClient(memberId);
@@ -136,13 +170,14 @@ describe('TodoService', () => {
       loadSessionClient(userId);
       const { id: id2 } = await service.createTodo(params2);
 
-      const createdTodos = await service.getTodos(memberId);
+      const createdTodos = await service.getTodos(memberId, journeyId);
 
       expect(createdTodos).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             _id: generateObjectId(id1),
             memberId: generateObjectId(memberId),
+            journeyId: generateObjectId(journeyId),
             text: params1.text,
             label: params1.label,
             cronExpressions: expect.arrayContaining([...params1.cronExpressions]),
@@ -158,6 +193,7 @@ describe('TodoService', () => {
           expect.objectContaining({
             _id: generateObjectId(id2),
             memberId: generateObjectId(memberId),
+            journeyId: generateObjectId(journeyId),
             text: params2.text,
             label: params2.label,
             cronExpressions: expect.arrayContaining([...params2.cronExpressions]),
@@ -175,7 +211,7 @@ describe('TodoService', () => {
     });
 
     it('should get empty array if member doesnt have todos', async () => {
-      const createdTodos = await service.getTodos(generateId());
+      const createdTodos = await service.getTodos(generateId(), generateId());
       expect(createdTodos).toEqual([]);
     });
   });
@@ -183,15 +219,17 @@ describe('TodoService', () => {
   describe('getTodo', () => {
     it('should get todo', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       const params: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       const { id } = await service.createTodo(params);
 
       const createdTodo = await todoModel.findById(id);
-      const result = await service.getTodo(id, memberId);
+      const result = await service.getTodo(id, memberId, journeyId);
 
       expect(createdTodo).toEqual(
         expect.objectContaining({
@@ -204,7 +242,7 @@ describe('TodoService', () => {
     });
 
     it('should throw an error if todo does not exists', async () => {
-      await expect(service.getTodo(generateId(), generateId())).rejects.toThrow(
+      await expect(service.getTodo(generateId(), generateId(), generateId())).rejects.toThrow(
         Errors.get(ErrorType.todoNotFound),
       );
     });
@@ -213,23 +251,28 @@ describe('TodoService', () => {
   describe('updateTodo', () => {
     it('should update Todo', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const userId = generateId();
 
       const createParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       loadSessionClient(memberId);
+
       const { id } = await service.createTodo(createParams);
 
       const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
         id,
         memberId,
+        journeyId,
       });
       const updateTodoParamsWithNoId = cloneDeep(updateTodoParams);
       delete updateTodoParamsWithNoId.id;
 
       loadSessionClient(userId);
+
       const createdTodo = await service.updateTodo(updateTodoParams);
       const updatedTodo = await todoModel.findById(id).lean();
       delete createParams.end;
@@ -239,6 +282,7 @@ describe('TodoService', () => {
           ...createParams,
           _id: generateObjectId(id),
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           status: TodoStatus.updated,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(userId),
@@ -256,6 +300,7 @@ describe('TodoService', () => {
           _id: createdTodo._id,
           cronExpressions: expect.arrayContaining([...updateTodoParams.cronExpressions]),
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(userId),
@@ -273,9 +318,11 @@ describe('TodoService', () => {
         'if start was not provided and there is no todoDone',
       async () => {
         const memberId = generateId();
+        const journeyId = generateId();
 
         const createParams: CreateTodoParams = generateCreateTodoParams({
           memberId,
+          journeyId,
         });
 
         const { id } = await service.createTodo(createParams);
@@ -283,6 +330,7 @@ describe('TodoService', () => {
         const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
           id,
           memberId,
+          journeyId,
         });
         delete updateTodoParams.start;
 
@@ -299,9 +347,11 @@ describe('TodoService', () => {
         'if start was not provided and there is todoDone',
       async () => {
         const memberId = generateId();
+        const journeyId = generateId();
 
         const createParams: CreateTodoParams = generateCreateTodoParams({
           memberId,
+          journeyId,
         });
 
         const { id } = await service.createTodo(createParams);
@@ -309,6 +359,7 @@ describe('TodoService', () => {
         const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
           todoId: id,
           memberId,
+          journeyId,
         });
 
         await service.createTodoDone(createTodoDoneParams);
@@ -316,6 +367,7 @@ describe('TodoService', () => {
         const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
           id,
           memberId,
+          journeyId,
         });
         delete updateTodoParams.start;
 
@@ -328,9 +380,11 @@ describe('TodoService', () => {
 
     it('should set status to ended if updating an unscheduled todo', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
       delete createTodoParams.cronExpressions;
       delete createTodoParams.start;
@@ -341,6 +395,7 @@ describe('TodoService', () => {
       const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
         id,
         memberId,
+        journeyId,
       });
       delete updateTodoParams.start;
 
@@ -354,6 +409,7 @@ describe('TodoService', () => {
       const params: UpdateTodoParams = generateUpdateTodoParams({
         id: generateId(),
         memberId: generateId(),
+        journeyId: generateId(),
       });
 
       await expect(service.updateTodo(params)).rejects.toThrow(Errors.get(ErrorType.todoNotFound));
@@ -363,8 +419,10 @@ describe('TodoService', () => {
       'should throw an error if todo status=%p',
       async (status) => {
         const memberId = generateId();
+        const journeyId = generateId();
         const params: CreateTodoParams = generateCreateTodoParams({
           memberId,
+          journeyId,
         });
 
         const { id } = await service.createTodo(params);
@@ -373,6 +431,7 @@ describe('TodoService', () => {
         const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
           id,
           memberId,
+          journeyId,
         });
 
         await expect(service.updateTodo(updateTodoParams)).rejects.toThrow(
@@ -383,8 +442,10 @@ describe('TodoService', () => {
 
     it('should throw an error if action todo', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const params: CreateActionTodoParams = generateCreateActionTodoParams({
         memberId,
+        journeyId,
       });
 
       const { id } = await service.createActionTodo(params);
@@ -392,6 +453,7 @@ describe('TodoService', () => {
       const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
         id,
         memberId,
+        journeyId,
       });
 
       await expect(service.updateTodo(updateTodoParams)).rejects.toThrow(
@@ -403,12 +465,14 @@ describe('TodoService', () => {
   describe('endTodo', () => {
     it('should end Todo', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const userId = generateId();
 
       loadSessionClient(memberId);
 
       const createParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       const { id } = await service.createTodo(createParams);
@@ -422,6 +486,7 @@ describe('TodoService', () => {
           ...createParams,
           _id: generateObjectId(id),
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           status: TodoStatus.ended,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(userId),
@@ -442,9 +507,11 @@ describe('TodoService', () => {
       'should throw an error if todo status=%p',
       async (status) => {
         const memberId = generateId();
+        const journeyId = generateId();
 
         const params: CreateTodoParams = generateCreateTodoParams({
           memberId,
+          journeyId,
         });
 
         const { id } = await service.createTodo(params);
@@ -460,11 +527,13 @@ describe('TodoService', () => {
   describe('approveTodo', () => {
     it('should approve todo', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       loadSessionClient(memberId);
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
         label: TodoLabel.Meds,
       });
       createTodoParams.status = TodoStatus.requested;
@@ -477,6 +546,7 @@ describe('TodoService', () => {
           ...createTodoParams,
           _id: generateObjectId(todoId),
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           status: TodoStatus.requested,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(memberId),
@@ -486,7 +556,7 @@ describe('TodoService', () => {
         }),
       );
 
-      const result = await service.approveTodo(todoId, memberId);
+      const result = await service.approveTodo(todoId, memberId, journeyId);
       expect(result).toBeTruthy();
 
       createdTodo = await todoModel.findById(todoId).lean();
@@ -495,6 +565,7 @@ describe('TodoService', () => {
           ...createTodoParams,
           _id: generateObjectId(todoId),
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(memberId),
@@ -506,20 +577,22 @@ describe('TodoService', () => {
     });
 
     it('should fail if todo does not exists', async () => {
-      await expect(service.approveTodo(generateId(), generateId())).rejects.toThrow(
+      await expect(service.approveTodo(generateId(), generateId(), generateId())).rejects.toThrow(
         Errors.get(ErrorType.todoNotFoundOrApproveNotRequested),
       );
     });
 
     it('should fail if status is not requested', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);
 
-      await expect(service.approveTodo(todoId, memberId)).rejects.toThrow(
+      await expect(service.approveTodo(todoId, memberId, journeyId)).rejects.toThrow(
         Errors.get(ErrorType.todoNotFoundOrApproveNotRequested),
       );
     });
@@ -528,8 +601,10 @@ describe('TodoService', () => {
   describe('createTodoDone', () => {
     it('should create TodoDone', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);
@@ -537,6 +612,7 @@ describe('TodoService', () => {
       const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId,
         memberId,
+        journeyId,
       });
 
       const { id: todoDoneId } = await service.createTodoDone(createTodoDoneParams);
@@ -550,6 +626,7 @@ describe('TodoService', () => {
           _id: generateObjectId(todoDoneId),
           id: todoDoneId,
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
           deleted: false,
@@ -567,8 +644,10 @@ describe('TodoService', () => {
       `should throw an error if status=%p`,
       async (status) => {
         const memberId = generateId();
+        const journeyId = generateId();
         const createTodoParams: CreateTodoParams = generateCreateTodoParams({
           memberId,
+          journeyId,
         });
 
         const { id: todoId } = await service.createTodo(createTodoParams);
@@ -577,6 +656,7 @@ describe('TodoService', () => {
         const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
           todoId,
           memberId,
+          journeyId,
         });
 
         await expect(service.createTodoDone(createTodoDoneParams)).rejects.toThrow(
@@ -587,11 +667,13 @@ describe('TodoService', () => {
 
     it(`if unscheduled todo should change status to ${TodoStatus.ended}`, async () => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       loadSessionClient(memberId);
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
       delete createTodoParams.cronExpressions;
       delete createTodoParams.start;
@@ -602,6 +684,7 @@ describe('TodoService', () => {
       const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId,
         memberId,
+        journeyId,
       });
 
       const { id: todoDoneId } = await service.createTodoDone(createTodoDoneParams);
@@ -613,6 +696,7 @@ describe('TodoService', () => {
           ...CreateTodoParams,
           _id: generateObjectId(todoId),
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           status: TodoStatus.ended,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(memberId),
@@ -627,8 +711,10 @@ describe('TodoService', () => {
   describe('getTodoDones', () => {
     it('should get todoDones', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);
@@ -636,18 +722,20 @@ describe('TodoService', () => {
       const createTodoDoneParams1: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId,
         memberId,
+        journeyId,
         done: add(new Date(), { days: 1 }),
       });
       const createTodoDoneParams2: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId,
         memberId,
+        journeyId,
         done: add(new Date(), { days: 2 }),
       });
 
       const { id: todoDoneId1 } = await service.createTodoDone(createTodoDoneParams1);
       const { id: todoDoneId2 } = await service.createTodoDone(createTodoDoneParams2);
 
-      let getTodoDonesParams = generateGetTodoDonesParams({ memberId });
+      let getTodoDonesParams = generateGetTodoDonesParams({ memberId, journeyId });
 
       let createdTodoDones = await service.getTodoDones(getTodoDonesParams);
       expect(createdTodoDones.length).toEqual(2);
@@ -657,6 +745,7 @@ describe('TodoService', () => {
             _id: generateObjectId(todoDoneId1),
             id: todoDoneId1,
             memberId: generateObjectId(memberId),
+            journeyId: generateObjectId(journeyId),
             done: createTodoDoneParams1.done,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
@@ -666,6 +755,7 @@ describe('TodoService', () => {
             _id: generateObjectId(todoDoneId2),
             id: todoDoneId2,
             memberId: generateObjectId(memberId),
+            journeyId: generateObjectId(journeyId),
             done: createTodoDoneParams2.done,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
@@ -676,6 +766,7 @@ describe('TodoService', () => {
 
       getTodoDonesParams = generateGetTodoDonesParams({
         memberId,
+        journeyId,
         end: add(new Date(), { days: 1, hours: 1 }),
       });
 
@@ -687,6 +778,7 @@ describe('TodoService', () => {
             _id: generateObjectId(todoDoneId1),
             id: todoDoneId1,
             memberId: generateObjectId(memberId),
+            journeyId: generateObjectId(journeyId),
             done: createTodoDoneParams1.done,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
@@ -697,7 +789,10 @@ describe('TodoService', () => {
     });
 
     it('should get empty array if member doesnt have todoDones', async () => {
-      const getTodoDonesParams = generateGetTodoDonesParams({ memberId: generateId() });
+      const getTodoDonesParams = generateGetTodoDonesParams({
+        memberId: generateId(),
+        journeyId: generateId(),
+      });
       const createdTodoDones = await service.getTodoDones(getTodoDonesParams);
       expect(createdTodoDones).toEqual([]);
     });
@@ -706,8 +801,10 @@ describe('TodoService', () => {
   describe('deleteTodoDone', () => {
     it('should delete TodoDone', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);
@@ -715,6 +812,7 @@ describe('TodoService', () => {
       const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId,
         memberId,
+        journeyId,
       });
 
       const { id: todoDoneId } = await service.createTodoDone(createTodoDoneParams);
@@ -722,22 +820,24 @@ describe('TodoService', () => {
       const createdTodoDone = await todoDoneModel.findById(todoDoneId).lean();
       expect(createdTodoDone).not.toBeUndefined();
 
-      const result = await service.deleteTodoDone(todoDoneId, memberId);
+      const result = await service.deleteTodoDone(todoDoneId, memberId, journeyId);
       expect(result).toBeTruthy();
       const deletedTodoDone = await todoDoneModel.findById(todoDoneId).lean();
       expect(deletedTodoDone).toBeNull();
     });
 
     it('should throw an error if todoDone does not exists', async () => {
-      await expect(service.deleteTodoDone(generateId(), generateId())).rejects.toThrow(
-        Errors.get(ErrorType.todoDoneNotFound),
-      );
+      await expect(
+        service.deleteTodoDone(generateId(), generateId(), generateId()),
+      ).rejects.toThrow(Errors.get(ErrorType.todoDoneNotFound));
     });
 
     it(`should throw an error if todo status is ${TodoStatus.ended}`, async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);
@@ -745,23 +845,26 @@ describe('TodoService', () => {
       const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId,
         memberId,
+        journeyId,
       });
 
       const { id: todoDoneId } = await service.createTodoDone(createTodoDoneParams);
 
       await service.endTodo(todoId, memberId);
 
-      await expect(service.deleteTodoDone(todoDoneId, memberId)).rejects.toThrow(
+      await expect(service.deleteTodoDone(todoDoneId, memberId, journeyId)).rejects.toThrow(
         Errors.get(ErrorType.todoDeleteDoneStatus),
       );
     });
 
     it(`if todo unscheduled should update status to ${TodoStatus.active}`, async () => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       loadSessionClient(memberId);
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
       delete createTodoParams.cronExpressions;
       delete createTodoParams.start;
@@ -772,6 +875,7 @@ describe('TodoService', () => {
       const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId,
         memberId,
+        journeyId,
       });
 
       const { id: todoDoneId } = await service.createTodoDone(createTodoDoneParams);
@@ -781,6 +885,7 @@ describe('TodoService', () => {
           ...CreateTodoParams,
           _id: generateObjectId(todoId),
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           status: TodoStatus.ended,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(memberId),
@@ -793,7 +898,7 @@ describe('TodoService', () => {
       const createdTodoDone = await todoDoneModel.findById(todoDoneId).lean();
       expect(createdTodoDone).not.toBeUndefined();
 
-      await service.deleteTodoDone(todoDoneId, memberId);
+      await service.deleteTodoDone(todoDoneId, memberId, journeyId);
 
       createdTodo = await todoModel.findById(todoId).lean();
       expect(createdTodo).toEqual(
@@ -801,6 +906,7 @@ describe('TodoService', () => {
           ...CreateTodoParams,
           _id: generateObjectId(todoId),
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(memberId),
@@ -815,8 +921,10 @@ describe('TodoService', () => {
   describe('deleteTodos', () => {
     test.each([true, false])('should soft delete member Todos and TodoDones', async (hard) => {
       const memberId = generateId();
+      const journeyId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
+        journeyId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);
@@ -824,16 +932,18 @@ describe('TodoService', () => {
       const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId,
         memberId,
+        journeyId,
       });
 
       await service.createTodoDone(createTodoDoneParams);
 
       const getResults = async () => {
-        const resTodo = await service.getTodos(memberId);
+        const resTodo = await service.getTodos(memberId, journeyId);
         const resTodoDone = await service.getTodoDones({
           start: createTodoParams.start,
           end: createTodoParams.end,
           memberId,
+          journeyId,
         });
 
         return { resTodo, resTodoDone };
@@ -851,6 +961,7 @@ describe('TodoService', () => {
       // @ts-ignore
       const deletedTodo = await todoModel.findWithDeleted({
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
       });
 
       if (hard) {
@@ -860,4 +971,122 @@ describe('TodoService', () => {
       }
     });
   });
+
+  describe('todos alerts', () => {
+    let mockNotificationGetDispatchesByClientSenderId: jest.SpyInstance;
+
+    beforeAll(() => {
+      mockNotificationGetDispatchesByClientSenderId = jest.spyOn(
+        module.get<NotificationService>(NotificationService),
+        `getDispatchesByClientSenderId`,
+      );
+    });
+
+    afterEach(() => {
+      mockNotificationGetDispatchesByClientSenderId.mockReset();
+    });
+
+    it('should return todos created by member alerts', async () => {
+      mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
+      // create a new member
+      const { memberId, journeyId } = await generateMember();
+
+      const member = await memberService.get(memberId);
+
+      const mockTodo = mockGenerateTodo({
+        memberId: generateObjectId(memberId),
+        journeyId: generateObjectId(journeyId),
+        createdBy: generateObjectId(memberId),
+        updatedBy: generateObjectId(memberId),
+      });
+      delete mockTodo.id;
+
+      const todo = await todoModel.create(mockTodo);
+
+      const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
+
+      expect(alerts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: `${todo.id}_${AlertType.memberCreateTodo}`,
+            type: AlertType.memberCreateTodo,
+            date: todo.createdAt,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            text: service.internationalization.getAlerts(AlertType.memberCreateTodo, {
+              member,
+              todoText: todo.text,
+            }),
+            memberId: member.id,
+            dismissed: false,
+            isNew: true,
+          }),
+        ]),
+      );
+    });
+
+    it('should not return todos created by member if they are related alerts', async () => {
+      mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
+      // create a new member
+      const { memberId, journeyId } = await generateMember();
+
+      const member = await memberService.get(memberId);
+
+      const mockTodo = mockGenerateTodo({
+        memberId: generateObjectId(memberId),
+        journeyId: generateObjectId(journeyId),
+        createdBy: generateObjectId(memberId),
+        updatedBy: generateObjectId(memberId),
+      });
+      mockTodo.relatedTo = generateObjectId();
+      delete mockTodo.id;
+
+      const todo = await todoModel.create(mockTodo);
+
+      const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
+
+      expect(alerts).toEqual(
+        expect.not.arrayContaining([
+          expect.objectContaining({
+            id: `${todo.id}_${AlertType.memberCreateTodo}`,
+            type: AlertType.memberCreateTodo,
+            date: todo.createdAt,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            text: service.internationalization.getAlerts(AlertType.memberCreateTodo, {
+              member,
+              todoText: todo.text,
+            }),
+            memberId: member.id,
+            dismissed: false,
+            isNew: true,
+          }),
+        ]),
+      );
+    });
+  });
+
+  const generateMember = async (orgId?: string, userId?: string) => {
+    orgId = orgId ? orgId : await generateOrg();
+    userId = userId ? userId : await generateUser();
+    const createMemberParams = generateCreateMemberParams({ orgId });
+    const { member } = await memberService.insert(
+      { ...createMemberParams, phoneType: 'mobile' },
+      new Types.ObjectId(userId),
+    );
+    const { id: journeyId } = await modelJourney.create(
+      mockGenerateJourney({ memberId: member.id }),
+    );
+    return { memberId: member.id, journeyId };
+  };
+
+  const generateOrg = async (): Promise<string> => {
+    const { _id: ordId } = await modelOrg.create(generateOrgParams());
+    return ordId.toString();
+  };
+
+  const generateUser = async (): Promise<string> => {
+    const { _id: userId } = await modelUser.create(generateCreateUserParams());
+    return userId.toString();
+  };
 });

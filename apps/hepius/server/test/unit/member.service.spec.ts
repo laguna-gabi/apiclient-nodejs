@@ -49,7 +49,6 @@ import {
   mockGenerateDispatch,
   mockGenerateJourney,
   mockGenerateQuestionnaireItem,
-  mockGenerateTodo,
 } from '..';
 import { AppointmentDocument, AppointmentDto, AppointmentModule } from '../../src/appointment';
 import {
@@ -65,6 +64,7 @@ import {
   defaultTimestampsDbValues,
 } from '../../src/common';
 import { Audit } from '../../src/db';
+import { Journey, JourneyDocument, JourneyDto, ReadmissionRisk } from '../../src/journey';
 import {
   CaregiverDocument,
   CaregiverDto,
@@ -91,7 +91,6 @@ import {
   Sex,
   UpdateMemberParams,
 } from '../../src/member';
-import { Journey, JourneyDocument, JourneyDto, ReadmissionRisk } from '../../src/journey';
 import { Org, OrgDocument, OrgDto } from '../../src/org';
 import { Internationalization } from '../../src/providers';
 import {
@@ -105,7 +104,6 @@ import {
   QuestionnaireType,
 } from '../../src/questionnaire';
 import { NotificationService } from '../../src/services';
-import { Todo, TodoDocument, TodoDto } from '../../src/todo';
 import { UserDocument, UserDto } from '../../src/user';
 import { confirmEmittedChangeEvent } from '../common';
 
@@ -123,7 +121,6 @@ describe('MemberService', () => {
   let modelCaregiver: Model<CaregiverDocument>;
   let modelQuestionnaire: Model<QuestionnaireDocument>;
   let modelQuestionnaireResponse: Model<QuestionnaireResponseDocument>;
-  let modelTodo: Model<TodoDocument & defaultTimestampsDbValues>;
   let modelJourney: Model<JourneyDocument & defaultTimestampsDbValues>;
   let modelInsurance: Model<InsuranceDocument>;
   let i18nService: Internationalization;
@@ -158,7 +155,6 @@ describe('MemberService', () => {
       QuestionnaireResponse.name,
       QuestionnaireResponseDto,
     );
-    modelTodo = model<TodoDocument & defaultTimestampsDbValues>(Todo.name, TodoDto);
     modelJourney = model<JourneyDocument & defaultTimestampsDbValues>(Journey.name, JourneyDto);
     modelInsurance = model<InsuranceDocument>(Insurance.name, InsuranceDto);
 
@@ -1679,85 +1675,6 @@ describe('MemberService', () => {
 
         expect(alerts).toEqual(expectedAlerts);
       });
-    });
-
-    describe('todos alerts', () => {
-      it('should return todos created by member alerts', async () => {
-        mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
-        // create a new member
-        const memberId = await generateMember();
-
-        const member = await service.get(memberId);
-
-        const mockTodo = mockGenerateTodo({
-          memberId: generateObjectId(memberId),
-          createdBy: generateObjectId(memberId),
-          updatedBy: generateObjectId(memberId),
-        });
-        delete mockTodo.id;
-
-        const todo = await modelTodo.create(mockTodo);
-
-        const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
-
-        expect(alerts).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              id: `${todo.id}_${AlertType.memberCreateTodo}`,
-              type: AlertType.memberCreateTodo,
-              date: todo.createdAt,
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
-              text: service.internationalization.getAlerts(AlertType.memberCreateTodo, {
-                member,
-                todoText: todo.text,
-              }),
-              memberId: member.id,
-              dismissed: false,
-              isNew: true,
-            }),
-          ]),
-        );
-      });
-    });
-
-    it('should not return todos created by member if they are related alerts', async () => {
-      mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
-      // create a new member
-      const memberId = await generateMember();
-
-      const member = await service.get(memberId);
-
-      const mockTodo = mockGenerateTodo({
-        memberId: generateObjectId(memberId),
-        createdBy: generateObjectId(memberId),
-        updatedBy: generateObjectId(memberId),
-      });
-      mockTodo.relatedTo = generateObjectId();
-      delete mockTodo.id;
-
-      const todo = await modelTodo.create(mockTodo);
-
-      const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
-
-      expect(alerts).toEqual(
-        expect.not.arrayContaining([
-          expect.objectContaining({
-            id: `${todo.id}_${AlertType.memberCreateTodo}`,
-            type: AlertType.memberCreateTodo,
-            date: todo.createdAt,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberCreateTodo, {
-              member,
-              todoText: todo.text,
-            }),
-            memberId: member.id,
-            dismissed: false,
-            isNew: true,
-          }),
-        ]),
-      );
     });
   });
 

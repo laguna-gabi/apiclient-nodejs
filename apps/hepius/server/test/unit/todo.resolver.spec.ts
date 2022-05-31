@@ -23,6 +23,7 @@ import {
   mockGenerateTodoDone,
 } from '..';
 import { ErrorType, Errors, EventType, LoggerService } from '../../src/common';
+import { JourneyModule, JourneyService } from '../../src/journey';
 import {
   ActionTodoLabel,
   CreateActionTodoParams,
@@ -40,17 +41,19 @@ describe('TodoResolver', () => {
   let module: TestingModule;
   let resolver: TodoResolver;
   let service: TodoService;
+  let journeyService: JourneyService;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      imports: defaultModules().concat(TodoModule),
+      imports: defaultModules().concat(TodoModule, JourneyModule),
     }).compile();
 
     resolver = module.get<TodoResolver>(TodoResolver);
     service = module.get<TodoService>(TodoService);
+    journeyService = module.get<JourneyService>(JourneyService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
@@ -68,40 +71,60 @@ describe('TodoResolver', () => {
 
   describe('createTodo', () => {
     let spyOnServiceCreateTodo;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceCreateTodo = jest.spyOn(service, 'createTodo');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceCreateTodo.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
     it('should create a Todo by member', async () => {
       const memberId = generateId();
-      const todo = mockGenerateTodo({ memberId: generateObjectId(memberId) });
+      const journeyId = generateId();
+      const todo = mockGenerateTodo({
+        memberId: generateObjectId(memberId),
+        journeyId: generateObjectId(journeyId),
+      });
+      const params: CreateTodoParams = generateCreateTodoParams({ memberId });
       spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
-      const params: CreateTodoParams = generateCreateTodoParams();
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const result = await resolver.createTodo([MemberRole.member], memberId, params);
 
-      expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({ ...params, status: TodoStatus.active });
+      expect(spyOnJourneyServiceGetRecent).toHaveBeenCalledWith(memberId);
+      expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
+        ...params,
+        journeyId,
+        status: TodoStatus.active,
+      });
       expect(result).toEqual({ id: todo.id });
     });
 
     test.each([UserRole.coach, UserRole.nurse])('should create a Todo by user', async (role) => {
       const memberId = generateId();
+      const journeyId = generateId();
       const userId = generateId();
-      const todo = mockGenerateTodo({ memberId: generateObjectId(memberId) });
-      spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
+      const todo = mockGenerateTodo({
+        memberId: generateObjectId(memberId),
+        journeyId: generateObjectId(journeyId),
+      });
       const params: CreateTodoParams = generateCreateTodoParams({ memberId });
       delete params.label;
+      spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const result = await resolver.createTodo([role], userId, params);
 
+      expect(spyOnJourneyServiceGetRecent).toHaveBeenCalledWith(memberId);
       expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
         ...params,
+        journeyId,
         status: TodoStatus.active,
       });
       expect(result).toEqual({ id: todo.id });
@@ -112,16 +135,24 @@ describe('TodoResolver', () => {
         `should create a Todo by ${role} and send notification to member`,
         async (label) => {
           const memberId = generateId();
+          const journeyId = generateId();
           const userId = generateId();
-          const todo = mockGenerateTodo({ memberId: generateObjectId(memberId), label });
-          spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
+          const todo = mockGenerateTodo({
+            memberId: generateObjectId(memberId),
+            journeyId: generateObjectId(journeyId),
+            label,
+          });
           const params: CreateTodoParams = generateCreateTodoParams({ memberId });
           delete params.label;
+          spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
+          spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
           const result = await resolver.createTodo([role], userId, params);
 
+          expect(spyOnJourneyServiceGetRecent).toHaveBeenCalledWith(memberId);
           expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
             ...params,
+            journeyId,
             status: TodoStatus.active,
           });
           expect(result).toEqual({ id: todo.id });
@@ -144,20 +175,26 @@ describe('TodoResolver', () => {
       `should create a Todo by user in status requested if label ${TodoLabel.Meds}`,
       async (role) => {
         const memberId = generateId();
+        const journeyId = generateId();
         const userId = generateId();
-        const todo = mockGenerateTodo({ memberId: generateObjectId(memberId) });
-        spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
+        const todo = mockGenerateTodo({
+          memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
+        });
         const params: CreateTodoParams = generateCreateTodoParams({
           memberId,
           label: TodoLabel.Meds,
         });
-        params.label = TodoLabel.Meds;
+        spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
+        spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
         const result = await resolver.createTodo([role], userId, params);
 
+        expect(spyOnJourneyServiceGetRecent).toHaveBeenCalledWith(memberId);
         expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
           ...params,
           status: TodoStatus.requested,
+          journeyId,
         });
         expect(result).toEqual({ id: todo.id });
       },
@@ -166,13 +203,16 @@ describe('TodoResolver', () => {
 
   describe('createActionTodo', () => {
     let spyOnServiceCreateActionTodo;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceCreateActionTodo = jest.spyOn(service, 'createActionTodo');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceCreateActionTodo.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
@@ -181,17 +221,23 @@ describe('TodoResolver', () => {
         `should create action Todo by ${role} and send notification to member`,
         async (label) => {
           const memberId = generateId();
+          const journeyId = generateId();
           const userId = generateId();
-          const todo = mockGenerateActionTodo({ memberId: generateObjectId(memberId), label });
-          spyOnServiceCreateActionTodo.mockImplementationOnce(async () => todo);
+          const todo = mockGenerateActionTodo({
+            memberId: generateObjectId(memberId),
+            journeyId: generateObjectId(journeyId),
+            label,
+          });
           const params: CreateActionTodoParams = generateCreateActionTodoParams({
             memberId,
             label,
           });
+          spyOnServiceCreateActionTodo.mockImplementationOnce(async () => todo);
+          spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
           const result = await resolver.createActionTodo([role], userId, params);
 
-          expect(spyOnServiceCreateActionTodo).toHaveBeenCalledWith(params);
+          expect(spyOnServiceCreateActionTodo).toHaveBeenCalledWith({ ...params, journeyId });
           expect(result).toEqual({ id: todo.id });
 
           const contentKey = TodoInternalKey[`createTodo${label}`];
@@ -213,17 +259,23 @@ describe('TodoResolver', () => {
         `should create action Todo by ${role} and send notification to member`,
         async (label) => {
           const memberId = generateId();
+          const journeyId = generateId();
           const userId = generateId();
-          const todo = mockGenerateActionTodo({ memberId: generateObjectId(memberId), label });
-          spyOnServiceCreateActionTodo.mockImplementationOnce(async () => todo);
+          const todo = mockGenerateActionTodo({
+            memberId: generateObjectId(memberId),
+            journeyId: generateObjectId(journeyId),
+            label,
+          });
           const params: CreateActionTodoParams = generateCreateActionTodoParams({
             memberId,
             label,
           });
+          spyOnServiceCreateActionTodo.mockImplementationOnce(async () => todo);
+          spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
           const result = await resolver.createActionTodo([role], userId, params);
 
-          expect(spyOnServiceCreateActionTodo).toHaveBeenCalledWith(params);
+          expect(spyOnServiceCreateActionTodo).toHaveBeenCalledWith({ ...params, journeyId });
           expect(result).toEqual({ id: todo.id });
 
           const contentKey = TodoInternalKey.createTodoTodo;
@@ -243,66 +295,80 @@ describe('TodoResolver', () => {
 
   describe('getTodos', () => {
     let spyOnServiceGetTodos;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceGetTodos = jest.spyOn(service, 'getTodos');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceGetTodos.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should get Todos by member', async () => {
       const member = mockGenerateMember();
       const memberId = member.id;
+      const journeyId = generateId();
       const todos = [
         mockGenerateTodo({
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(memberId),
         }),
         mockGenerateTodo({
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(memberId),
         }),
       ];
       spyOnServiceGetTodos.mockImplementationOnce(async () => todos);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const result = await resolver.getTodos(memberId);
 
-      expect(spyOnServiceGetTodos).toHaveBeenCalledWith(memberId);
+      expect(spyOnServiceGetTodos).toHaveBeenCalledWith(memberId, journeyId);
       expect(result).toEqual(todos);
     });
   });
 
   describe('updateTodo', () => {
     let spyOnServiceUpdateTodo;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceUpdateTodo = jest.spyOn(service, 'updateTodo');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceUpdateTodo.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
     it('should update Todo by member', async () => {
       const member = mockGenerateMember();
       const memberId = member.id;
+      const journeyId = generateId();
       const newTodo = mockGenerateTodo({
         memberId: generateObjectId(memberId),
+        journeyId: generateObjectId(journeyId),
         createdBy: generateObjectId(memberId),
         updatedBy: generateObjectId(memberId),
       });
-      spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
       const params: UpdateTodoParams = generateUpdateTodoParams();
+      spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const result = await resolver.updateTodo([MemberRole.member], memberId, params);
 
       expect(spyOnServiceUpdateTodo).toHaveBeenCalledWith({
         ...params,
+        journeyId,
         status: TodoStatus.active,
       });
       expect(result).toEqual(newTodo);
@@ -310,20 +376,24 @@ describe('TodoResolver', () => {
 
     test.each([UserRole.coach, UserRole.nurse])('should update Todo by user', async (role) => {
       const memberId = generateId();
+      const journeyId = generateId();
       const userId = generateId();
       const newTodo = mockGenerateTodo({
         memberId: generateObjectId(memberId),
+        journeyId: generateObjectId(journeyId),
         createdBy: generateObjectId(memberId),
         updatedBy: generateObjectId(memberId),
       });
-      spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
       const params: UpdateTodoParams = generateUpdateTodoParams({ memberId });
       delete params.label;
+      spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const result = await resolver.updateTodo([role], userId, params);
 
       expect(spyOnServiceUpdateTodo).toHaveBeenCalledWith({
         ...params,
+        journeyId,
         status: TodoStatus.active,
       });
       expect(result).toEqual(newTodo);
@@ -334,15 +404,18 @@ describe('TodoResolver', () => {
         `should update a Todo by ${role} and send notification to member with label = %p`,
         async (label) => {
           const memberId = generateId();
+          const journeyId = generateId();
           const userId = generateId();
           const newTodo = mockGenerateTodo({
             memberId: generateObjectId(memberId),
+            journeyId: generateObjectId(journeyId),
             createdBy: generateObjectId(memberId),
             updatedBy: generateObjectId(memberId),
             label,
           });
-          spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
           const params: UpdateTodoParams = generateUpdateTodoParams({ memberId });
+          spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
+          spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
           await resolver.updateTodo([role], userId, params);
 
@@ -364,15 +437,19 @@ describe('TodoResolver', () => {
       `should update Todo by user in status requested if label ${TodoLabel.Meds}`,
       async (role) => {
         const memberId = generateId();
+        const journeyId = generateId();
         const userId = generateId();
         const newTodo = mockGenerateTodo({
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
         });
-        spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
         const params: UpdateTodoParams = generateUpdateTodoParams({
           memberId,
+          journeyId,
           label: TodoLabel.Meds,
         });
+        spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
+        spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
         const result = await resolver.updateTodo([role], userId, params);
 
@@ -388,41 +465,50 @@ describe('TodoResolver', () => {
   describe('endTodo', () => {
     let spyOnServiceGetTodo;
     let spyOnServiceEndTodo;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceGetTodo = jest.spyOn(service, 'getTodo');
       spyOnServiceEndTodo = jest.spyOn(service, 'endTodo');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceGetTodo.mockReset();
       spyOnServiceEndTodo.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
     it('should end Todo by member', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const id = generateId();
-      const todo = mockGenerateTodo({ id, memberId: generateObjectId(memberId) });
-
+      const todo = mockGenerateTodo({
+        id,
+        memberId: generateObjectId(memberId),
+        journeyId: generateObjectId(journeyId),
+      });
       spyOnServiceGetTodo.mockImplementationOnce(async () => todo);
       spyOnServiceEndTodo.mockImplementationOnce(async () => true);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const result = await resolver.endTodo(memberId, [MemberRole.member], id);
 
       expect(spyOnServiceEndTodo).toHaveBeenCalledWith(id, memberId);
-      expect(spyOnServiceGetTodo).toHaveBeenCalledWith(id, memberId);
+      expect(spyOnServiceGetTodo).toHaveBeenCalledWith(id, memberId, journeyId);
       expect(result).toBeTruthy();
     });
 
     it('should end Todo by user', async () => {
       const userId = generateId();
       const memberId = generateId();
+      const journeyId = generateId();
       const id = generateId();
       const todo = mockGenerateTodo({ id, memberId: generateObjectId(memberId) });
-
       spyOnServiceGetTodo.mockImplementationOnce(async () => todo);
       spyOnServiceEndTodo.mockImplementationOnce(async () => todo);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const result = await resolver.endTodo(userId, [UserRole.coach], id);
 
@@ -433,11 +519,12 @@ describe('TodoResolver', () => {
 
     it('should fail to end todo by member if action todo', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const id = generateId();
       const actionTodo = mockGenerateActionTodo({ id, memberId: generateObjectId(memberId) });
-
       spyOnServiceGetTodo.mockImplementationOnce(async () => actionTodo);
       spyOnServiceEndTodo.mockImplementationOnce(async () => actionTodo);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       await expect(resolver.endTodo(memberId, [MemberRole.member], id)).rejects.toThrow(
         Errors.get(ErrorType.todoEndActionTodo),
@@ -450,10 +537,12 @@ describe('TodoResolver', () => {
         async (label) => {
           const userId = generateId();
           const memberId = generateId();
+          const journeyId = generateId();
           const id = generateId();
           const todo = mockGenerateTodo({ id, memberId: generateObjectId(memberId), label });
           spyOnServiceGetTodo.mockImplementationOnce(async () => todo);
           spyOnServiceEndTodo.mockImplementationOnce(async () => todo);
+          spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
           await resolver.endTodo(userId, [role], id);
 
@@ -474,24 +563,28 @@ describe('TodoResolver', () => {
 
   describe('approveTodo', () => {
     let spyOnServiceApproveTodo;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceApproveTodo = jest.spyOn(service, 'approveTodo');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceApproveTodo.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should approve Todo', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const id = generateId();
-
       spyOnServiceApproveTodo.mockImplementationOnce(async () => true);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const result = await resolver.approveTodo([MemberRole.member], memberId, id);
 
-      expect(spyOnServiceApproveTodo).toHaveBeenCalledWith(id, memberId);
+      expect(spyOnServiceApproveTodo).toHaveBeenCalledWith(id, memberId, journeyId);
       expect(result).toBeTruthy();
     });
 
@@ -508,29 +601,32 @@ describe('TodoResolver', () => {
   describe('createTodoDone', () => {
     let spyOnServiceCreateTodoDone;
     let spyOnServiceEndTodo;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceCreateTodoDone = jest.spyOn(service, 'createTodoDone');
       spyOnServiceEndTodo = jest.spyOn(service, 'endTodo');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceCreateTodoDone.mockReset();
       spyOnServiceEndTodo.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should create TodoDone', async () => {
       const id = generateId();
-
+      const journeyId = generateId();
+      const params: CreateTodoDoneParams = generateCreateTodoDoneParams();
       spyOnServiceCreateTodoDone.mockImplementationOnce(async () => id);
       spyOnServiceEndTodo.mockImplementationOnce(async () => true);
-
-      const params: CreateTodoDoneParams = generateCreateTodoDoneParams();
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const result = await resolver.createTodoDone([MemberRole.member], params);
 
       expect(result).toEqual(id);
-      expect(spyOnServiceCreateTodoDone).toHaveBeenCalledWith(params);
+      expect(spyOnServiceCreateTodoDone).toHaveBeenCalledWith({ ...params, journeyId });
       expect(spyOnServiceEndTodo).not.toHaveBeenCalled();
     });
 
@@ -546,58 +642,69 @@ describe('TodoResolver', () => {
 
   describe('getTodoDones', () => {
     let spyOnServiceGetTodoDones;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceGetTodoDones = jest.spyOn(service, 'getTodoDones');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceGetTodoDones.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should get Todos by member', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const todoId = generateId();
       const todoDones = [
         mockGenerateTodoDone({
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           todoId: generateObjectId(todoId),
         }),
         mockGenerateTodoDone({
           memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
           todoId: generateObjectId(todoId),
         }),
       ];
-      spyOnServiceGetTodoDones.mockImplementationOnce(async () => todoDones);
-
       const getTodoDonesParams = generateGetTodoDonesParams({ memberId });
+      spyOnServiceGetTodoDones.mockImplementationOnce(async () => todoDones);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
+
       const result = await resolver.getTodoDones(getTodoDonesParams);
 
-      expect(spyOnServiceGetTodoDones).toHaveBeenCalledWith(getTodoDonesParams);
+      expect(spyOnServiceGetTodoDones).toHaveBeenCalledWith({ ...getTodoDonesParams, journeyId });
       expect(result).toEqual(todoDones);
     });
   });
 
   describe('deleteTodoDone', () => {
     let spyOnServiceDeleteTodoDone;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceDeleteTodoDone = jest.spyOn(service, 'deleteTodoDone');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceDeleteTodoDone.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should delete TodoDone', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const id = generateId();
-
       spyOnServiceDeleteTodoDone.mockImplementationOnce(async () => true);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const result = await resolver.deleteTodoDone([MemberRole.member], memberId, id);
 
-      expect(spyOnServiceDeleteTodoDone).toHaveBeenCalledWith(id, memberId);
+      expect(spyOnServiceDeleteTodoDone).toHaveBeenCalledWith(id, memberId, journeyId);
       expect(result).toBeTruthy();
     });
 

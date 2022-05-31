@@ -924,6 +924,7 @@ export const generateUpdateCaregiverParams = ({
 export const mockGenerateTodo = ({
   id = generateId(),
   memberId = generateObjectId(),
+  journeyId = generateObjectId(),
   text = lorem.words(5),
   label = TodoLabel.Appointment,
   cronExpressions = ['0 10 * * 6'],
@@ -936,6 +937,7 @@ export const mockGenerateTodo = ({
   return {
     id,
     memberId,
+    journeyId,
     text,
     label,
     cronExpressions,
@@ -950,6 +952,7 @@ export const mockGenerateTodo = ({
 export const mockGenerateActionTodo = ({
   id = generateId(),
   memberId = generateObjectId(),
+  journeyId = generateObjectId(),
   label = ActionTodoLabel.Explore,
   resource = {
     id: generateId(),
@@ -963,6 +966,7 @@ export const mockGenerateActionTodo = ({
   return {
     id,
     memberId,
+    journeyId,
     label,
     resource,
     status,
@@ -974,12 +978,14 @@ export const mockGenerateActionTodo = ({
 export const mockGenerateTodoDone = ({
   id = generateId(),
   memberId = generateObjectId(),
+  journeyId = generateObjectId(),
   todoId = generateObjectId(),
   done = new Date(),
 }: Partial<TodoDone> = {}): TodoDone => {
   return {
     id,
     memberId,
+    journeyId,
     todoId,
     done,
   };
@@ -992,7 +998,8 @@ export const generateCreateTodoParams = ({
   cronExpressions = ['0 10 * * 6'],
   start = new Date(),
   end = fakerDate.soon(2),
-}: Partial<CreateTodoParams> = {}) => {
+  journeyId,
+}: Partial<CreateTodoParams> = {}): CreateTodoParams => {
   return {
     memberId,
     text,
@@ -1000,6 +1007,7 @@ export const generateCreateTodoParams = ({
     cronExpressions,
     start,
     end,
+    journeyId,
   };
 };
 
@@ -1011,11 +1019,13 @@ export const generateCreateActionTodoParams = ({
     name: lorem.words(2),
     type: ResourceType.article,
   },
-}: Partial<CreateActionTodoParams> = {}) => {
+  journeyId,
+}: Partial<CreateActionTodoParams> = {}): CreateActionTodoParams => {
   return {
     memberId,
     label,
     resource,
+    journeyId,
   };
 };
 
@@ -1023,11 +1033,13 @@ export const generateGetTodoDonesParams = ({
   start = sub(new Date(), { days: 7 }),
   end = add(new Date(), { days: 7 }),
   memberId,
-}: Partial<GetTodoDonesParams> = {}) => {
+  journeyId,
+}: Partial<GetTodoDonesParams> = {}): GetTodoDonesParams => {
   return {
     start,
     end,
     memberId,
+    journeyId,
   };
 };
 
@@ -1039,7 +1051,8 @@ export const generateUpdateTodoParams = ({
   cronExpressions = ['0 10,17,21,23 * * *'],
   start = fakerDate.soon(1),
   end = add(fakerDate.soon(3), { days: 1 }),
-}: Partial<UpdateTodoParams> = {}) => {
+  journeyId,
+}: Partial<UpdateTodoParams> = {}): UpdateTodoParams => {
   return {
     id,
     memberId,
@@ -1048,6 +1061,7 @@ export const generateUpdateTodoParams = ({
     cronExpressions,
     start,
     end,
+    journeyId,
   };
 };
 
@@ -1055,11 +1069,13 @@ export const generateCreateTodoDoneParams = ({
   todoId = generateId(),
   done = new Date(),
   memberId = generateId(),
-}: Partial<CreateTodoDoneParams> = {}) => {
+  journeyId,
+}: Partial<CreateTodoDoneParams> = {}): CreateTodoDoneParams => {
   return {
     todoId,
     done,
     memberId,
+    journeyId,
   };
 };
 

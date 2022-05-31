@@ -621,7 +621,7 @@ describe('Integration tests: all', () => {
       const appointmentResult = await handler.queries.getAppointment({ id: appointment.id });
       expect(appointmentResult).toBeNull();
 
-      const todos = await handler.queries.getTodos({ memberId: member.id });
+      const todos = await handler.todoModel.find({ memberId: member.id });
       expect(todos.length).toEqual(0);
 
       const caregivers = await handler.queries.getCaregivers({ memberId: member.id });
@@ -1683,6 +1683,7 @@ describe('Integration tests: all', () => {
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
       });
+      delete createTodoParams.journeyId;
 
       const { id } = await handler.mutations.createTodo({
         requestHeaders: requestHeadersUser,
@@ -1710,6 +1711,7 @@ describe('Integration tests: all', () => {
       );
 
       const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({ id });
+      delete updateTodoParams.journeyId;
       const newCreatedTodo = await handler.mutations.updateTodo({
         updateTodoParams,
         requestHeaders: requestHeadersMember,
@@ -1860,6 +1862,7 @@ describe('Integration tests: all', () => {
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
       });
+      delete createTodoParams.journeyId;
       delete createTodoParams.cronExpressions;
       delete createTodoParams.start;
       delete createTodoParams.end;
@@ -1913,6 +1916,7 @@ describe('Integration tests: all', () => {
         memberId,
         label: TodoLabel.Meds,
       });
+      delete createTodoParams.journeyId;
 
       const { id } = await handler.mutations.createTodo({
         requestHeaders: generateRequestHeaders(user.authId),

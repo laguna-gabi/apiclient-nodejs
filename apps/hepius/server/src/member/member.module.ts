@@ -31,7 +31,7 @@ import { ChangeEventFactoryProvider, useFactoryOptions } from '../db';
 import { ConfigsService, ExternalConfigs, ProvidersModule } from '../providers';
 import { QuestionnaireModule } from '../questionnaire';
 import { ServiceModule } from '../services';
-import { Todo, TodoDto } from '../todo';
+import { Todo, TodoDto, TodoModule } from '../todo';
 import { UserModule } from '../user';
 import { JourneyModule } from '../journey';
 
@@ -45,6 +45,7 @@ import { JourneyModule } from '../journey';
     CommonModule,
     QuestionnaireModule,
     JourneyModule,
+    TodoModule,
     MongooseModule.forFeature([
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },

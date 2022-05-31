@@ -87,12 +87,14 @@ import {
 } from '../../src/providers';
 import { QuestionnaireAlerts, QuestionnaireType } from '../../src/questionnaire';
 import { UserService } from '../../src/user';
+import { TodoService } from '../../src/todo';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
   let userService: UserService;
+  let todoService: TodoService;
   let storage: StorageService;
   let cognitoService: CognitoService;
   let communicationResolver: CommunicationResolver;
@@ -113,6 +115,7 @@ describe('MemberResolver', () => {
     resolver = module.get<MemberResolver>(MemberResolver);
     service = module.get<MemberService>(MemberService);
     userService = module.get<UserService>(UserService);
+    todoService = module.get<TodoService>(TodoService);
     storage = module.get<StorageService>(StorageService);
     cognitoService = module.get<CognitoService>(CognitoService);
     oneSignal = module.get<OneSignal>(OneSignal);
@@ -1890,14 +1893,20 @@ describe('MemberResolver', () => {
 
   describe('getAlerts', () => {
     let spyOnServiceGetAlerts;
+    let spyOnActionItemsServiceGetAlerts;
+    let spyOnTodoServiceGetAlerts;
     let spyOnServiceGetUserMembers;
     beforeEach(() => {
       spyOnServiceGetAlerts = jest.spyOn(service, 'getAlerts');
+      spyOnActionItemsServiceGetAlerts = jest.spyOn(journeyService, 'getAlerts');
+      spyOnTodoServiceGetAlerts = jest.spyOn(todoService, 'getAlerts');
       spyOnServiceGetUserMembers = jest.spyOn(service, 'getUserMembers');
     });
 
     afterEach(() => {
       spyOnServiceGetAlerts.mockReset();
+      spyOnActionItemsServiceGetAlerts.mockReset();
+      spyOnTodoServiceGetAlerts.mockReset();
       spyOnServiceGetUserMembers.mockReset();
     });
 
@@ -1905,16 +1914,20 @@ describe('MemberResolver', () => {
       const userId = generateId();
       const lastQueryAlert = date.past(1);
       const alert = mockGenerateAlert();
+      const actionItemsAlert = mockGenerateAlert();
+      const todoAlert = mockGenerateAlert();
 
       const members = [mockGenerateMember()];
       spyOnServiceGetUserMembers.mockResolvedValue(members);
       spyOnServiceGetAlerts.mockResolvedValue([alert]);
+      spyOnActionItemsServiceGetAlerts.mockResolvedValue([actionItemsAlert]);
+      spyOnTodoServiceGetAlerts.mockResolvedValue([todoAlert]);
 
       const alerts = await resolver.getAlerts(userId, lastQueryAlert);
 
       expect(spyOnServiceGetAlerts).toBeCalledTimes(1);
       expect(spyOnServiceGetAlerts).toBeCalledWith(userId, members, lastQueryAlert);
-      expect(alerts).toEqual([alert]);
+      expect(alerts).toEqual([alert, actionItemsAlert, todoAlert]);
     });
   });
 

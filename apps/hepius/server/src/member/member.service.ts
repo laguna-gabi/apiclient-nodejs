@@ -21,15 +21,13 @@ import {
   IEventOnNewMemberCommunication,
   IEventUpdateHealthPersona,
   LoggerService,
-  defaultTimestampsDbValues,
   deleteMemberObjects,
   extractEmbeddedSetObject,
 } from '../common';
 import { ISoftDelete } from '../db';
-import { Internationalization, StorageService } from '../providers';
+import { Internationalization } from '../providers';
 import { Questionnaire, QuestionnaireAlerts, QuestionnaireService } from '../questionnaire';
 import { NotificationService } from '../services';
-import { Todo, TodoDocument, TodoStatus } from '../todo';
 import {
   AddCaregiverParams,
   AddInsuranceParams,
@@ -76,14 +74,10 @@ export class MemberService extends AlertService {
     private readonly caregiverModel: Model<CaregiverDocument> & ISoftDelete<CaregiverDocument>,
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
-    @InjectModel(Todo.name)
-    private readonly todoModel: Model<TodoDocument & defaultTimestampsDbValues> &
-      ISoftDelete<TodoDocument>,
     @InjectModel(Insurance.name)
     private readonly insuranceModel: Model<InsuranceDocument> & ISoftDelete<InsuranceDocument>,
     @InjectModel(DismissedAlert.name)
     readonly dismissAlertModel: Model<DismissedAlertDocument>,
-    private readonly storageService: StorageService,
     private readonly notificationService: NotificationService,
     private readonly internationalization: Internationalization,
     private readonly questionnaireService: QuestionnaireService,
@@ -740,9 +734,6 @@ export class MemberService extends AlertService {
     // Collect assessment related alerts
     alerts = alerts.concat(await this.questionnaireToAlerts(member));
 
-    // Collect todo alerts
-    alerts = alerts.concat(await this.todosItemsToAlerts(member));
-
     return alerts;
   }
 
@@ -856,28 +847,6 @@ export class MemberService extends AlertService {
           } as Alert;
         }
       }),
-    );
-  }
-
-  private async todosItemsToAlerts(member: Member): Promise<Alert[]> {
-    const todos = await this.todoModel.find({
-      memberId: new Types.ObjectId(member.id),
-      status: TodoStatus.active,
-      relatedTo: { $exists: false },
-      createdBy: new Types.ObjectId(member.id),
-    });
-    return todos.map(
-      (todo) =>
-        ({
-          id: `${todo.id}_${AlertType.memberCreateTodo}`,
-          type: AlertType.memberCreateTodo,
-          date: todo.createdAt,
-          text: this.internationalization.getAlerts(AlertType.memberCreateTodo, {
-            member,
-            todoText: todo.text,
-          }),
-          memberId: member.id,
-        } as Alert),
     );
   }
 

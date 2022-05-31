@@ -17,51 +17,71 @@ import {
   UpdateTodoParams,
 } from '.';
 import {
-  BaseService,
+  Alert,
+  AlertService,
+  AlertType,
+  DismissedAlert,
+  DismissedAlertDocument,
   ErrorType,
   Errors,
   EventType,
   IEventDeleteMember,
   LoggerService,
+  defaultTimestampsDbValues,
   deleteMemberObjects,
 } from '../common';
 import { ISoftDelete } from '../db';
 import { Identifier } from '@argus/hepiusClient';
+import { JourneyService } from '../journey';
+import { Internationalization } from '../providers';
 
 @Injectable()
-export class TodoService extends BaseService {
+export class TodoService extends AlertService {
   constructor(
     @InjectModel(Todo.name)
-    private readonly todoModel: Model<TodoDocument> & ISoftDelete<TodoDocument>,
+    private readonly todoModel: Model<TodoDocument & defaultTimestampsDbValues> &
+      ISoftDelete<TodoDocument>,
     @InjectModel(TodoDone.name)
     private readonly todoDoneModel: Model<TodoDoneDocument> & ISoftDelete<TodoDoneDocument>,
+    @InjectModel(DismissedAlert.name)
+    readonly dismissAlertModel: Model<DismissedAlertDocument>,
+    private readonly journeyService: JourneyService,
+    private readonly internationalization: Internationalization,
     readonly logger: LoggerService,
   ) {
-    super();
+    super(dismissAlertModel);
   }
 
   async createTodo(createTodoParams: CreateTodoParams): Promise<Todo> {
+    const { memberId, journeyId } = createTodoParams;
     return this.todoModel.create({
       ...this.removeNotNullable(createTodoParams, NotNullableTodoKeys),
-      memberId: new Types.ObjectId(createTodoParams.memberId),
+      memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
     });
   }
 
   async createActionTodo(createActionTodoParams: CreateActionTodoParams): Promise<Todo> {
+    const { memberId, journeyId } = createActionTodoParams;
     return this.todoModel.create({
       ...createActionTodoParams,
-      memberId: new Types.ObjectId(createActionTodoParams.memberId),
+      memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
     });
   }
 
-  async getTodos(memberId: string): Promise<Todo[]> {
-    return this.todoModel.find({ memberId: new Types.ObjectId(memberId) });
+  async getTodos(memberId: string, journeyId: string): Promise<Todo[]> {
+    return this.todoModel.find({
+      memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
+    });
   }
 
-  async getTodo(id: string, memberId: string): Promise<Todo> {
+  async getTodo(id: string, memberId: string, journeyId: string): Promise<Todo> {
     const result = await this.todoModel.findOne({
       _id: new Types.ObjectId(id),
       memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
     });
 
     if (!result) {
@@ -72,7 +92,7 @@ export class TodoService extends BaseService {
   }
 
   async updateTodo(updateTodoParams: UpdateTodoParams): Promise<Todo> {
-    const { memberId, id, ...params } = this.removeNotNullable(
+    const { id, memberId, journeyId, ...params } = this.removeNotNullable(
       updateTodoParams,
       NotNullableTodoKeys,
     );
@@ -80,6 +100,7 @@ export class TodoService extends BaseService {
     const updatedTodo = await this.todoModel.findOne({
       _id: new Types.ObjectId(id),
       memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
     });
 
     if (!updatedTodo) {
@@ -117,6 +138,7 @@ export class TodoService extends BaseService {
     return this.todoModel.create({
       ...params,
       memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
       relatedTo: new Types.ObjectId(id),
       createdBy: new Types.ObjectId(updatedTodo.createdBy),
     });
@@ -143,11 +165,12 @@ export class TodoService extends BaseService {
     return endedTodo;
   }
 
-  async approveTodo(id: string, memberId: string): Promise<boolean> {
+  async approveTodo(id: string, memberId: string, journeyId: string): Promise<boolean> {
     const todo = await this.todoModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(id),
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
         status: TodoStatus.requested,
       },
       { $set: { status: TodoStatus.active } },
@@ -161,10 +184,11 @@ export class TodoService extends BaseService {
   }
 
   async createTodoDone(createTodoDoneParams: CreateTodoDoneParams): Promise<Identifier> {
-    const { todoId, memberId } = createTodoDoneParams;
+    const { memberId, journeyId, todoId } = createTodoDoneParams;
     const todo = await this.todoModel.findOne({
       _id: new Types.ObjectId(todoId),
       memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
     });
 
     if (!todo) {
@@ -187,23 +211,26 @@ export class TodoService extends BaseService {
       ...createTodoDoneParams,
       todoId: new Types.ObjectId(todoId),
       memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
     });
 
     return { id };
   }
 
   async getTodoDones(getTodoDonesParams: GetTodoDonesParams): Promise<TodoDone[]> {
-    const { memberId, start, end } = getTodoDonesParams;
+    const { memberId, journeyId, start, end } = getTodoDonesParams;
     return this.todoDoneModel.find({
       memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
       done: { $gte: start, $lte: end },
     });
   }
 
-  async deleteTodoDone(id: string, memberId: string): Promise<boolean> {
+  async deleteTodoDone(id: string, memberId: string, journeyId: string): Promise<boolean> {
     const todoDone = await this.todoDoneModel.findOne({
       _id: new Types.ObjectId(id),
       memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
     });
 
     if (!todoDone) {
@@ -246,6 +273,39 @@ export class TodoService extends BaseService {
       model: this.todoDoneModel,
       ...data,
     });
+  }
+
+  async entityToAlerts(member): Promise<Alert[]> {
+    let alerts: Alert[] = [];
+
+    // Collect todo alerts
+    alerts = alerts.concat(await this.todosItemsToAlerts(member));
+
+    return alerts;
+  }
+
+  private async todosItemsToAlerts(member): Promise<Alert[]> {
+    const { id: journeyId } = await this.journeyService.getRecent(member.id);
+    const todos = await this.todoModel.find({
+      memberId: new Types.ObjectId(member.id),
+      journeyId: new Types.ObjectId(journeyId),
+      status: TodoStatus.active,
+      relatedTo: { $exists: false },
+      createdBy: new Types.ObjectId(member.id),
+    });
+    return todos.map(
+      (todo) =>
+        ({
+          id: `${todo.id}_${AlertType.memberCreateTodo}`,
+          type: AlertType.memberCreateTodo,
+          date: todo.createdAt,
+          text: this.internationalization.getAlerts(AlertType.memberCreateTodo, {
+            member,
+            todoText: todo.text,
+          }),
+          memberId: member.id,
+        } as Alert),
+    );
   }
 
   /*************************************************************************************************

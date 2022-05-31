@@ -88,6 +88,7 @@ import {
   TwilioService,
 } from '../providers';
 import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
+import { TodoService } from '../todo';
 import { UserService } from '../user';
 import {
   AddCaregiverParams,
@@ -138,6 +139,7 @@ export class MemberResolver extends MemberBase {
     protected readonly bitly: Bitly,
     readonly featureFlagService: FeatureFlagService,
     readonly journeyService: JourneyService,
+    readonly todoService: TodoService,
     readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {
@@ -716,8 +718,9 @@ export class MemberResolver extends MemberBase {
     const members = await this.memberService.getUserMembers({ primaryUserId: userId });
     const memberAlerts = await this.memberService.getAlerts(userId, members, lastQueryAlert);
     const journeyAlerts = await this.journeyService.getAlerts(userId, members, lastQueryAlert);
+    const todoAlerts = await this.todoService.getAlerts(userId, members, lastQueryAlert);
 
-    return memberAlerts.concat(journeyAlerts);
+    return memberAlerts.concat(journeyAlerts, todoAlerts);
   }
 
   /************************************************************************************************

@@ -1,3 +1,4 @@
+import { Identifier, MemberRole, RoleTypes, UserRole } from '@argus/hepiusClient';
 import { TodoInternalKey, generateDispatchId } from '@argus/irisClient';
 import { NotificationType } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
@@ -36,13 +37,14 @@ import {
   generatePath,
   getCorrelationId,
 } from '../common';
-import { Identifier, MemberRole, RoleTypes, UserRole } from '@argus/hepiusClient';
+import { JourneyService } from '../journey';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Todo)
 export class TodoResolver {
   constructor(
     private readonly todoService: TodoService,
+    private readonly journeyService: JourneyService,
     readonly eventEmitter: EventEmitter2,
     readonly logger: LoggerService,
   ) {}
@@ -56,10 +58,12 @@ export class TodoResolver {
     @Client('_id') clientId,
     @Args(camelCase(CreateTodoParams.name)) createTodoParams: CreateTodoParams,
   ) {
+    const { id: journeyId } = await this.journeyService.getRecent(createTodoParams.memberId);
     const status = this.getTodoStatus(createTodoParams, roles);
     const todo = await this.todoService.createTodo({
       ...createTodoParams,
       status,
+      journeyId,
     });
     this.todoSendNotification(todo, roles, clientId, 'createTodo');
     return { id: todo.id };
@@ -72,7 +76,8 @@ export class TodoResolver {
     @Client('_id') clientId,
     @Args(camelCase(CreateActionTodoParams.name)) createActionTodoParams: CreateActionTodoParams,
   ) {
-    const todo = await this.todoService.createActionTodo(createActionTodoParams);
+    const { id: journeyId } = await this.journeyService.getRecent(createActionTodoParams.memberId);
+    const todo = await this.todoService.createActionTodo({ ...createActionTodoParams, journeyId });
     this.todoSendNotification(todo, roles, clientId, 'createActionTodo');
     return { id: todo.id };
   }
@@ -89,7 +94,8 @@ export class TodoResolver {
     )
     memberId?: string,
   ) {
-    return this.todoService.getTodos(memberId);
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.todoService.getTodos(memberId, journeyId);
   }
 
   @Mutation(() => Todo)
@@ -101,10 +107,12 @@ export class TodoResolver {
     @Client('_id') clientId,
     @Args(camelCase(UpdateTodoParams.name)) updateTodoParams: UpdateTodoParams,
   ) {
+    const { id: journeyId } = await this.journeyService.getRecent(updateTodoParams.memberId);
     const status = this.getTodoStatus(updateTodoParams, roles);
     const todo = await this.todoService.updateTodo({
       ...updateTodoParams,
       status,
+      journeyId,
     });
     this.todoSendNotification(todo, roles, clientId, 'updateTodo');
     return todo;
@@ -119,7 +127,8 @@ export class TodoResolver {
     id: string,
   ) {
     if (roles.includes(MemberRole.member)) {
-      const todo = await this.todoService.getTodo(id, clientId);
+      const { id: journeyId } = await this.journeyService.getRecent(clientId);
+      const todo = await this.todoService.getTodo(id, clientId, journeyId);
       if (this.todoService.isActionTodo(todo)) {
         throw new Error(Errors.get(ErrorType.todoEndActionTodo));
       }
@@ -140,7 +149,8 @@ export class TodoResolver {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    return this.todoService.approveTodo(id, memberId);
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.todoService.approveTodo(id, memberId, journeyId);
   }
 
   @Mutation(() => Identifier)
@@ -154,7 +164,8 @@ export class TodoResolver {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    return this.todoService.createTodoDone(createTodoDoneParams);
+    const { id: journeyId } = await this.journeyService.getRecent(createTodoDoneParams.memberId);
+    return this.todoService.createTodoDone({ ...createTodoDoneParams, journeyId });
   }
 
   @Query(() => [TodoDone])
@@ -164,7 +175,8 @@ export class TodoResolver {
   async getTodoDones(
     @Args(camelCase(GetTodoDonesParams.name)) getTodoDonesParams: GetTodoDonesParams,
   ) {
-    return this.todoService.getTodoDones(getTodoDonesParams);
+    const { id: journeyId } = await this.journeyService.getRecent(getTodoDonesParams.memberId);
+    return this.todoService.getTodoDones({ ...getTodoDonesParams, journeyId });
   }
 
   @Mutation(() => Boolean)
@@ -182,7 +194,8 @@ export class TodoResolver {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    return this.todoService.deleteTodoDone(id, memberId);
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.todoService.deleteTodoDone(id, memberId, journeyId);
   }
 
   /*************************************************************************************************
