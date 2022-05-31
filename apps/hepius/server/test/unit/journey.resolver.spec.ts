@@ -292,7 +292,7 @@ describe(JourneyResolver.name, () => {
       expect(result).toEqual(id);
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on create journal if role = %p',
       async (role) => {
         await expect(resolver.createJournal([role], generateId())).rejects.toThrow(
@@ -344,7 +344,7 @@ describe(JourneyResolver.name, () => {
       expect(result).toEqual(journal);
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on update journal if role = %p',
       async (role) => {
         await expect(
@@ -405,7 +405,7 @@ describe(JourneyResolver.name, () => {
       expect(result).toEqual(journal);
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on get journal if role = %p',
       async (role) => {
         await expect(resolver.getJournal([role], generateId(), generateId())).rejects.toThrow(
@@ -472,7 +472,7 @@ describe(JourneyResolver.name, () => {
       expect(result).toEqual(journals);
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on get Journals if role = %p',
       async (role) => {
         await expect(resolver.getJournals([role], generateId())).rejects.toThrow(
@@ -525,7 +525,7 @@ describe(JourneyResolver.name, () => {
       expect(result).toBeTruthy();
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on delete journal if role = %p',
       async (role) => {
         await expect(resolver.deleteJournal([role], generateId(), generateId())).rejects.toThrow(
@@ -568,7 +568,7 @@ describe(JourneyResolver.name, () => {
       expect(result).toEqual({ normalImageLink: url });
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on get member upload journal links if role = %p',
       async (role) => {
         await expect(
@@ -615,7 +615,7 @@ describe(JourneyResolver.name, () => {
       expect(result).toEqual({ audioLink: url });
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on get member upload journal links if role = %p',
       async (role) => {
         await expect(
@@ -675,7 +675,7 @@ describe(JourneyResolver.name, () => {
       ).rejects.toThrow(Error(Errors.get(ErrorType.journeyJournalImageNotFound)));
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on delete journal image if role = %p',
       async (role) => {
         await expect(
@@ -726,7 +726,7 @@ describe(JourneyResolver.name, () => {
       ).rejects.toThrow(Error(Errors.get(ErrorType.journeyJournalAudioNotFound)));
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on delete journal audio if role = %p',
       async (role) => {
         await expect(
@@ -851,7 +851,7 @@ describe(JourneyResolver.name, () => {
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onPublishedJournal, event);
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on publish journal if role = %p',
       async (role) => {
         await expect(resolver.publishJournal([role], generateId(), generateId())).rejects.toThrow(

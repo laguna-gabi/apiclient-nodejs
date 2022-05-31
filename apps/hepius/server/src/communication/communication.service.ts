@@ -27,7 +27,7 @@ import { SendBird, TwilioService } from '../providers';
 import { Platform, formatEx } from '@argus/pandora';
 import { ISoftDelete } from '../db';
 import { chunk } from 'lodash';
-import { AppointmentStatus, User, UserRole } from '@argus/hepiusClient';
+import { AppointmentStatus, User } from '@argus/hepiusClient';
 
 @Injectable()
 export class CommunicationService {
@@ -51,7 +51,7 @@ export class CommunicationService {
       nickname: `${user.firstName} ${user.lastName}`,
       profile_url: user.avatar,
       issue_access_token: true,
-      metadata: { role: UserRole.coach.toLowerCase() },
+      metadata: { role: 'coach' },
     };
 
     const accessToken = await this.sendBird.createUser(params);

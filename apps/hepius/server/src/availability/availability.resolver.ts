@@ -18,7 +18,7 @@ export class AvailabilityResolver {
   constructor(private readonly availabilityService: AvailabilityService) {}
 
   @Mutation(() => Identifiers)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async createAvailabilities(
     @Client('_id') userId,
     @Args('availabilities', { type: () => [AvailabilityInput] })
@@ -28,13 +28,13 @@ export class AvailabilityResolver {
   }
 
   @Query(() => [AvailabilitySlot])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getAvailabilities(): Promise<AvailabilitySlot[]> {
     return this.availabilityService.get();
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async deleteAvailability(
     @Client('_id') userId,
     @Args(

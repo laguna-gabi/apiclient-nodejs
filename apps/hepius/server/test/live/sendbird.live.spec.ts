@@ -45,7 +45,7 @@ describe('live: sendbird actions', () => {
       nickname: name.firstName(),
       profile_url: image.avatar(),
       issue_access_token: true,
-      metadata: { role: UserRole.coach.toLowerCase() },
+      metadata: { role: UserRole.lagunaCoach.toLowerCase() },
     };
     const userResult = await sendBird.createUser(user);
     expect(userResult).toEqual(expect.any(String));
@@ -111,7 +111,7 @@ describe('live: sendbird actions', () => {
       nickname: name.firstName(),
       profile_url: image.avatar(),
       issue_access_token: true,
-      metadata: { role: UserRole.coach.toLowerCase() },
+      metadata: { role: UserRole.lagunaCoach.toLowerCase() },
     };
     await sendBird.createUser(newUser);
 

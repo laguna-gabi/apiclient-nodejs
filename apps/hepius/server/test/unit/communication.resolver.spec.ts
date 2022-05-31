@@ -280,7 +280,7 @@ describe('CommunicationResolver', () => {
       spyOnUserServiceGet.mockImplementationOnce(() => user);
 
       await expect(
-        resolver.getMemberCommunicationInfo([UserRole.coach], generateId(), generateId()),
+        resolver.getMemberCommunicationInfo([UserRole.lagunaCoach], generateId(), generateId()),
       ).rejects.toThrow(Errors.get(ErrorType.memberAllowedOnly));
     });
 

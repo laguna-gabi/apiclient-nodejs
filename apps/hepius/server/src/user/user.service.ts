@@ -324,7 +324,9 @@ export class UserService extends BaseService {
    * Internal method for all receiving users who where fully registered -
    * users who have sendbird accessToken in userConfig
    */
-  async getRegisteredUsers(roles: UserRole[] = [UserRole.coach, UserRole.nurse]): Promise<User[]> {
+  async getRegisteredUsers(
+    roles: UserRole[] = [UserRole.lagunaCoach, UserRole.lagunaNurse],
+  ): Promise<User[]> {
     return this.userModel.aggregate([
       {
         $lookup: {
@@ -358,7 +360,7 @@ export class UserService extends BaseService {
       {
         $match: {
           maxMembers: { $ne: 0 },
-          roles: { $in: [UserRole.coach] },
+          roles: { $in: [UserRole.lagunaCoach] },
           ...(orgId ? { orgs: { $in: [new Types.ObjectId(orgId)] } } : {}),
         },
       },

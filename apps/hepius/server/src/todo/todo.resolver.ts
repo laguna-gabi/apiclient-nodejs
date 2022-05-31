@@ -52,7 +52,7 @@ export class TodoResolver {
   @Mutation(() => Identifier)
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
   async createTodo(
     @Client('roles') roles,
     @Client('_id') clientId,
@@ -70,7 +70,7 @@ export class TodoResolver {
   }
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async createActionTodo(
     @Client('roles') roles,
     @Client('_id') clientId,
@@ -85,7 +85,7 @@ export class TodoResolver {
   @Query(() => [Todo])
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
   async getTodos(
     @Args(
       'memberId',
@@ -101,7 +101,7 @@ export class TodoResolver {
   @Mutation(() => Todo)
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
   async updateTodo(
     @Client('roles') roles,
     @Client('_id') clientId,
@@ -119,7 +119,7 @@ export class TodoResolver {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
   async endTodo(
     @Client('_id') clientId,
     @Client('roles') roles,
@@ -171,7 +171,7 @@ export class TodoResolver {
   @Query(() => [TodoDone])
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
   async getTodoDones(
     @Args(camelCase(GetTodoDonesParams.name)) getTodoDonesParams: GetTodoDonesParams,
   ) {
@@ -203,9 +203,9 @@ export class TodoResolver {
    ************************************************************************************************/
 
   private getTodoStatus(params: ExtraTodoParams, roles: RoleTypes): TodoStatus {
-    return (roles.includes(UserRole.coach) ||
-      roles.includes(UserRole.nurse) ||
-      roles.includes(UserRole.admin)) &&
+    return (roles.includes(UserRole.lagunaCoach) ||
+      roles.includes(UserRole.lagunaNurse) ||
+      roles.includes(UserRole.lagunaAdmin)) &&
       params.label === TodoLabel.Meds
       ? TodoStatus.requested
       : TodoStatus.active;
@@ -218,9 +218,9 @@ export class TodoResolver {
     todoNotificationsType: TodoNotificationsType,
   ) {
     if (
-      roles.includes(UserRole.coach) ||
-      roles.includes(UserRole.nurse) ||
-      roles.includes(UserRole.admin)
+      roles.includes(UserRole.lagunaCoach) ||
+      roles.includes(UserRole.lagunaNurse) ||
+      roles.includes(UserRole.lagunaAdmin)
     ) {
       const contentKey = this.extractContentType(todoNotificationsType, todo.label);
       const createTodoEvent: IInternalDispatch = {

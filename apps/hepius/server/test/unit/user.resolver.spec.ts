@@ -90,10 +90,10 @@ describe('UserResolver', () => {
 
     test.each([
       [Object.values(UserRole)],
-      [[UserRole.coach, UserRole.nurse]],
-      [[UserRole.coach]],
-      [[UserRole.nurse]],
-      [[UserRole.admin]],
+      [[UserRole.lagunaCoach, UserRole.lagunaNurse]],
+      [[UserRole.lagunaCoach]],
+      [[UserRole.lagunaNurse]],
+      [[UserRole.lagunaAdmin]],
     ])('should successfully create a user with role: %p', async (roles) => {
       const user = mockGenerateUser();
       const authId = v4();
@@ -181,10 +181,10 @@ describe('UserResolver', () => {
 
     test.each([
       [Object.values(UserRole)],
-      [[UserRole.coach, UserRole.nurse]],
-      [[UserRole.coach]],
-      [[UserRole.nurse]],
-      [[UserRole.admin]],
+      [[UserRole.lagunaCoach, UserRole.lagunaNurse]],
+      [[UserRole.lagunaCoach]],
+      [[UserRole.lagunaNurse]],
+      [[UserRole.lagunaAdmin]],
     ])('should successfully update a user with role: %p', async (roles) => {
       const user = mockGenerateUser();
       spyOnServiceGet.mockImplementationOnce(async () => user);
@@ -227,7 +227,7 @@ describe('UserResolver', () => {
     test.each`
       field                 | updateParam
       ${'orgs'}             | ${{ orgs: [generateId()] }}
-      ${'roles'}            | ${{ roles: [UserRole.nurse] }}
+      ${'roles'}            | ${{ roles: [UserRole.lagunaNurse] }}
       ${'description'}      | ${{ description: lorem.sentence() }}
       ${'title'}            | ${{ title: lorem.word() }}
       ${'maxMembers'}       | ${{ maxMembers: 2 }}

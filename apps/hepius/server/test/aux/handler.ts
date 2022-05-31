@@ -313,13 +313,13 @@ export class Handler extends BaseHandler {
       this.userService,
       this.userResolver,
       this.eventEmitter,
-      [UserRole.nurse, UserRole.coach],
+      [UserRole.lagunaNurse, UserRole.lagunaCoach],
     );
     this.defaultAdminRequestHeaders = await initClients(
       this.userService,
       this.userResolver,
       this.eventEmitter,
-      [UserRole.admin],
+      [UserRole.lagunaAdmin],
     );
   }
 

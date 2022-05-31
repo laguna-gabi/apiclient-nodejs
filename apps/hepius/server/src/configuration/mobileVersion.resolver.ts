@@ -17,7 +17,7 @@ export class MobileVersionResolver {
   constructor(private readonly mobileVersionService: MobileVersionService) {}
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.admin)
+  @Roles(UserRole.lagunaAdmin)
   async createMobileVersion(
     @Args(camelCase(CreateMobileVersionParams.name))
     createMobileVersionParams: CreateMobileVersionParams,
@@ -26,7 +26,7 @@ export class MobileVersionResolver {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.admin)
+  @Roles(UserRole.lagunaAdmin)
   async updateMinMobileVersion(
     @Args(camelCase(UpdateMinMobileVersionParams.name))
     updateMinMobileVersionParams: UpdateMinMobileVersionParams,
@@ -35,7 +35,7 @@ export class MobileVersionResolver {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.admin)
+  @Roles(UserRole.lagunaAdmin)
   async updateFaultyMobileVersions(
     @Args(camelCase(UpdateFaultyMobileVersionsParams.name))
     updateFaultyMobileVersionsParams: UpdateFaultyMobileVersionsParams,

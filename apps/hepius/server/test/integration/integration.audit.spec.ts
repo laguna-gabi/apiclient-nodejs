@@ -98,8 +98,8 @@ describe('Integration tests : Audit', () => {
 
     user1 = await creators.createAndValidateUser();
     user2 = await creators.createAndValidateUser();
-    adminUser1 = await creators.createAndValidateUser({ roles: [UserRole.admin] });
-    adminUser2 = await creators.createAndValidateUser({ roles: [UserRole.admin] });
+    adminUser1 = await creators.createAndValidateUser({ roles: [UserRole.lagunaAdmin] });
+    adminUser2 = await creators.createAndValidateUser({ roles: [UserRole.lagunaAdmin] });
   }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {

@@ -54,13 +54,13 @@ export class SeedBase extends BaseHandler {
       this.userService,
       this.userResolver,
       this.eventEmitter,
-      [UserRole.nurse, UserRole.coach],
+      [UserRole.lagunaNurse, UserRole.lagunaCoach],
     );
     const defaultAdminRequestHeaders = await initClients(
       this.userService,
       this.userResolver,
       this.eventEmitter,
-      [UserRole.admin],
+      [UserRole.lagunaAdmin],
     );
 
     this.mutations = new Mutations(

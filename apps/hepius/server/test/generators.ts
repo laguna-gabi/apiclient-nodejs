@@ -180,7 +180,7 @@ import {
 import { CreateUserParams, GetSlotsParams, UpdateUserParams } from '../src/user';
 
 export const generateCreateUserParams = ({
-  roles = [UserRole.coach],
+  roles = [UserRole.lagunaCoach],
   firstName = name.firstName(21),
   lastName = name.lastName(21),
   email = generateEmail(),
@@ -209,7 +209,7 @@ export const generateCreateUserParams = ({
 
 export const generateUpdateUserParams = ({
   id = generateId(),
-  roles = [UserRole.nurse],
+  roles = [UserRole.lagunaNurse],
   firstName = name.firstName(21),
   lastName = name.lastName(21),
   avatar = image.imageUrl(),
@@ -263,7 +263,7 @@ export const mockGenerateUser = (): User => {
     firstName,
     lastName,
     email: generateEmail(),
-    roles: [UserRole.coach],
+    roles: [UserRole.lagunaCoach],
     avatar: image.imageUrl(),
     description: lorem.sentence(),
     createdAt: fakerDate.past(1),

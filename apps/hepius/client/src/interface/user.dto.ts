@@ -9,7 +9,7 @@ import { UserRole } from './roles';
 export const defaultUserParams = {
   maxMembers: 7,
   languages: [Language.en],
-  roles: [UserRole.coach],
+  roles: [UserRole.lagunaCoach],
   avatar: 'https://i.imgur.com/bvuKGXB.png',
 };
 

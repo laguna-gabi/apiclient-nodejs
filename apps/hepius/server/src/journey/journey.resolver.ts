@@ -56,7 +56,7 @@ export class JourneyResolver {
    ******************************************** Journey *******************************************
    ************************************************************************************************/
   @Mutation(() => Journey)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async updateJourney(
     @Args(camelCase(UpdateJourneyParams.name)) params: UpdateJourneyParams,
   ): Promise<Journey> {
@@ -64,7 +64,7 @@ export class JourneyResolver {
   }
 
   @Query(() => [Journey])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getJourneys(
     @Args(
       'memberId',
@@ -77,7 +77,7 @@ export class JourneyResolver {
   }
 
   @Query(() => Journey)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getJourney(
     @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.journeyIdInvalid)))
     id: string,
@@ -86,7 +86,7 @@ export class JourneyResolver {
   }
 
   @Query(() => Journey, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getRecentJourney(
     @Args(
       'memberId',
@@ -103,7 +103,7 @@ export class JourneyResolver {
    ************************************************************************************************/
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async setGeneralNotes(
     @Args(camelCase(SetGeneralNotesParams.name)) setGeneralNotesParams: SetGeneralNotesParams,
   ) {
@@ -115,7 +115,7 @@ export class JourneyResolver {
    ************************************************************************************************/
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async createActionItem(
     @Args(camelCase(CreateActionItemParams.name))
     createActionItemParams: CreateActionItemParams,
@@ -127,7 +127,7 @@ export class JourneyResolver {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async updateActionItemStatus(
     @Args(camelCase(UpdateActionItemStatusParams.name))
     updateActionItemStatusParams: UpdateActionItemStatusParams,
@@ -136,7 +136,7 @@ export class JourneyResolver {
   }
 
   @Query(() => [ActionItem])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getActionItems(
     @Args(
       'memberId',
@@ -151,7 +151,7 @@ export class JourneyResolver {
    ****************************************** Admission *******************************************
    ************************************************************************************************/
   @Mutation(() => Admission)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async changeMemberDna(
     @Client('roles') roles,
     @Args(camelCase(ChangeMemberDnaParams.name))
@@ -162,7 +162,7 @@ export class JourneyResolver {
   }
 
   @Query(() => [Admission])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberAdmissions(
     @Args(
       'memberId',
@@ -175,7 +175,7 @@ export class JourneyResolver {
   }
 
   @Query(() => DietaryMatcher)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getAdmissionsDietaryMatcher() {
     return this.dietaryMatcher.get();
   }

@@ -4,9 +4,9 @@ export enum MemberRole {
   member = 'member',
 }
 export enum UserRole {
-  admin = 'admin',
-  coach = 'coach',
-  nurse = 'nurse',
+  lagunaAdmin = 'lagunaAdmin',
+  lagunaCoach = 'lagunaCoach',
+  lagunaNurse = 'lagunaNurse',
 }
 
 registerEnumType(UserRole, { name: 'UserRole' });

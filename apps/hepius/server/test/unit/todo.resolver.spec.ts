@@ -106,31 +106,34 @@ describe('TodoResolver', () => {
       expect(result).toEqual({ id: todo.id });
     });
 
-    test.each([UserRole.coach, UserRole.nurse])('should create a Todo by user', async (role) => {
-      const memberId = generateId();
-      const journeyId = generateId();
-      const userId = generateId();
-      const todo = mockGenerateTodo({
-        memberId: generateObjectId(memberId),
-        journeyId: generateObjectId(journeyId),
-      });
-      const params: CreateTodoParams = generateCreateTodoParams({ memberId });
-      delete params.label;
-      spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
-      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse])(
+      'should create a Todo by user',
+      async (role) => {
+        const memberId = generateId();
+        const journeyId = generateId();
+        const userId = generateId();
+        const todo = mockGenerateTodo({
+          memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
+        });
+        const params: CreateTodoParams = generateCreateTodoParams({ memberId });
+        delete params.label;
+        spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
+        spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
-      const result = await resolver.createTodo([role], userId, params);
+        const result = await resolver.createTodo([role], userId, params);
 
-      expect(spyOnJourneyServiceGetRecent).toHaveBeenCalledWith(memberId);
-      expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
-        ...params,
-        journeyId,
-        status: TodoStatus.active,
-      });
-      expect(result).toEqual({ id: todo.id });
-    });
+        expect(spyOnJourneyServiceGetRecent).toHaveBeenCalledWith(memberId);
+        expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
+          ...params,
+          journeyId,
+          status: TodoStatus.active,
+        });
+        expect(result).toEqual({ id: todo.id });
+      },
+    );
 
-    [UserRole.coach, UserRole.nurse, UserRole.admin].forEach((role) => {
+    [UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin].forEach((role) => {
       test.each([TodoLabel.Meds, TodoLabel.Appointment, undefined])(
         `should create a Todo by ${role} and send notification to member`,
         async (label) => {
@@ -171,7 +174,7 @@ describe('TodoResolver', () => {
       );
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       `should create a Todo by user in status requested if label ${TodoLabel.Meds}`,
       async (role) => {
         const memberId = generateId();
@@ -216,7 +219,7 @@ describe('TodoResolver', () => {
       spyOnEventEmitter.mockReset();
     });
 
-    [UserRole.coach, UserRole.nurse, UserRole.admin].forEach((role) => {
+    [UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin].forEach((role) => {
       test.each([ActionTodoLabel.Questionnaire, ActionTodoLabel.Explore])(
         `should create action Todo by ${role} and send notification to member`,
         async (label) => {
@@ -254,7 +257,7 @@ describe('TodoResolver', () => {
       );
     });
 
-    [UserRole.coach, UserRole.nurse, UserRole.admin].forEach((role) => {
+    [UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin].forEach((role) => {
       test.each([ActionTodoLabel.Journal, ActionTodoLabel.Scanner])(
         `should create action Todo by ${role} and send notification to member`,
         async (label) => {
@@ -374,32 +377,35 @@ describe('TodoResolver', () => {
       expect(result).toEqual(newTodo);
     });
 
-    test.each([UserRole.coach, UserRole.nurse])('should update Todo by user', async (role) => {
-      const memberId = generateId();
-      const journeyId = generateId();
-      const userId = generateId();
-      const newTodo = mockGenerateTodo({
-        memberId: generateObjectId(memberId),
-        journeyId: generateObjectId(journeyId),
-        createdBy: generateObjectId(memberId),
-        updatedBy: generateObjectId(memberId),
-      });
-      const params: UpdateTodoParams = generateUpdateTodoParams({ memberId });
-      delete params.label;
-      spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
-      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse])(
+      'should update Todo by user',
+      async (role) => {
+        const memberId = generateId();
+        const journeyId = generateId();
+        const userId = generateId();
+        const newTodo = mockGenerateTodo({
+          memberId: generateObjectId(memberId),
+          journeyId: generateObjectId(journeyId),
+          createdBy: generateObjectId(memberId),
+          updatedBy: generateObjectId(memberId),
+        });
+        const params: UpdateTodoParams = generateUpdateTodoParams({ memberId });
+        delete params.label;
+        spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
+        spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
-      const result = await resolver.updateTodo([role], userId, params);
+        const result = await resolver.updateTodo([role], userId, params);
 
-      expect(spyOnServiceUpdateTodo).toHaveBeenCalledWith({
-        ...params,
-        journeyId,
-        status: TodoStatus.active,
-      });
-      expect(result).toEqual(newTodo);
-    });
+        expect(spyOnServiceUpdateTodo).toHaveBeenCalledWith({
+          ...params,
+          journeyId,
+          status: TodoStatus.active,
+        });
+        expect(result).toEqual(newTodo);
+      },
+    );
 
-    [UserRole.coach, UserRole.nurse, UserRole.admin].forEach((role) => {
+    [UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin].forEach((role) => {
       test.each([TodoLabel.Meds, TodoLabel.Appointment, undefined])(
         `should update a Todo by ${role} and send notification to member with label = %p`,
         async (label) => {
@@ -433,7 +439,7 @@ describe('TodoResolver', () => {
       );
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       `should update Todo by user in status requested if label ${TodoLabel.Meds}`,
       async (role) => {
         const memberId = generateId();
@@ -510,7 +516,7 @@ describe('TodoResolver', () => {
       spyOnServiceEndTodo.mockImplementationOnce(async () => todo);
       spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
-      const result = await resolver.endTodo(userId, [UserRole.coach], id);
+      const result = await resolver.endTodo(userId, [UserRole.lagunaCoach], id);
 
       expect(spyOnServiceGetTodo).not.toHaveBeenCalled();
       expect(spyOnServiceEndTodo).toHaveBeenCalledWith(id, userId);
@@ -531,7 +537,7 @@ describe('TodoResolver', () => {
       );
     });
 
-    [(UserRole.coach, UserRole.nurse, UserRole.admin)].forEach((role) => {
+    [(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin)].forEach((role) => {
       test.each([TodoLabel.Meds, TodoLabel.Appointment, undefined])(
         `should end a Todo by ${role} and send notification to member with label = %p`,
         async (label) => {
@@ -588,7 +594,7 @@ describe('TodoResolver', () => {
       expect(result).toBeTruthy();
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on approve todo if role = %p',
       async (role) => {
         await expect(resolver.approveTodo([role], generateId(), generateId())).rejects.toThrow(
@@ -630,7 +636,7 @@ describe('TodoResolver', () => {
       expect(spyOnServiceEndTodo).not.toHaveBeenCalled();
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on create TodoDone if role = %p',
       async (role) => {
         await expect(
@@ -708,7 +714,7 @@ describe('TodoResolver', () => {
       expect(result).toBeTruthy();
     });
 
-    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+    test.each([UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.lagunaAdmin])(
       'should throw an error on delete todoDone if role = %p',
       async (role) => {
         await expect(resolver.deleteTodoDone([role], generateId(), generateId())).rejects.toThrow(

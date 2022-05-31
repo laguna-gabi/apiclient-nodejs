@@ -54,7 +54,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Appointment)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async requestAppointment(
     @Args(camelCase(RequestAppointmentParams.name))
     requestAppointmentParams: RequestAppointmentParams,
@@ -67,7 +67,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Query(() => Appointment, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getAppointment(
     @Args(
       'id',
@@ -82,7 +82,7 @@ export class AppointmentResolver extends AppointmentBase {
   @Mutation(() => Appointment)
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
   async scheduleAppointment(
     @Args(camelCase(ScheduleAppointmentParams.name))
     scheduleAppointmentParams: ScheduleAppointmentParams,
@@ -91,7 +91,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async deleteAppointment(
     @Client('_id') userId,
     @Args(
@@ -111,7 +111,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Appointment)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async endAppointment(
     @Args(camelCase(EndAppointmentParams.name)) endAppointmentParams: EndAppointmentParams,
   ) {
@@ -129,7 +129,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Notes, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async updateNotes(@Args(camelCase(UpdateNotesParams.name)) updateNotesParams: UpdateNotesParams) {
     return this.appointmentService.updateNotes(updateNotesParams);
   }

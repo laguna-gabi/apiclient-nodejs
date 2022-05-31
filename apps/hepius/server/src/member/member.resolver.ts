@@ -155,7 +155,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async createMember(
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
@@ -166,7 +166,7 @@ export class MemberResolver extends MemberBase {
   @Query(() => Member, { nullable: true })
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMember(
     @Args(
       'id',
@@ -182,7 +182,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Member)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async updateMember(
     @Args(camelCase(UpdateMemberParams.name)) params: UpdateMemberParams,
   ): Promise<Member> {
@@ -197,7 +197,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [MemberSummary])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMembers(
     @Args(
       'orgId',
@@ -210,7 +210,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [AppointmentCompose])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMembersAppointments(
     @Args(
       'orgId',
@@ -227,7 +227,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.admin)
+  @Roles(UserRole.lagunaAdmin)
   async deleteMember(
     @Client('_id') userId,
     @Args(camelCase(DeleteMemberParams.name))
@@ -265,7 +265,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.admin)
+  @Roles(UserRole.lagunaAdmin)
   async replaceUserForMember(
     @Args(camelCase(ReplaceUserForMemberParams.name))
     replaceUserForMemberParams: ReplaceUserForMemberParams,
@@ -301,7 +301,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.admin)
+  @Roles(UserRole.lagunaAdmin)
   async replaceMemberOrg(
     @Args(camelCase(ReplaceMemberOrgParams.name))
     replaceMemberOrgParams: ReplaceMemberOrgParams,
@@ -318,7 +318,7 @@ export class MemberResolver extends MemberBase {
   @Query(() => DischargeDocumentsLinks)
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberUploadDischargeDocumentsLinks(
     @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)))
     id?: string,
@@ -347,7 +347,7 @@ export class MemberResolver extends MemberBase {
   @Query(() => DischargeDocumentsLinks)
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberDownloadDischargeDocumentsLinks(
     @Args(
       'id',
@@ -377,7 +377,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async deleteDischargeDocument(
     @Args(camelCase(DeleteDischargeDocumentParams.name))
     deleteDischargeDocumentParams: DeleteDischargeDocumentParams,
@@ -399,7 +399,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Query(() => String)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberUploadGeneralDocumentLink(
     @Args(camelCase(GetMemberUploadGeneralDocumentLinkParams.name))
     getMemberUploadGeneralDocumentLinkParams: GetMemberUploadGeneralDocumentLinkParams,
@@ -427,7 +427,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [String])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberDownloadGeneralDocumentsLinks(
     @Args(
       'memberId',
@@ -456,7 +456,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async deleteMemberGeneralDocument(
     @Args(camelCase(DeleteMemberGeneralDocumentParams.name))
     deleteMemberGeneralDocumentParams: DeleteMemberGeneralDocumentParams,
@@ -478,7 +478,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Query(() => String)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberUploadRecordingLink(
     @Args(camelCase(RecordingLinkParams.name))
     recordingLinkParams: RecordingLinkParams,
@@ -492,7 +492,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => MultipartUploadInfo)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberMultipartUploadRecordingLink(
     @Args(camelCase(MultipartUploadRecordingLinkParams.name))
     multipartUploadRecordingLinkParams: MultipartUploadRecordingLinkParams,
@@ -506,7 +506,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async completeMultipartUpload(
     @Args(camelCase(CompleteMultipartUploadParams.name))
     completeMultipartUploadParams: CompleteMultipartUploadParams,
@@ -520,7 +520,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => String)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberDownloadRecordingLink(
     @Args(camelCase(RecordingLinkParams.name))
     recordingLinkParams: RecordingLinkParams,
@@ -534,7 +534,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Recording)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async updateRecording(
     @Args(camelCase(UpdateRecordingParams.name)) updateRecordingParams: UpdateRecordingParams,
     @Client('_id') userId,
@@ -543,7 +543,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async updateRecordingReview(
     @Args(camelCase(UpdateRecordingReviewParams.name))
     updateRecordingReviewParams: UpdateRecordingReviewParams,
@@ -553,7 +553,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [RecordingOutput])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getRecordings(
     @Args(
       'memberId',
@@ -570,7 +570,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Query(() => Transcript, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getTranscript(
     @Args('recordingId', { type: () => String })
     recordingId: string,
@@ -583,7 +583,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Transcript, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async setTranscriptSpeaker(
     @Args('recordingId', { type: () => String })
     recordingId: string,
@@ -639,7 +639,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Caregiver)
-  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   async addCaregiver(
@@ -650,7 +650,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean)
-  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
   async deleteCaregiver(
     @Args(
       'id',
@@ -670,7 +670,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Caregiver)
-  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   async updateCaregiver(
@@ -683,7 +683,7 @@ export class MemberResolver extends MemberBase {
   @Query(() => [Caregiver])
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getCaregivers(
     @Args(
       'memberId',
@@ -699,7 +699,7 @@ export class MemberResolver extends MemberBase {
    ********************************************* Alerts ********************************************
    ************************************************************************************************/
   @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async dismissAlert(
     @Client('_id') userId: string,
     @Args('alertId', { type: () => String })
@@ -710,7 +710,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [Alert])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getAlerts(
     @Client('_id') userId: string,
     @Client('lastQueryAlert') lastQueryAlert: Date,
@@ -801,7 +801,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig } = await this.extractDataOfMemberAndUser(memberId, userId);
@@ -856,7 +856,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => String, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async notifyContent(
     @Args(camelCase(NotifyContentParams.name))
     notifyContentParams: NotifyContentParams,
@@ -885,7 +885,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => String, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async cancelNotify(
     @Args(camelCase(CancelNotifyParams.name))
     cancelNotifyParams: CancelNotifyParams,
@@ -905,7 +905,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.admin)
+  @Roles(UserRole.lagunaAdmin)
   async graduateMember(
     @Args(camelCase(GraduateMemberParams.name))
     graduateMemberParams: GraduateMemberParams,
@@ -1148,7 +1148,7 @@ export class MemberResolver extends MemberBase {
   @Query(() => MemberConfig)
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberConfig(
     @Args(
       'id',

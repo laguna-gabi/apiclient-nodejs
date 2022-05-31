@@ -34,7 +34,7 @@ export class QuestionnaireResolver {
   ) {}
 
   @Mutation(() => Questionnaire)
-  @Roles(UserRole.admin)
+  @Roles(UserRole.lagunaAdmin)
   async createQuestionnaire(
     @Args(camelCase(CreateQuestionnaireParams.name), { type: () => CreateQuestionnaireParams })
     createQuestionnaireParams: CreateQuestionnaireParams,
@@ -43,13 +43,13 @@ export class QuestionnaireResolver {
   }
 
   @Query(() => [Questionnaire])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getActiveQuestionnaires(): Promise<Questionnaire[]> {
     return this.questionnaireService.getActiveQuestionnaires();
   }
 
   @Query(() => Questionnaire)
-  @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
   async getQuestionnaire(
     @Client('roles') roles,
     @Args(
@@ -67,7 +67,7 @@ export class QuestionnaireResolver {
   }
 
   @Query(() => [QuestionnaireResponse])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberQuestionnaireResponses(
     @Args(
       'memberId',
@@ -80,7 +80,7 @@ export class QuestionnaireResolver {
   }
 
   @Query(() => QuestionnaireResponse, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getQuestionnaireResponse(
     @Args(
       'id',
@@ -93,7 +93,7 @@ export class QuestionnaireResolver {
   }
 
   @Mutation(() => QuestionnaireResponse)
-  @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   async submitQuestionnaireResponse(

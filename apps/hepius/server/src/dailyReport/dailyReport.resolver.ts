@@ -99,7 +99,7 @@ export class DailyReportResolver {
   @Query(() => DailyReportResults)
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(UserRole.coach, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, MemberRole.member)
   async getDailyReports(
     @Client('roles') roles,
     @Args(

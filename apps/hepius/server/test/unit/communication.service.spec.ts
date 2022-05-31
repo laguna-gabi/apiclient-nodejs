@@ -33,7 +33,7 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import { ServiceModule } from '../../src/services';
-import { AppointmentStatus, UserRole } from '@argus/hepiusClient';
+import { AppointmentStatus } from '@argus/hepiusClient';
 
 describe('CommunicationService', () => {
   let module: TestingModule;
@@ -85,7 +85,7 @@ describe('CommunicationService', () => {
         nickname: `${user.firstName} ${user.lastName}`,
         profile_url: user.avatar,
         issue_access_token: true,
-        metadata: { role: UserRole.coach.toLowerCase() },
+        metadata: { role: `coach` },
       });
     });
 

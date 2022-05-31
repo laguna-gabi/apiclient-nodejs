@@ -40,7 +40,7 @@ export class UserResolver {
   ) {}
 
   @Mutation(() => User)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async createUser(
     @Args(camelCase(CreateUserParams.name))
     createUserParams: CreateUserParams,
@@ -66,7 +66,7 @@ export class UserResolver {
   }
 
   @Mutation(() => User)
-  @Roles(UserRole.admin)
+  @Roles(UserRole.lagunaAdmin)
   async updateUser(
     @Args(camelCase(UpdateUserParams.name))
     updateUserParams: UpdateUserParams,
@@ -88,7 +88,7 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getUser(@Client('_id') userId): Promise<User> {
     const user = await this.userService.get(userId);
     if (!user) {
@@ -98,14 +98,14 @@ export class UserResolver {
   }
 
   @Query(() => [UserSummary])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getUsers(
     @Args('roles', {
       type: () => [UserRole],
       nullable: true,
-      defaultValue: [UserRole.coach, UserRole.nurse],
+      defaultValue: [UserRole.lagunaCoach, UserRole.lagunaNurse],
     })
-    roles: UserRole[] = [UserRole.coach, UserRole.nurse],
+    roles: UserRole[] = [UserRole.lagunaCoach, UserRole.lagunaNurse],
   ): Promise<UserSummary[]> {
     const users = await this.userService.getUsers(roles);
 
@@ -118,7 +118,7 @@ export class UserResolver {
   }
 
   @Query(() => Slots)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getUserSlots(
     @Args(camelCase(GetSlotsParams.name)) getSlotsParams: GetSlotsParams,
   ): Promise<Slots> {
@@ -139,7 +139,7 @@ export class UserResolver {
   }
 
   @Query(() => UserConfig)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getUserConfig(
     @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.userIdInvalid)))
     id: string,
@@ -148,7 +148,7 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async setLastQueryAlert(@Client('_id') userId: string): Promise<boolean> {
     await this.userService.setLatestQueryAlert(userId);
 
@@ -156,7 +156,7 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async disableUser(
     @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.userIdInvalid)))
     id: string,
@@ -170,7 +170,7 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async enableUser(
     @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.userIdInvalid)))
     id: string,

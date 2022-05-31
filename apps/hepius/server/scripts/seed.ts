@@ -74,7 +74,7 @@ export async function seed() {
   const users = await userService.getRegisteredUsers();
   if (users.length === 0) {
     //No users existing in the db, creating one
-    await createUser([UserRole.coach], 'user');
+    await createUser([UserRole.lagunaCoach], 'user');
     //Since Sendbird is doing async calls in event emitter,
     //we need to wait a while for the actions to be finished since in createMember we're creating
     //a groupChannel that should wait for the user to be registered on sendbird.

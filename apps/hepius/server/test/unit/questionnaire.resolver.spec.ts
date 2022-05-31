@@ -94,7 +94,7 @@ describe('QuestionnaireResolver', () => {
 
     it('should get a Questionnaire', async () => {
       const qId = generateId();
-      await resolver.getQuestionnaire(UserRole.coach, qId);
+      await resolver.getQuestionnaire(UserRole.lagunaCoach, qId);
 
       expect(spyOnServiceGetById).toHaveBeenCalledWith(qId);
     });
@@ -171,7 +171,7 @@ describe('QuestionnaireResolver', () => {
     it('should submit a Questionnaire Response', async () => {
       const qrSubmitParams = generateSubmitQuestionnaireResponseParams();
       spyOnServiceSubmitQR.mockResolvedValueOnce({ type: QuestionnaireType.phq9 });
-      await resolver.submitQuestionnaireResponse(UserRole.coach, qrSubmitParams);
+      await resolver.submitQuestionnaireResponse(UserRole.lagunaCoach, qrSubmitParams);
 
       expect(spyOnServiceSubmitQR).toHaveBeenCalledWith({ ...qrSubmitParams });
     });
@@ -183,7 +183,7 @@ describe('QuestionnaireResolver', () => {
 
       const qrSubmitParams = generateSubmitQuestionnaireResponseParams();
       spyOnServiceSubmitQR.mockResolvedValueOnce({ type: QuestionnaireType.lhp });
-      await resolver.submitQuestionnaireResponse(UserRole.coach, qrSubmitParams);
+      await resolver.submitQuestionnaireResponse(UserRole.lagunaCoach, qrSubmitParams);
 
       const event: IEventUpdateHealthPersona = { memberId: qrSubmitParams.memberId, healthPersona };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdateHealthPersona, event);

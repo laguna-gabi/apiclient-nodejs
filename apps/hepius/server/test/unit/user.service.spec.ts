@@ -88,7 +88,7 @@ describe('UserService', () => {
       const user2 = generateCreateUserParams();
       await service.insert(user2);
 
-      const result = await service.getUsers([UserRole.coach, UserRole.nurse]);
+      const result = await service.getUsers([UserRole.lagunaCoach, UserRole.lagunaNurse]);
       expect(result.length).toBeGreaterThanOrEqual(2);
     }, 10000);
 
@@ -109,9 +109,9 @@ describe('UserService', () => {
 
     test.each([
       [Object.values(UserRole)],
-      [[UserRole.coach, UserRole.nurse]],
-      [[UserRole.coach]],
-      [[UserRole.nurse]],
+      [[UserRole.lagunaCoach, UserRole.lagunaNurse]],
+      [[UserRole.lagunaCoach]],
+      [[UserRole.lagunaNurse]],
     ])('should successfully insert a user having roles : %p', async (roles) => {
       const user = generateCreateUserParams({ roles });
 
@@ -335,7 +335,7 @@ describe('UserService', () => {
       const user = generateCreateUserParams();
       await service.insert(user);
       // create admin user
-      const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.admin] });
+      const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.lagunaAdmin] });
       const insertedUser = await service.insert(adminOnlyUser);
       await userModel.updateOne(
         { _id: new Types.ObjectId(insertedUser.id) },
@@ -357,7 +357,7 @@ describe('UserService', () => {
       const user = generateCreateUserParams();
       await service.insert(user);
       // create nurse user
-      const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.nurse] });
+      const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.lagunaNurse] });
       const insertedUser = await service.insert(adminOnlyUser);
       await userModel.updateOne(
         { _id: new Types.ObjectId(insertedUser.id) },

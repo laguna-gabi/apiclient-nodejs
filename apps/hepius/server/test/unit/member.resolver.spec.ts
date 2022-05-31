@@ -1272,7 +1272,7 @@ describe('MemberResolver', () => {
         isPushNotificationsEnabled: true,
       };
       await expect(
-        resolver.registerMemberForNotifications([UserRole.coach], member.id, params),
+        resolver.registerMemberForNotifications([UserRole.lagunaCoach], member.id, params),
       ).rejects.toThrow(Errors.get(ErrorType.memberAllowedOnly));
     });
   });

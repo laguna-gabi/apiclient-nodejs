@@ -143,9 +143,9 @@ describe('Integration tests: all', () => {
      * 13. Fetch member and checks all related appointments
      */
     const resultNurse1 = await creators.createAndValidateUser({
-      roles: [UserRole.nurse, UserRole.coach],
+      roles: [UserRole.lagunaNurse, UserRole.lagunaCoach],
     });
-    const resultNurse2 = await creators.createAndValidateUser({ roles: [UserRole.nurse] });
+    const resultNurse2 = await creators.createAndValidateUser({ roles: [UserRole.lagunaNurse] });
 
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
@@ -1445,7 +1445,7 @@ describe('Integration tests: all', () => {
       await handler.mutations.setLastQueryAlert({ requestHeaders: requestHeadersUser });
       await handler.queries.getUser({ requestHeaders: requestHeadersUser });
 
-      const alerts = await handler.queries // .setContextUserId(primaryUser, undefined, [UserRole.coach], lastQueryAlert)
+      const alerts = await handler.queries // .setContextUserId(primaryUser, undefined, [UserRole.lagunaCoach], lastQueryAlert)
         .getAlerts({ requestHeaders: requestHeadersUser });
 
       expect(alerts).toEqual([
@@ -3049,13 +3049,13 @@ describe('Integration tests: all', () => {
       notificationScoreThreshold: 2,
     });
 
-    const { id: questionnaireId } = await handler.mutations // .setContextUserId(userId, '', [UserRole.admin])
+    const { id: questionnaireId } = await handler.mutations // .setContextUserId(userId, '', [UserRole.lagunaAdmin])
       .createQuestionnaire({
         createQuestionnaireParams,
       });
 
     // Submit a questionnaire response
-    await handler.mutations // .setContextUserId(userId, '', [UserRole.nurse])
+    await handler.mutations // .setContextUserId(userId, '', [UserRole.lagunaNurse])
       .submitQuestionnaireResponse({
         submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
           questionnaireId,

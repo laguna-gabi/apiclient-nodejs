@@ -40,7 +40,7 @@ export class CareResolver {
    *************************************************************************************************/
 
   @Query(() => [RedFlag])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberRedFlags(
     @Args(
       'memberId',
@@ -53,13 +53,13 @@ export class CareResolver {
   }
 
   @Query(() => [RedFlagType])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getRedFlagTypes(): Promise<RedFlagType[]> {
     return this.careService.getRedFlagTypes();
   }
 
   @Mutation(() => RedFlag)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async updateRedFlag(
     @Args(camelCase(UpdateRedFlagParams.name)) updateRedFlagParams: UpdateRedFlagParams,
   ): Promise<RedFlag> {
@@ -71,13 +71,13 @@ export class CareResolver {
    *************************************************************************************************/
 
   @Query(() => [BarrierType])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getBarrierTypes(): Promise<BarrierType[]> {
     return this.careService.getBarrierTypes();
   }
 
   @Mutation(() => Barrier)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async createBarrier(
     @Args(camelCase(CreateBarrierParams.name)) createBarrierParams: CreateBarrierParams,
   ): Promise<Barrier> {
@@ -85,7 +85,7 @@ export class CareResolver {
   }
 
   @Mutation(() => Barrier)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async updateBarrier(
     @Args(camelCase(UpdateBarrierParams.name)) updateBarrierParams: UpdateBarrierParams,
   ): Promise<Barrier> {
@@ -93,7 +93,7 @@ export class CareResolver {
   }
 
   @Query(() => [Barrier])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberBarriers(
     @Args(
       'memberId',
@@ -110,13 +110,13 @@ export class CareResolver {
    *************************************************************************************************/
 
   @Query(() => [CarePlanType])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getCarePlanTypes(): Promise<CarePlanType[]> {
     return this.careService.getCarePlanTypes();
   }
 
   @Mutation(() => CarePlan)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async createCarePlan(
     @Args(camelCase(CreateCarePlanParams.name)) createCarePlanParams: CreateCarePlanParams,
   ): Promise<CarePlan> {
@@ -124,7 +124,7 @@ export class CareResolver {
   }
 
   @Mutation(() => CarePlan)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async updateCarePlan(
     @Args(camelCase(UpdateCarePlanParams.name)) updateCarePlanParams: UpdateCarePlanParams,
   ): Promise<CarePlan> {
@@ -132,7 +132,7 @@ export class CareResolver {
   }
 
   @Query(() => [CarePlan])
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getMemberCarePlans(
     @Args(
       'memberId',
@@ -145,7 +145,7 @@ export class CareResolver {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async deleteCarePlan(
     @Client('_id') userId,
     @Args(camelCase(DeleteCarePlanParams.name)) deleteCarePlanParams: DeleteCarePlanParams,
@@ -154,7 +154,7 @@ export class CareResolver {
   }
 
   @Mutation(() => Identifiers)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async submitCareWizard(
     @Args(camelCase(SubmitCareWizardParams.name)) submitCareWizardParams: SubmitCareWizardParams,
   ): Promise<Identifiers> {

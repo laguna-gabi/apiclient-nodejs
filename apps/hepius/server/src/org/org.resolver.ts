@@ -11,7 +11,7 @@ export class OrgResolver {
   constructor(private readonly orgService: OrgService) {}
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async createOrg(
     @Args(camelCase(CreateOrgParams.name))
     createOrgParams: CreateOrgParams,
@@ -20,7 +20,7 @@ export class OrgResolver {
   }
 
   @Query(() => Org, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
   async getOrg(
     @Args(
       'id',
@@ -33,7 +33,7 @@ export class OrgResolver {
   }
 
   @Query(() => [Org])
-  @Roles(UserRole.admin)
+  @Roles(UserRole.lagunaAdmin)
   async getOrgs(): Promise<Org[]> {
     return this.orgService.getOrgs();
   }

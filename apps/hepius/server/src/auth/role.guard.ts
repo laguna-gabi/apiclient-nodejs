@@ -18,7 +18,7 @@ export class RolesGuard implements CanActivate {
     }
 
     const user = request?.user as { roles: string[] };
-    if (user?.roles?.find((role) => role == UserRole.admin)) {
+    if (user?.roles?.find((role) => role == UserRole.lagunaAdmin)) {
       return true;
     }
 

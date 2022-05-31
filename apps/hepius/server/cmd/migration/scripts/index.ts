@@ -47,6 +47,7 @@ export * as m20220523164734 from './20220523164734-remove-consent-from-appotintm
 export * as m20220526092554 from './20220526092554-add-identity-verification-to-recording';
 export * as m20220526150137 from './20220526150137-journal-append-journey';
 export * as m20220529143244 from './20220529143244-move-scores-data-to-journey';
+export * as m20220530160450 from './20220530160450-rename-laguna-roles';
 export * as m20220530141746 from './20220530141746-todo-append-journey';
 export * as m20220530160002 from './20220530160002-remove-deletedMedia-from-recording';
 export * as m20220531090011 from './20220531090011-add-org-code';
