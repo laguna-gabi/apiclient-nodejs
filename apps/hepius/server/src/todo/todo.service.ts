@@ -183,13 +183,13 @@ export class TodoService extends BaseService {
       });
     }
 
-    const { _id } = await this.todoDoneModel.create({
+    const { id } = await this.todoDoneModel.create({
       ...createTodoDoneParams,
       todoId: new Types.ObjectId(todoId),
       memberId: new Types.ObjectId(memberId),
     });
 
-    return { id: _id };
+    return { id };
   }
 
   async getTodoDones(getTodoDonesParams: GetTodoDonesParams): Promise<TodoDone[]> {
