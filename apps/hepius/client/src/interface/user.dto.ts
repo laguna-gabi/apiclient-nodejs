@@ -40,7 +40,7 @@ export class User extends Identifier {
   @Field(() => String)
   email: string;
 
-  @Prop({ default: defaultUserParams.roles })
+  @Prop({ index: true, default: defaultUserParams.roles })
   @Field(() => [UserRole], {
     description: 'role of the user: admin/user/nurse/nutrition/doctor/...',
   })
