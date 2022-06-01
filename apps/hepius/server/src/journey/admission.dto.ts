@@ -317,7 +317,7 @@ export class Diagnosis extends BaseCategory {
   @Field({ nullable: true })
   description?: string;
 
-  @Prop({ type: String, enum: PrimaryDiagnosisType, default: PrimaryDiagnosisType.clinical })
+  @Prop({ type: String, enum: PrimaryDiagnosisType })
   @Field(() => PrimaryDiagnosisType, { nullable: true })
   primaryType?: PrimaryDiagnosisType;
 

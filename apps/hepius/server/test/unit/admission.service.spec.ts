@@ -11,7 +11,6 @@ import {
   AdmitType,
   ChangeMemberDnaParams,
   DischargeTo,
-  PrimaryDiagnosisType,
   WarningSigns,
 } from '../../src/journey';
 import {
@@ -324,25 +323,6 @@ describe(AdmissionService.name, () => {
 
       const categoryRes = await model.findById(new Types.ObjectId(id));
       expect(categoryRes[key]).toEqual(createParams[key]);
-    },
-  );
-
-  test.each`
-    admissionCategory              | key              | defaultValue
-    ${AdmissionCategory.diagnoses} | ${'primaryType'} | ${PrimaryDiagnosisType.clinical}
-  `(
-    'should set $admissionCategory default $key when not provided in params',
-    async ({ admissionCategory, key, defaultValue }) => {
-      const memberId = generateId();
-      const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
-
-      const createParams = method({ changeType: ChangeType.create });
-      delete createParams[key];
-
-      await change(field, createParams, memberId);
-
-      const result = await model.findOne({}, {}, { sort: { _id: -1 } });
-      expect(result[key]).toEqual(defaultValue);
     },
   );
 
