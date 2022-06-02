@@ -7,6 +7,7 @@ export enum UserRole {
   lagunaAdmin = 'lagunaAdmin',
   lagunaCoach = 'lagunaCoach',
   lagunaNurse = 'lagunaNurse',
+  coach = 'coach',
 }
 
 registerEnumType(UserRole, { name: 'UserRole' });

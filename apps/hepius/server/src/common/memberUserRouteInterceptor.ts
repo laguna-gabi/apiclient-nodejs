@@ -3,7 +3,7 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
-import { ErrorType, Errors } from '.';
+import { DecoratorType, ErrorType, Errors } from '.';
 
 /**
  * There are 2 ways to pass params to gql:
@@ -31,7 +31,10 @@ export class MemberUserRouteInterceptor implements NestInterceptor<void> {
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const memberId: string = this.reflector.get<string[]>('memberId', context.getHandler());
+    const memberId: string = this.reflector.get<string[]>(
+      DecoratorType.memberId,
+      context.getHandler(),
+    );
     if (!memberId) {
       throw new Error(Errors.get(ErrorType.memberIdMetadataMissing));
     }

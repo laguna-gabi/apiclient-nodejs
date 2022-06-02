@@ -206,3 +206,29 @@ export interface SeverityLevelInterface {
   max: number;
   label: string;
 }
+
+/**************************************************************************************************
+ **************************************** ACE Options *******************************************
+ *************************************************************************************************/
+
+export const defaultEntityMemberIdLocator = 'memberId';
+
+export enum AceStrategy {
+  entity = 'entity',
+  custom = 'custom',
+}
+export class AceOptions {
+  strategy: AceStrategy;
+  /**
+   * affected entity name in request
+   */
+  entityName?: string;
+  /**
+   * entity id locator name in request args
+   */
+  idLocator?: string;
+  /**
+   * member id locator name in a non-member entity model. default is `memberId`
+   */
+  entityMemberIdLocator?: string;
+}

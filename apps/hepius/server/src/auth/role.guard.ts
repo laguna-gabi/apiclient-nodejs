@@ -1,11 +1,14 @@
 import { UserRole } from '@argus/hepiusClient';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
+import { BaseGuard } from '.';
+import { DecoratorType } from '../common';
 
 @Injectable()
-export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+export class RolesGuard extends BaseGuard implements CanActivate {
+  constructor(reflector: Reflector) {
+    super(reflector);
+  }
 
   canActivate(context: ExecutionContext): boolean {
     // `rpc` type requests are managed via the TCP Auth. Interceptor
@@ -13,25 +16,18 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    let request;
+    const request = this.getRequest(context);
 
-    if (context.getType<GqlContextType>() === 'graphql') {
-      const ctx = GqlExecutionContext.create(context);
-      request = ctx.getContext().req;
-    } else {
-      request = context.switchToHttp().getRequest();
-    }
-
-    const user = request?.user as { roles: string[] };
+    const user = request?.user as { roles: string[]; orgs: string[] };
     if (user?.roles?.find((role) => role == UserRole.lagunaAdmin)) {
       return true;
     }
 
-    const allowedRoles = this.reflector.get<string[]>('roles', context.getHandler());
+    const allowedRoles = this.reflector.get<string[]>(DecoratorType.roles, context.getHandler());
 
     if (!allowedRoles?.length) {
       // if no roles associated to route we can accept an isPublic annotation
-      return this.reflector.get<boolean>('isPublic', context.getHandler());
+      return this.reflector.get<boolean>(DecoratorType.isPublic, context.getHandler());
     }
 
     if (user.roles.find((role) => allowedRoles.includes(role))) {
