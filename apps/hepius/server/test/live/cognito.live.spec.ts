@@ -31,13 +31,14 @@ describe('live: cognito', () => {
       email: 'hadas@lagunahealth.com',
       phone: generatePhone(),
     };
+    const userName = user.firstName.toLowerCase();
 
     const { authId } = await cognitoService.addUser(user);
     expect(authId).not.toBeUndefined();
 
-    const currentClient = await getClient(user.firstName.toLowerCase());
+    const currentClient = await getClient(userName);
     expect(currentClient.Enabled).toBeTruthy();
-    expect(currentClient.Username).toEqual(user.firstName.toLowerCase());
+    expect(currentClient.Username).toEqual(userName);
     expect(currentClient.UserAttributes).toEqual([
       { Name: 'sub', Value: authId },
       { Name: 'email_verified', Value: 'true' },
@@ -46,24 +47,22 @@ describe('live: cognito', () => {
       { Name: 'email', Value: user.email },
     ]);
 
-    const disableResult = await cognitoService.disableClient(user.firstName.toLowerCase());
+    const checkEnabled = async (isEnabled: boolean) => {
+      const listUsersStatus = await cognitoService.listUsersStatus();
+      expect(listUsersStatus.get(userName)).toEqual(isEnabled);
+    };
+
+    const disableResult = await cognitoService.disableClient(userName);
     expect(disableResult).toBeTruthy();
-    let isEnabled = await cognitoService.isClientEnabled(user.firstName.toLowerCase());
-    expect(isEnabled).toBeFalsy();
+    await checkEnabled(false);
 
-    const enableResult = await cognitoService.enableClient(user.firstName.toLowerCase());
+    const enableResult = await cognitoService.enableClient(userName);
     expect(enableResult).toBeTruthy();
-    isEnabled = await cognitoService.isClientEnabled(user.firstName.toLowerCase());
-    expect(isEnabled).toBeTruthy();
+    await checkEnabled(true);
 
-    const deleteResult = await cognitoService.deleteClient(user.firstName.toLowerCase());
+    const deleteResult = await cognitoService.deleteClient(userName);
     expect(deleteResult).toBeTruthy();
-    await expect(getClient(user.firstName.toLowerCase())).rejects.toThrow(
-      new Error('User does not exist.'),
-    );
-
-    isEnabled = await cognitoService.isClientEnabled(user.firstName.toLowerCase());
-    expect(isEnabled).toBeFalsy();
+    await expect(getClient(userName)).rejects.toThrow(new Error('User does not exist.'));
   }, 15000);
 
   describe('should add multiple users with the same first name', () => {

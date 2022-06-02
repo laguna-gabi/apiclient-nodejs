@@ -108,13 +108,18 @@ export class UserResolver {
     roles: UserRole[] = [UserRole.lagunaCoach, UserRole.lagunaNurse],
   ): Promise<UserSummary[]> {
     const users = await this.userService.getUsers(roles);
+    const usersStatusMap = await this.cognitoService.listUsersStatus();
 
-    return Promise.all(
-      users.map(async (user) => {
-        const isEnabled = await this.cognitoService.isClientEnabled(user.firstName.toLowerCase());
-        return { ...user, isEnabled };
+    const array = [];
+
+    users.forEach((item) =>
+      array.push({
+        ...item,
+        isEnabled: usersStatusMap.has(item.username) ? usersStatusMap.get(item.username) : false,
       }),
     );
+
+    return array;
   }
 
   @Query(() => Slots)

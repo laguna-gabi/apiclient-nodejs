@@ -114,19 +114,8 @@ export class CognitoService {
     }
   }
 
-  async isClientEnabled(userName: string): Promise<boolean> {
-    this.logger.info({ userName }, CognitoService.name, this.isClientEnabled.name);
-    try {
-      const { Enabled } = await this.cognito
-        .adminGetUser({ UserPoolId: aws.cognito.userPoolId, Username: userName })
-        .promise();
-      return Enabled;
-    } catch (ex) {
-      if (ex?.code !== 'UserNotFoundException') {
-        this.logger.error(userName, CognitoService.name, this.isClientEnabled.name, formatEx(ex));
-      }
-      return false;
-    }
+  async listUsersStatus(): Promise<Map<string, boolean>> {
+    return this.listUsersStatusInternal(true, new Map(), null);
   }
 
   async deleteClient(userName: string): Promise<boolean> {
@@ -172,5 +161,23 @@ export class CognitoService {
         return;
       }
     }
+  }
+
+  private async listUsersStatusInternal(
+    first = true,
+    currentUsers: Map<string, boolean>,
+    paginationToken = null,
+  ): Promise<Map<string, boolean>> {
+    if (!paginationToken && !first) {
+      return currentUsers;
+    }
+
+    const { Users, PaginationToken } = await this.cognito
+      .listUsers({ UserPoolId: aws.cognito.userPoolId, PaginationToken: paginationToken })
+      .promise();
+
+    Users.forEach((user) => currentUsers.set(user.Username, user.Enabled));
+
+    return this.listUsersStatusInternal(false, currentUsers, PaginationToken);
   }
 }

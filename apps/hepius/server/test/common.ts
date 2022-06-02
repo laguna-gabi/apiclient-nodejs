@@ -193,7 +193,7 @@ export const mockProviders = (
   const spyOnCognitoServiceDisableClient = jest.spyOn(cognitoService, 'disableClient');
   const spyOnCognitoServiceEnableClient = jest.spyOn(cognitoService, 'enableClient');
   const spyOnCognitoServiceDeleteClient = jest.spyOn(cognitoService, 'deleteClient');
-  const spyOnCognitoServiceIsClientEnabled = jest.spyOn(cognitoService, 'isClientEnabled');
+  const spyOnCognitoServiceListUsersStatus = jest.spyOn(cognitoService, 'listUsersStatus');
   const spyOnQueueServiceSendMessage = jest.spyOn(queueService, 'sendMessage');
   const spyOnNotificationServiceGetDispatchesByClientSenderId = jest.spyOn(
     notificationService,
@@ -230,7 +230,7 @@ export const mockProviders = (
   spyOnCognitoServiceDisableClient.mockResolvedValue(true);
   spyOnCognitoServiceEnableClient.mockResolvedValue(true);
   spyOnCognitoServiceDeleteClient.mockReturnValue(undefined);
-  spyOnCognitoServiceIsClientEnabled.mockResolvedValue(true);
+  spyOnCognitoServiceListUsersStatus.mockResolvedValue(new Map());
   spyOnQueueServiceSendMessage.mockReturnValue(undefined);
   spyOnNotificationServiceGetDispatchesByClientSenderId.mockResolvedValue([undefined]);
 
@@ -263,7 +263,7 @@ export const mockProviders = (
       spyOnCognitoServiceDisableClient,
       spyOnCognitoServiceEnableClient,
       spyOnCognitoServiceDeleteClient,
-      spyOnCognitoServiceIsClientEnabled,
+      spyOnCognitoServiceListUsersStatus,
     },
     storage: {
       spyOnStorageDownload,

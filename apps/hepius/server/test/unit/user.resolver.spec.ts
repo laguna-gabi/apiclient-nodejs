@@ -302,28 +302,33 @@ describe('UserResolver', () => {
 
   describe('getUsers', () => {
     let spyOnServiceGetUsers;
-    let spyOnServiceIsClientEnabled;
+    let spyOnServiceListUsersStatus;
     beforeEach(() => {
       spyOnServiceGetUsers = jest.spyOn(service, 'getUsers');
-      spyOnServiceIsClientEnabled = jest.spyOn(cognitoService, 'isClientEnabled');
+      spyOnServiceListUsersStatus = jest.spyOn(cognitoService, 'listUsersStatus');
     });
 
     afterEach(() => {
       spyOnServiceGetUsers.mockReset();
-      spyOnServiceIsClientEnabled.mockReset();
+      spyOnServiceListUsersStatus.mockReset();
     });
 
-    it('should get users', async () => {
-      const user1 = mockGenerateUser();
-      const user2 = mockGenerateUser();
-      spyOnServiceGetUsers.mockImplementationOnce(async () => [user1, user2]);
-      spyOnServiceIsClientEnabled.mockResolvedValue(true);
+    it('should get users with edge cases from cognito list users', async () => {
+      const users = [mockGenerateUser(), mockGenerateUser(), mockGenerateUser()];
+      spyOnServiceGetUsers.mockImplementationOnce(async () => users);
+
+      const map = new Map<string, boolean>();
+      map.set(users[0].username, true);
+      map.set(users[1].username, false);
+      map.set(name.firstName(), true);
+      spyOnServiceListUsersStatus.mockResolvedValueOnce(map);
 
       const result = await resolver.getUsers();
 
       expect(result).toEqual([
-        { ...user1, isEnabled: true },
-        { ...user2, isEnabled: true },
+        { ...users[0], isEnabled: true },
+        { ...users[1], isEnabled: false },
+        { ...users[2], isEnabled: false },
       ]);
     });
   });
