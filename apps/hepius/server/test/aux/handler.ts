@@ -10,7 +10,14 @@ import {
   User,
   UserRole,
 } from '@argus/hepiusClient';
-import { generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import {
+  AppRequestContext,
+  TcpAuthInterceptor,
+  generateObjectId,
+  mockLogger,
+  mockProcessWarnings,
+  requestContextMiddleware,
+} from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -49,14 +56,7 @@ import {
   RedFlagDto,
   RedFlagType,
 } from '../../src/care';
-import {
-  AppRequestContext,
-  EventType,
-  IEventOnNewUser,
-  LoggerService,
-  defaultAuditDbValues,
-  requestContextMiddleware,
-} from '../../src/common';
+import { EventType, IEventOnNewUser, LoggerService, defaultAuditDbValues } from '../../src/common';
 import {
   Communication,
   CommunicationDocument,
@@ -187,19 +187,24 @@ export class Handler extends BaseHandler {
 
     this.app = moduleFixture.createNestApplication();
 
-    this.app.connectMicroservice<MicroserviceOptions>({
-      transport: Transport.TCP,
-      options: {
-        port: tcpPort,
-      },
-    });
-
     this.app.useGlobalPipes(new ValidationPipe());
 
     const reflector = this.app.get(Reflector);
     this.app.useGlobalGuards(new GlobalAuthGuard());
     this.app.useGlobalGuards(new RolesGuard(reflector));
     this.app.use(requestContextMiddleware(AppRequestContext));
+
+    this.app.useGlobalInterceptors(new TcpAuthInterceptor());
+
+    this.app.connectMicroservice<MicroserviceOptions>(
+      {
+        transport: Transport.TCP,
+        options: {
+          port: tcpPort,
+        },
+      },
+      { inheritAppConfig: true },
+    );
 
     this.app.useLogger(false);
     mockLogger(moduleFixture.get<LoggerService>(LoggerService));

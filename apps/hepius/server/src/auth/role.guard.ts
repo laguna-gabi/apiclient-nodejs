@@ -8,6 +8,11 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
+    // `rpc` type requests are managed via the TCP Auth. Interceptor
+    if (context.getType() === 'rpc') {
+      return true;
+    }
+
     let request;
 
     if (context.getType<GqlContextType>() === 'graphql') {

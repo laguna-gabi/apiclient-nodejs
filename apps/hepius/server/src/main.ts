@@ -1,27 +1,19 @@
-import { internalLogs } from '@argus/pandora';
+import {
+  AppRequestContext,
+  TcpAuthInterceptor,
+  internalLogs,
+  requestContextMiddleware,
+} from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { general, services } from 'config';
 import { AppModule } from './app.module';
 import { GlobalAuthGuard, RolesGuard } from './auth';
-import {
-  AllExceptionsFilter,
-  AppRequestContext,
-  LoggerService,
-  requestContextMiddleware,
-} from './common';
+import { AllExceptionsFilter, LoggerService } from './common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ['log'], bodyParser: false });
-
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.TCP,
-    options: {
-      host: '0.0.0.0',
-      port: services.hepius.tcpPort,
-    },
-  });
 
   app.enableCors();
 
@@ -36,7 +28,20 @@ async function bootstrap() {
 
   app.use(requestContextMiddleware(AppRequestContext));
 
+  app.useGlobalInterceptors(new TcpAuthInterceptor());
+
   process.env.TZ = general.get('timezone');
+
+  app.connectMicroservice<MicroserviceOptions>(
+    {
+      transport: Transport.TCP,
+      options: {
+        host: '0.0.0.0',
+        port: services.hepius.tcpPort,
+      },
+    },
+    { inheritAppConfig: true },
+  );
 
   await app.startAllMicroservices();
 

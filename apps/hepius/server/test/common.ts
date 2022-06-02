@@ -1,8 +1,10 @@
 import { User } from '@argus/hepiusClient';
 import {
+  AppRequestContext,
   GlobalEventType,
   IChangeEvent,
   QueueType,
+  RequestContext,
   ServiceName,
   generateId,
   webhooks,
@@ -15,7 +17,7 @@ import { TestingModule } from '@nestjs/testing';
 import { db } from 'config';
 import { Document, Model, Types, connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
-import { AppRequestContext, RequestContext, apiPrefix } from '../src/common';
+import { apiPrefix } from '../src/common';
 import { Audit, DbModule } from '../src/db';
 import { Member, defaultMemberParams } from '../src/member';
 import { BaseCategory } from '../src/journey';

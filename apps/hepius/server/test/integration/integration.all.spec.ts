@@ -13,7 +13,7 @@ import {
   UserRole,
 } from '@argus/hepiusClient';
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
-import { GlobalEventType, Language, Platform, generateId } from '@argus/pandora';
+import { GlobalEventType, Language, Platform, ServiceClientId, generateId } from '@argus/pandora';
 import { articlesByDrg, general, hosts } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub, subDays } from 'date-fns';
 import { date, lorem } from 'faker';
@@ -1586,7 +1586,7 @@ describe('Integration tests: all', () => {
         await handler.tcpClient
           .send<Caregiver[]>(
             { cmd: HepiusMessagePatterns.getCaregiversByMemberId },
-            { memberId: member.id },
+            { memberId: member.id, clientId: ServiceClientId.themis },
           )
           .toPromise(),
       ).toMatchObject([addCaregiverParams]);
@@ -2219,7 +2219,10 @@ describe('Integration tests: all', () => {
         });
 
         const { id } = await handler.tcpClient
-          .send<CarePlan>({ cmd: HepiusMessagePatterns.createCarePlan }, createCarePlanParams)
+          .send<CarePlan>(
+            { cmd: HepiusMessagePatterns.createCarePlan },
+            { createCarePlanParams, clientId: ServiceClientId.themis },
+          )
           .toPromise();
 
         // get again to verify the update
@@ -2374,7 +2377,10 @@ describe('Integration tests: all', () => {
 
       // test barriers
       const memberBarriersTcp: Barrier[] = await handler.tcpClient
-        .send<Barrier[]>({ cmd: HepiusMessagePatterns.getMemberBarriers }, { memberId })
+        .send<Barrier[]>(
+          { cmd: HepiusMessagePatterns.getMemberBarriers },
+          { memberId, clientId: ServiceClientId.themis },
+        )
         .toPromise();
 
       delete barrier1.carePlans;
@@ -2411,7 +2417,10 @@ describe('Integration tests: all', () => {
 
       // test care plans
       const memberCarePlansTcp: CarePlan[] = await handler.tcpClient
-        .send<CarePlan[]>({ cmd: HepiusMessagePatterns.getMemberCarePlans }, { memberId })
+        .send<CarePlan[]>(
+          { cmd: HepiusMessagePatterns.getMemberCarePlans },
+          { memberId, clientId: ServiceClientId.themis },
+        )
         .toPromise();
 
       const carePlansResult = [memberCarePlans, memberCarePlansTcp];

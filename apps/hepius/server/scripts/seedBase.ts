@@ -1,5 +1,10 @@
 import { UserRole } from '@argus/hepiusClient';
-import { Environments } from '@argus/pandora';
+import {
+  AppRequestContext,
+  Environments,
+  TcpAuthInterceptor,
+  requestContextMiddleware,
+} from '@argus/pandora';
 import { Injectable, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -9,7 +14,6 @@ import { datatype } from 'faker';
 import { GraphQLClient } from 'graphql-request';
 import { AppModule } from '../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../src/auth';
-import { AppRequestContext, requestContextMiddleware } from '../src/common';
 import { QueueService } from '../src/providers';
 import { QuestionnaireService } from '../src/questionnaire';
 import { UserResolver, UserService } from '../src/user';
@@ -37,6 +41,8 @@ export class SeedBase extends BaseHandler {
     this.app.useGlobalGuards(new GlobalAuthGuard());
     this.app.useGlobalGuards(new RolesGuard(reflector));
     this.app.use(requestContextMiddleware(AppRequestContext));
+
+    this.app.useGlobalInterceptors(new TcpAuthInterceptor());
 
     await this.app.init();
 

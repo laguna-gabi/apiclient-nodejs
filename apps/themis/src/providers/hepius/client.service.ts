@@ -5,7 +5,7 @@ import {
   CreateCarePlanParams,
   HepiusMessagePatterns,
 } from '@argus/hepiusClient';
-import { ServiceName } from '@argus/pandora';
+import { ServiceClientId, ServiceName } from '@argus/pandora';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 
@@ -15,25 +15,41 @@ export class HepiusClientService {
 
   async getCaregiversByMemberId({ memberId }: { memberId: string }): Promise<Caregiver[]> {
     return this.hepiusClient
-      .send<Caregiver[]>({ cmd: HepiusMessagePatterns.getCaregiversByMemberId }, { memberId })
+      .send<Caregiver[]>(
+        { cmd: HepiusMessagePatterns.getCaregiversByMemberId },
+        { memberId, clientId: ServiceClientId.themis },
+      )
       .toPromise();
   }
 
   async getMemberBarriers({ memberId }: { memberId: string }): Promise<Barrier[]> {
     return this.hepiusClient
-      .send<Barrier[]>({ cmd: HepiusMessagePatterns.getMemberBarriers }, { memberId })
+      .send<Barrier[]>(
+        { cmd: HepiusMessagePatterns.getMemberBarriers },
+        { memberId, clientId: ServiceClientId.themis },
+      )
       .toPromise();
   }
 
   async getMemberCarePlans({ memberId }: { memberId: string }): Promise<CarePlan[]> {
     return this.hepiusClient
-      .send<CarePlan[]>({ cmd: HepiusMessagePatterns.getMemberCarePlans }, { memberId })
+      .send<CarePlan[]>(
+        { cmd: HepiusMessagePatterns.getMemberCarePlans },
+        { memberId, clientId: ServiceClientId.themis },
+      )
       .toPromise();
   }
 
-  async createCarePlan(createCarePlanParams: CreateCarePlanParams): Promise<CarePlan> {
+  async createCarePlan({
+    createCarePlanParams,
+  }: {
+    createCarePlanParams: CreateCarePlanParams;
+  }): Promise<CarePlan> {
     return this.hepiusClient
-      .send<CarePlan>({ cmd: HepiusMessagePatterns.createCarePlan }, createCarePlanParams)
+      .send<CarePlan>(
+        { cmd: HepiusMessagePatterns.createCarePlan },
+        { createCarePlanParams, clientId: ServiceClientId.themis },
+      )
       .toPromise();
   }
 }

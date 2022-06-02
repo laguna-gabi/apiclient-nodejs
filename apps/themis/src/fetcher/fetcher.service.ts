@@ -70,7 +70,9 @@ export class FetcherService {
         type: { id: carePlanAction.entityType },
         barrierId: carePlanAction.parentEntityId,
       };
-      await this.hepiusClientService.createCarePlan(createCarePlanParams);
+      await this.hepiusClientService.createCarePlan({
+        createCarePlanParams,
+      });
     }
   }
 }

@@ -25,7 +25,11 @@ export class CareTcpController {
   }
 
   @MessagePattern({ cmd: HepiusMessagePatterns.createCarePlan }, Transport.TCP)
-  async createCarePlan(createCarePlanParams: CreateCarePlanParams): Promise<CarePlan> {
+  async createCarePlan({
+    createCarePlanParams,
+  }: {
+    createCarePlanParams: CreateCarePlanParams;
+  }): Promise<CarePlan> {
     return this.careService.createCarePlan(createCarePlanParams);
   }
 }

@@ -145,7 +145,9 @@ describe(FetcherService.name, () => {
       };
       await service.handleCarePlanAction(carePlanAction);
 
-      expect(mockHepiusClientServiceCreateCarePlan).toHaveBeenCalledWith(createCarePlanParams);
+      expect(mockHepiusClientServiceCreateCarePlan).toHaveBeenCalledWith({
+        createCarePlanParams,
+      });
     });
   });
 });

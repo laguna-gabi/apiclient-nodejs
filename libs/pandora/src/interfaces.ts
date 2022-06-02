@@ -15,6 +15,14 @@ export enum ServiceName {
   poseidon = 'poseidon',
 }
 
+// Service client id for TCP commands audit trail
+export enum ServiceClientId {
+  hepius = '000000000000000000000001',
+  iris = '000000000000000000000002',
+  themis = '000000000000000000000003',
+  poseidon = '000000000000000000000004',
+}
+
 export enum ClientCategory {
   member = 'member',
   user = 'user',

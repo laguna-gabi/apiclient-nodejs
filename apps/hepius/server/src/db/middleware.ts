@@ -5,11 +5,11 @@ import {
   GlobalEventType,
   IChangeEvent,
   QueueType,
+  getRequestClientId,
 } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Document, Schema, Types } from 'mongoose';
 import { Audit } from '.';
-import { getRequestClientId } from '../common';
 
 /**************************************************************************************************
  ********************************** Audit Middlewares *********************************************
