@@ -147,7 +147,7 @@ import {
   ReadmissionRisk,
   SecondaryDiagnosisType,
   SetGeneralNotesParams,
-  UpdateActionItemStatusParams,
+  UpdateActionItemParams,
   UpdateJournalTextParams,
   UpdateJourneyParams,
   WarningSigns,
@@ -555,10 +555,10 @@ export const generateCreateActionItemParams = ({
   return { memberId, title, deadline };
 };
 
-export const generateUpdateActionItemStatusParams = ({
+export const generateUpdateActionItemParams = ({
   id = generateId(),
-  status = ActionItemStatus.reached,
-}: Partial<UpdateActionItemStatusParams> = {}): UpdateActionItemStatusParams => {
+  status = ActionItemStatus.completed,
+}: Partial<UpdateActionItemParams> = {}): UpdateActionItemParams => {
   return { id, status };
 };
 

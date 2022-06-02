@@ -53,7 +53,7 @@ import {
   GraduateMemberParams,
   Journal,
   SetGeneralNotesParams,
-  UpdateActionItemStatusParams,
+  UpdateActionItemParams,
   UpdateJournalTextParams,
   UpdateJourneyParams,
 } from '../../src/journey';
@@ -490,27 +490,25 @@ export class Mutations {
     return createActionItem;
   };
 
-  updateActionItemStatus = async ({
-    updateActionItemStatusParams,
+  updateActionItem = async ({
+    updateActionItemParams,
     missingFieldError,
     invalidFieldsErrors,
     requestHeaders = this.defaultUserRequestHeaders,
   }: {
-    updateActionItemStatusParams: UpdateActionItemStatusParams;
+    updateActionItemParams: UpdateActionItemParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
     requestHeaders?;
   }) => {
-    const { updateActionItemStatus } = await this.client
+    const { updateActionItem } = await this.client
       .request(
         gql`
-          mutation updateActionItemStatus(
-            $updateActionItemStatusParams: UpdateActionItemStatusParams!
-          ) {
-            updateActionItemStatus(updateActionItemStatusParams: $updateActionItemStatusParams)
+          mutation updateActionItem($updateActionItemParams: UpdateActionItemParams!) {
+            updateActionItem(updateActionItemParams: $updateActionItemParams)
           }
         `,
-        { updateActionItemStatusParams },
+        { updateActionItemParams },
         requestHeaders,
       )
       .catch((ex) => {
@@ -521,7 +519,7 @@ export class Mutations {
         });
       });
 
-    return updateActionItemStatus;
+    return updateActionItem;
   };
 
   createAvailabilities = async ({

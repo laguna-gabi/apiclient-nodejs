@@ -30,7 +30,7 @@ import {
   Journey,
   JourneyService,
   SetGeneralNotesParams,
-  UpdateActionItemStatusParams,
+  UpdateActionItemParams,
   UpdateJournalTextParams,
   UpdateJourneyParams,
 } from '.';
@@ -122,17 +122,17 @@ export class JourneyResolver {
   ) {
     return this.journeyService.insertActionItem({
       createActionItemParams,
-      status: ActionItemStatus.pending,
+      status: ActionItemStatus.active,
     });
   }
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async updateActionItemStatus(
-    @Args(camelCase(UpdateActionItemStatusParams.name))
-    updateActionItemStatusParams: UpdateActionItemStatusParams,
+  async updateActionItem(
+    @Args(camelCase(UpdateActionItemParams.name))
+    updateActionItemParams: UpdateActionItemParams,
   ) {
-    return this.journeyService.updateActionItemStatus(updateActionItemStatusParams);
+    return this.journeyService.updateActionItem(updateActionItemParams);
   }
 
   @Query(() => [ActionItem])

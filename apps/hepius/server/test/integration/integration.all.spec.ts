@@ -169,8 +169,8 @@ describe('Integration tests: all', () => {
       member.id,
       handler.mutations.createActionItem,
     );
-    await updateActionItemStatus(idAi1, handler.mutations.updateActionItemStatus);
-    await updateActionItemStatus(idAi2, handler.mutations.updateActionItemStatus);
+    await updateActionItem(idAi1, handler.mutations.updateActionItem);
+    await updateActionItem(idAi2, handler.mutations.updateActionItem);
 
     const resultMember = await handler.queries.getMember({
       id: member.id,
@@ -2975,9 +2975,9 @@ describe('Integration tests: all', () => {
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/
 
-  const updateActionItemStatus = async (id: string, method) => {
-    const updateActionItemStatusParams = { id, status: ActionItemStatus.reached };
-    await method({ updateActionItemStatusParams });
+  const updateActionItem = async (id: string, method) => {
+    const updateActionItemParams = { id, status: ActionItemStatus.completed };
+    await method({ updateActionItemParams });
   };
 
   const compareActionItem = (
@@ -2985,7 +2985,7 @@ describe('Integration tests: all', () => {
     createActionItemParams: CreateActionItemParams,
   ) => {
     expect(actionItem.title).toEqual(createActionItemParams.title);
-    expect(actionItem.status).toEqual(ActionItemStatus.reached);
+    expect(actionItem.status).toEqual(ActionItemStatus.completed);
     expect(new Date(actionItem.deadline)).toEqual(createActionItemParams.deadline);
   };
 

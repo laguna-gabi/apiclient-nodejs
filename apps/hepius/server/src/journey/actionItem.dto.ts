@@ -12,8 +12,9 @@ import { DefaultSchemaOptions } from '@argus/pandora';
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
 export enum ActionItemStatus {
-  pending = 'pending',
-  reached = 'reached',
+  active = 'active',
+  completed = 'completed',
+  refused = 'refused',
 }
 
 registerEnumType(ActionItemStatus, { name: 'ActionItemStatus' });
@@ -35,7 +36,7 @@ export class CreateActionItemParams {
 }
 
 @InputType({ isAbstract: true })
-export class UpdateActionItemStatusParams {
+export class UpdateActionItemParams {
   @Field(() => String)
   id: string;
 

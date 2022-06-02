@@ -36,7 +36,7 @@ import {
   CreateActionItemParams,
   Journal,
   JournalDocument,
-  UpdateActionItemStatusParams,
+  UpdateActionItemParams,
   UpdateJournalParams,
 } from './';
 
@@ -206,10 +206,8 @@ export class JourneyService extends AlertService {
     return { id: _id };
   }
 
-  async updateActionItemStatus(
-    updateActionItemStatusParams: UpdateActionItemStatusParams,
-  ): Promise<void> {
-    const { id, status } = updateActionItemStatusParams;
+  async updateActionItem(updateActionItemParams: UpdateActionItemParams): Promise<void> {
+    const { id, status } = updateActionItemParams;
 
     const result = await this.actionItemModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id) },
@@ -245,7 +243,7 @@ export class JourneyService extends AlertService {
     return actionItems
       .filter(
         (actionItem) =>
-          actionItem.status === ActionItemStatus.pending && actionItem.deadline < new Date(),
+          actionItem.status === ActionItemStatus.active && actionItem.deadline < new Date(),
       )
       .map(
         (actionItem) =>

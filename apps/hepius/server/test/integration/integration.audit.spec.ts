@@ -299,8 +299,8 @@ describe('Integration tests : Audit', () => {
         await checkAuditValues<ActionItemDocument>(id, handler.actionItemModel, user1.id, user1.id),
       ).toBeTruthy();
 
-      await handler.mutations.updateActionItemStatus({
-        updateActionItemStatusParams: { id, status: ActionItemStatus.reached },
+      await handler.mutations.updateActionItem({
+        updateActionItemParams: { id, status: ActionItemStatus.completed },
         requestHeaders: generateRequestHeaders(user2.authId),
       });
 

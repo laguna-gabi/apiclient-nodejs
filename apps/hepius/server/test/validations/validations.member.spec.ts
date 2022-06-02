@@ -30,7 +30,7 @@ import {
   generateReplaceUserForMemberParams,
   generateRequestHeaders,
   generateUniqueUrl,
-  generateUpdateActionItemStatusParams,
+  generateUpdateActionItemParams,
   generateUpdateJournalTextParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
@@ -794,7 +794,7 @@ describe('Validations - member', () => {
       );
     });
 
-    describe('updateActionItemStatus', () => {
+    describe('updateActionItem', () => {
       /* eslint-disable max-len */
       test.each`
         field       | actionItemType  | error
@@ -804,10 +804,10 @@ describe('Validations - member', () => {
         /* eslint-enable max-len */
         `should fail to update $actionItemType since mandatory field $field is missing`,
         async (params) => {
-          const updateActionItemStatusParams = generateUpdateActionItemStatusParams();
-          delete updateActionItemStatusParams[params.field];
-          await handler.mutations.updateActionItemStatus({
-            updateActionItemStatusParams,
+          const updateActionItemParams = generateUpdateActionItemParams();
+          delete updateActionItemParams[params.field];
+          await handler.mutations.updateActionItem({
+            updateActionItemParams,
             missingFieldError: params.error,
           });
         },
@@ -822,11 +822,11 @@ describe('Validations - member', () => {
         `should fail to update $actionItemType since $input is not a valid type`,
         async (params) => {
           /* eslint-enable max-len */
-          const updateActionItemStatusParams = generateUpdateActionItemStatusParams({
+          const updateActionItemParams = generateUpdateActionItemParams({
             ...params.input,
           });
-          await handler.mutations.updateActionItemStatus({
-            updateActionItemStatusParams,
+          await handler.mutations.updateActionItem({
+            updateActionItemParams,
             missingFieldError: params.error,
           });
         },

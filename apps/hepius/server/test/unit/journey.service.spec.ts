@@ -20,7 +20,7 @@ import {
   generateCreateJourneyParams,
   generateGetMemberUploadJournalImageLinkParams,
   generateSetGeneralNotesParams,
-  generateUpdateActionItemStatusParams,
+  generateUpdateActionItemParams,
   generateUpdateJournalTextParams,
   generateUpdateJourneyParams,
 } from '../index';
@@ -413,33 +413,33 @@ describe(JourneyService.name, () => {
       const createActionItemParams = generateCreateActionItemParams({ memberId });
       const { id } = await service.insertActionItem({
         createActionItemParams: createActionItemParams,
-        status: ActionItemStatus.pending,
+        status: ActionItemStatus.active,
       });
 
       expect(id).toEqual(expect.any(Types.ObjectId));
     });
   });
 
-  describe('updateActionItemStatus', () => {
+  describe('updateActionItem', () => {
     it('should update an existing action item status', async () => {
       const memberId = generateId();
       await service.create(generateCreateJourneyParams({ memberId }));
       const createActionItemParams = generateCreateActionItemParams({ memberId });
       const { id } = await service.insertActionItem({
         createActionItemParams: createActionItemParams,
-        status: ActionItemStatus.pending,
+        status: ActionItemStatus.active,
       });
 
-      const status = ActionItemStatus.reached;
-      await service.updateActionItemStatus({ id, status });
+      const status = ActionItemStatus.completed;
+      await service.updateActionItem({ id, status });
       const results = await service.getActionItems(memberId);
       expect(results[0].status).toEqual(status);
     });
 
     it('should not be able to update status for a non existing action item', async () => {
-      await expect(
-        service.updateActionItemStatus(generateUpdateActionItemStatusParams()),
-      ).rejects.toThrow(Errors.get(ErrorType.journeyActionItemIdNotFound));
+      await expect(service.updateActionItem(generateUpdateActionItemParams())).rejects.toThrow(
+        Errors.get(ErrorType.journeyActionItemIdNotFound),
+      );
     });
   });
 
@@ -451,22 +451,22 @@ describe(JourneyService.name, () => {
       const createActionItemParams2 = generateCreateActionItemParams({ memberId });
       await service.insertActionItem({
         createActionItemParams: createActionItemParams1,
-        status: ActionItemStatus.pending,
+        status: ActionItemStatus.active,
       });
       await service.insertActionItem({
         createActionItemParams: createActionItemParams2,
-        status: ActionItemStatus.reached,
+        status: ActionItemStatus.completed,
       });
 
       const results = await service.getActionItems(memberId);
       expect(results.length).toEqual(2);
       expect(results[0]).toMatchObject({
         ...createActionItemParams2,
-        status: ActionItemStatus.reached,
+        status: ActionItemStatus.completed,
       });
       expect(results[1]).toMatchObject({
         ...createActionItemParams1,
-        status: ActionItemStatus.pending,
+        status: ActionItemStatus.active,
       });
     });
 

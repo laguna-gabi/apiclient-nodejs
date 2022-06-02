@@ -4,7 +4,7 @@ import {
   generateGetMemberUploadJournalImageLinkParams,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
-  generateUpdateActionItemStatusParams,
+  generateUpdateActionItemParams,
   generateUpdateJournalTextParams,
   generateUpdateJourneyParams,
   mockGenerateMember,
@@ -193,29 +193,29 @@ describe(JourneyResolver.name, () => {
       expect(spyOnServiceInsertActionItem).toBeCalledTimes(1);
       expect(spyOnServiceInsertActionItem).toBeCalledWith({
         createActionItemParams: params,
-        status: ActionItemStatus.pending,
+        status: ActionItemStatus.active,
       });
     });
   });
 
-  describe('updateActionItemStatus', () => {
-    let spyOnServiceUpdateActionItemStatus;
+  describe('updateActionItem', () => {
+    let spyOnServiceUpdateActionItem;
     beforeEach(() => {
-      spyOnServiceUpdateActionItemStatus = jest.spyOn(service, 'updateActionItemStatus');
+      spyOnServiceUpdateActionItem = jest.spyOn(service, 'updateActionItem');
     });
 
     afterEach(() => {
-      spyOnServiceUpdateActionItemStatus.mockReset();
+      spyOnServiceUpdateActionItem.mockReset();
     });
 
     it('should create an action item', async () => {
-      spyOnServiceUpdateActionItemStatus.mockImplementationOnce(async () => mockGenerateMember());
+      spyOnServiceUpdateActionItem.mockImplementationOnce(async () => mockGenerateMember());
 
-      const updateActionItemStatus = generateUpdateActionItemStatusParams();
-      await resolver.updateActionItemStatus(updateActionItemStatus);
+      const updateActionItem = generateUpdateActionItemParams();
+      await resolver.updateActionItem(updateActionItem);
 
-      expect(spyOnServiceUpdateActionItemStatus).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateActionItemStatus).toBeCalledWith(updateActionItemStatus);
+      expect(spyOnServiceUpdateActionItem).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateActionItem).toBeCalledWith(updateActionItem);
     });
   });
 
