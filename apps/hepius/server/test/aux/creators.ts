@@ -78,7 +78,7 @@ export class Creators {
     const org = orgId
       ? await this.handler.queries.getOrg({ id: orgId })
       : await this.createAndValidateOrg();
-    const createUserParams = generateCreateUserParams();
+    const createUserParams = generateCreateUserParams({ orgs: [org.id] });
     this.handler.cognitoService.spyOnCognitoServiceAddUser.mockResolvedValueOnce({
       authId: v4(),
       username: v4(),
@@ -90,7 +90,7 @@ export class Creators {
 
     const requestHeaders = this.handler.defaultUserRequestHeaders;
     const memberParams = generateCreateMemberParams({ orgId: org.id, userId: user.id });
-    const { id } = await this.handler.mutations.createMember({ memberParams, requestHeaders });
+    const { id } = await this.handler.createMemberWithRetries({ memberParams });
 
     const member = await this.handler.queries.getMember({ id, requestHeaders });
     expect(member.phone).toEqual(memberParams.phone);

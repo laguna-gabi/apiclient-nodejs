@@ -10,7 +10,7 @@ import {
   User,
   UserRole,
 } from '@argus/hepiusClient';
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -75,6 +75,7 @@ import {
   ControlMember,
   ControlMemberDocument,
   ControlMemberDto,
+  CreateMemberParams,
   Member,
   MemberDocument,
   MemberDto,
@@ -252,9 +253,12 @@ export class Handler extends BaseHandler {
       authId: v4(),
       username: v4(),
     });
-    const user = await this.mutations.createUser({ createUserParams: generateCreateUserParams() });
+    const user = await this.mutations.createUser({
+      createUserParams: generateCreateUserParams({ orgs: [orgId] }),
+    });
     const memberParams = generateCreateMemberParams({ userId: user.id, orgId });
-    const { id } = await this.mutations.createMember({ memberParams });
+
+    const { id } = await this.createMemberWithRetries({ memberParams });
     this.patientZero = await this.queries.getMember({ id });
   }
 
@@ -352,6 +356,29 @@ export class Handler extends BaseHandler {
     this.appointmentModel = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     this.notesModel = model<NotesDocument>(Notes.name, NotesDto);
   }
+
+  createMemberWithRetries = async ({ memberParams }: { memberParams: CreateMemberParams }) => {
+    let result = await this.mutations.createMember({
+      memberParams,
+      requestHeaders: this.defaultUserRequestHeaders,
+    });
+
+    if (!result) {
+      console.warn('failed to create a member, this request will mock getAvailableUser');
+      const spyOnGetAvailableUsers = jest.spyOn(this.userService, 'getAvailableUser');
+      spyOnGetAvailableUsers.mockResolvedValueOnce(generateObjectId(memberParams.userId));
+
+      result = await this.mutations.createMember({
+        memberParams,
+        requestHeaders: this.defaultUserRequestHeaders,
+      });
+
+      spyOnGetAvailableUsers.mockReset();
+      spyOnGetAvailableUsers.mockRestore();
+    }
+
+    return result;
+  };
 }
 
 export const initClients = async (

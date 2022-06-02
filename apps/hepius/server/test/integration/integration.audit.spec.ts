@@ -86,6 +86,7 @@ describe('Integration tests : Audit', () => {
   let adminUser1: User;
   let adminUser2: User;
   let server;
+  let orgId;
 
   beforeAll(async () => {
     await handler.beforeAll();
@@ -96,10 +97,12 @@ describe('Integration tests : Audit', () => {
     );
     creators = new Creators(handler, appointmentsActions);
 
-    user1 = await creators.createAndValidateUser();
-    user2 = await creators.createAndValidateUser();
-    adminUser1 = await creators.createAndValidateUser({ roles: [UserRole.lagunaAdmin] });
-    adminUser2 = await creators.createAndValidateUser({ roles: [UserRole.lagunaAdmin] });
+    orgId = handler.patientZero.org.id;
+
+    user1 = await creators.createAndValidateUser({ orgId });
+    user2 = await creators.createAndValidateUser({ orgId });
+    adminUser1 = await creators.createAndValidateUser({ roles: [UserRole.lagunaAdmin], orgId });
+    adminUser2 = await creators.createAndValidateUser({ roles: [UserRole.lagunaAdmin], orgId });
   }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
@@ -246,7 +249,7 @@ describe('Integration tests : Audit', () => {
       const users = [];
 
       for (let i = 0; i < 5; i++) {
-        const user = await creators.createAndValidateUser();
+        const user = await creators.createAndValidateUser({ orgId });
         users.push(user);
       }
 
@@ -805,7 +808,7 @@ describe('Integration tests : Audit', () => {
       'should set createdBy and updatedBy on communication ' +
         'when scheduleAppointment is invoked',
       async () => {
-        const { id: userId } = await creators.createAndValidateUser();
+        const { id: userId } = await creators.createAndValidateUser({ orgId });
 
         await handler.mutations.scheduleAppointment({
           appointmentParams: generateScheduleAppointmentParams({
@@ -837,7 +840,7 @@ describe('Integration tests : Audit', () => {
 
   describe(Appointment.name, () => {
     it('should set createdBy and updatedBy on requestAppointment', async () => {
-      const { id: userId } = await creators.createAndValidateUser();
+      const { id: userId } = await creators.createAndValidateUser({ orgId });
       const { id } = await handler.mutations.requestAppointment({
         appointmentParams: generateRequestAppointmentParams({
           userId,
@@ -858,7 +861,7 @@ describe('Integration tests : Audit', () => {
     });
 
     it('should set createdBy and updatedBy on scheduleAppointment', async () => {
-      const { id: userId } = await creators.createAndValidateUser();
+      const { id: userId } = await creators.createAndValidateUser({ orgId });
       const { id } = await handler.mutations.scheduleAppointment({
         appointmentParams: generateScheduleAppointmentParams({
           userId,
@@ -878,7 +881,7 @@ describe('Integration tests : Audit', () => {
     });
 
     it('should update createdBy and updatedBy on scheduleAppointment', async () => {
-      const { id: userId } = await creators.createAndValidateUser();
+      const { id: userId } = await creators.createAndValidateUser({ orgId });
       const appointmentParams = generateScheduleAppointmentParams({
         userId,
         memberId: handler.patientZero.id,
@@ -909,7 +912,7 @@ describe('Integration tests : Audit', () => {
     });
 
     it('should update createdBy and updatedBy on endAppointment', async () => {
-      const { id: userId } = await creators.createAndValidateUser();
+      const { id: userId } = await creators.createAndValidateUser({ orgId });
       const { id } = await handler.mutations.scheduleAppointment({
         appointmentParams: generateScheduleAppointmentParams({
           userId,

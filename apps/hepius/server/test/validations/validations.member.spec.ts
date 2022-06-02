@@ -68,7 +68,6 @@ describe('Validations - member', () => {
       handler.defaultUserRequestHeaders,
     );
     creators = new Creators(handler, appointmentsActions);
-    await creators.createAndValidateUser();
     server = handler.app.getHttpServer();
   }, BEFORE_ALL_TIMEOUT);
 

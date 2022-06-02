@@ -6,7 +6,7 @@ import {
   DietaryCategory,
   DietaryName,
 } from '../../src/journey';
-import { AdmissionHelper, AppointmentsIntegrationActions, Creators } from '../aux';
+import { AdmissionHelper } from '../aux';
 import { Handler } from '../aux/handler';
 import { lorem } from 'faker';
 import { generateId } from '@argus/pandora';
@@ -15,17 +15,10 @@ const stringError = `String cannot represent a non string value`;
 
 describe('Validations - DNA', () => {
   const handler: Handler = new Handler();
-  let creators: Creators;
   const admissionHelper: AdmissionHelper = new AdmissionHelper();
 
   beforeAll(async () => {
     await handler.beforeAll();
-    const appointmentsActions = new AppointmentsIntegrationActions(
-      handler.mutations,
-      handler.defaultUserRequestHeaders,
-    );
-    creators = new Creators(handler, appointmentsActions);
-    await creators.createAndValidateUser();
   }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {

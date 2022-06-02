@@ -1,5 +1,4 @@
 import { BEFORE_ALL_TIMEOUT, generateSetGeneralNotesParams, generateUpdateJourneyParams } from '..';
-import { AppointmentsIntegrationActions, Creators } from '../aux';
 import { Handler } from '../aux/handler';
 import { UpdateJourneyParams } from '../../src/journey';
 import { ErrorType, Errors } from '../../src/common';
@@ -8,16 +7,9 @@ const stringError = `String cannot represent a non string value`;
 
 describe('Validations - Journey', () => {
   const handler: Handler = new Handler();
-  let creators: Creators;
 
   beforeAll(async () => {
     await handler.beforeAll();
-    const appointmentsActions = new AppointmentsIntegrationActions(
-      handler.mutations,
-      handler.defaultUserRequestHeaders,
-    );
-    creators = new Creators(handler, appointmentsActions);
-    await creators.createAndValidateUser();
   }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {

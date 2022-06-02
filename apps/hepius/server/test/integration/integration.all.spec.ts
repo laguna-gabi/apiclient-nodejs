@@ -142,10 +142,15 @@ describe('Integration tests: all', () => {
      * 12. Update action items for a member
      * 13. Fetch member and checks all related appointments
      */
+    const { id: orgId } = await creators.createAndValidateOrg();
     const resultNurse1 = await creators.createAndValidateUser({
       roles: [UserRole.lagunaNurse, UserRole.lagunaCoach],
+      orgId,
     });
-    const resultNurse2 = await creators.createAndValidateUser({ roles: [UserRole.lagunaNurse] });
+    const resultNurse2 = await creators.createAndValidateUser({
+      roles: [UserRole.lagunaNurse],
+      orgId,
+    });
 
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
@@ -450,14 +455,12 @@ describe('Integration tests: all', () => {
   it('should assign user from the same org to member', async () => {
     const org = await creators.createAndValidateOrg();
     const { id: userId } = await creators.createAndValidateUser({ orgId: org.id });
-    const memberParams = generateCreateMemberParams({ orgId: org.id });
+    const memberParams = generateCreateMemberParams({ orgId: org.id, userId });
     handler.featureFlagService.spyOnFeatureFlagControlGroup.mockImplementationOnce(
       async () => false,
     );
 
-    const { id } = await handler.mutations.createMember({
-      memberParams,
-    });
+    const { id } = await handler.createMemberWithRetries({ memberParams });
 
     const { primaryUserId } = await handler.queries.getMember({ id });
     expect(primaryUserId).toEqual(userId);
@@ -501,7 +504,7 @@ describe('Integration tests: all', () => {
     expect(initialMember.users.length).toEqual(1);
     expect(initialMember.users[0].id).toEqual(member.primaryUserId);
 
-    const newUser = await creators.createAndValidateUser();
+    const newUser = await creators.createAndValidateUser({ orgId: member.org.id });
     //calling twice, to check that the user wasn't added twice to users list
     const appointment1 = await params.method({ userId: newUser.id, memberId: member.id });
     const start = new Date(appointment1.end);
@@ -522,8 +525,8 @@ describe('Integration tests: all', () => {
 
   describe('new member + member registration scheduling', () => {
     it('should delete timeout for member if an appointment is scheduled', async () => {
-      const primaryUser = await creators.createAndValidateUser();
       const { member } = await creators.createMemberUserAndOptionalOrg();
+      const primaryUser = await creators.createAndValidateUser({ orgId: member.org.id });
       const appointmentParams: RequestAppointmentParams = generateRequestAppointmentParams({
         memberId: member.id,
         userId: primaryUser.id,
@@ -660,9 +663,9 @@ describe('Integration tests: all', () => {
 
   describe('replaceUserForMember', () => {
     it('should set new user for a given member', async () => {
-      const { member, user } = await creators.createMemberUserAndOptionalOrg();
+      const { member, user, org } = await creators.createMemberUserAndOptionalOrg();
       const oldUserId = member.primaryUserId.toString();
-      const newUser = await creators.createAndValidateUser();
+      const newUser = await creators.createAndValidateUser({ orgId: org.id });
       const requestHeadersOldUser = generateRequestHeaders(user.authId);
       const requestHeadersNewUser = generateRequestHeaders(newUser.authId);
 
@@ -784,8 +787,8 @@ describe('Integration tests: all', () => {
     });
 
     it('should get user slots', async () => {
-      const user = await creators.createAndValidateUser();
-      const { member } = await creators.createMemberUserAndOptionalOrg();
+      const { member, org } = await creators.createMemberUserAndOptionalOrg();
+      const user = await creators.createAndValidateUser({ orgId: org.id });
 
       await handler.mutations.createAvailabilities({
         requestHeaders: generateRequestHeaders(user.authId),
@@ -1278,7 +1281,7 @@ describe('Integration tests: all', () => {
           deadline: sub(new Date(), { days: 31 }),
         }),
       });
-      const { id } = await handler.mutations.createMember({
+      const { id } = await handler.createMemberWithRetries({
         memberParams: generateCreateMemberParams({ orgId: org.id, userId: user.id }),
       });
       member2 = await handler.queries.getMember({ id });
@@ -2569,7 +2572,7 @@ describe('Integration tests: all', () => {
 
   it('should update user related channels on updated user', async () => {
     const { user, org } = await creators.createMemberUserAndOptionalOrg();
-    await handler.mutations.createMember({
+    await handler.createMemberWithRetries({
       memberParams: generateCreateMemberParams({ orgId: org.id, userId: user.id }),
     }); //generating another member for the specific user above
 
@@ -2600,8 +2603,8 @@ describe('Integration tests: all', () => {
   });
 
   it('should update only primary user related channels on updated user', async () => {
-    const user1 = await creators.createAndValidateUser();
-    const { user: user2, member } = await creators.createMemberUserAndOptionalOrg();
+    const { user: user2, member, org } = await creators.createMemberUserAndOptionalOrg();
+    const user1 = await creators.createAndValidateUser({ orgId: org.id });
 
     /**
      * adding user1 to member and user2 sendbird channel
@@ -2639,8 +2642,8 @@ describe('Integration tests: all', () => {
   });
 
   it('should not update secondary user related channels on updated user', async () => {
-    const user = await creators.createAndValidateUser();
-    const { member } = await creators.createMemberUserAndOptionalOrg();
+    const { member, org } = await creators.createMemberUserAndOptionalOrg();
+    const user = await creators.createAndValidateUser({ orgId: org.id });
 
     /**
      * adding user1 to member and user2 sendbird channel
