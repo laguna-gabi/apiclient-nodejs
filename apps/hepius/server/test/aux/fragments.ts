@@ -80,11 +80,6 @@ export const FRAGMENT_MEMBER = gql`
     createdAt
     honorific
     healthPersona
-    readmissionRisk
-    readmissionRiskHistory {
-      readmissionRisk
-      date
-    }
     maritalStatus
     height
     weight

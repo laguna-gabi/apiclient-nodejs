@@ -124,7 +124,7 @@ export class MemberService extends AlertService {
 
   async update(updateMemberParams: UpdateMemberParams): Promise<Member> {
     updateMemberParams = this.removeNotNullable(updateMemberParams, NotNullableMemberKeys);
-    const { id, readmissionRisk } = updateMemberParams;
+    const { id } = updateMemberParams;
 
     delete updateMemberParams.id;
 
@@ -144,14 +144,6 @@ export class MemberService extends AlertService {
       },
       { rawResult: true },
     );
-
-    if (readmissionRisk !== result.value?.readmissionRisk) {
-      await this.memberModel.findOneAndUpdate(
-        { _id: new Types.ObjectId(id) },
-        { $push: { readmissionRiskHistory: { readmissionRisk, date: new Date() } } },
-        { rawResult: true },
-      );
-    }
 
     const member = await this.getById(result.value?.id);
     if (!member) {

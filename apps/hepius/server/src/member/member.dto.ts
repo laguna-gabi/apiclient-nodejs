@@ -25,7 +25,6 @@ import {
 import { graphql, twilio } from 'config';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
-import { ReadmissionRisk, ReadmissionRiskHistory } from '../journey';
 import {
   ErrorType,
   Errors,
@@ -330,16 +329,6 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @Field(() => String, { nullable: true, deprecationReason })
   @IsOptional()
   drgDesc?: string;
-
-  /**
-   * will be @deprecated soon
-   * use admission.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Field(() => ReadmissionRisk, { nullable: true, deprecationReason })
-  @IsOptional()
-  readmissionRisk?: ReadmissionRisk;
 
   @Field(() => String, { description: validPhoneExamples, nullable: true })
   @IsOptional()
@@ -712,26 +701,6 @@ export class Member extends Identifier {
   @Prop({ type: String, enum: Race, isNaN: true })
   @Field(() => Race, { nullable: true })
   race?: Race;
-
-  /**
-   * will be @deprecated soon
-   * use admission.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Prop({ type: String, enum: ReadmissionRisk, isNaN: true })
-  @Field(() => ReadmissionRisk, { nullable: true, deprecationReason })
-  readmissionRisk?: ReadmissionRisk;
-
-  /**
-   * will be @deprecated soon
-   * use admission.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Prop({ isNaN: true })
-  @Field(() => [ReadmissionRiskHistory], { nullable: true, deprecationReason })
-  readmissionRiskHistory?: ReadmissionRiskHistory[];
 
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })

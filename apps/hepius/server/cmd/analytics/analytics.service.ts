@@ -499,7 +499,7 @@ export class AnalyticsService {
       phone: member.memberDetails.phone,
       phone_secondary: member.memberDetails.phoneSecondary,
       email: member.memberDetails.email,
-      readmission_risk: member.memberDetails.readmissionRisk,
+      readmission_risk: member.recentJourney?.readmissionRisk,
       drg: member.memberDetails.drg,
       drg_desc: member.memberDetails.drgDesc,
       created: reformatDate(member.memberDetails.createdAt.toString(), momentFormats.mysqlDateTime),

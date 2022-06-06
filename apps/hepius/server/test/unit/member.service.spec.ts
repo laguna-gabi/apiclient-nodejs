@@ -64,7 +64,7 @@ import {
   defaultTimestampsDbValues,
 } from '../../src/common';
 import { Audit } from '../../src/db';
-import { Journey, JourneyDocument, JourneyDto, ReadmissionRisk } from '../../src/journey';
+import { Journey, JourneyDocument, JourneyDto } from '../../src/journey';
 import {
   CaregiverDocument,
   CaregiverDto,
@@ -1038,13 +1038,6 @@ describe('MemberService', () => {
       );
     });
 
-    it('should be able to update partial fields', async () => {
-      await updateMember({
-        fellowName: name.firstName(),
-        readmissionRisk: ReadmissionRisk.high,
-      });
-    });
-
     it('should be able to receive only id in update', async () => {
       await updateMember();
     });
@@ -1073,41 +1066,6 @@ describe('MemberService', () => {
       });
     });
 
-    it('should not add to readmissionRiskHistory if the readmissionRisk is the same', async () => {
-      const id = await generateMember();
-
-      const updateMemberParams = generateUpdateMemberParams();
-      updateMemberParams.readmissionRisk = ReadmissionRisk.low;
-
-      await service.update({ ...updateMemberParams, id });
-      const beforeObject = await memberModel.findById(id);
-
-      expect(beforeObject['readmissionRiskHistory'].length).toEqual(1);
-
-      await service.update({ ...updateMemberParams, id });
-      const afterObject = await memberModel.findById(id);
-
-      expect(afterObject['readmissionRiskHistory'].length).toEqual(1);
-    });
-
-    it('should add to readmissionRiskHistory if the readmissionRisk is not the same', async () => {
-      const id = await generateMember();
-
-      const updateMemberParams = generateUpdateMemberParams();
-      updateMemberParams.readmissionRisk = ReadmissionRisk.low;
-
-      await service.update({ ...updateMemberParams, id });
-      const beforeObject = await memberModel.findById(id);
-
-      expect(beforeObject['readmissionRiskHistory'].length).toEqual(1);
-
-      updateMemberParams.readmissionRisk = ReadmissionRisk.high;
-      await service.update({ ...updateMemberParams, id });
-      const afterObject = await memberModel.findById(id);
-
-      expect(afterObject['readmissionRiskHistory'].length).toEqual(2);
-    });
-
     const updateMember = async (updateMemberParams?: Omit<UpdateMemberParams, 'id' | 'authId'>) => {
       const id = await generateMember();
 
@@ -1119,7 +1077,6 @@ describe('MemberService', () => {
       expect(afterObject.toJSON()).toEqual({
         ...beforeObject.toJSON(),
         ...updateMemberParams,
-        readmissionRiskHistory: expect.any(Array),
         updatedAt: afterObject['updatedAt'],
       });
     };
