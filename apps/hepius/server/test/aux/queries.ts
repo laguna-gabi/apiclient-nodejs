@@ -6,13 +6,6 @@ import { RedFlag, RedFlagType } from '../../src/care';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
-  DischargeDocumentsLinks,
-  Member,
-  MultipartUploadInfo,
-  MultipartUploadRecordingLinkParams,
-  RecordingLinkParams,
-} from '../../src/member';
-import {
   ActionItem,
   Admission,
   DietaryMatcher,
@@ -20,7 +13,13 @@ import {
   GetMemberUploadJournalImageLinkParams,
   Journey,
 } from '../../src/journey';
+import { DischargeDocumentsLinks, Member } from '../../src/member';
 import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
+import {
+  MultipartUploadInfo,
+  MultipartUploadRecordingLinkParams,
+  RecordingLinkParams,
+} from '../../src/recording';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams, UserSummary } from '../../src/user';

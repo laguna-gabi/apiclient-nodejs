@@ -57,13 +57,7 @@ import {
   RedFlagTypeDocument,
 } from '../../src/care';
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
-import {
-  CaregiverDocument,
-  Member,
-  MemberDocument,
-  MemberService,
-  Recording,
-} from '../../src/member';
+import { CaregiverDocument, Member, MemberDocument, MemberService } from '../../src/member';
 import { StorageService } from '../../src/providers';
 import {
   Questionnaire,
@@ -71,6 +65,7 @@ import {
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
 } from '../../src/questionnaire';
+import { Recording } from '../../src/recording';
 import { UserDocument } from '../../src/user';
 
 @Injectable()

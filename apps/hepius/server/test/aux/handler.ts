@@ -23,6 +23,7 @@ import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ClientProxy, ClientsModule, MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { getConnectionToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { datatype, lorem } from 'faker';
 import { GraphQLClient } from 'graphql-request';
@@ -70,18 +71,6 @@ import {
   DailyReportService,
 } from '../../src/dailyReport';
 import {
-  CaregiverDocument,
-  CaregiverDto,
-  ControlMember,
-  ControlMemberDocument,
-  ControlMemberDto,
-  CreateMemberParams,
-  Member,
-  MemberDocument,
-  MemberDto,
-  MemberService,
-} from '../../src/member';
-import {
   ActionItem,
   ActionItemDocument,
   ActionItemDto,
@@ -93,6 +82,18 @@ import {
   JourneyDto,
   JourneyService,
 } from '../../src/journey';
+import {
+  CaregiverDocument,
+  CaregiverDto,
+  ControlMember,
+  ControlMemberDocument,
+  ControlMemberDto,
+  CreateMemberParams,
+  Member,
+  MemberDocument,
+  MemberDto,
+  MemberService,
+} from '../../src/member';
 import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
 import {
@@ -103,6 +104,7 @@ import {
   QuestionnaireResponseDocument,
   QuestionnaireResponseDto,
 } from '../../src/questionnaire';
+import { Recording, RecordingDocument, RecordingDto } from '../../src/recording';
 import {
   Todo,
   TodoDocument,
@@ -121,7 +123,6 @@ import {
   UserService,
 } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
-import { getConnectionToken } from '@nestjs/mongoose';
 
 export class Handler extends BaseHandler {
   sendBird;
@@ -154,6 +155,7 @@ export class Handler extends BaseHandler {
   barrierTypeModel: Model<BarrierTypeDocument>;
   caregiverModel: Model<CaregiverDocument>;
   todoModel: Model<TodoDocument>;
+  recordingModel: Model<RecordingDocument>;
   todoDoneModel: Model<TodoDoneDocument>;
   actionItemModel: Model<ActionItemDocument>;
   questionnaireResponseModel: Model<QuestionnaireResponseDocument>;
@@ -340,6 +342,7 @@ export class Handler extends BaseHandler {
     this.barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
     this.caregiverModel = model<CaregiverDocument>(Caregiver.name, CaregiverDto);
     this.todoModel = model<TodoDocument>(Todo.name, TodoDto);
+    this.recordingModel = model<RecordingDocument>(Recording.name, RecordingDto);
     this.todoDoneModel = model<TodoDoneDocument>(TodoDone.name, TodoDoneDto);
     this.actionItemModel = model<ActionItemDocument>(ActionItem.name, ActionItemDto);
     this.questionnaireResponseModel = model<QuestionnaireResponseDocument>(

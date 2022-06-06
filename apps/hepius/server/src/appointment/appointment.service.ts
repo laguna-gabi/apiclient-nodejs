@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { hosts } from 'config';
+import { add, sub } from 'date-fns';
 import { isUndefined, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
@@ -15,7 +16,11 @@ import {
   UpdateNotesParams,
 } from '.';
 import {
-  BaseService,
+  Alert,
+  AlertService,
+  AlertType,
+  DismissedAlert,
+  DismissedAlertDocument,
   ErrorType,
   Errors,
   EventType,
@@ -26,19 +31,27 @@ import {
   LoggerService,
 } from '../common';
 import { ISoftDelete } from '../db';
+import { Member } from '../member';
+import { Internationalization } from '../providers';
+import { Recording, RecordingDocument } from '../recording';
 
 @Injectable()
-export class AppointmentService extends BaseService {
+export class AppointmentService extends AlertService {
   constructor(
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument> &
       ISoftDelete<AppointmentDocument>,
     @InjectModel(Notes.name)
     private readonly notesModel: Model<NotesDocument> & ISoftDelete<NotesDocument>,
+    @InjectModel(DismissedAlert.name)
+    readonly dismissAlertModel: Model<DismissedAlertDocument>,
+    @InjectModel(Recording.name)
+    private readonly recordingModel: Model<RecordingDocument> & ISoftDelete<RecordingDocument>,
+    private readonly internationalization: Internationalization,
     private eventEmitter: EventEmitter2,
     readonly logger: LoggerService,
   ) {
-    super();
+    super(dismissAlertModel);
   }
 
   async request(params: RequestAppointmentParams): Promise<Appointment> {
@@ -369,5 +382,56 @@ export class AppointmentService extends BaseService {
         formatEx(ex),
       );
     }
+  }
+
+  async entityToAlerts(member): Promise<Alert[]> {
+    let alerts: Alert[] = [];
+
+    // Collect appointment related alerts
+    alerts = alerts.concat(await this.appointmentsItemsToAlerts(member));
+
+    return alerts;
+  }
+
+  private async appointmentsItemsToAlerts(member: Member): Promise<Alert[]> {
+    // collect all member recordings
+    const recordings = await this.recordingModel.find({
+      memberId: new Types.ObjectId(member.id),
+      review: { $exists: true },
+    });
+
+    // collect all reviewed appointments (push all reviewed appointment ids to an array)
+    const reviewAppointmentAlerts = recordings.map((recording) => {
+      return {
+        id: `${recording.id}_${AlertType.appointmentReviewed}`,
+        type: AlertType.appointmentReviewed,
+        date: recording.review.createdAt,
+        text: this.internationalization.getAlerts(AlertType.appointmentReviewed, {
+          member,
+        }),
+        memberId: member.id,
+      } as Alert;
+    });
+
+    // grab all `scheduled` (status) appointments where `end` occurred more than 24hrs ago (overdue for submit)
+    const appointments = await this.appointmentModel.find({
+      memberId: new Types.ObjectId(member.id),
+      status: AppointmentStatus.scheduled,
+      end: { $lte: sub(new Date(), { days: 1 }) },
+    });
+
+    const appointmentSubmitOverdueAlerts = appointments.map((appointment) => {
+      return {
+        id: `${appointment.id}_${AlertType.appointmentSubmitOverdue}`,
+        type: AlertType.appointmentSubmitOverdue,
+        date: add(appointment.end, { days: 1 }),
+        text: this.internationalization.getAlerts(AlertType.appointmentSubmitOverdue, {
+          member,
+        }),
+        memberId: member.id,
+      } as Alert;
+    });
+
+    return [reviewAppointmentAlerts, appointmentSubmitOverdueAlerts].flat();
   }
 }

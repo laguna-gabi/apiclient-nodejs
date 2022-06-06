@@ -1,8 +1,10 @@
-import { Field, InputType, ObjectType, OmitType } from '@nestjs/graphql';
+import { IsObjectId } from '@argus/hepiusClient';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
-import { RecordingType } from '../common';
-import { ISoftDelete } from '../db';
+import { Document, Types } from 'mongoose';
+import * as mongooseDelete from 'mongoose-delete';
+import { ErrorType, Errors, RecordingType } from '../common';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -42,6 +44,8 @@ export class UpdateRecordingParams {
 
   @Field(() => Boolean, { nullable: true })
   identityVerification?: boolean;
+
+  journeyId: string;
 }
 
 @InputType({ isAbstract: true })
@@ -51,6 +55,47 @@ export class UpdateRecordingReviewParams {
 
   @Field(() => String, { nullable: true })
   content?: string;
+
+  userId: string;
+}
+
+@InputType()
+export class RecordingLinkParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+}
+
+@InputType()
+export class MultipartUploadRecordingLinkParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => Number)
+  partNumber: number;
+
+  @Field(() => String, { nullable: true })
+  uploadId?: string;
+}
+
+@InputType()
+export class CompleteMultipartUploadParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => String)
+  uploadId: string;
 }
 
 /**************************************************************************************************
@@ -76,6 +121,15 @@ export class RecordingReview {
 }
 
 @ObjectType()
+export class MultipartUploadInfo {
+  @Field(() => String)
+  url: string;
+
+  @Field(() => String)
+  uploadId: string;
+}
+
+@ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Recording {
   @Prop({ type: String, index: true, unique: true })
@@ -85,6 +139,9 @@ export class Recording {
   @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String)
   memberId: Types.ObjectId;
+
+  @Prop({ index: true, type: Types.ObjectId })
+  journeyId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String, { nullable: true })
@@ -127,11 +184,10 @@ export class Recording {
   review?: RecordingReview;
 }
 
-@ObjectType()
-export class RecordingOutput extends OmitType(Recording, ['memberId'] as const) {}
-
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type RecordingDocument = Recording & Document & ISoftDelete<Recording>;
-export const MemberRecordingDto = SchemaFactory.createForClass(Recording);
+export type RecordingDocument = Recording & Document & ISoftDelete<RecordingDocument>;
+export const RecordingDto = audit(
+  SchemaFactory.createForClass(Recording).plugin(mongooseDelete, useFactoryOptions),
+);

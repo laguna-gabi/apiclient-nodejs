@@ -21,6 +21,7 @@ import { MemberModule } from './member';
 import { OrgModule } from './org';
 import { ProvidersModule } from './providers';
 import { QuestionnaireModule } from './questionnaire';
+import { RecordingModule } from './recording';
 import { ServiceModule } from './services';
 import { TodoModule } from './todo';
 import { UserModule } from './user';
@@ -39,6 +40,7 @@ const badRequestException = 'Bad Request Exception';
     ConfigurationModule,
     AvailabilityModule,
     DailyReportModule,
+    RecordingModule,
     TodoModule,
     ProvidersModule,
     ServiceModule,

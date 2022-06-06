@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Db } from 'mongodb';
+import { Appointment } from '@argus/hepiusClient';
 import { NestFactory } from '@nestjs/core';
 import { getModelToken } from '@nestjs/mongoose';
+import { Db } from 'mongodb';
 import { Model } from 'mongoose';
 import { AppModule } from '../../../src/app.module';
-import { Recording } from '../../../src/member';
-import { Appointment } from '@argus/hepiusClient';
+import { Recording } from '../../../src/recording';
 
 // ------------------------------------------------------------------------------------------------
 // Description: migrate `up`

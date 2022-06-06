@@ -23,7 +23,6 @@ import {
 } from '@argus/irisClient';
 import {
   EntityName,
-  Environments,
   GlobalEventType,
   IEventNotifySlack,
   NotificationType,
@@ -35,22 +34,16 @@ import {
   StorageType,
   formatEx,
 } from '@argus/pandora';
-import {
-  PoseidonMessagePatterns,
-  Speaker,
-  Transcript,
-  generateTranscriptResponse,
-} from '@argus/poseidonClient';
-import { Inject, UseInterceptors } from '@nestjs/common';
+import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { ClientProxy } from '@nestjs/microservices';
 import { isEmpty } from 'class-validator';
 import { hosts } from 'config';
 import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { camelCase } from 'lodash';
 import { lookup } from 'zipcode-to-timezone';
+import { AppointmentService } from '../appointment';
 import {
   Ace,
   Alert,
@@ -97,7 +90,6 @@ import {
   AppointmentCompose,
   CancelNotifyParams,
   ChatMessageOrigin,
-  CompleteMultipartUploadParams,
   CreateMemberParams,
   DeleteDischargeDocumentParams,
   DeleteMemberGeneralDocumentParams,
@@ -109,28 +101,20 @@ import {
   MemberConfig,
   MemberService,
   MemberSummary,
-  MultipartUploadInfo,
-  MultipartUploadRecordingLinkParams,
   NotifyContentMetadata,
   NotifyContentParams,
   NotifyParams,
-  Recording,
-  RecordingLinkParams,
-  RecordingOutput,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   UpdateCaregiverParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
-  UpdateRecordingParams,
-  UpdateRecordingReviewParams,
 } from './index';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
 export class MemberResolver extends MemberBase {
   constructor(
-    @Inject(ServiceName.poseidon) private client: ClientProxy,
     readonly memberService: MemberService,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
@@ -142,6 +126,7 @@ export class MemberResolver extends MemberBase {
     readonly featureFlagService: FeatureFlagService,
     readonly journeyService: JourneyService,
     readonly todoService: TodoService,
+    readonly appointmentService: AppointmentService,
     readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {
@@ -479,132 +464,6 @@ export class MemberResolver extends MemberBase {
   }
 
   /*************************************************************************************************
-   ******************************************* Recording *******************************************
-   ************************************************************************************************/
-
-  @Query(() => String)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async getMemberUploadRecordingLink(
-    @Args(camelCase(RecordingLinkParams.name))
-    recordingLinkParams: RecordingLinkParams,
-  ) {
-    // Validating member exists
-    await this.memberService.get(recordingLinkParams.memberId);
-    return this.storageService.getUploadUrl({
-      ...recordingLinkParams,
-      storageType: StorageType.recordings,
-    });
-  }
-
-  @Query(() => MultipartUploadInfo)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async getMemberMultipartUploadRecordingLink(
-    @Args(camelCase(MultipartUploadRecordingLinkParams.name))
-    multipartUploadRecordingLinkParams: MultipartUploadRecordingLinkParams,
-  ) {
-    // Validating member exists
-    await this.memberService.get(multipartUploadRecordingLinkParams.memberId);
-    return this.storageService.getMultipartUploadUrl({
-      ...multipartUploadRecordingLinkParams,
-      storageType: StorageType.recordings,
-    });
-  }
-
-  @Mutation(() => Boolean)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async completeMultipartUpload(
-    @Args(camelCase(CompleteMultipartUploadParams.name))
-    completeMultipartUploadParams: CompleteMultipartUploadParams,
-  ) {
-    // Validating member exists
-    await this.memberService.get(completeMultipartUploadParams.memberId);
-    return this.storageService.completeMultipartUpload({
-      ...completeMultipartUploadParams,
-      storageType: StorageType.recordings,
-    });
-  }
-
-  @Query(() => String)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async getMemberDownloadRecordingLink(
-    @Args(camelCase(RecordingLinkParams.name))
-    recordingLinkParams: RecordingLinkParams,
-  ) {
-    // Validating member exists
-    await this.memberService.get(recordingLinkParams.memberId);
-    return this.storageService.getDownloadUrl({
-      ...recordingLinkParams,
-      storageType: StorageType.recordings,
-    });
-  }
-
-  @Mutation(() => Recording)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async updateRecording(
-    @Args(camelCase(UpdateRecordingParams.name)) updateRecordingParams: UpdateRecordingParams,
-    @Client('_id') userId,
-  ) {
-    return this.memberService.updateRecording(updateRecordingParams, userId);
-  }
-
-  @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async updateRecordingReview(
-    @Args(camelCase(UpdateRecordingReviewParams.name))
-    updateRecordingReviewParams: UpdateRecordingReviewParams,
-    @Client('_id') userId,
-  ) {
-    return this.memberService.updateRecordingReview(updateRecordingReviewParams, userId);
-  }
-
-  @Query(() => [RecordingOutput])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async getRecordings(
-    @Args(
-      'memberId',
-      { type: () => String },
-      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
-    )
-    memberId: string,
-  ) {
-    return this.memberService.getRecordings(memberId);
-  }
-
-  /*************************************************************************************************
-   ******************************************* Transcript ******************************************
-   ************************************************************************************************/
-
-  @Query(() => Transcript, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async getTranscript(
-    @Args('recordingId', { type: () => String })
-    recordingId: string,
-  ) {
-    if (process.env.NODE_ENV === Environments.production) {
-      return this.client.send(PoseidonMessagePatterns.getTranscript, { recordingId }).toPromise();
-    } else {
-      return generateTranscriptResponse();
-    }
-  }
-
-  @Mutation(() => Transcript, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async setTranscriptSpeaker(
-    @Args('recordingId', { type: () => String })
-    recordingId: string,
-    @Args('coach', { type: () => Speaker })
-    coach: Speaker,
-  ) {
-    if (process.env.NODE_ENV === Environments.production) {
-      return this.client
-        .send(PoseidonMessagePatterns.setTranscriptSpeaker, { recordingId, coach })
-        .toPromise();
-    } else {
-      return generateTranscriptResponse();
-    }
-  }
-
-  /*************************************************************************************************
    ******************************************** Journal ********************************************
    ************************************************************************************************/
 
@@ -728,8 +587,13 @@ export class MemberResolver extends MemberBase {
     const memberAlerts = await this.memberService.getAlerts(userId, members, lastQueryAlert);
     const journeyAlerts = await this.journeyService.getAlerts(userId, members, lastQueryAlert);
     const todoAlerts = await this.todoService.getAlerts(userId, members, lastQueryAlert);
+    const appointmentAlerts = await this.appointmentService.getAlerts(
+      userId,
+      members,
+      lastQueryAlert,
+    );
 
-    return memberAlerts.concat(journeyAlerts, todoAlerts);
+    return memberAlerts.concat(journeyAlerts, todoAlerts, appointmentAlerts);
   }
 
   /************************************************************************************************

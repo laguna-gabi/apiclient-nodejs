@@ -92,32 +92,6 @@ import {
 } from '../src/configuration';
 import { DailyReport } from '../src/dailyReport';
 import {
-  AddCaregiverParams,
-  AddInsuranceParams,
-  AppointmentCompose,
-  CancelNotifyParams,
-  CreateMemberParams,
-  DeleteDischargeDocumentParams,
-  DeleteMemberParams,
-  DischargeDocumentType,
-  Honorific,
-  InternalCreateMemberParams,
-  MaritalStatus,
-  Member,
-  MemberConfig,
-  NotifyContentParams,
-  NotifyParams,
-  ReplaceMemberOrgParams,
-  ReplaceUserForMemberParams,
-  Sex,
-  UpdateCaregiverParams,
-  UpdateMemberConfigParams,
-  UpdateMemberParams,
-  UpdateRecordingParams,
-  UpdateRecordingReviewParams,
-  defaultMemberParams,
-} from '../src/member';
-import {
   ActionItemCategory,
   ActionItemStatus,
   Activity,
@@ -156,6 +130,30 @@ import {
   WarningSigns,
   WoundCare,
 } from '../src/journey';
+import {
+  AddCaregiverParams,
+  AddInsuranceParams,
+  AppointmentCompose,
+  CancelNotifyParams,
+  CreateMemberParams,
+  DeleteDischargeDocumentParams,
+  DeleteMemberParams,
+  DischargeDocumentType,
+  Honorific,
+  InternalCreateMemberParams,
+  MaritalStatus,
+  Member,
+  MemberConfig,
+  NotifyContentParams,
+  NotifyParams,
+  ReplaceMemberOrgParams,
+  ReplaceUserForMemberParams,
+  Sex,
+  UpdateCaregiverParams,
+  UpdateMemberConfigParams,
+  UpdateMemberParams,
+  defaultMemberParams,
+} from '../src/member';
 import { CreateOrgParams, Org, OrgType } from '../src/org';
 import {
   Answer,
@@ -166,6 +164,14 @@ import {
   QuestionnaireType,
   SubmitQuestionnaireResponseParams,
 } from '../src/questionnaire';
+import {
+  CompleteMultipartUploadParams,
+  MultipartUploadRecordingLinkParams,
+  Recording,
+  RecordingLinkParams,
+  UpdateRecordingParams,
+  UpdateRecordingReviewParams,
+} from '../src/recording';
 import { Dispatch } from '../src/services';
 import {
   ActionTodoLabel,
@@ -843,10 +849,11 @@ export const generateUpdateRecordingParams = ({
   end = fakerDate.soon(2),
   answered = true,
   phone = generatePhone(),
-  appointmentId,
+  appointmentId = generateId(),
   recordingType = RecordingType.phone,
   consent = true,
   identityVerification = true,
+  journeyId,
 }: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
   const obj = id ? { id } : {};
   return {
@@ -861,14 +868,77 @@ export const generateUpdateRecordingParams = ({
     recordingType,
     consent,
     identityVerification,
+    journeyId,
+  };
+};
+
+export const mockGenerateRecording = ({
+  id = v4(),
+  memberId = generateObjectId(),
+  journeyId = generateObjectId(),
+  userId = generateObjectId(),
+  start = fakerDate.recent(1),
+  end = new Date(),
+  answered = true,
+  phone = generatePhone(),
+  recordingType = RecordingType.phone,
+  appointmentId = generateObjectId(),
+  consent = true,
+  identityVerification = true,
+  review = {
+    userId: generateObjectId(),
+    content: lorem.words(5),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+}: Partial<Recording> = {}): Recording => {
+  return {
+    id,
+    memberId,
+    journeyId,
+    userId,
+    start,
+    end,
+    answered,
+    phone,
+    recordingType,
+    appointmentId,
+    consent,
+    identityVerification,
+    review,
   };
 };
 
 export const generateUpdateRecordingReviewParams = ({
   recordingId = generateId(),
   content = random.words(5),
+  userId = generateId(),
 }: Partial<UpdateRecordingReviewParams> = {}): UpdateRecordingReviewParams => {
-  return { recordingId, content };
+  return { recordingId, content, userId };
+};
+
+export const generateRecordingLinkParams = ({
+  id = generateId(),
+  memberId = generateId(),
+}: Partial<RecordingLinkParams> = {}): RecordingLinkParams => {
+  return { id, memberId };
+};
+
+export const generateMultipartUploadRecordingLinkParams = ({
+  id = generateId(),
+  memberId = generateId(),
+  partNumber = datatype.number(5),
+  uploadId = generateId(),
+}: Partial<MultipartUploadRecordingLinkParams> = {}): MultipartUploadRecordingLinkParams => {
+  return { id, memberId, partNumber, uploadId };
+};
+
+export const generateCompleteMultipartUploadParams = ({
+  id = generateId(),
+  memberId = generateId(),
+  uploadId = generateId(),
+}: Partial<CompleteMultipartUploadParams> = {}): CompleteMultipartUploadParams => {
+  return { id, memberId, uploadId };
 };
 
 export const generateDailyReport = ({

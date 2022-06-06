@@ -84,7 +84,7 @@ import {
   reformatDate,
 } from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
-import { Member, Recording, RecordingOutput, ReplaceUserForMemberParams } from '../../src/member';
+import { Member, ReplaceUserForMemberParams } from '../../src/member';
 import {
   ActionItem,
   ActionItemStatus,
@@ -108,6 +108,7 @@ import {
 } from '../../src/todo';
 import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
+import { Recording } from '../../src/recording';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -609,7 +610,7 @@ describe('Integration tests: all', () => {
       });
       expect(communication).toBeNull();
 
-      const recordings = await handler.queries.getRecordings({ memberId: member.id });
+      const recordings = await handler.recordingModel.find({ memberId: member.id });
       expect(recordings.length).toEqual(0);
 
       const dailyReports = await handler.queries.getDailyReports({
@@ -1044,31 +1045,43 @@ describe('Integration tests: all', () => {
 
   describe('recordings', () => {
     it('should be able to get upload recordings of a member', async () => {
+      const id = generateId();
       const { member } = await creators.createMemberUserAndOptionalOrg();
+
+      const params = generateUpdateRecordingParams({ memberId: member.id, id });
+      await handler.mutations.updateRecording({
+        updateRecordingParams: params,
+      });
 
       const result = await handler.queries.getMemberUploadRecordingLink({
         recordingLinkParams: {
           memberId: member.id,
-          id: `${lorem.word()}.mp4`,
+          id,
         },
       });
       expect(result).toEqual('https://some-url/upload');
     });
 
     it('should be able to get download recordings of a member', async () => {
+      const id = generateId();
       const { member } = await creators.createMemberUserAndOptionalOrg();
+
+      const params = generateUpdateRecordingParams({ memberId: member.id, id });
+      await handler.mutations.updateRecording({
+        updateRecordingParams: params,
+      });
 
       const result = await handler.queries.getMemberDownloadRecordingLink({
         recordingLinkParams: {
           memberId: member.id,
-          id: `${lorem.word()}.mp4`,
+          id,
         },
       });
       expect(result).toEqual('https://some-url/download');
     });
 
     it('should update recordings for multiple members and get those recordings', async () => {
-      const compareRecording = (rec1: RecordingOutput, rec2: Recording, userId: string) => {
+      const compareRecording = (rec1: Recording, rec2: Recording, userId: string) => {
         expect(rec1.id).toEqual(rec2.id);
         expect(rec1.userId).toEqual(userId);
         expect(rec1.start).toEqual(rec2.start);

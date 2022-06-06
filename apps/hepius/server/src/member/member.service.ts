@@ -4,7 +4,6 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { articlesByDrg, queryDaysLimit } from 'config';
-import { add, sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
@@ -46,16 +45,11 @@ import {
   MemberDocument,
   MemberSummary,
   NotNullableMemberKeys,
-  Recording,
-  RecordingDocument,
-  RecordingOutput,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   UpdateCaregiverParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
-  UpdateRecordingParams,
-  UpdateRecordingReviewParams,
 } from './index';
 
 @Injectable()
@@ -66,8 +60,6 @@ export class MemberService extends AlertService {
     @InjectModel(MemberConfig.name)
     private readonly memberConfigModel: Model<MemberConfigDocument> &
       ISoftDelete<MemberConfigDocument>,
-    @InjectModel(Recording.name)
-    private readonly recordingModel: Model<RecordingDocument> & ISoftDelete<RecordingDocument>,
     @InjectModel(ControlMember.name)
     private readonly controlMemberModel: Model<ControlMemberDocument>,
     @InjectModel(Caregiver.name)
@@ -370,11 +362,6 @@ export class MemberService extends AlertService {
       serviceName: MemberService.name,
     };
 
-    await deleteMemberObjects<Model<RecordingDocument> & ISoftDelete<RecordingDocument>>({
-      model: this.recordingModel,
-      ...data,
-    });
-
     await deleteMemberObjects<Model<CaregiverDocument> & ISoftDelete<CaregiverDocument>>({
       model: this.caregiverModel,
       ...data,
@@ -477,121 +464,6 @@ export class MemberService extends AlertService {
         formatEx(ex),
       );
     }
-  }
-
-  /*************************************************************************************************
-   ******************************************** Recording ******************************************
-   ************************************************************************************************/
-  async updateRecording(updateRecordingParams: UpdateRecordingParams, userId): Promise<Recording> {
-    const {
-      start,
-      end,
-      memberId,
-      id,
-      phone,
-      answered,
-      appointmentId,
-      recordingType,
-      consent,
-      identityVerification,
-    } = updateRecordingParams;
-    const member = await this.memberModel.findById(memberId, { _id: 1 });
-    if (!member) {
-      throw new Error(Errors.get(ErrorType.memberNotFound));
-    }
-
-    const objectMemberId = new Types.ObjectId(memberId);
-    const setParams = omitBy(
-      {
-        memberId: objectMemberId,
-        start,
-        end,
-        userId,
-        phone,
-        answered,
-        recordingType,
-        consent,
-        identityVerification,
-        appointmentId: appointmentId ? new Types.ObjectId(appointmentId) : null,
-      },
-      isNil,
-    );
-
-    if (id) {
-      const exists = await this.recordingModel.findOne({ id });
-      if (exists && exists.memberId.toString() !== objectMemberId.toString()) {
-        throw new Error(Errors.get(ErrorType.memberRecordingSameUserEdit));
-      }
-      const result = await this.recordingModel.findOneAndUpdate({ id }, setParams, {
-        upsert: true,
-        new: true,
-        rawResult: true,
-      });
-      return result.value.toObject();
-    } else {
-      const result = await this.recordingModel.create({ ...setParams, id: v4() });
-      return result.toObject();
-    }
-  }
-
-  async updateRecordingReview(
-    updateRecordingReviewParams: UpdateRecordingReviewParams,
-    userId,
-  ): Promise<void> {
-    const { recordingId, content } = updateRecordingReviewParams;
-
-    const recording = await this.recordingModel.findOne({ id: recordingId });
-
-    if (!recording) {
-      throw new Error(Errors.get(ErrorType.memberRecordingNotFound));
-    }
-
-    const objectUserId = new Types.ObjectId(userId);
-
-    // User cannot review own recording
-    if (recording.userId.toString() === objectUserId.toString()) {
-      throw new Error(Errors.get(ErrorType.memberRecordingSameUser));
-    }
-
-    // Only user who wrote review can update it
-    if (
-      recording.review?.userId &&
-      recording.review.userId.toString() !== objectUserId.toString()
-    ) {
-      throw new Error(Errors.get(ErrorType.memberRecordingSameUserEdit));
-    }
-
-    if (recording.review) {
-      await this.recordingModel.updateOne(
-        { id: recordingId },
-        {
-          $set: {
-            'review.userId': objectUserId,
-            'review.content': content,
-          },
-        },
-        { new: true, upsert: true },
-      );
-    } else {
-      await this.recordingModel.findOneAndUpdate(
-        { id: recordingId },
-        {
-          $set: {
-            review: {
-              userId: objectUserId,
-              content,
-              createdAt: null,
-              updatedAt: null,
-            },
-          },
-        },
-        { new: true, upsert: true },
-      );
-    }
-  }
-
-  async getRecordings(memberId: string): Promise<RecordingOutput[]> {
-    return this.recordingModel.find({ memberId: new Types.ObjectId(memberId) });
   }
 
   /************************************************************************************************
@@ -720,9 +592,6 @@ export class MemberService extends AlertService {
     // collect actionItemOverdue alerts
     alerts = alerts.concat(await this.notificationDispatchToAlerts(member));
 
-    // Collect appointment related alerts
-    alerts = alerts.concat(await this.appointmentsItemsToAlerts(member));
-
     // Collect assessment related alerts
     alerts = alerts.concat(await this.questionnaireToAlerts(member));
 
@@ -758,48 +627,6 @@ export class MemberService extends AlertService {
             } as Alert),
         ) || []
     );
-  }
-
-  private async appointmentsItemsToAlerts(member: Member): Promise<Alert[]> {
-    // collect all member recordings
-    const recordings = await this.recordingModel.find({
-      memberId: new Types.ObjectId(member.id),
-      review: { $exists: true },
-    });
-
-    // collect all reviewed appointments (push all reviewed appointment ids to an array)
-    const reviewAppointmentAlerts = recordings.map((recording) => {
-      return {
-        id: `${recording.id}_${AlertType.appointmentReviewed}`,
-        type: AlertType.appointmentReviewed,
-        date: recording.review.createdAt,
-        text: this.internationalization.getAlerts(AlertType.appointmentReviewed, {
-          member,
-        }),
-        memberId: member.id,
-      } as Alert;
-    });
-
-    // grab all `scheduled` (status) appointments where `end` occurred more than 24hrs ago (overdue for submit)
-    const appointments = await this.appointmentModel.find({
-      memberId: new Types.ObjectId(member.id),
-      status: AppointmentStatus.scheduled,
-      end: { $lte: sub(new Date(), { days: 1 }) },
-    });
-
-    const appointmentSubmitOverdueAlerts = appointments.map((appointment) => {
-      return {
-        id: `${appointment.id}_${AlertType.appointmentSubmitOverdue}`,
-        type: AlertType.appointmentSubmitOverdue,
-        date: add(appointment.end, { days: 1 }),
-        text: this.internationalization.getAlerts(AlertType.appointmentSubmitOverdue, {
-          member,
-        }),
-        memberId: member.id,
-      } as Alert;
-    });
-
-    return [reviewAppointmentAlerts, appointmentSubmitOverdueAlerts].flat();
   }
 
   private async questionnaireToAlerts(member: Member): Promise<Alert[]> {

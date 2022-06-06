@@ -31,20 +31,17 @@ import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
   AddCaregiverParams,
   CancelNotifyParams,
-  CompleteMultipartUploadParams,
   CreateMemberParams,
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
   Member,
   NotifyContentParams,
   NotifyParams,
-  Recording,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   UpdateCaregiverParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
-  UpdateRecordingParams,
 } from '../../src/member';
 import {
   Admission,
@@ -83,6 +80,11 @@ import {
   UpdateFaultyMobileVersionsParams,
   UpdateMinMobileVersionParams,
 } from '../../src/configuration';
+import {
+  CompleteMultipartUploadParams,
+  Recording,
+  UpdateRecordingParams,
+} from '../../src/recording';
 
 export class Mutations {
   constructor(

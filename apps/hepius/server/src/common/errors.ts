@@ -29,7 +29,6 @@ export enum ErrorType {
   memberPrimaryUserIdNotInUsers = 9211,
   memberAdmitDate = 9212,
   memberRegisterForNotificationToken = 9213,
-  memberRecordingIdAlreadyExists = 9214,
   memberRegisterWebPlatform = 9215,
   memberInvalidZipCode = 9216,
   memberAllowedOnly = 9218,
@@ -37,9 +36,6 @@ export enum ErrorType {
   memberOrgIdInvalid = 9223,
   memberIdInvalid = 9224,
   memberIdInconsistent = 9225,
-  memberRecordingNotFound = 9226,
-  memberRecordingSameUser = 9227,
-  memberRecordingSameUserEdit = 9228,
   memberIdMetadataMissing = 9229,
   memberNotesAndNurseNotesNotProvided = 9230,
   memberUploadAlreadyExistingGeneralDocument = 9231,
@@ -189,6 +185,12 @@ export enum ErrorType {
   // configuration
   configurationMobileVersionNotFound = 10801,
   configurationMobileVersionInvalidVersion = 10802,
+
+  // recording
+  recordingIdAlreadyExists = 10901,
+  recordingNotFound = 10902,
+  recordingSameUser = 10903,
+  recordingSameUserEdit = 10904,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -232,7 +234,6 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberNotFound.valueOf(), `member ${notFoundPrefix}`],
   [ErrorType.memberPrimaryUserIdNotInUsers.valueOf(), 'primaryUserId must exists in usersIds list'],
   [ErrorType.memberAdmitDate.valueOf(), `admitDate ${dateInstanceFormat}`],
-  [ErrorType.memberRecordingIdAlreadyExists.valueOf(), `id already exists`],
   [ErrorType.memberRegisterWebPlatform.valueOf(), `cant register member with platform web`],
   [ErrorType.memberInvalidZipCode.valueOf(), `invalid ZIP code`],
   [
@@ -243,9 +244,6 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberReplaceUserAlreadyExists.valueOf(), `user is already assigned to member`],
   [ErrorType.memberOrgIdInvalid.valueOf(), `orgId ${objectIdFormat}`],
   [ErrorType.memberIdInvalid.valueOf(), `memberId ${objectIdFormat}`],
-  [ErrorType.memberRecordingNotFound.valueOf(), `recording not found`],
-  [ErrorType.memberRecordingSameUser.valueOf(), `user cannot review own recording`],
-  [ErrorType.memberRecordingSameUserEdit.valueOf(), `only user who wrote review can update it`],
   [ErrorType.memberIdMetadataMissing.valueOf(), `@MemberIdParam is missing on route`],
   [ErrorType.memberNotesAndNurseNotesNotProvided.valueOf(), `Notes or nurseNotes must be provided`],
   [
@@ -483,6 +481,10 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.insuranceEndAfterStart.valueOf(), 'insurance end date must be after start date'],
   [ErrorType.configurationMobileVersionNotFound.valueOf(), 'mobile version not found'],
   [ErrorType.configurationMobileVersionInvalidVersion.valueOf(), 'invalid mobile version'],
+  [ErrorType.recordingIdAlreadyExists.valueOf(), `recording id already exists`],
+  [ErrorType.recordingNotFound.valueOf(), `recording not found`],
+  [ErrorType.recordingSameUser.valueOf(), `user cannot review own recording`],
+  [ErrorType.recordingSameUserEdit.valueOf(), `only user who wrote recording review can update it`],
 ]);
 
 export const DbErrors = {

@@ -15,7 +15,6 @@ import { IEventDeleteMember, LoggerService } from '.';
 import { BarrierDocument, CarePlanDocument, RedFlagDocument } from '../care';
 import { DailyReportDocument } from '../dailyReport';
 import { ISoftDelete } from '../db';
-import { CaregiverDocument, InsuranceDocument, RecordingDocument } from '../member';
 import {
   AdmissionDocument,
   DiagnosisDocument,
@@ -26,7 +25,9 @@ import {
   MedicationDocument,
   TreatmentRenderedDocument,
 } from '../journey';
+import { CaregiverDocument, InsuranceDocument } from '../member';
 import { QuestionnaireResponseDocument } from '../questionnaire';
+import { RecordingDocument } from '../recording';
 import { TodoDocument, TodoDoneDocument } from '../todo';
 
 export function reformatDate(date: string, stringFormat: string): string {

@@ -11,15 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { RecordingType } from '../../src/common';
-import {
-  Honorific,
-  MaritalStatus,
-  Member,
-  MemberConfig,
-  Race,
-  Recording,
-  Sex,
-} from '../../src/member';
+import { Honorific, MaritalStatus, Member, MemberConfig, Race, Sex } from '../../src/member';
 import { Journey, ReadmissionRisk } from '../../src/journey';
 import {
   Appointment,
@@ -32,6 +24,7 @@ import {
   User,
   UserRole,
 } from '@argus/hepiusClient';
+import { Recording } from '../../src/recording';
 
 export const DefaultOutputDir = './outputs';
 export const HarmonyLink = hosts.harmony;

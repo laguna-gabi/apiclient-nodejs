@@ -2,7 +2,7 @@ import { Appointment, AppointmentMethod, AppointmentStatus, Notes } from '@argus
 import { generateId, generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { addDays, addMinutes, subDays } from 'date-fns';
+import { add, addDays, addMinutes, sub, subDays } from 'date-fns';
 import { lorem } from 'faker';
 import { Model, Types, model } from 'mongoose';
 import {
@@ -15,6 +15,8 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
+  generateUpdateRecordingParams,
+  generateUpdateRecordingReviewParams,
 } from '..';
 import {
   AppointmentDocument,
@@ -26,6 +28,7 @@ import {
   NotesDto,
 } from '../../src/appointment';
 import {
+  AlertType,
   ErrorType,
   Errors,
   EventType,
@@ -35,22 +38,35 @@ import {
   LoggerService,
   defaultTimestampsDbValues,
 } from '../../src/common';
+import { MemberModule } from '../../src/member';
+import {
+  Recording,
+  RecordingDocument,
+  RecordingDto,
+  RecordingModule,
+  RecordingService,
+} from '../../src/recording';
+import { NotificationService } from '../../src/services';
+import { mockGenerateMember } from '../generators';
 
 describe('AppointmentService', () => {
   let module: TestingModule;
   let service: AppointmentService;
+  let recordingService: RecordingService;
   let eventEmitter: EventEmitter2;
   let appointmentModel: Model<AppointmentDocument & defaultTimestampsDbValues>;
+  let recordingModel: Model<RecordingDocument>;
   let notesModel: Model<NotesDocument>;
   let spyOnEventEmitter;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      imports: defaultModules().concat(AppointmentModule),
+      imports: defaultModules().concat(AppointmentModule, RecordingModule, MemberModule),
     }).compile();
 
     service = module.get<AppointmentService>(AppointmentService);
+    recordingService = module.get<RecordingService>(RecordingService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     mockLogger(module.get<LoggerService>(LoggerService));
 
@@ -58,6 +74,7 @@ describe('AppointmentService', () => {
       Appointment.name,
       AppointmentDto,
     );
+    recordingModel = model<RecordingDocument>(Recording.name, RecordingDto);
     notesModel = model<NotesDocument>(Notes.name, NotesDto);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
@@ -804,6 +821,97 @@ describe('AppointmentService', () => {
       },
       /* eslint-enable @typescript-eslint/ban-ts-comment */
     );
+  });
+
+  describe('alerts', () => {
+    let mockNotificationGetDispatchesByClientSenderId: jest.SpyInstance;
+
+    beforeAll(() => {
+      mockNotificationGetDispatchesByClientSenderId = jest.spyOn(
+        module.get<NotificationService>(NotificationService),
+        `getDispatchesByClientSenderId`,
+      );
+    });
+
+    afterEach(() => {
+      mockNotificationGetDispatchesByClientSenderId.mockReset();
+    });
+
+    it('should return appointment reviewed alerts', async () => {
+      mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
+      // create a new member
+      const member = mockGenerateMember();
+      const memberId = member.id;
+      const userId = member.primaryUserId.toString();
+
+      // Create a reviewed recording
+      const recordingParams = generateUpdateRecordingParams({ memberId, userId });
+      const { id: recordingId } = await recordingService.updateRecording(recordingParams);
+
+      const recordingReviewParams = generateUpdateRecordingReviewParams({
+        recordingId,
+      });
+      await recordingService.updateRecordingReview(recordingReviewParams);
+
+      const updatedRecording = await recordingModel.findOne({
+        memberId: new Types.ObjectId(memberId),
+      });
+
+      // Create a recording without a review - we are not expecting to see this review alert
+      await recordingService.updateRecording(generateUpdateRecordingParams({ memberId, userId }));
+
+      const alerts = await service.getAlerts(userId, [member]);
+
+      expect(alerts).toEqual([
+        {
+          id: `${recordingId}_${AlertType.appointmentReviewed}`,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          text: service.internationalization.getAlerts(AlertType.appointmentReviewed, { member }),
+          memberId: member.id.toString(),
+          type: AlertType.appointmentReviewed,
+          date: updatedRecording.review.createdAt,
+          dismissed: false,
+          isNew: true,
+        },
+      ]);
+    });
+
+    it('should return appointment submit overdue alerts', async () => {
+      mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
+      // create a new member
+      const member = mockGenerateMember();
+      const memberId = member.id;
+      const userId = member.primaryUserId.toString();
+
+      const appointmentParams = generateScheduleAppointmentParams({ memberId, userId });
+      const { id: appointmentId } = await service.schedule(appointmentParams);
+
+      const endDate = sub(new Date(), { days: 2 });
+      // set an `end` date over 24hrs ago (2 days ago)
+      await appointmentModel.updateOne(
+        { _id: new Types.ObjectId(appointmentId) },
+        { $set: { end: endDate } },
+      );
+
+      const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
+
+      expect(alerts).toEqual([
+        {
+          id: `${appointmentId}_${AlertType.appointmentSubmitOverdue}`,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          text: service.internationalization.getAlerts(AlertType.appointmentSubmitOverdue, {
+            member,
+          }),
+          memberId: member.id.toString(),
+          type: AlertType.appointmentSubmitOverdue,
+          date: add(endDate, { days: 1 }),
+          dismissed: false,
+          isNew: true,
+        },
+      ]);
+    });
   });
 
   const requestAppointment = async ({

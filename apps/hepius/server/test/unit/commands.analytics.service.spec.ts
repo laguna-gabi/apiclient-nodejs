@@ -135,21 +135,25 @@ describe('Commands: AnalyticsService', () => {
     // eslint-disable-next-line max-len
     it('to return 0 duration when all recordings are for un-answered calls', async () => {
       const memberId = generateObjectId();
+      const journeyId = generateObjectId();
       expect(
         analyticsService.getRecordingsSummary([
           {
             id: generateId(),
             memberId,
+            journeyId,
             answered: false,
           },
           {
             id: generateId(),
             memberId,
+            journeyId,
             answered: false,
           },
           {
             id: generateId(),
             memberId,
+            journeyId,
             answered: true,
           },
         ]),
@@ -161,11 +165,13 @@ describe('Commands: AnalyticsService', () => {
     // eslint-disable-next-line max-len
     it('to return primary channel and total duration for answered calls', async () => {
       const memberId = generateObjectId();
+      const journeyId = generateObjectId();
       expect(
         analyticsService.getRecordingsSummary([
           {
             id: generateId(),
             memberId,
+            journeyId,
             answered: false,
             start: now,
             end: add(now, { seconds: 100 }),
@@ -174,6 +180,7 @@ describe('Commands: AnalyticsService', () => {
           {
             id: generateId(),
             memberId,
+            journeyId,
             answered: false,
             start: now,
             end: add(now, { seconds: 100 }),
@@ -182,6 +189,7 @@ describe('Commands: AnalyticsService', () => {
           {
             id: generateId(),
             memberId,
+            journeyId,
             answered: true,
             start: now,
             end: add(now, { seconds: 15 }),
@@ -190,6 +198,7 @@ describe('Commands: AnalyticsService', () => {
           {
             id: generateId(),
             memberId,
+            journeyId,
             answered: true,
             start: now,
             end: add(now, { seconds: 10 }),
@@ -198,6 +207,7 @@ describe('Commands: AnalyticsService', () => {
           {
             id: generateId(),
             memberId,
+            journeyId,
             answered: true,
             start: now,
             end: add(now, { seconds: 25 }),

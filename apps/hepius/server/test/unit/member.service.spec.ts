@@ -16,12 +16,11 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { articlesByDrg, queryDaysLimit } from 'config';
-import { add, sub } from 'date-fns';
+import { sub } from 'date-fns';
 import { address, datatype, date, internet, lorem, name } from 'faker';
-import { isNil, omitBy, pickBy } from 'lodash';
+import { pickBy } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
-import { v4 } from 'uuid';
 import {
   checkDelete,
   compareMembers,
@@ -43,8 +42,6 @@ import {
   generateUpdateCaregiverParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
-  generateUpdateRecordingParams,
-  generateUpdateRecordingReviewParams,
   loadSessionClient,
   mockGenerateDispatch,
   mockGenerateJourney,
@@ -60,7 +57,6 @@ import {
   Errors,
   LoggerService,
   PhoneType,
-  RecordingType,
   defaultTimestampsDbValues,
 } from '../../src/common';
 import { Audit } from '../../src/db';
@@ -83,11 +79,8 @@ import {
   MemberDocument,
   MemberDto,
   MemberModule,
-  MemberRecordingDto,
   MemberService,
   NotNullableMemberKeys,
-  Recording,
-  RecordingDocument,
   Sex,
   UpdateMemberParams,
 } from '../../src/member';
@@ -117,7 +110,6 @@ describe('MemberService', () => {
   let modelOrg: Model<OrgDocument>;
   let modelAppointment: Model<AppointmentDocument>;
   let modelDismissedAlert: Model<DismissedAlertDocument>;
-  let modelRecording: Model<RecordingDocument>;
   let modelCaregiver: Model<CaregiverDocument>;
   let modelQuestionnaire: Model<QuestionnaireDocument>;
   let modelQuestionnaireResponse: Model<QuestionnaireResponseDocument>;
@@ -148,7 +140,6 @@ describe('MemberService', () => {
     modelOrg = model<OrgDocument>(Org.name, OrgDto);
     modelAppointment = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     modelDismissedAlert = model<DismissedAlertDocument>(DismissedAlert.name, DismissedAlertDto);
-    modelRecording = model<RecordingDocument>(Recording.name, MemberRecordingDto);
     modelCaregiver = model<CaregiverDocument>(Caregiver.name, CaregiverDto);
     modelQuestionnaire = model<QuestionnaireDocument>(Questionnaire.name, QuestionnaireDto);
     modelQuestionnaireResponse = model<QuestionnaireResponseDocument>(
@@ -956,10 +947,6 @@ describe('MemberService', () => {
     it('should be able to hard delete after soft delete', async () => {
       const memberId = await generateMember();
       const userId = generateId();
-      const params = generateUpdateRecordingParams({ memberId });
-      const params2 = generateUpdateRecordingParams({ memberId });
-      const { id: recordingId } = await service.updateRecording(params, params.userId);
-      await service.updateRecording(params2, params2.userId);
 
       const { id: caregiverId } = await service.addCaregiver(
         generateAddCaregiverParams({ memberId }),
@@ -982,10 +969,6 @@ describe('MemberService', () => {
         memberId: new Types.ObjectId(memberId),
       });
       // @ts-ignore
-      const recordingDeletedResult = await modelRecording.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
-      // @ts-ignore
       const caregiverDeletedResult = await modelCaregiver.findWithDeleted({
         memberId: new Types.ObjectId(memberId),
       });
@@ -997,7 +980,6 @@ describe('MemberService', () => {
         { memberId: new Types.ObjectId(memberId) },
         userId,
       );
-      await checkDelete(recordingDeletedResult, { memberId: new Types.ObjectId(memberId) }, userId);
       await checkDelete(caregiverDeletedResult, { memberId: new Types.ObjectId(memberId) }, userId);
 
       const resultHard = await service.deleteMember(
@@ -1016,18 +998,13 @@ describe('MemberService', () => {
         memberId: new Types.ObjectId(memberId),
       });
       // @ts-ignore
-      const recordingDeletedResultHard = await modelRecording.findWithDeleted({ id: recordingId });
-      // @ts-ignore
       const caregiverDeletedResultHard = await modelCaregiver.findWithDeleted({ _id: caregiverId });
       /* eslint-enable @typescript-eslint/ban-ts-comment */
-      [
-        memberDeletedResultHard,
-        memberConfigDeletedResultHard,
-        recordingDeletedResultHard,
-        caregiverDeletedResultHard,
-      ].forEach((result) => {
-        expect(result).toEqual([]);
-      });
+      [memberDeletedResultHard, memberConfigDeletedResultHard, caregiverDeletedResultHard].forEach(
+        (result) => {
+          expect(result).toEqual([]);
+        },
+      );
     });
   });
 
@@ -1442,114 +1419,6 @@ describe('MemberService', () => {
     });
 
     describe('entity based alerts', () => {
-      it('should return appointment reviewed alerts', async () => {
-        mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
-        // create a new member
-        const memberId = await generateMember();
-
-        const member = await service.get(memberId);
-
-        // Create a reviewed recording
-        const recordingParams = generateUpdateRecordingParams({ memberId });
-        const recording = await service.updateRecording(
-          recordingParams,
-          member.primaryUserId.toString(),
-        );
-
-        const recordingReviewParams = generateUpdateRecordingReviewParams({
-          recordingId: recording.id,
-        });
-        await service.updateRecordingReview(recordingReviewParams, recordingParams.userId);
-
-        const updatedRecording = await modelRecording.findOne({
-          memberId: new Types.ObjectId(memberId),
-        });
-
-        // Create a recording without a review - we are not expecting to see this review alert
-        await service.updateRecording(
-          generateUpdateRecordingParams({ memberId }),
-          member.primaryUserId.toString(),
-        );
-
-        const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
-
-        expect(alerts).toEqual([
-          {
-            id: `${recording.id}_${AlertType.appointmentReviewed}`,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.appointmentReviewed, { member }),
-            memberId: member.id.toString(),
-            type: AlertType.appointmentReviewed,
-            date: updatedRecording.review.createdAt,
-            dismissed: false,
-            isNew: true,
-          },
-          {
-            id: `${memberId}_${AlertType.memberAssigned}`,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberAssigned, { member }),
-            memberId: member.id.toString(),
-            type: AlertType.memberAssigned,
-            date: member.createdAt,
-            dismissed: false,
-            isNew: true,
-          },
-        ]);
-      });
-
-      it('should return appointment submit overdue alerts', async () => {
-        mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
-        // create a new member
-        const memberId = await generateMember();
-
-        const member = await service.get(memberId);
-
-        // create a `scheduled` appointment for the member (and primary user)
-        const { id: appointmentId } = await generateAppointment({
-          memberId,
-          userId: member.primaryUserId.toString(),
-          status: AppointmentStatus.scheduled,
-        });
-
-        const endDate = sub(new Date(), { days: 2 });
-        // set an `end` date over 24hrs ago (2 days ago)
-        await modelAppointment.updateOne(
-          { _id: new Types.ObjectId(appointmentId) },
-          { $set: { end: endDate } },
-        );
-
-        const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
-
-        expect(alerts).toEqual([
-          {
-            id: `${memberId}_${AlertType.memberAssigned}`,
-            memberId: member.id.toString(),
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberAssigned, { member }),
-            type: AlertType.memberAssigned,
-            date: member.createdAt,
-            dismissed: false,
-            isNew: true,
-          },
-          {
-            id: `${appointmentId}_${AlertType.appointmentSubmitOverdue}`,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.appointmentSubmitOverdue, {
-              member,
-            }),
-            memberId: member.id.toString(),
-            type: AlertType.appointmentSubmitOverdue,
-            date: add(endDate, { days: 1 }),
-            dismissed: false,
-            isNew: true,
-          },
-        ]);
-      });
-
       it.each([
         [
           'should return score over threshold assessment alerts - total score over threshold',
@@ -1776,186 +1645,6 @@ describe('MemberService', () => {
       const memberConfig = await service.getMemberConfig(id);
 
       expect(memberConfig.articlesPath).toEqual(articlesByDrg['123']);
-    });
-  });
-
-  describe('updateRecording + getRecordings', () => {
-    it('should fail to update recording on non existing member', async () => {
-      await expect(
-        service.updateRecording(generateUpdateRecordingParams(), generateId()),
-      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
-    });
-
-    it('should fail to update an existing id for different member', async () => {
-      const userId = generateId();
-      const memberId1 = await generateMember();
-      const params1 = generateUpdateRecordingParams({ memberId: memberId1 });
-      const recording1 = await service.updateRecording(params1, userId);
-
-      const memberId2 = await generateMember();
-      const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId: memberId2 });
-      await expect(service.updateRecording(recording2, userId)).rejects.toThrow(
-        Errors.get(ErrorType.memberRecordingSameUserEdit),
-      );
-    });
-
-    it('should insert recording if id does not exist', async () => {
-      const memberId = await generateMember();
-      const params = generateUpdateRecordingParams({ memberId, id: v4() });
-      const result = await service.updateRecording(params, params.userId);
-      expect(result).toEqual(
-        expect.objectContaining(
-          omitBy({ ...params, memberId: new Types.ObjectId(params.memberId) }, isNil),
-        ),
-      );
-    });
-
-    it('should create a member recording with undefined id on 1st time', async () => {
-      const memberId = await generateMember();
-      const params = generateUpdateRecordingParams({ memberId });
-      params.id = undefined;
-      const result = await service.updateRecording(params, params.userId);
-      expect(result).toEqual(
-        expect.objectContaining(
-          omitBy({ ...params, memberId: new Types.ObjectId(params.memberId) }, isNil),
-        ),
-      );
-    });
-
-    it('should update a member recording', async () => {
-      const memberId = await generateMember();
-      const params = generateUpdateRecordingParams({ memberId });
-      const recording = await service.updateRecording(params, params.userId);
-
-      const recordings = await service.getRecordings(memberId);
-      expect(recordings.length).toEqual(1);
-      expect(recordings[0].id).toEqual(recording.id);
-      expect(recordings[0]).toEqual(
-        expect.objectContaining(
-          omitBy({ ...params, memberId: new Types.ObjectId(params.memberId) }, isNil),
-        ),
-      );
-    });
-
-    test.each(['start', 'end', 'userId', 'phone', 'answered', 'recordingType', 'appointmentId'])(
-      'should not override optional field %p when not set from params',
-      async (param) => {
-        const memberId = await generateMember();
-        const params1 = generateUpdateRecordingParams({
-          memberId,
-          appointmentId: generateId(),
-          recordingType: RecordingType.phone,
-        });
-        const { id } = await service.updateRecording(params1, params1.userId);
-        const params2 = generateUpdateRecordingParams({ id, memberId });
-        delete params2[param];
-        await service.updateRecording(params2, params2.userId);
-
-        const recordings = await service.getRecordings(memberId);
-        expect(recordings.length).toEqual(1);
-        expect(recordings[0][param]).toEqual(
-          param === 'appointmentId' ? new Types.ObjectId(params1.appointmentId) : params1[param],
-        );
-      },
-    );
-
-    it('should multiple update members recordings', async () => {
-      const memberId1 = await generateMember();
-      const params1a = generateUpdateRecordingParams({ memberId: memberId1 });
-      const recording1a = await service.updateRecording(params1a, params1a.userId);
-      const params1b = generateUpdateRecordingParams({ memberId: memberId1 });
-      params1b.end = undefined;
-      const recording1b = await service.updateRecording(params1b, params1b.userId);
-      const memberId2 = await generateMember();
-      const params2 = generateUpdateRecordingParams({ memberId: memberId2 });
-      const recording2 = await service.updateRecording(params2, params2.userId);
-
-      const recordings1 = await service.getRecordings(memberId1);
-      expect(recordings1.length).toEqual(2);
-      expect(recordings1[0]).toEqual(expect.objectContaining(recording1a));
-      expect(recordings1[1]).toEqual(expect.objectContaining(recording1b));
-
-      const recordings2 = await service.getRecordings(memberId2);
-      expect(recordings2.length).toEqual(1);
-      expect(recordings2[0]).toEqual(expect.objectContaining(recording2));
-    });
-  });
-
-  describe('updateRecordingReview', () => {
-    it('should fail to update review on non existing member', async () => {
-      await expect(
-        service.updateRecordingReview(generateUpdateRecordingReviewParams(), generateId()),
-      ).rejects.toThrow(Errors.get(ErrorType.memberRecordingNotFound));
-    });
-
-    it('should fail to update review if user created recording', async () => {
-      const memberId = await generateMember();
-      const params = generateUpdateRecordingParams({ memberId });
-      const recording = await service.updateRecording(params, params.userId);
-
-      await expect(
-        service.updateRecordingReview(
-          generateUpdateRecordingReviewParams({ recordingId: recording.id }),
-          recording.userId,
-        ),
-      ).rejects.toThrow(Errors.get(ErrorType.memberRecordingSameUser));
-    });
-
-    it('should fail to update review if different user wrote review', async () => {
-      const userId1 = generateId();
-      const userId2 = generateId();
-
-      const memberId = await generateMember();
-      const params1 = generateUpdateRecordingParams({ memberId });
-      const recording = await service.updateRecording(params1, params1.userId);
-
-      const paramsReview = generateUpdateRecordingReviewParams({ recordingId: recording.id });
-      await service.updateRecordingReview(paramsReview, userId1);
-
-      await expect(
-        service.updateRecordingReview(
-          generateUpdateRecordingReviewParams({ recordingId: paramsReview.recordingId }),
-          userId2,
-        ),
-      ).rejects.toThrow(Errors.get(ErrorType.memberRecordingSameUserEdit));
-    });
-
-    it('should create a review', async () => {
-      const memberId = await generateMember();
-      const params = generateUpdateRecordingParams({ memberId });
-      const recording = await service.updateRecording(params, params.userId);
-
-      const userId = generateId();
-      const paramsReview = generateUpdateRecordingReviewParams({ recordingId: recording.id });
-      await service.updateRecordingReview(paramsReview, userId);
-
-      const recordings = await service.getRecordings(memberId);
-      const { review } = recordings[0];
-
-      expect(review.content).toEqual(paramsReview.content);
-      expect(review.userId.toString()).toEqual(userId);
-      expect(review.createdAt).toBeInstanceOf(Date);
-      expect(review.createdAt).toEqual(review.updatedAt);
-    });
-
-    it('should update a review', async () => {
-      const memberId = await generateMember();
-      const params = generateUpdateRecordingParams({ memberId });
-      const recording = await service.updateRecording(params, params.userId);
-
-      const userId = generateId();
-      const paramsReview = generateUpdateRecordingReviewParams({ recordingId: recording.id });
-      await service.updateRecordingReview(paramsReview, userId);
-
-      const newParams = generateUpdateRecordingReviewParams({ recordingId: recording.id });
-      await service.updateRecordingReview(newParams, userId);
-
-      const recordings = await service.getRecordings(memberId);
-      const { review } = recordings[0];
-
-      expect(review.content).toEqual(newParams.content);
-      expect(review.updatedAt).toBeInstanceOf(Date);
-      expect(review.createdAt).not.toEqual(review.updatedAt);
     });
   });
 

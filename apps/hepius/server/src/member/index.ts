@@ -1,7 +1,6 @@
 export * from './member.interfaces';
 export * from './member.dto';
 export * from './memberConfig.dto';
-export * from './member.recording.dto';
 export * from './caregiver.dto';
 export * from './insurance.dto';
 export * from './member.service';
