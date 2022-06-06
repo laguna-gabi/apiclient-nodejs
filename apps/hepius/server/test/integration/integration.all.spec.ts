@@ -109,7 +109,7 @@ import {
 import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 
-describe.skip('Integration tests: all', () => {
+describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
