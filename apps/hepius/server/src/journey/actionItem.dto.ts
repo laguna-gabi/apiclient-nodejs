@@ -104,7 +104,7 @@ export class ActionItem extends Identifier {
   journeyId: Types.ObjectId;
 
   @Prop()
-  @Field(() => String, { nullable: true })
+  @Field(() => String)
   title: string;
 
   @Prop({ type: String, enum: ActionItemStatus })
