@@ -39,7 +39,7 @@ import {
   NotesDocument,
   NotesDto,
 } from '../../src/appointment';
-import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
+import { AceGuard, EntityResolver, GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { Availability, AvailabilityDocument, AvailabilityDto } from '../../src/availability';
 import {
   BarrierDocument,
@@ -121,6 +121,7 @@ import {
   UserService,
 } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
+import { getConnectionToken } from '@nestjs/mongoose';
 
 export class Handler extends BaseHandler {
   sendBird;
@@ -191,7 +192,10 @@ export class Handler extends BaseHandler {
 
     const reflector = this.app.get(Reflector);
     this.app.useGlobalGuards(new GlobalAuthGuard());
-    this.app.useGlobalGuards(new RolesGuard(reflector));
+    this.app.useGlobalGuards(
+      new RolesGuard(reflector),
+      new AceGuard(reflector, new EntityResolver(this.app.get(getConnectionToken()))),
+    );
     this.app.use(requestContextMiddleware(AppRequestContext));
 
     this.app.useGlobalInterceptors(new TcpAuthInterceptor());

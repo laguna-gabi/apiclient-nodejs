@@ -94,6 +94,7 @@ export enum EntityName {
   caregiver = 'caregiver',
   insurance = 'insurance',
   barrier = 'barrier',
+  member = 'member',
 }
 
 export interface IChangeEvent {

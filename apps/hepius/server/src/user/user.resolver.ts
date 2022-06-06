@@ -1,6 +1,6 @@
 import { MemberRole, User, UserRole } from '@argus/hepiusClient';
 import { IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
-import { ClientCategory, GlobalEventType, QueueType, formatEx } from '@argus/pandora';
+import { ClientCategory, EntityName, GlobalEventType, QueueType, formatEx } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -15,6 +15,7 @@ import {
   UserSummary,
 } from '.';
 import {
+  Ace,
   Client,
   ErrorType,
   Errors,
@@ -132,6 +133,7 @@ export class UserResolver {
 
   @Query(() => Slots)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getUserSlotsByAppointmentId(
     @Args(
       'appointmentId',

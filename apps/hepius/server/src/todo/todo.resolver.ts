@@ -1,6 +1,6 @@
 import { Identifier, MemberRole, RoleTypes, UserRole } from '@argus/hepiusClient';
 import { TodoInternalKey, generateDispatchId } from '@argus/irisClient';
-import { NotificationType } from '@argus/pandora';
+import { EntityName, NotificationType } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -22,6 +22,7 @@ import {
   UpdateTodoParams,
 } from '.';
 import {
+  Ace,
   Client,
   ErrorType,
   Errors,
@@ -53,6 +54,7 @@ export class TodoResolver {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async createTodo(
     @Client('roles') roles,
     @Client('_id') clientId,
@@ -86,6 +88,7 @@ export class TodoResolver {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getTodos(
     @Args(
       'memberId',
@@ -102,6 +105,7 @@ export class TodoResolver {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async updateTodo(
     @Client('roles') roles,
     @Client('_id') clientId,
@@ -120,6 +124,7 @@ export class TodoResolver {
 
   @Mutation(() => Boolean)
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async endTodo(
     @Client('_id') clientId,
     @Client('roles') roles,
@@ -140,6 +145,7 @@ export class TodoResolver {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async approveTodo(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -157,6 +163,7 @@ export class TodoResolver {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async createTodoDone(
     @Client('roles') roles,
     @Args(camelCase(CreateTodoDoneParams.name)) createTodoDoneParams: CreateTodoDoneParams,
@@ -172,6 +179,7 @@ export class TodoResolver {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getTodoDones(
     @Args(camelCase(GetTodoDonesParams.name)) getTodoDonesParams: GetTodoDonesParams,
   ) {
@@ -181,6 +189,7 @@ export class TodoResolver {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async deleteTodoDone(
     @Client('roles') roles,
     @Client('_id') memberId,

@@ -1,4 +1,5 @@
 import { MemberRole, UserRole } from '@argus/hepiusClient';
+import { EntityName } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -12,6 +13,7 @@ import {
   SubmitQuestionnaireResponseParams,
 } from '.';
 import {
+  Ace,
   Client,
   ErrorType,
   Errors,
@@ -50,6 +52,7 @@ export class QuestionnaireResolver {
 
   @Query(() => Questionnaire)
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getQuestionnaire(
     @Client('roles') roles,
     @Args(
@@ -94,6 +97,7 @@ export class QuestionnaireResolver {
 
   @Mutation(() => QuestionnaireResponse)
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   async submitQuestionnaireResponse(

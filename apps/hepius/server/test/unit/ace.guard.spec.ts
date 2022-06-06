@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { UserRole } from '@argus/hepiusClient';
-import { generateId, generateObjectId, mockProcessWarnings } from '@argus/pandora';
+import { EntityName, generateId, generateObjectId, mockProcessWarnings } from '@argus/pandora';
 import { createMock } from '@golevelup/ts-jest';
 import { ExecutionContext } from '@nestjs/common';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { Reflector } from '@nestjs/core';
 import { AceGuard, EntityResolver } from '../../src/auth';
 import { Types } from 'mongoose';
-import { AceStrategy } from '../../src/common';
 import { Member } from '../../src/member';
 import { Journey } from '../../src/journey';
 
@@ -35,6 +34,7 @@ describe(AceGuard.name, () => {
     test.each([
       { roles: [UserRole.lagunaCoach] },
       { roles: [UserRole.lagunaAdmin] },
+      { roles: [UserRole.lagunaNurse] },
       { roles: [UserRole.lagunaAdmin, UserRole.coach] },
     ])(`to allow access for a Laguna user %p`, async (client) => {
       spyOnMockExecutionContextSwitchToHttp.mockReturnValueOnce(mockHttpArgumentsHost);
@@ -76,7 +76,6 @@ describe(AceGuard.name, () => {
       spyOnMockReflectorGet
         .mockReturnValueOnce(false) // `isPublic`
         .mockReturnValueOnce({
-          strategy: AceStrategy.entity,
           entityName: Member.name,
           idLocator: 'memberId',
         }); // `aceOptions`
@@ -110,8 +109,7 @@ describe(AceGuard.name, () => {
       spyOnMockReflectorGet
         .mockReturnValueOnce(false) // `isPublic`
         .mockReturnValueOnce({
-          strategy: AceStrategy.entity,
-          entityName: Member.name,
+          entityName: EntityName.member,
           idLocator: 'memberId',
         }); // `aceOptions`
 
@@ -141,7 +139,6 @@ describe(AceGuard.name, () => {
       spyOnMockReflectorGet
         .mockReturnValueOnce(false) // `isPublic`
         .mockReturnValueOnce({
-          strategy: AceStrategy.entity,
           entityName: Journey.name,
           idLocator: 'id',
           entityMemberIdLocator: `customMemberId`,
@@ -189,7 +186,6 @@ describe(AceGuard.name, () => {
       spyOnMockReflectorGet
         .mockReturnValueOnce(false) // `isPublic`
         .mockReturnValueOnce({
-          strategy: AceStrategy.entity,
           entityName: Journey.name,
           idLocator: 'id',
           entityMemberIdLocator: `customMemberId`,
@@ -219,24 +215,6 @@ describe(AceGuard.name, () => {
 
       expect(spyOnMockEntityResolver).toHaveBeenNthCalledWith(1, Journey.name, entityId);
       expect(spyOnMockEntityResolver).toHaveBeenNthCalledWith(2, Member.name, memberId);
-    });
-
-    // eslint-disable-next-line max-len
-    it(`to allow access for a non-Laguna coach user when handler is marked as custom ACE`, async () => {
-      spyOnMockExecutionContextSwitchToHttp.mockReturnValueOnce(mockHttpArgumentsHost);
-      spyOnMockHttpArgumentsHostGetRequest.mockReturnValueOnce({
-        user: { roles: [UserRole.coach], orgs: [generateObjectId()] },
-      });
-
-      spyOnMockReflectorGet
-        .mockReturnValueOnce(false) // `isPublic`
-        .mockReturnValueOnce({
-          strategy: AceStrategy.custom,
-        }); // `aceOptions`
-
-      const guard = new AceGuard(mockReflector, mockEntityResolver);
-
-      expect(await guard.canActivate(mockExecutionContext)).toBeTruthy();
     });
 
     // eslint-disable-next-line max-len

@@ -1,9 +1,10 @@
 import { MemberRole, User, UserRole } from '@argus/hepiusClient';
+import { EntityName } from '@argus/pandora';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Types } from 'mongoose';
 import { BaseGuard, EntityResolver } from '.';
-import { AceOptions, AceStrategy, DecoratorType, defaultEntityMemberIdLocator } from '../common';
+import { AceOptions, DecoratorType, defaultEntityMemberIdLocator } from '../common';
 import { Member } from '../member';
 
 @Injectable()
@@ -13,6 +14,11 @@ export class AceGuard extends BaseGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // `rpc` type requests are managed via the TCP Auth. Interceptor
+    if (context.getType() === 'rpc') {
+      return true;
+    }
+
     const isPublic = this.reflector.get<boolean>(DecoratorType.isPublic, context.getHandler());
     const aceOptions = this.reflector.get<AceOptions>(
       DecoratorType.aceOptions,
@@ -45,26 +51,15 @@ export class AceGuard extends BaseGuard implements CanActivate {
 
     // #2: if client is a Member we should allow access only to self
     // Note: if member id is empty we rely on an interceptor to set the `memberId`,
-    // however, in that case the developer should set ace strategy to `custom` explicitly
     if (this.isMember(client)) {
-      return (
-        (memberId && client.id === memberId) ||
-        (!memberId && aceOptions.strategy === AceStrategy.custom)
-      );
+      return (memberId && client.id === memberId) || !memberId;
     } else {
-      // #3: if client is a user we allow access based on org provisioning
+      // #3: if client is a user we allow/deny access based on org provisioning
       if (Types.ObjectId.isValid(memberId)) {
         const member = await this.entityResolver.getEntityById(Member.name, memberId);
-        if (client.orgs?.find((org) => org.toString() === member?.org.id)) {
-          return true;
-        }
+        return !!client.orgs?.find((org) => org.toString() === member?.org.id);
       }
-      // #4: if a member id could not be found and the route is marked with @CustomAceType
-      // the ACE logic is implemented downstream from pre handler decorators
-      return aceOptions?.strategy === AceStrategy.custom;
     }
-
-    return false;
   }
 
   // Description: get the request affected member id
@@ -85,7 +80,7 @@ export class AceGuard extends BaseGuard implements CanActivate {
           entityId = args[paramsName][aceOptions.idLocator];
         }
 
-        if (aceOptions.entityName === Member.name) {
+        if (aceOptions.entityName === EntityName.member) {
           return entityId;
         } else {
           // if the args only carry a non-member entity id we can resolve the member id by fetching the entity

@@ -22,6 +22,7 @@ import {
   generateDispatchId,
 } from '@argus/irisClient';
 import {
+  EntityName,
   Environments,
   GlobalEventType,
   IEventNotifySlack,
@@ -51,6 +52,7 @@ import { getTimezoneOffset } from 'date-fns-tz';
 import { camelCase } from 'lodash';
 import { lookup } from 'zipcode-to-timezone';
 import {
+  Ace,
   Alert,
   Client,
   ErrorType,
@@ -167,6 +169,7 @@ export class MemberResolver extends MemberBase {
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Ace({ entityName: EntityName.member, idLocator: `id` })
   async getMember(
     @Args(
       'id',
@@ -319,6 +322,7 @@ export class MemberResolver extends MemberBase {
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberUploadDischargeDocumentsLinks(
     @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)))
     id?: string,
@@ -348,6 +352,7 @@ export class MemberResolver extends MemberBase {
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberDownloadDischargeDocumentsLinks(
     @Args(
       'id',
@@ -639,7 +644,8 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Caregiver)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   async addCaregiver(
@@ -651,6 +657,7 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async deleteCaregiver(
     @Args(
       'id',
@@ -671,6 +678,7 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Caregiver)
   @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   async updateCaregiver(
@@ -684,6 +692,7 @@ export class MemberResolver extends MemberBase {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getCaregivers(
     @Args(
       'memberId',
@@ -729,6 +738,7 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async registerMemberForNotifications(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -1149,6 +1159,7 @@ export class MemberResolver extends MemberBase {
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberConfig(
     @Args(
       'id',
@@ -1164,6 +1175,7 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async updateMemberConfig(
     @Client('roles') roles,
     @Client('_id') memberId,

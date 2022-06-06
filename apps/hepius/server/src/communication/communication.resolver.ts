@@ -11,6 +11,7 @@ import {
   UnreadMessagesCount,
 } from '.';
 import {
+  Ace,
   Client,
   ErrorType,
   Errors,
@@ -27,7 +28,7 @@ import {
   UpdatedAppointmentAction,
 } from '../common';
 import { UserService } from '../user';
-import { formatEx } from '@argus/pandora';
+import { EntityName, formatEx } from '@argus/pandora';
 import { AppointmentStatus, MemberRole, UserRole } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
@@ -81,6 +82,7 @@ export class CommunicationResolver {
 
   @Query(() => UnreadMessagesCount)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   getMemberUnreadMessagesCount(@Client('roles') roles, @Client('_id') memberId) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
@@ -91,6 +93,7 @@ export class CommunicationResolver {
 
   @Query(() => MemberCommunicationInfo)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberCommunicationInfo(
     @Client('roles') roles,
     @Client('_id') memberId,

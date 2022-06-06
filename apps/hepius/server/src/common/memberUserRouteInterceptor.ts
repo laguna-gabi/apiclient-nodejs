@@ -1,4 +1,4 @@
-import { MemberRole, UserRole } from '@argus/hepiusClient';
+import { MemberRole } from '@argus/hepiusClient';
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
@@ -47,12 +47,7 @@ export class MemberUserRouteInterceptor implements NestInterceptor<void> {
       // params
       if (clientRoles.includes(MemberRole.member)) {
         context.getArgByIndex(1)[memberId] = clientId.toString();
-      } else if (
-        (clientRoles.includes(UserRole.lagunaCoach) ||
-          clientRoles.includes(UserRole.lagunaNurse) ||
-          clientRoles.includes(UserRole.lagunaAdmin)) &&
-        !context.getArgByIndex(1)[memberId]
-      ) {
+      } else if (!context.getArgByIndex(1)[memberId]) {
         throw new Error(Errors.get(ErrorType.memberIdInvalid));
       }
     } else {
@@ -60,12 +55,7 @@ export class MemberUserRouteInterceptor implements NestInterceptor<void> {
       const paramsName = Object.keys(context.getArgByIndex(1))[0];
       if (clientRoles.includes(MemberRole.member)) {
         context.getArgByIndex(1)[paramsName][memberId] = clientId.toString();
-      } else if (
-        (clientRoles.includes(UserRole.lagunaCoach) ||
-          clientRoles.includes(UserRole.lagunaNurse) ||
-          clientRoles.includes(UserRole.lagunaAdmin)) &&
-        !context.getArgByIndex(1)[paramsName][memberId]
-      ) {
+      } else if (!context.getArgByIndex(1)[paramsName][memberId]) {
         throw new Error(Errors.get(ErrorType.memberIdInvalid));
       }
     }

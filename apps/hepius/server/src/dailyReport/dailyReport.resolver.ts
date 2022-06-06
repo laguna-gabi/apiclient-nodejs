@@ -1,6 +1,6 @@
 import { MemberRole, UserRole } from '@argus/hepiusClient';
 import { LogInternalKey, generateDispatchId } from '@argus/irisClient';
-import { NotificationType } from '@argus/pandora';
+import { EntityName, NotificationType } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -14,6 +14,7 @@ import {
   ParseDailyReportInputTransform,
 } from '.';
 import {
+  Ace,
   Client,
   EventType,
   IInternalDispatch,
@@ -41,6 +42,7 @@ export class DailyReportResolver {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async setDailyReportCategories(
     @Client('roles') roles,
     @Client('primaryUserId') primaryUserId,
@@ -100,6 +102,7 @@ export class DailyReportResolver {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.lagunaCoach, MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getDailyReports(
     @Client('roles') roles,
     @Args(

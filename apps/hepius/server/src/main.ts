@@ -7,9 +7,10 @@ import {
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { getConnectionToken } from '@nestjs/mongoose';
 import { general, services } from 'config';
 import { AppModule } from './app.module';
-import { GlobalAuthGuard, RolesGuard } from './auth';
+import { AceGuard, EntityResolver, GlobalAuthGuard, RolesGuard } from './auth';
 import { AllExceptionsFilter, LoggerService } from './common';
 
 async function bootstrap() {
@@ -24,7 +25,10 @@ async function bootstrap() {
   // Guard ALL routes (GQL and REST) - new routes must be explicitly annotated
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new GlobalAuthGuard());
-  app.useGlobalGuards(new RolesGuard(reflector));
+  app.useGlobalGuards(
+    new RolesGuard(reflector),
+    new AceGuard(reflector, new EntityResolver(app.get(getConnectionToken()))),
+  );
 
   app.use(requestContextMiddleware(AppRequestContext));
 

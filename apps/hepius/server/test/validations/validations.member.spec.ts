@@ -2,7 +2,6 @@ import { ExternalKey } from '@argus/irisClient';
 import {
   CancelNotificationType,
   NotificationType,
-  Platform,
   generateId,
   generateZipCode,
 } from '@argus/pandora';
@@ -442,36 +441,6 @@ describe('Validations - member', () => {
       await handler.queries.getMemberConfig({
         id: generateId(),
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
-      });
-    });
-  });
-
-  describe('registerForNotificationParams', () => {
-    test.each([
-      {
-        token: 'a-b',
-        memberId: generateId(),
-        error: Errors.get(ErrorType.memberRegisterForNotificationToken),
-      },
-      {
-        token: 'a_b',
-        memberId: generateId(),
-        error: Errors.get(ErrorType.memberRegisterForNotificationToken),
-      },
-      {
-        token: 'ab',
-        memberId: '123',
-        error: Errors.get(ErrorType.memberIdInvalid),
-      },
-    ])('should not be able to register due to invalid fields %p', async (params) => {
-      await handler.mutations.registerMemberForNotifications({
-        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
-        registerForNotificationParams: {
-          platform: Platform.ios,
-          token: params.token,
-          memberId: params.memberId,
-        },
-        invalidFieldsErrors: [params.error],
       });
     });
   });
@@ -1218,9 +1187,8 @@ describe('Validations - member', () => {
 
     describe('getCaregivers', () => {
       test.each`
-        input    | error
-        ${'123'} | ${[Errors.get(ErrorType.memberIdInvalid)]}
-        ${123}   | ${stringError}
+        input  | error
+        ${123} | ${stringError}
       `(`should fail to get caregivers by member id $input is not a valid type`, async (params) => {
         await handler.queries.getCaregivers({
           memberId: params.input,

@@ -1,5 +1,6 @@
 import { UseInterceptors } from '@nestjs/common';
 import {
+  Ace,
   Client,
   ErrorType,
   Errors,
@@ -35,7 +36,7 @@ import {
 } from '.';
 import { Identifier, MemberRole, UserRole } from '@argus/hepiusClient';
 import { camelCase } from 'lodash';
-import { StorageType } from '@argus/pandora';
+import { EntityName, StorageType } from '@argus/pandora';
 import { StorageService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -182,6 +183,7 @@ export class JourneyResolver {
 
   @Mutation(() => Identifier)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async createJournal(@Client('roles') roles, @Client('_id') memberId) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
@@ -192,6 +194,7 @@ export class JourneyResolver {
 
   @Mutation(() => Journal)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async updateJournalText(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -213,6 +216,7 @@ export class JourneyResolver {
 
   @Query(() => Journal)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getJournal(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -229,6 +233,7 @@ export class JourneyResolver {
 
   @Query(() => [Journal])
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getJournals(@Client('roles') roles, @Client('_id') memberId) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
@@ -245,6 +250,7 @@ export class JourneyResolver {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async deleteJournal(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -288,6 +294,7 @@ export class JourneyResolver {
 
   @Query(() => JournalUploadImageLink)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberUploadJournalImageLink(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -318,6 +325,7 @@ export class JourneyResolver {
 
   @Query(() => JournalUploadAudioLink)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberUploadJournalAudioLink(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -348,6 +356,7 @@ export class JourneyResolver {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async deleteJournalImage(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -393,6 +402,7 @@ export class JourneyResolver {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async deleteJournalAudio(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -429,6 +439,7 @@ export class JourneyResolver {
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(MemberRole.member)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async publishJournal(
     @Client('roles') roles,
     @Client('_id') memberId,

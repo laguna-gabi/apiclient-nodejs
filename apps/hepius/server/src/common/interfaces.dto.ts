@@ -1,6 +1,7 @@
 import { ICreateDispatch } from '@argus/irisClient';
 import {
   CancelNotificationType,
+  EntityName,
   Language,
   NotificationType,
   Platform,
@@ -213,16 +214,11 @@ export interface SeverityLevelInterface {
 
 export const defaultEntityMemberIdLocator = 'memberId';
 
-export enum AceStrategy {
-  entity = 'entity',
-  custom = 'custom',
-}
 export class AceOptions {
-  strategy: AceStrategy;
   /**
    * affected entity name in request
    */
-  entityName?: string;
+  entityName?: EntityName;
   /**
    * entity id locator name in request args
    */

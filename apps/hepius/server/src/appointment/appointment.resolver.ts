@@ -1,5 +1,5 @@
 import { AppointmentInternalKey, RegisterInternalKey, generateDispatchId } from '@argus/irisClient';
-import { NotificationType, formatEx } from '@argus/pandora';
+import { EntityName, NotificationType, formatEx } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -14,6 +14,7 @@ import {
   UpdateNotesParams,
 } from '.';
 import {
+  Ace,
   Client,
   ErrorType,
   Errors,
@@ -83,6 +84,7 @@ export class AppointmentResolver extends AppointmentBase {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async scheduleAppointment(
     @Args(camelCase(ScheduleAppointmentParams.name))
     scheduleAppointmentParams: ScheduleAppointmentParams,
