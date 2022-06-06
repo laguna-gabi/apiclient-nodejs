@@ -118,6 +118,7 @@ import {
   defaultMemberParams,
 } from '../src/member';
 import {
+  ActionItemCategory,
   ActionItemStatus,
   Activity,
   AdmitSource,
@@ -145,6 +146,8 @@ import {
   MedicationStatus,
   PrimaryDiagnosisType,
   ReadmissionRisk,
+  RelatedEntity,
+  RelatedEntityType,
   SecondaryDiagnosisType,
   SetGeneralNotesParams,
   UpdateActionItemParams,
@@ -548,9 +551,28 @@ export const generateUpdateMemberConfigParams = ({
 export const generateCreateActionItemParams = ({
   memberId = generateId(),
   title = lorem.words(2),
+  description = lorem.words(2),
+  category = randomEnum(ActionItemCategory) as ActionItemCategory,
+  priority,
   deadline = fakerDate.soon(3),
+  relatedEntities,
 }: Partial<CreateActionItemParams> = {}): CreateActionItemParams => {
-  return { memberId, title, deadline };
+  return {
+    memberId,
+    title,
+    deadline,
+    description,
+    category,
+    priority,
+    relatedEntities,
+  };
+};
+
+export const generateRelatedEntity = ({
+  id = generateId(),
+  type = randomEnum(RelatedEntityType) as RelatedEntityType,
+}: Partial<RelatedEntity> = {}): RelatedEntity => {
+  return { id, type };
 };
 
 export const generateUpdateActionItemParams = ({

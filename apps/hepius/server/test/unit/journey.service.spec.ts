@@ -2,6 +2,7 @@ import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import {
+  ActionItemPriority,
   ActionItemStatus,
   ImageFormat,
   Journal,
@@ -10,6 +11,7 @@ import {
   JourneyModule,
   JourneyService,
   ReadmissionRisk,
+  RelatedEntityType,
   UpdateJourneyParams,
 } from '../../src/journey';
 import {
@@ -19,6 +21,7 @@ import {
   generateCreateActionItemParams,
   generateCreateJourneyParams,
   generateGetMemberUploadJournalImageLinkParams,
+  generateRelatedEntity,
   generateSetGeneralNotesParams,
   generateUpdateActionItemParams,
   generateUpdateJournalTextParams,
@@ -411,12 +414,9 @@ describe(JourneyService.name, () => {
       const memberId = generateId();
       await service.create(generateCreateJourneyParams({ memberId }));
       const createActionItemParams = generateCreateActionItemParams({ memberId });
-      const { id } = await service.insertActionItem({
-        createActionItemParams: createActionItemParams,
-        status: ActionItemStatus.active,
-      });
+      const { id } = await service.insertActionItem(createActionItemParams);
 
-      expect(id).toEqual(expect.any(Types.ObjectId));
+      expect(id).toEqual(expect.any(String));
     });
   });
 
@@ -425,10 +425,7 @@ describe(JourneyService.name, () => {
       const memberId = generateId();
       await service.create(generateCreateJourneyParams({ memberId }));
       const createActionItemParams = generateCreateActionItemParams({ memberId });
-      const { id } = await service.insertActionItem({
-        createActionItemParams: createActionItemParams,
-        status: ActionItemStatus.active,
-      });
+      const { id } = await service.insertActionItem(createActionItemParams);
 
       const status = ActionItemStatus.completed;
       await service.updateActionItem({ id, status });
@@ -444,30 +441,39 @@ describe(JourneyService.name, () => {
   });
 
   describe('getActionItems', () => {
-    it('should get existing action items', async () => {
+    it('should create and get action items', async () => {
       const memberId = generateId();
       await service.create(generateCreateJourneyParams({ memberId }));
       const createActionItemParams1 = generateCreateActionItemParams({ memberId });
-      const createActionItemParams2 = generateCreateActionItemParams({ memberId });
-      await service.insertActionItem({
-        createActionItemParams: createActionItemParams1,
-        status: ActionItemStatus.active,
+      const questionnaire = generateRelatedEntity({ type: RelatedEntityType.questionnaire });
+      const createActionItemParams2 = generateCreateActionItemParams({
+        memberId,
+        priority: ActionItemPriority.urgent,
+        relatedEntities: [questionnaire],
       });
-      await service.insertActionItem({
-        createActionItemParams: createActionItemParams2,
-        status: ActionItemStatus.completed,
-      });
+      await service.insertActionItem(createActionItemParams1);
+      await service.insertActionItem(createActionItemParams2);
 
       const results = await service.getActionItems(memberId);
       expect(results.length).toEqual(2);
-      expect(results[0]).toMatchObject({
-        ...createActionItemParams2,
-        status: ActionItemStatus.completed,
-      });
-      expect(results[1]).toMatchObject({
-        ...createActionItemParams1,
-        status: ActionItemStatus.active,
-      });
+      expect(results).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createActionItemParams1,
+            memberId: new Types.ObjectId(memberId),
+            // test default properties
+            relatedEntities: [],
+            status: ActionItemStatus.active,
+            priority: ActionItemPriority.normal,
+          }),
+          expect.objectContaining({
+            ...createActionItemParams2,
+            relatedEntities: [questionnaire],
+            status: ActionItemStatus.active,
+            memberId: new Types.ObjectId(memberId),
+          }),
+        ]),
+      );
     });
 
     it('should return empty array on non existing action items per member', async () => {

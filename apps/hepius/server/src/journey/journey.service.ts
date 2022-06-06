@@ -1,18 +1,7 @@
-import { Identifier } from '@argus/hepiusClient';
 import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { isEmpty, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
-import {
-  CreateJourneyParams,
-  GraduateMemberParams,
-  Journey,
-  JourneyDocument,
-  SetGeneralNotesParams,
-  UpdateJourneyParams,
-} from '.';
 import {
   Alert,
   AlertService,
@@ -28,6 +17,18 @@ import {
   deleteMemberObjects,
 } from '../common';
 import { ISoftDelete } from '../db';
+import {
+  ActionItemPriority,
+  CreateJourneyParams,
+  GraduateMemberParams,
+  Journey,
+  JourneyDocument,
+  SetGeneralNotesParams,
+  UpdateJourneyParams,
+} from '.';
+import { Identifier } from '@argus/hepiusClient';
+import { OnEvent } from '@nestjs/event-emitter';
+import { isEmpty, isNil, omitBy } from 'lodash';
 import { Internationalization } from '../providers';
 import {
   ActionItem,
@@ -184,26 +185,22 @@ export class JourneyService extends AlertService {
    ****************************************** Action item ******************************************
    ************************************************************************************************/
 
-  async insertActionItem({
-    createActionItemParams,
-    status,
-  }: {
-    createActionItemParams: CreateActionItemParams;
-    status: ActionItemStatus;
-  }): Promise<Identifier> {
-    const recentJourney = await this.getRecent(createActionItemParams.memberId);
+  async insertActionItem(createActionItemParams: CreateActionItemParams): Promise<Identifier> {
+    const { memberId, ...createParams } = createActionItemParams;
+    const recentJourney = await this.getRecent(memberId);
     const identifiers = {
-      memberId: new Types.ObjectId(createActionItemParams.memberId),
+      memberId: new Types.ObjectId(memberId),
       journeyId: new Types.ObjectId(recentJourney.id),
     };
-    delete createActionItemParams.memberId;
-    const { _id } = await this.actionItemModel.create({
-      ...createActionItemParams,
-      status,
+    const { id } = await this.actionItemModel.create({
+      ...createParams,
+      status: ActionItemStatus.active,
+      priority: createParams.priority || ActionItemPriority.normal,
+      relatedEntities: createParams.relatedEntities || [],
       ...identifiers,
     });
 
-    return { id: _id };
+    return { id };
   }
 
   async updateActionItem(updateActionItemParams: UpdateActionItemParams): Promise<void> {

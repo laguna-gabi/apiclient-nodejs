@@ -13,7 +13,6 @@ import {
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   ActionItem,
-  ActionItemStatus,
   Admission,
   AdmissionService,
   AudioType,
@@ -120,10 +119,7 @@ export class JourneyResolver {
     @Args(camelCase(CreateActionItemParams.name))
     createActionItemParams: CreateActionItemParams,
   ) {
-    return this.journeyService.insertActionItem({
-      createActionItemParams,
-      status: ActionItemStatus.active,
-    });
+    return this.journeyService.insertActionItem(createActionItemParams);
   }
 
   @Mutation(() => Boolean, { nullable: true })

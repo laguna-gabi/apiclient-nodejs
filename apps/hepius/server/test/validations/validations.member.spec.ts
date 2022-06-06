@@ -759,13 +759,12 @@ describe('Validations - member', () => {
     describe('createActionItem', () => {
       /* eslint-disable max-len */
       test.each`
-        field         | actionItemType  | error
-        ${'memberId'} | ${'actionItem'} | ${`Field "memberId" of required type "String!" was not provided.`}
-        ${'title'}    | ${'actionItem'} | ${`Field "title" of required type "String!" was not provided.`}
-        ${'deadline'} | ${'actionItem'} | ${`Field "deadline" of required type "DateTime!" was not provided.`}
+        field         | error
+        ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
+        ${'title'}    | ${`Field "title" of required type "String!" was not provided.`}
       `(
         /* eslint-enable max-len */
-        `should fail to create $actionItemType since mandatory field $field is missing`,
+        `should fail to create actionItem since mandatory field $field is missing`,
         async (params) => {
           const createActionItemParams = generateCreateActionItemParams();
           delete createActionItemParams[params.field];
@@ -778,13 +777,17 @@ describe('Validations - member', () => {
 
       /* eslint-disable max-len */
       test.each`
-        input                        | actionItemType  | error
-        ${{ memberId: 123 }}         | ${'actionItem'} | ${{ missingFieldError: stringError }}
-        ${{ title: 123 }}            | ${'actionItem'} | ${{ missingFieldError: stringError }}
-        ${{ deadline: 'not-valid' }} | ${'actionItem'} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyActionItemDeadline)] }}
+        input                        | error
+        ${{ memberId: 123 }}         | ${{ missingFieldError: stringError }}
+        ${{ title: 123 }}            | ${{ missingFieldError: stringError }}
+        ${{ description: 123 }}      | ${{ missingFieldError: stringError }}
+        ${{ status: 123 }}           | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
+        ${{ priority: 123 }}         | ${`Field "priority" of required type "ActionItemPriority!" was not provided.`}
+        ${{ category: 123 }}         | ${`Field "category" of required type "ActionItemCategory!" was not provided.`}
+        ${{ deadline: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyActionItemDeadline)] }}
       `(
         /* eslint-enable max-len */
-        `should fail to create $actionItemType since setting $input is not a valid type`,
+        `should fail to create actionItem since setting $input is not a valid type`,
         async (params) => {
           const createActionItemParams = generateCreateActionItemParams({ ...params.input });
           await handler.mutations.createActionItem({ createActionItemParams, ...params.error });
@@ -795,12 +798,12 @@ describe('Validations - member', () => {
     describe('updateActionItem', () => {
       /* eslint-disable max-len */
       test.each`
-        field       | actionItemType  | error
-        ${'id'}     | ${'actionItem'} | ${`Field "id" of required type "String!" was not provided.`}
-        ${'status'} | ${'actionItem'} | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
+        field       | error
+        ${'id'}     | ${`Field "id" of required type "String!" was not provided.`}
+        ${'status'} | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
       `(
         /* eslint-enable max-len */
-        `should fail to update $actionItemType since mandatory field $field is missing`,
+        `should fail to update actionItem since mandatory field $field is missing`,
         async (params) => {
           const updateActionItemParams = generateUpdateActionItemParams();
           delete updateActionItemParams[params.field];
@@ -813,22 +816,19 @@ describe('Validations - member', () => {
 
       /* eslint-disable max-len */
       test.each`
-        input              | actionItemType  | error
-        ${{ id: 123 }}     | ${'actionItem'} | ${stringError}
-        ${{ status: 123 }} | ${'actionItem'} | ${'Enum "ActionItemStatus" cannot represent non-string value'}
-      `(
-        `should fail to update $actionItemType since $input is not a valid type`,
-        async (params) => {
-          /* eslint-enable max-len */
-          const updateActionItemParams = generateUpdateActionItemParams({
-            ...params.input,
-          });
-          await handler.mutations.updateActionItem({
-            updateActionItemParams,
-            missingFieldError: params.error,
-          });
-        },
-      );
+        input              | error
+        ${{ id: 123 }}     | ${stringError}
+        ${{ status: 123 }} | ${'Enum "ActionItemStatus" cannot represent non-string value'}
+      `(`should fail to update actionItem since $input is not a valid type`, async (params) => {
+        /* eslint-enable max-len */
+        const updateActionItemParams = generateUpdateActionItemParams({
+          ...params.input,
+        });
+        await handler.mutations.updateActionItem({
+          updateActionItemParams,
+          missingFieldError: params.error,
+        });
+      });
     });
   });
 

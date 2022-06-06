@@ -11,7 +11,6 @@ import {
 } from '../generators';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
-  ActionItemStatus,
   AdmissionService,
   AudioFormat,
   AudioType,
@@ -191,10 +190,7 @@ describe(JourneyResolver.name, () => {
       await resolver.createActionItem(params);
 
       expect(spyOnServiceInsertActionItem).toBeCalledTimes(1);
-      expect(spyOnServiceInsertActionItem).toBeCalledWith({
-        createActionItemParams: params,
-        status: ActionItemStatus.active,
-      });
+      expect(spyOnServiceInsertActionItem).toBeCalledWith(params);
     });
   });
 
@@ -208,7 +204,7 @@ describe(JourneyResolver.name, () => {
       spyOnServiceUpdateActionItem.mockReset();
     });
 
-    it('should create an action item', async () => {
+    it('should update an action item', async () => {
       spyOnServiceUpdateActionItem.mockImplementationOnce(async () => mockGenerateMember());
 
       const updateActionItem = generateUpdateActionItemParams();

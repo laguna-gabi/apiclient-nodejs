@@ -19,6 +19,27 @@ export enum ActionItemStatus {
 
 registerEnumType(ActionItemStatus, { name: 'ActionItemStatus' });
 
+export enum ActionItemCategory {
+  learn = 'learn',
+  legWork = 'legWork',
+  nextSession = 'nextSession',
+}
+
+registerEnumType(ActionItemCategory, { name: 'ActionItemCategory' });
+
+export enum ActionItemPriority {
+  urgent = 'urgent',
+  normal = 'normal',
+}
+
+registerEnumType(ActionItemPriority, { name: 'Priority' });
+
+export enum RelatedEntityType {
+  questionnaire = 'questionnaire',
+}
+
+registerEnumType(RelatedEntityType, { name: 'RelatedEntityType' });
+
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
@@ -30,9 +51,21 @@ export class CreateActionItemParams {
   @Field(() => String)
   title: string;
 
-  @Field(() => Date)
+  @Field(() => Date, { nullable: true })
   @IsDate({ message: Errors.get(ErrorType.journeyActionItemDeadline) })
-  deadline: Date;
+  deadline?: Date;
+
+  @Field(() => [RelatedEntity], { nullable: true })
+  relatedEntities?: RelatedEntity[];
+
+  @Field(() => String, { nullable: true })
+  description?: string;
+
+  @Field(() => ActionItemCategory, { nullable: true })
+  category?: ActionItemCategory;
+
+  @Field(() => ActionItemPriority, { nullable: true })
+  priority?: ActionItemPriority;
 }
 
 @InputType({ isAbstract: true })
@@ -47,6 +80,18 @@ export class UpdateActionItemParams {
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
+@InputType('RelatedEntityInput')
+@ObjectType()
+export class RelatedEntity {
+  @Prop({ type: String, enum: RelatedEntityType })
+  @Field(() => RelatedEntityType)
+  type: RelatedEntityType;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  id?: string;
+}
+
 @ObjectType()
 @Schema(DefaultSchemaOptions)
 export class ActionItem extends Identifier {
@@ -59,16 +104,42 @@ export class ActionItem extends Identifier {
   journeyId: Types.ObjectId;
 
   @Prop()
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   title: string;
 
   @Prop({ type: String, enum: ActionItemStatus })
   @Field(() => ActionItemStatus)
   status: ActionItemStatus;
 
+  @Prop()
+  @Field(() => [RelatedEntity])
+  relatedEntities: RelatedEntity[];
+
   @Prop({ type: Date })
+  @Field(() => Date, { nullable: true })
+  deadline?: Date;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  description?: string;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  rejectNote?: string;
+
+  @Prop({ type: String, enum: ActionItemCategory })
+  @Field(() => ActionItemCategory, { nullable: true })
+  category?: ActionItemCategory;
+
+  @Prop({ type: String, enum: ActionItemPriority })
+  @Field(() => ActionItemPriority)
+  priority: ActionItemPriority;
+
   @Field(() => Date)
-  deadline: Date;
+  createdAt: Date;
+
+  @Field(() => String)
+  createdBy: Types.ObjectId;
 }
 
 /**************************************************************************************************
