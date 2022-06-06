@@ -1,5 +1,6 @@
 {
   "hosts": {
+    "api": "https://staging.api.lagunahealth.com",
     "chat": "https://staging.chat.lagunahealth.com",
     "app": "https://staging.app.lagunahealth.com",
     "harmony": "https://staging.harmony.lagunahealth.com"

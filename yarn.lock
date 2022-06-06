@@ -3953,7 +3953,7 @@ es5-ext@^0.10.35, es5-ext@^0.10.50:
 es6-iterator@^2.0.3:
   version "2.0.3"
   resolved "https://registry.npmjs.org/es6-iterator/-/es6-iterator-2.0.3.tgz#a7de889141a05a94b0854403b2d0a0fbfa98f3b7"
-  integrity sha1-p96IkUGgWpSwhUQDstCg+/qY87c=
+  integrity sha512-zw4SRzoUkd+cl+ZoE15A9o1oQd920Bb0iOJMQkQhl3jNc03YqVjAhG7scf9C5KWRU/R13Orf588uCC6525o02g==
   dependencies:
     d "1"
     es5-ext "^0.10.35"
@@ -8181,10 +8181,10 @@ reusify@^1.0.4:
   resolved "https://registry.npmjs.org/reusify/-/reusify-1.0.4.tgz#90da382b1e126efc02146e90845a88db12925d76"
   integrity sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==
 
-revai-node-sdk@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.npmjs.org/revai-node-sdk/-/revai-node-sdk-3.1.0.tgz#647dd418f4bbce7391a0860570b27c621e79dbe0"
-  integrity sha512-t3CoIQZRVRU/0CU7sm9MWV4PZo9NfJVxDH/4ihwN6SKRlD3Qb/jFUCrs8NszMzqPT2L8TJSyjBr/PfOEULuklg==
+revai-node-sdk@^3.5.0:
+  version "3.5.0"
+  resolved "https://registry.npmjs.org/revai-node-sdk/-/revai-node-sdk-3.5.0.tgz#57f7aa977c77390569e22fd8b9c23be3b8d93d21"
+  integrity sha512-1hixQwmxkORodqhVc8vkR1KOVjYXKsQbDNe7mBDXsKajZ759AGjT0Kg9aIB91enVt6ujJqgqz/bfMNyC5cpYNQ==
   dependencies:
     axios "^0.21.1"
     form-data "^2.3.3"

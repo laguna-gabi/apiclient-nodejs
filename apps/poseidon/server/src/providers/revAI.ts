@@ -22,9 +22,9 @@ export class RevAI implements OnModuleInit {
 
   async createTranscript(url: string): Promise<string> {
     if (process.env.NODE_ENV === Environments.production) {
-      const { id } = await this.client.submitJobUrl(url, {
-        callback_url: `${hosts.api}/${webhooks}/${revai}`,
-        language: 'en',
+      const { id } = await this.client.submitJob({
+        source_config: { url },
+        notification_config: { url: `${hosts.api}/${webhooks}/${revai}` },
       });
       return id;
     }
