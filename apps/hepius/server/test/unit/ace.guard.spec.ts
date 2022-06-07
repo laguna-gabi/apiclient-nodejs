@@ -9,6 +9,7 @@ import { AceGuard, EntityResolver } from '../../src/auth';
 import { Types } from 'mongoose';
 import { Member } from '../../src/member';
 import { Journey } from '../../src/journey';
+import { AceStrategy } from '../../src/common';
 
 describe(AceGuard.name, () => {
   const mockReflector = createMock<Reflector>();
@@ -46,6 +47,18 @@ describe(AceGuard.name, () => {
 
     it(`to allow access when handler is marked as public`, async () => {
       spyOnMockReflectorGet.mockReturnValueOnce(true); // `isPublic`
+
+      const guard = new AceGuard(mockReflector, null);
+
+      expect(await guard.canActivate(mockExecutionContext)).toBeTruthy();
+    });
+
+    it(`to allow access when ACE options indicate RBAC guard is sufficient`, async () => {
+      spyOnMockReflectorGet
+        .mockReturnValueOnce(false) // `isPublic`
+        .mockReturnValueOnce({
+          strategy: AceStrategy.rbac,
+        }); // `aceOptions`
 
       const guard = new AceGuard(mockReflector, null);
 
@@ -218,7 +231,7 @@ describe(AceGuard.name, () => {
     });
 
     // eslint-disable-next-line max-len
-    it(`to deny access for a non-Laguna coach user where affected member is not available and handler is not marked as custom ACE`, async () => {
+    it(`to deny access for a non-Laguna coach user where affected member is not available`, async () => {
       spyOnMockExecutionContextSwitchToHttp.mockReturnValueOnce(mockHttpArgumentsHost);
       spyOnMockHttpArgumentsHostGetRequest.mockReturnValueOnce({
         user: { roles: [UserRole.coach], orgs: [generateObjectId()] },
@@ -232,5 +245,26 @@ describe(AceGuard.name, () => {
 
       expect(await guard.canActivate(mockExecutionContext)).toBeFalsy();
     });
+
+    // eslint-disable-next-line max-len
+    test.each([AceStrategy.token, AceStrategy.rbac])(
+      `to allow access for a non-Laguna coach user when strategy is set to %p (no ACE required)`,
+      async (strategy) => {
+        spyOnMockExecutionContextSwitchToHttp.mockReturnValueOnce(mockHttpArgumentsHost);
+        spyOnMockHttpArgumentsHostGetRequest.mockReturnValueOnce({
+          user: { roles: [UserRole.coach], orgs: [generateObjectId()] },
+        });
+
+        spyOnMockReflectorGet
+          .mockReturnValueOnce(false) // `isPublic`
+          .mockReturnValueOnce({
+            strategy,
+          }); // `aceOptions`
+
+        const guard = new AceGuard(mockReflector, mockEntityResolver);
+
+        expect(await guard.canActivate(mockExecutionContext)).toBeTruthy();
+      },
+    );
   });
 });

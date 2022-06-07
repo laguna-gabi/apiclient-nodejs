@@ -123,6 +123,7 @@ import {
   UserService,
 } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
+import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
 
 export class Handler extends BaseHandler {
   sendBird;
@@ -150,6 +151,8 @@ export class Handler extends BaseHandler {
   client: GraphQLClient;
   defaultUserRequestHeaders;
   defaultAdminRequestHeaders;
+  discoveryService: DiscoveryService;
+  reflector: Reflector;
 
   controlMemberModel: Model<ControlMemberDocument>;
   barrierTypeModel: Model<BarrierTypeDocument>;
@@ -185,6 +188,7 @@ export class Handler extends BaseHandler {
         ClientsModule.register([
           { name: 'TCP_TEST_CLIENT', transport: Transport.TCP, options: { port: tcpPort } },
         ]),
+        DiscoveryModule,
       ],
     }).compile();
 
@@ -192,11 +196,11 @@ export class Handler extends BaseHandler {
 
     this.app.useGlobalPipes(new ValidationPipe());
 
-    const reflector = this.app.get(Reflector);
+    this.reflector = this.app.get(Reflector);
     this.app.useGlobalGuards(new GlobalAuthGuard());
     this.app.useGlobalGuards(
-      new RolesGuard(reflector),
-      new AceGuard(reflector, new EntityResolver(this.app.get(getConnectionToken()))),
+      new RolesGuard(this.reflector),
+      new AceGuard(this.reflector, new EntityResolver(this.app.get(getConnectionToken()))),
     );
     this.app.use(requestContextMiddleware(AppRequestContext));
 
@@ -220,6 +224,7 @@ export class Handler extends BaseHandler {
     await this.app.init();
 
     this.tcpClient = moduleFixture.get<ClientProxy>('TCP_TEST_CLIENT');
+    this.discoveryService = moduleFixture.get<DiscoveryService>(DiscoveryService);
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
     this.eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     this.dailyReportService = moduleFixture.get<DailyReportService>(DailyReportService);

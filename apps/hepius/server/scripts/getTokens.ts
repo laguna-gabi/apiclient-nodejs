@@ -55,6 +55,7 @@ export async function getTokens() {
       id: user._id,
       authId: user.authId,
       token: sign({ sub: user.authId }, 'key-123'),
+      roles: user.roles,
     };
   });
   console.log(

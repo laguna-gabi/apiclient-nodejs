@@ -14,6 +14,7 @@ import {
 } from '.';
 import {
   Ace,
+  AceStrategy,
   Client,
   ErrorType,
   Errors,
@@ -39,6 +40,7 @@ export class QuestionnaireResolver {
 
   @Mutation(() => Questionnaire)
   @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async createQuestionnaire(
     @Args(camelCase(CreateQuestionnaireParams.name), { type: () => CreateQuestionnaireParams })
     createQuestionnaireParams: CreateQuestionnaireParams,
@@ -47,14 +49,15 @@ export class QuestionnaireResolver {
   }
 
   @Query(() => [Questionnaire])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.rbac })
   async getActiveQuestionnaires(): Promise<Questionnaire[]> {
     return this.questionnaireService.getActiveQuestionnaires();
   }
 
   @Query(() => Questionnaire)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member, UserRole.coach)
+  @Ace({ strategy: AceStrategy.rbac })
   async getQuestionnaire(
     @Client('roles') roles,
     @Args(
@@ -72,7 +75,8 @@ export class QuestionnaireResolver {
   }
 
   @Query(() => [QuestionnaireResponse])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberQuestionnaireResponses(
     @Args(
       'memberId',
@@ -86,7 +90,12 @@ export class QuestionnaireResolver {
   }
 
   @Query(() => QuestionnaireResponse, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({
+    entityName: EntityName.questionnaireresponse,
+    idLocator: `id`,
+    entityMemberIdLocator: 'memberId',
+  })
   async getQuestionnaireResponse(
     @Args(
       'id',
@@ -99,7 +108,7 @@ export class QuestionnaireResolver {
   }
 
   @Mutation(() => QuestionnaireResponse)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member, UserRole.coach)
   @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)

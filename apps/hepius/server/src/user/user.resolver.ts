@@ -16,6 +16,7 @@ import {
 } from '.';
 import {
   Ace,
+  AceStrategy,
   Client,
   ErrorType,
   Errors,
@@ -41,7 +42,8 @@ export class UserResolver {
   ) {}
 
   @Mutation(() => User)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async createUser(
     @Args(camelCase(CreateUserParams.name))
     createUserParams: CreateUserParams,
@@ -68,6 +70,7 @@ export class UserResolver {
 
   @Mutation(() => User)
   @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async updateUser(
     @Args(camelCase(UpdateUserParams.name))
     updateUserParams: UpdateUserParams,
@@ -133,7 +136,11 @@ export class UserResolver {
 
   @Query(() => Slots)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({
+    entityName: EntityName.appointment,
+    idLocator: `appointmentId`,
+    entityMemberIdLocator: 'memberId',
+  })
   async getUserSlotsByAppointmentId(
     @Args(
       'appointmentId',
@@ -155,7 +162,8 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.token })
   async setLastQueryAlert(@Client('_id') userId: string): Promise<boolean> {
     await this.userService.setLatestQueryAlert(userId);
 

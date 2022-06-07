@@ -1080,19 +1080,6 @@ describe('Validations - member', () => {
       );
     });
 
-    describe('deleteCaregiver', () => {
-      test.each`
-        input    | error
-        ${'123'} | ${[Errors.get(ErrorType.caregiverIdInvalid)]}
-      `(`should fail to delete caregiver by id $input is not a valid type`, async (params) => {
-        await handler.mutations.deleteCaregiver({
-          id: params.input,
-          invalidFieldsErrors: [params.error],
-          requestHeaders: generateRequestHeaders(handler.patientZero.authId),
-        });
-      });
-    });
-
     describe('getCaregivers', () => {
       test.each`
         input  | error

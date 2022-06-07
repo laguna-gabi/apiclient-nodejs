@@ -55,7 +55,8 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Appointment)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: 'memberId' })
   async requestAppointment(
     @Args(camelCase(RequestAppointmentParams.name))
     requestAppointmentParams: RequestAppointmentParams,
@@ -68,7 +69,8 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Query(() => Appointment, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.appointment, idLocator: 'id', entityMemberIdLocator: 'memberId' })
   async getAppointment(
     @Args(
       'id',
@@ -83,7 +85,7 @@ export class AppointmentResolver extends AppointmentBase {
   @Mutation(() => Appointment)
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
   @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async scheduleAppointment(
     @Args(camelCase(ScheduleAppointmentParams.name))
@@ -93,7 +95,8 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.appointment, idLocator: 'id', entityMemberIdLocator: 'memberId' })
   async deleteAppointment(
     @Client('_id') userId,
     @Args(
@@ -113,7 +116,8 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Appointment)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.appointment, idLocator: 'id', entityMemberIdLocator: 'memberId' })
   async endAppointment(
     @Args(camelCase(EndAppointmentParams.name)) endAppointmentParams: EndAppointmentParams,
   ) {
@@ -131,7 +135,12 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Notes, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({
+    entityName: EntityName.appointment,
+    idLocator: 'appointmentId',
+    entityMemberIdLocator: 'memberId',
+  })
   async updateNotes(@Args(camelCase(UpdateNotesParams.name)) updateNotesParams: UpdateNotesParams) {
     return this.appointmentService.updateNotes(updateNotesParams);
   }

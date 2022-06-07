@@ -588,10 +588,10 @@ describe('Integration tests : Audit', () => {
       });
       const { id } = await handler.mutations.createUser({
         createUserParams: generateCreateUserParams(),
-        requestHeaders: generateRequestHeaders(user1.authId),
+        requestHeaders: generateRequestHeaders(adminUser1.authId),
       });
       expect(
-        await checkAuditValues<UserDocument>(id, handler.userModel, user1.id, user1.id),
+        await checkAuditValues<UserDocument>(id, handler.userModel, adminUser1.id, adminUser1.id),
       ).toBeTruthy();
 
       const { _id } = await handler.userConfigModel.findOne({ userId: new Types.ObjectId(id) });
@@ -599,8 +599,8 @@ describe('Integration tests : Audit', () => {
         await checkAuditValues<UserConfigDocument>(
           _id,
           handler.userConfigModel,
-          user1.id,
-          user1.id,
+          adminUser1.id,
+          adminUser1.id,
         ),
       ).toBeTruthy();
     });
@@ -612,7 +612,7 @@ describe('Integration tests : Audit', () => {
       });
       const { id } = await handler.mutations.createUser({
         createUserParams: generateCreateUserParams(),
-        requestHeaders: generateRequestHeaders(user1.authId),
+        requestHeaders: generateRequestHeaders(adminUser1.authId),
       });
       await handler.mutations.scheduleAppointment({
         appointmentParams: generateScheduleAppointmentParams({
@@ -623,7 +623,7 @@ describe('Integration tests : Audit', () => {
       });
 
       expect(
-        await checkAuditValues<UserDocument>(id, handler.userModel, user1.id, user2.id),
+        await checkAuditValues<UserDocument>(id, handler.userModel, adminUser1.id, user2.id),
       ).toBeTruthy();
     });
   });

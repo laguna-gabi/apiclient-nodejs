@@ -1,6 +1,7 @@
 import { UseInterceptors } from '@nestjs/common';
 import {
   Ace,
+  AceStrategy,
   Client,
   ErrorType,
   Errors,
@@ -56,7 +57,8 @@ export class JourneyResolver {
    ******************************************** Journey *******************************************
    ************************************************************************************************/
   @Mutation(() => Journey)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async updateJourney(
     @Args(camelCase(UpdateJourneyParams.name)) params: UpdateJourneyParams,
   ): Promise<Journey> {
@@ -64,7 +66,8 @@ export class JourneyResolver {
   }
 
   @Query(() => [Journey])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getJourneys(
     @Args(
       'memberId',
@@ -77,7 +80,12 @@ export class JourneyResolver {
   }
 
   @Query(() => Journey)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({
+    entityName: EntityName.journey,
+    idLocator: `id`,
+    entityMemberIdLocator: 'memberId',
+  })
   async getJourney(
     @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.journeyIdInvalid)))
     id: string,
@@ -86,7 +94,8 @@ export class JourneyResolver {
   }
 
   @Query(() => Journey, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getRecentJourney(
     @Args(
       'memberId',
@@ -103,7 +112,8 @@ export class JourneyResolver {
    ************************************************************************************************/
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async setGeneralNotes(
     @Args(camelCase(SetGeneralNotesParams.name)) setGeneralNotesParams: SetGeneralNotesParams,
   ) {
@@ -115,7 +125,8 @@ export class JourneyResolver {
    ************************************************************************************************/
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async createActionItem(
     @Args(camelCase(CreateActionItemParams.name))
     createActionItemParams: CreateActionItemParams,
@@ -124,7 +135,8 @@ export class JourneyResolver {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.actionitem, idLocator: `id`, entityMemberIdLocator: 'memberId' })
   async setActionItem(
     @Args(camelCase(SetActionItemParams.name))
     setActionItemParams: SetActionItemParams,
@@ -133,7 +145,8 @@ export class JourneyResolver {
   }
 
   @Query(() => [ActionItem])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: 'memberId' })
   async getActionItems(
     @Args(
       'memberId',
@@ -149,6 +162,7 @@ export class JourneyResolver {
    ************************************************************************************************/
   @Mutation(() => Admission)
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async changeMemberDna(
     @Client('roles') roles,
     @Args(camelCase(ChangeMemberDnaParams.name))
@@ -161,6 +175,7 @@ export class JourneyResolver {
 
   @Query(() => [Admission])
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Ace({ entityName: EntityName.member, idLocator: 'memberId' })
   async getMemberAdmissions(
     @Args(
       'memberId',
@@ -174,7 +189,8 @@ export class JourneyResolver {
   }
 
   @Query(() => DietaryMatcher)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.rbac })
   async getAdmissionsDietaryMatcher() {
     return this.dietaryMatcher.get();
   }
@@ -185,7 +201,7 @@ export class JourneyResolver {
 
   @Mutation(() => Identifier)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async createJournal(@Client('roles') roles, @Client('_id') memberId) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
@@ -196,7 +212,7 @@ export class JourneyResolver {
 
   @Mutation(() => Journal)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async updateJournalText(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -218,7 +234,7 @@ export class JourneyResolver {
 
   @Query(() => Journal)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async getJournal(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -235,7 +251,7 @@ export class JourneyResolver {
 
   @Query(() => [Journal])
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async getJournals(@Client('roles') roles, @Client('_id') memberId) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
@@ -252,7 +268,7 @@ export class JourneyResolver {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async deleteJournal(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -296,7 +312,7 @@ export class JourneyResolver {
 
   @Query(() => JournalUploadImageLink)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async getMemberUploadJournalImageLink(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -327,7 +343,7 @@ export class JourneyResolver {
 
   @Query(() => JournalUploadAudioLink)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async getMemberUploadJournalAudioLink(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -358,7 +374,7 @@ export class JourneyResolver {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async deleteJournalImage(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -404,7 +420,7 @@ export class JourneyResolver {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async deleteJournalAudio(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -441,7 +457,7 @@ export class JourneyResolver {
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async publishJournal(
     @Client('roles') roles,
     @Client('_id') memberId,

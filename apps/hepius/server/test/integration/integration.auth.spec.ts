@@ -1,12 +1,20 @@
-import { UserRole } from '@argus/hepiusClient';
+import { CarePlanStatus, UserRole } from '@argus/hepiusClient';
 import { generateId } from '@argus/pandora';
 import {
   BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
   generateRequestHeaders,
+  generateUpdateCarePlanParams,
   generateUpdateUserParams,
+  submitMockCareWizard,
 } from '..';
+import { AceOptions, DecoratorType } from '../../src/common';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
+
+enum Access {
+  allowed = 'allowed',
+  denied = 'denied',
+}
 
 describe('Integration tests : RBAC / ACE', () => {
   const handler: Handler = new Handler();
@@ -28,6 +36,27 @@ describe('Integration tests : RBAC / ACE', () => {
     await handler.afterAll();
   });
 
+  it.skip('to confirm that all endpoints include ACE annotation', async () => {
+    // identify all routes with @Roles annotation where @Ace is not defined
+    expect(
+      (
+        await handler.discoveryService.providerMethodsWithMetaAtKey<DecoratorType>(
+          DecoratorType.roles,
+        )
+      )
+        .filter(
+          (method) =>
+            !handler.reflector.get<AceOptions>(
+              DecoratorType.aceOptions,
+              method.discoveredMethod.handler,
+            ),
+        )
+        .map(
+          (method) => `'${method.discoveredMethod.methodName}': endpoint is missing ACE annotation`,
+        ),
+    ).toEqual([]);
+  });
+
   // eslint-disable-next-line max-len
   it('expecting `member` to be denied access to a secure (`coach` only) endpoint (RBAC)', async () => {
     const { errors } = await handler.queries.getMembers({
@@ -39,7 +68,7 @@ describe('Integration tests : RBAC / ACE', () => {
   });
 
   // eslint-disable-next-line max-len
-  it('expecting `member` to be granted access get his own member information (RBAC+ACE)', async () => {
+  it('expecting `member` to be ALLOWED access get his own member information (RBAC+ACE)', async () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const response = await handler.queries.getMember({
@@ -51,7 +80,7 @@ describe('Integration tests : RBAC / ACE', () => {
   });
 
   // eslint-disable-next-line max-len
-  it('expecting `member` to be granted access to get his own member information when member id is not supplied (populated / RBAC+ACE)', async () => {
+  it('expecting `member` to be ALLOWED access to get his own member information when member id is not supplied (populated / RBAC+ACE)', async () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const response = await handler.queries.getMember({
@@ -61,67 +90,102 @@ describe('Integration tests : RBAC / ACE', () => {
     expect(response).toBeTruthy();
   });
 
-  // eslint-disable-next-line max-len
-  it('expecting non-Laguna (customer) coach to be granted access to modify a member in provisioned org', async () => {
-    const { member, user } = await creators.createMemberUserAndOptionalOrg();
+  test.each([Access.allowed, Access.denied])(
+    // eslint-disable-next-line max-len
+    'expecting non-Laguna (customer) coach to be %p to modify a member by member id based on org provisioning',
+    async (access) => {
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
 
-    // provision the user to the member's org
-    await handler.mutations.updateUser({
-      updateUserParams: generateUpdateUserParams({
-        id: user.id,
-        orgs: [member.org.id, generateId()],
-        roles: [UserRole.coach],
-      }),
-      requestHeaders: handler.defaultAdminRequestHeaders,
-    });
+      await handler.mutations.updateUser({
+        updateUserParams: generateUpdateUserParams({
+          id: user.id,
+          orgs: access === Access.allowed ? [member.org.toString()] : [generateId()],
+          roles: [UserRole.coach],
+        }),
+        requestHeaders: handler.defaultAdminRequestHeaders,
+      });
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    // `addCaregiver` request is allowed for customer coach
-    const response = handler.mutations.addCaregiver({
-      addCaregiverParams: generateAddCaregiverParams({ memberId: member.id }),
-      requestHeaders: generateRequestHeaders(user.authId),
-    });
+      const result = await handler.mutations.addCaregiver({
+        addCaregiverParams: generateAddCaregiverParams({ memberId: member.id }),
+        requestHeaders: generateRequestHeaders(user.authId),
+      });
 
-    expect(response).toBeTruthy();
-  });
+      if (access === Access.allowed) {
+        expect(result).toBeTruthy();
+      } else {
+        expect(result).toBeFalsy();
+      }
+    },
+  );
 
-  // eslint-disable-next-line max-len
-  it('expecting non-Laguna (customer) coach to be denied access to modify a member in a non provisioned org', async () => {
-    const { member, user } = await creators.createMemberUserAndOptionalOrg();
+  test.each([Access.allowed, Access.denied])(
+    // eslint-disable-next-line max-len
+    'expecting member to be %p access to add a caregiver to self - member id should be populated',
+    async (access) => {
+      const { member } = await creators.createMemberUserAndOptionalOrg();
 
-    // provision the user to the member's org
-    await handler.mutations.updateUser({
-      updateUserParams: generateUpdateUserParams({
-        id: user.id,
-        orgs: [generateId(), generateId()],
-        roles: [UserRole.coach],
-      }),
-      requestHeaders: handler.defaultAdminRequestHeaders,
-    });
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      // `addCaregiver` request is allowed for customer coach
+      const result = await handler.mutations.addCaregiver({
+        addCaregiverParams: generateAddCaregiverParams({
+          memberId: access === Access.allowed ? undefined : generateId(),
+        }), // <- when member id is undefined it is properly populated, however, if set we compare to client id
+        requestHeaders: generateRequestHeaders(member.authId),
+      });
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    // `addCaregiver` request is allowed for customer coach
-    const response = await handler.mutations.addCaregiver({
-      addCaregiverParams: generateAddCaregiverParams({ memberId: member.id }),
-      requestHeaders: generateRequestHeaders(user.authId),
-    });
+      if (access === Access.allowed) {
+        expect(result).toBeTruthy();
+      } else {
+        expect(result).toBeFalsy();
+      }
+    },
+  );
 
-    expect(response).toBeFalsy();
-  });
+  test.each([Access.allowed, Access.denied])(
+    // eslint-disable-next-line max-len
+    `expecting non-Laguna (customer) coach to be %p to modify by entity id associated with a member based on org provisioning`,
+    async (access) => {
+      const {
+        member: { id: memberId, org },
+        user: { authId, id: userId },
+      } = await creators.createMemberUserAndOptionalOrg();
 
-  it('expecting member to be allowed access to add a caregiver to self (populated)', async () => {
-    const { member } = await creators.createMemberUserAndOptionalOrg();
+      await submitMockCareWizard(handler, memberId);
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    // `addCaregiver` request is allowed for customer coach
-    const response = await handler.mutations.addCaregiver({
-      addCaregiverParams: generateAddCaregiverParams(), // <- member id is undefined
-      requestHeaders: generateRequestHeaders(member.authId),
-    });
+      const memberCarePlans = await handler.queries.getMemberCarePlans({
+        memberId,
+        requestHeaders: generateRequestHeaders(authId),
+      });
+      expect(memberCarePlans.length).toEqual(1);
+      const carePlanId = memberCarePlans[0].id;
 
-    expect(response).toBeTruthy();
-  });
+      const updateCarePlanParams = generateUpdateCarePlanParams({
+        id: carePlanId,
+        notes: 'new notes',
+        status: CarePlanStatus.completed,
+      });
+
+      // set user to be a `coach` (keep member's org provisioning)
+      await handler.mutations.updateUser({
+        updateUserParams: generateUpdateUserParams({
+          id: userId,
+          orgs: access === Access.allowed ? [org.toString()] : [generateId()],
+          roles: [UserRole.coach],
+        }),
+        requestHeaders: handler.defaultAdminRequestHeaders,
+      });
+
+      const result = await handler.mutations.updateCarePlan({
+        updateCarePlanParams,
+        requestHeaders: generateRequestHeaders(authId),
+      });
+
+      if (access === Access.allowed) {
+        expect(result).toBeTruthy();
+      } else {
+        expect(result).toBeFalsy();
+      }
+    },
+  );
 });

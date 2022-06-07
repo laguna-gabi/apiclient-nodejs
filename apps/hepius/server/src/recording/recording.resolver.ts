@@ -1,5 +1,5 @@
 import { UserRole } from '@argus/hepiusClient';
-import { Environments, ServiceName, StorageType } from '@argus/pandora';
+import { EntityName, Environments, ServiceName, StorageType } from '@argus/pandora';
 import {
   PoseidonMessagePatterns,
   Speaker,
@@ -21,6 +21,7 @@ import {
   UpdateRecordingReviewParams,
 } from '.';
 import {
+  Ace,
   Client,
   ErrorType,
   Errors,
@@ -44,7 +45,8 @@ export class RecordingResolver {
   ) {}
 
   @Query(() => String)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberUploadRecordingLink(
     @Args(camelCase(RecordingLinkParams.name))
     recordingLinkParams: RecordingLinkParams,
@@ -56,7 +58,8 @@ export class RecordingResolver {
   }
 
   @Query(() => MultipartUploadInfo)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberMultipartUploadRecordingLink(
     @Args(camelCase(MultipartUploadRecordingLinkParams.name))
     multipartUploadRecordingLinkParams: MultipartUploadRecordingLinkParams,
@@ -68,7 +71,8 @@ export class RecordingResolver {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async completeMultipartUpload(
     @Args(camelCase(CompleteMultipartUploadParams.name))
     completeMultipartUploadParams: CompleteMultipartUploadParams,
@@ -80,7 +84,8 @@ export class RecordingResolver {
   }
 
   @Query(() => String)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberDownloadRecordingLink(
     @Args(camelCase(RecordingLinkParams.name))
     recordingLinkParams: RecordingLinkParams,
@@ -92,7 +97,8 @@ export class RecordingResolver {
   }
 
   @Mutation(() => Recording)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async updateRecording(
     @Args(camelCase(UpdateRecordingParams.name)) updateRecordingParams: UpdateRecordingParams,
     @Client('_id') userId,
@@ -102,7 +108,12 @@ export class RecordingResolver {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({
+    entityName: EntityName.recording,
+    idLocator: `recordingId`,
+    entityMemberIdLocator: 'memberId',
+  })
   async updateRecordingReview(
     @Args(camelCase(UpdateRecordingReviewParams.name))
     updateRecordingReviewParams: UpdateRecordingReviewParams,
@@ -115,7 +126,8 @@ export class RecordingResolver {
   }
 
   @Query(() => [Recording])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getRecordings(
     @Args(
       'memberId',
@@ -133,7 +145,12 @@ export class RecordingResolver {
    ************************************************************************************************/
 
   @Query(() => Transcript, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({
+    entityName: EntityName.recording,
+    idLocator: `recordingId`,
+    entityMemberIdLocator: 'memberId',
+  })
   async getTranscript(
     @Args('recordingId', { type: () => String })
     recordingId: string,
@@ -146,7 +163,12 @@ export class RecordingResolver {
   }
 
   @Mutation(() => Transcript, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({
+    entityName: EntityName.recording,
+    idLocator: `recordingId`,
+    entityMemberIdLocator: 'memberId',
+  })
   async setTranscriptSpeaker(
     @Args('recordingId', { type: () => String })
     recordingId: string,

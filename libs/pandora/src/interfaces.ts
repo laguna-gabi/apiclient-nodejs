@@ -93,8 +93,15 @@ export enum ChangeEventType {
 export enum EntityName {
   caregiver = 'caregiver',
   insurance = 'insurance',
-  barrier = 'barrier',
   member = 'member',
+  redflag = 'redflag',
+  barrier = 'barrier',
+  careplan = 'careplan',
+  appointment = 'appointment',
+  recording = 'recording',
+  journey = 'journey',
+  actionitem = 'actionitem',
+  questionnaireresponse = 'questionnaireresponse',
 }
 
 export interface IChangeEvent {

@@ -9,7 +9,7 @@ import {
   UpdateFaultyMobileVersionsParams,
   UpdateMinMobileVersionParams,
 } from '.';
-import { LoggingInterceptor, Roles } from '../common';
+import { Ace, AceStrategy, LoggingInterceptor, Roles } from '../common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => MobileVersion)
@@ -18,6 +18,7 @@ export class MobileVersionResolver {
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async createMobileVersion(
     @Args(camelCase(CreateMobileVersionParams.name))
     createMobileVersionParams: CreateMobileVersionParams,
@@ -27,6 +28,7 @@ export class MobileVersionResolver {
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async updateMinMobileVersion(
     @Args(camelCase(UpdateMinMobileVersionParams.name))
     updateMinMobileVersionParams: UpdateMinMobileVersionParams,
@@ -36,6 +38,7 @@ export class MobileVersionResolver {
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async updateFaultyMobileVersions(
     @Args(camelCase(UpdateFaultyMobileVersionsParams.name))
     updateFaultyMobileVersionsParams: UpdateFaultyMobileVersionsParams,

@@ -4,7 +4,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Types } from 'mongoose';
 import { BaseGuard, EntityResolver } from '.';
-import { AceOptions, DecoratorType, defaultEntityMemberIdLocator } from '../common';
+import { AceOptions, AceStrategy, DecoratorType, defaultEntityMemberIdLocator } from '../common';
 import { Member } from '../member';
 
 @Injectable()
@@ -27,7 +27,11 @@ export class AceGuard extends BaseGuard implements CanActivate {
     const args = context.getArgByIndex(1); // request args
 
     // #0: ACE is skipped if handler is marked as public
-    if (isPublic) {
+    if (
+      isPublic ||
+      aceOptions?.strategy === AceStrategy.token ||
+      aceOptions?.strategy === AceStrategy.rbac
+    ) {
       return true;
     }
 
@@ -86,7 +90,7 @@ export class AceGuard extends BaseGuard implements CanActivate {
           // if the args only carry a non-member entity id we can resolve the member id by fetching the entity
           const entity = await this.entityResolver.getEntityById(aceOptions.entityName, entityId);
           return entity
-            ? entity[aceOptions.entityMemberIdLocator || defaultEntityMemberIdLocator]
+            ? entity[aceOptions.entityMemberIdLocator || defaultEntityMemberIdLocator]?.toString()
             : undefined;
         }
       }

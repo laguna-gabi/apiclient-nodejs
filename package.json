@@ -77,6 +77,7 @@
     "zipcode-to-timezone": "^0.0.9"
   },
   "devDependencies": {
+    "@golevelup/nestjs-discovery": "^3.0.0",
     "@actions/core": "^1.6.0",
     "@golevelup/ts-jest": "^0.3.2",
     "@lagunahealth/gql-generator": "^0.0.1",

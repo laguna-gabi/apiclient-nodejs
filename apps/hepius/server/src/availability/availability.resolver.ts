@@ -3,6 +3,8 @@ import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Availability, AvailabilityInput, AvailabilityService, AvailabilitySlot } from '.';
 import {
+  Ace,
+  AceStrategy,
   Client,
   ErrorType,
   Errors,
@@ -18,7 +20,8 @@ export class AvailabilityResolver {
   constructor(private readonly availabilityService: AvailabilityService) {}
 
   @Mutation(() => Identifiers)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.token })
   async createAvailabilities(
     @Client('_id') userId,
     @Args('availabilities', { type: () => [AvailabilityInput] })

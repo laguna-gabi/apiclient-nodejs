@@ -214,7 +214,12 @@ export interface SeverityLevelInterface {
 
 export const defaultEntityMemberIdLocator = 'memberId';
 
+export enum AceStrategy {
+  token = 'token', // value are populated from token (user id, member id, orgs, ...)
+  rbac = 'rbac', // RBAC guard is sufficient
+}
 export class AceOptions {
+  strategy?: AceStrategy;
   /**
    * affected entity name in request
    */

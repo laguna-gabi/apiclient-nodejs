@@ -11,6 +11,8 @@ import {
   UpdateRedFlagParams,
 } from '.';
 import {
+  Ace,
+  AceStrategy,
   Client,
   ErrorType,
   Errors,
@@ -29,6 +31,7 @@ import {
   CreateCarePlanParams,
   UserRole,
 } from '@argus/hepiusClient';
+import { EntityName } from '@argus/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
@@ -40,7 +43,8 @@ export class CareResolver {
    *************************************************************************************************/
 
   @Query(() => [RedFlag])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberRedFlags(
     @Args(
       'memberId',
@@ -53,13 +57,15 @@ export class CareResolver {
   }
 
   @Query(() => [RedFlagType])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.rbac })
   async getRedFlagTypes(): Promise<RedFlagType[]> {
     return this.careService.getRedFlagTypes();
   }
 
   @Mutation(() => RedFlag)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.redflag, idLocator: `id`, entityMemberIdLocator: 'memberId' })
   async updateRedFlag(
     @Args(camelCase(UpdateRedFlagParams.name)) updateRedFlagParams: UpdateRedFlagParams,
   ): Promise<RedFlag> {
@@ -71,13 +77,15 @@ export class CareResolver {
    *************************************************************************************************/
 
   @Query(() => [BarrierType])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.rbac })
   async getBarrierTypes(): Promise<BarrierType[]> {
     return this.careService.getBarrierTypes();
   }
 
   @Mutation(() => Barrier)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async createBarrier(
     @Args(camelCase(CreateBarrierParams.name)) createBarrierParams: CreateBarrierParams,
   ): Promise<Barrier> {
@@ -85,7 +93,8 @@ export class CareResolver {
   }
 
   @Mutation(() => Barrier)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.barrier, idLocator: `id`, entityMemberIdLocator: 'memberId' })
   async updateBarrier(
     @Args(camelCase(UpdateBarrierParams.name)) updateBarrierParams: UpdateBarrierParams,
   ): Promise<Barrier> {
@@ -93,7 +102,8 @@ export class CareResolver {
   }
 
   @Query(() => [Barrier])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberBarriers(
     @Args(
       'memberId',
@@ -110,13 +120,15 @@ export class CareResolver {
    *************************************************************************************************/
 
   @Query(() => [CarePlanType])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.rbac })
   async getCarePlanTypes(): Promise<CarePlanType[]> {
     return this.careService.getCarePlanTypes();
   }
 
   @Mutation(() => CarePlan)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async createCarePlan(
     @Args(camelCase(CreateCarePlanParams.name)) createCarePlanParams: CreateCarePlanParams,
   ): Promise<CarePlan> {
@@ -124,7 +136,8 @@ export class CareResolver {
   }
 
   @Mutation(() => CarePlan)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.careplan, idLocator: `id`, entityMemberIdLocator: 'memberId' })
   async updateCarePlan(
     @Args(camelCase(UpdateCarePlanParams.name)) updateCarePlanParams: UpdateCarePlanParams,
   ): Promise<CarePlan> {
@@ -132,7 +145,8 @@ export class CareResolver {
   }
 
   @Query(() => [CarePlan])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberCarePlans(
     @Args(
       'memberId',
@@ -145,7 +159,8 @@ export class CareResolver {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.careplan, idLocator: `id`, entityMemberIdLocator: 'memberId' })
   async deleteCarePlan(
     @Client('_id') userId,
     @Args(camelCase(DeleteCarePlanParams.name)) deleteCarePlanParams: DeleteCarePlanParams,
@@ -154,7 +169,8 @@ export class CareResolver {
   }
 
   @Mutation(() => Identifiers)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async submitCareWizard(
     @Args(camelCase(SubmitCareWizardParams.name)) submitCareWizardParams: SubmitCareWizardParams,
   ): Promise<Identifiers> {

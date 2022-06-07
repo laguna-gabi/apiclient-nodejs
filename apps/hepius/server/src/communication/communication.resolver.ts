@@ -12,6 +12,7 @@ import {
 } from '.';
 import {
   Ace,
+  AceStrategy,
   Client,
   ErrorType,
   Errors,
@@ -43,7 +44,8 @@ export class CommunicationResolver {
   ) {}
 
   @Query(() => CommunicationInfo, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getCommunication(
     @Args(camelCase(GetCommunicationParams.name))
     getCommunicationParams: GetCommunicationParams,
@@ -82,7 +84,7 @@ export class CommunicationResolver {
 
   @Query(() => UnreadMessagesCount)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   getMemberUnreadMessagesCount(@Client('roles') roles, @Client('_id') memberId) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
@@ -93,7 +95,7 @@ export class CommunicationResolver {
 
   @Query(() => MemberCommunicationInfo)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async getMemberCommunicationInfo(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -135,7 +137,8 @@ export class CommunicationResolver {
   }
 
   @Query(() => String)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.rbac })
   getTwilioAccessToken() {
     return this.communicationService.getTwilioAccessToken();
   }

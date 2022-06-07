@@ -2,7 +2,15 @@ import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import { CreateOrgParams, Org, OrgService } from '.';
-import { ErrorType, Errors, IsValidObjectId, LoggingInterceptor, Roles } from '../common';
+import {
+  Ace,
+  AceStrategy,
+  ErrorType,
+  Errors,
+  IsValidObjectId,
+  LoggingInterceptor,
+  Roles,
+} from '../common';
 import { Identifier, UserRole } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
@@ -34,6 +42,7 @@ export class OrgResolver {
 
   @Query(() => [Org])
   @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async getOrgs(): Promise<Org[]> {
     return this.orgService.getOrgs();
   }

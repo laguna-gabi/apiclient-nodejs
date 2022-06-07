@@ -46,6 +46,7 @@ import { lookup } from 'zipcode-to-timezone';
 import { AppointmentService } from '../appointment';
 import {
   Ace,
+  AceStrategy,
   Alert,
   Client,
   ErrorType,
@@ -154,7 +155,7 @@ export class MemberResolver extends MemberBase {
   @Query(() => Member, { nullable: true })
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
   @Ace({ entityName: EntityName.member, idLocator: `id` })
   async getMember(
     @Args(
@@ -171,7 +172,8 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Member)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `id` })
   async updateMember(
     @Args(camelCase(UpdateMemberParams.name)) params: UpdateMemberParams,
   ): Promise<Member> {
@@ -217,6 +219,7 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async deleteMember(
     @Client('_id') userId,
     @Args(camelCase(DeleteMemberParams.name))
@@ -255,6 +258,7 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async replaceUserForMember(
     @Args(camelCase(ReplaceUserForMemberParams.name))
     replaceUserForMemberParams: ReplaceUserForMemberParams,
@@ -291,6 +295,7 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async replaceMemberOrg(
     @Args(camelCase(ReplaceMemberOrgParams.name))
     replaceMemberOrgParams: ReplaceMemberOrgParams,
@@ -307,8 +312,8 @@ export class MemberResolver extends MemberBase {
   @Query(() => DischargeDocumentsLinks)
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `id` })
   async getMemberUploadDischargeDocumentsLinks(
     @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)))
     id?: string,
@@ -337,8 +342,8 @@ export class MemberResolver extends MemberBase {
   @Query(() => DischargeDocumentsLinks)
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `id` })
   async getMemberDownloadDischargeDocumentsLinks(
     @Args(
       'id',
@@ -368,7 +373,8 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async deleteDischargeDocument(
     @Args(camelCase(DeleteDischargeDocumentParams.name))
     deleteDischargeDocumentParams: DeleteDischargeDocumentParams,
@@ -390,7 +396,8 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Query(() => String)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberUploadGeneralDocumentLink(
     @Args(camelCase(GetMemberUploadGeneralDocumentLinkParams.name))
     getMemberUploadGeneralDocumentLinkParams: GetMemberUploadGeneralDocumentLinkParams,
@@ -418,7 +425,8 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [String])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getMemberDownloadGeneralDocumentsLinks(
     @Args(
       'memberId',
@@ -447,7 +455,8 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async deleteMemberGeneralDocument(
     @Args(camelCase(DeleteMemberGeneralDocumentParams.name))
     deleteMemberGeneralDocumentParams: DeleteMemberGeneralDocumentParams,
@@ -516,8 +525,8 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.caregiver, idLocator: `id`, entityMemberIdLocator: 'memberId' })
   async deleteCaregiver(
     @Args(
       'id',
@@ -537,7 +546,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Caregiver)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
   @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
@@ -551,7 +560,7 @@ export class MemberResolver extends MemberBase {
   @Query(() => [Caregiver])
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
   @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getCaregivers(
     @Args(
@@ -568,7 +577,8 @@ export class MemberResolver extends MemberBase {
    ********************************************* Alerts ********************************************
    ************************************************************************************************/
   @Mutation(() => Boolean)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.token })
   async dismissAlert(
     @Client('_id') userId: string,
     @Args('alertId', { type: () => String })
@@ -579,7 +589,8 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [Alert])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.token })
   async getAlerts(
     @Client('_id') userId: string,
     @Client('lastQueryAlert') lastQueryAlert: Date,
@@ -604,7 +615,7 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async registerMemberForNotifications(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -677,7 +688,8 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig } = await this.extractDataOfMemberAndUser(memberId, userId);
@@ -732,7 +744,8 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => String, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async notifyContent(
     @Args(camelCase(NotifyContentParams.name))
     notifyContentParams: NotifyContentParams,
@@ -761,7 +774,8 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => String, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async cancelNotify(
     @Args(camelCase(CancelNotifyParams.name))
     cancelNotifyParams: CancelNotifyParams,
@@ -782,6 +796,7 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async graduateMember(
     @Args(camelCase(GraduateMemberParams.name))
     graduateMemberParams: GraduateMemberParams,
@@ -1024,8 +1039,8 @@ export class MemberResolver extends MemberBase {
   @Query(() => MemberConfig)
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `id` })
   async getMemberConfig(
     @Args(
       'id',
@@ -1041,7 +1056,7 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async updateMemberConfig(
     @Client('roles') roles,
     @Client('_id') memberId,

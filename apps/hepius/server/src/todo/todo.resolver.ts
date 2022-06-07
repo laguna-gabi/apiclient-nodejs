@@ -23,6 +23,7 @@ import {
 } from '.';
 import {
   Ace,
+  AceStrategy,
   Client,
   ErrorType,
   Errors,
@@ -53,7 +54,7 @@ export class TodoResolver {
   @Mutation(() => Identifier)
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member, UserRole.coach)
   @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async createTodo(
     @Client('roles') roles,
@@ -72,7 +73,8 @@ export class TodoResolver {
   }
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async createActionTodo(
     @Client('roles') roles,
     @Client('_id') clientId,
@@ -87,7 +89,7 @@ export class TodoResolver {
   @Query(() => [Todo])
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member, UserRole.coach)
   @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getTodos(
     @Args(
@@ -104,7 +106,7 @@ export class TodoResolver {
   @Mutation(() => Todo)
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member, UserRole.coach)
   @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async updateTodo(
     @Client('roles') roles,
@@ -123,7 +125,7 @@ export class TodoResolver {
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member, UserRole.coach)
   @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async endTodo(
     @Client('_id') clientId,
@@ -145,7 +147,7 @@ export class TodoResolver {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async approveTodo(
     @Client('roles') roles,
     @Client('_id') memberId,
@@ -178,7 +180,7 @@ export class TodoResolver {
   @Query(() => [TodoDone])
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, MemberRole.member, UserRole.coach)
   @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async getTodoDones(
     @Args(camelCase(GetTodoDonesParams.name)) getTodoDonesParams: GetTodoDonesParams,
@@ -189,7 +191,7 @@ export class TodoResolver {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
+  @Ace({ strategy: AceStrategy.token })
   async deleteTodoDone(
     @Client('roles') roles,
     @Client('_id') memberId,
