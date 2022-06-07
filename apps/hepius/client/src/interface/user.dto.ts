@@ -1,4 +1,4 @@
-import { Language } from '@argus/pandora';
+import { DefaultSchemaOptions, Language } from '@argus/pandora';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
@@ -18,7 +18,7 @@ export const defaultUserParams = {
  *************************************************************************************************/
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class User extends Identifier {
   @Prop()
   @Field(() => String, { nullable: true })

@@ -277,7 +277,7 @@ describe('UserService', () => {
       delete updatedUser.id;
 
       const result = await service.get(id);
-      expect(result).toEqual(expect.objectContaining({ _id: id, ...updatedUser }));
+      expect(result).toEqual(expect.objectContaining(updatedUser));
     });
 
     it('should not set null values input', async () => {
@@ -385,7 +385,7 @@ describe('UserService', () => {
       const createdUser = await service.insert(user);
       const CreatedConfigUser = await service.getUserConfig(createdUser.id);
 
-      expect(createdUser.id).toEqual(CreatedConfigUser.userId);
+      expect(createdUser.id).toEqual(CreatedConfigUser.userId.toString());
     });
   });
 

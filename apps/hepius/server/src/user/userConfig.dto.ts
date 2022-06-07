@@ -1,3 +1,4 @@
+import { DefaultSchemaOptions } from '@argus/pandora';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
@@ -8,7 +9,7 @@ import { audit } from '../db';
  *************************************************************************************************/
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class UserConfig {
   @Prop({ type: Types.ObjectId, unique: true, index: true })
   @Field(() => String)

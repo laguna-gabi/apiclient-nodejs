@@ -111,9 +111,9 @@ export class UserService extends BaseService {
       const newObject = this.removeNotNullable(createUserParams, NotNullableUserKeys);
 
       const object = await this.userModel.create({ ...newObject });
-      await this.userConfigModel.create({ userId: new Types.ObjectId(object._id) });
+      await this.userConfigModel.create({ userId: new Types.ObjectId(object.id) });
 
-      return this.replaceId(object.toObject());
+      return object.toObject();
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.userIdOrEmailAlreadyExists) : ex,
@@ -122,15 +122,17 @@ export class UserService extends BaseService {
   }
 
   async updateAuthIdAndUsername(id: string, authId: string, username: string): Promise<User> {
-    const user = await this.userModel
-      .findByIdAndUpdate(new Types.ObjectId(id), { authId, username }, { upsert: false, new: true })
-      .lean();
+    const user = await this.userModel.findByIdAndUpdate(
+      new Types.ObjectId(id),
+      { authId, username },
+      { upsert: false, new: true },
+    );
 
     if (!user) {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    return this.replaceId(user);
+    return user.toObject();
   }
 
   async update(updateUserParams: UpdateUserParams): Promise<User> {
@@ -139,20 +141,18 @@ export class UserService extends BaseService {
     if (isEmpty(setParams)) {
       user = await this.userModel.findById(new Types.ObjectId(id));
     } else {
-      user = await this.userModel
-        .findByIdAndUpdate(
-          new Types.ObjectId(id),
-          { $set: omitBy(setParams, isNil) },
-          { upsert: false, new: true },
-        )
-        .lean();
+      user = await this.userModel.findByIdAndUpdate(
+        new Types.ObjectId(id),
+        { $set: omitBy(setParams, isNil) },
+        { upsert: false, new: true },
+      );
     }
 
     if (!user) {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    return this.replaceId(user);
+    return user.toObject();
   }
 
   async delete(id: string) {
