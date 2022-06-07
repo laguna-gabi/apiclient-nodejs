@@ -29,8 +29,8 @@ import {
   generateReplaceMemberOrgParams,
   generateReplaceUserForMemberParams,
   generateRequestHeaders,
+  generateSetActionItemParams,
   generateUniqueUrl,
-  generateUpdateActionItemParams,
   generateUpdateJournalTextParams,
   generateUpdateMemberParams,
   urls,
@@ -675,6 +675,10 @@ describe('Validations - member', () => {
         ${{ memberId: 123 }}         | ${{ missingFieldError: stringError }}
         ${{ title: 123 }}            | ${{ missingFieldError: stringError }}
         ${{ description: 123 }}      | ${{ missingFieldError: stringError }}
+        ${{ relatedEntities: 123 }}  | ${{ missingFieldError: 'Expected type "RelatedEntityInput" to be an object' }}
+        ${{ status: 123 }}           | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
+        ${{ priority: 123 }}         | ${`Field "priority" of required type "ActionItemPriority!" was not provided.`}
+        ${{ category: 123 }}         | ${`Field "category" of required type "ActionItemCategory!" was not provided.`}
         ${{ status: 123 }}           | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
         ${{ priority: 123 }}         | ${`Field "priority" of required type "ActionItemPriority!" was not provided.`}
         ${{ category: 123 }}         | ${`Field "category" of required type "ActionItemCategory!" was not provided.`}
@@ -689,20 +693,23 @@ describe('Validations - member', () => {
       );
     });
 
-    describe('updateActionItem', () => {
+    describe('setActionItem', () => {
       /* eslint-disable max-len */
       test.each`
-        field       | error
-        ${'id'}     | ${`Field "id" of required type "String!" was not provided.`}
-        ${'status'} | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
+        field                | error
+        ${'id'}              | ${`Field "id" of required type "String!" was not provided.`}
+        ${'title'}           | ${`Field "title" of required type "String!" was not provided.`}
+        ${'status'}          | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
+        ${'priority'}        | ${`Field "priority" of required type "ActionItemPriority!" was not provided.`}
+        ${'relatedEntities'} | ${`Field "relatedEntities" of required type "[RelatedEntityInput!]!" was not provided.`}
       `(
         /* eslint-enable max-len */
         `should fail to update actionItem since mandatory field $field is missing`,
         async (params) => {
-          const updateActionItemParams = generateUpdateActionItemParams();
-          delete updateActionItemParams[params.field];
-          await handler.mutations.updateActionItem({
-            updateActionItemParams,
+          const setActionItemParams = generateSetActionItemParams();
+          delete setActionItemParams[params.field];
+          await handler.mutations.setActionItem({
+            setActionItemParams,
             missingFieldError: params.error,
           });
         },
@@ -710,17 +717,24 @@ describe('Validations - member', () => {
 
       /* eslint-disable max-len */
       test.each`
-        input              | error
-        ${{ id: 123 }}     | ${stringError}
-        ${{ status: 123 }} | ${'Enum "ActionItemStatus" cannot represent non-string value'}
+        input                        | error
+        ${{ id: 123 }}               | ${{ missingFieldError: stringError }}
+        ${{ title: 123 }}            | ${{ missingFieldError: stringError }}
+        ${{ description: 123 }}      | ${{ missingFieldError: stringError }}
+        ${{ rejectNote: 123 }}       | ${{ missingFieldError: stringError }}
+        ${{ relatedEntities: 123 }}  | ${{ missingFieldError: 'Expected type "RelatedEntityInput" to be an object' }}
+        ${{ status: 123 }}           | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
+        ${{ priority: 123 }}         | ${`Field "priority" of required type "ActionItemPriority!" was not provided.`}
+        ${{ category: 123 }}         | ${`Field "category" of required type "ActionItemCategory!" was not provided.`}
+        ${{ deadline: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyActionItemDeadline)] }}
       `(`should fail to update actionItem since $input is not a valid type`, async (params) => {
         /* eslint-enable max-len */
-        const updateActionItemParams = generateUpdateActionItemParams({
+        const setActionItemParams = generateSetActionItemParams({
           ...params.input,
         });
-        await handler.mutations.updateActionItem({
-          updateActionItemParams,
-          missingFieldError: params.error,
+        await handler.mutations.setActionItem({
+          setActionItemParams,
+          ...params.error,
         });
       });
     });

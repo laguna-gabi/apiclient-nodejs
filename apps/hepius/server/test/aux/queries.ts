@@ -1510,6 +1510,16 @@ export class Queries {
               title
               status
               deadline
+              rejectNote
+              description
+              category
+              priority
+              createdAt
+              createdBy
+              relatedEntities {
+                type
+                id
+              }
             }
           }
         `,

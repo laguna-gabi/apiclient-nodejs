@@ -93,6 +93,7 @@ import {
 import { DailyReport } from '../src/dailyReport';
 import {
   ActionItemCategory,
+  ActionItemPriority,
   ActionItemStatus,
   Activity,
   AdmitSource,
@@ -123,8 +124,8 @@ import {
   RelatedEntity,
   RelatedEntityType,
   SecondaryDiagnosisType,
+  SetActionItemParams,
   SetGeneralNotesParams,
-  UpdateActionItemParams,
   UpdateJournalTextParams,
   UpdateJourneyParams,
   WarningSigns,
@@ -581,11 +582,28 @@ export const generateRelatedEntity = ({
   return { id, type };
 };
 
-export const generateUpdateActionItemParams = ({
+export const generateSetActionItemParams = ({
   id = generateId(),
-  status = ActionItemStatus.completed,
-}: Partial<UpdateActionItemParams> = {}): UpdateActionItemParams => {
-  return { id, status };
+  title = lorem.words(2),
+  description = lorem.words(2),
+  category = randomEnum(ActionItemCategory) as ActionItemCategory,
+  status = randomEnum(ActionItemStatus) as ActionItemStatus,
+  priority = randomEnum(ActionItemPriority) as ActionItemPriority,
+  rejectNote = lorem.words(2),
+  deadline = fakerDate.soon(3),
+  relatedEntities = [],
+}: Partial<SetActionItemParams> = {}): SetActionItemParams => {
+  return {
+    id,
+    title,
+    deadline,
+    description,
+    category,
+    status,
+    priority,
+    rejectNote,
+    relatedEntities,
+  };
 };
 
 export const generateRequestAppointmentParams = ({

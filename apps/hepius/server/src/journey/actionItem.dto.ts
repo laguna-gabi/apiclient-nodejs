@@ -32,13 +32,15 @@ export enum ActionItemPriority {
   normal = 'normal',
 }
 
-registerEnumType(ActionItemPriority, { name: 'Priority' });
+registerEnumType(ActionItemPriority, { name: 'ActionItemPriority' });
 
 export enum RelatedEntityType {
   questionnaire = 'questionnaire',
 }
 
 registerEnumType(RelatedEntityType, { name: 'RelatedEntityType' });
+
+export const nullableActionItemKeys = ['deadline', 'description', 'rejectNote', 'category'];
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -68,13 +70,41 @@ export class CreateActionItemParams {
   priority?: ActionItemPriority;
 }
 
+/**
+ * In the case of action items we are requires to allow removing attributes on update.
+ * That's the reason we're using set instead of update (similar to PUT vs PATCH)
+ * Calling SetActionItem requires ALL attributes from the original dto,
+ * because we will replace the old object the new one.
+ */
 @InputType({ isAbstract: true })
-export class UpdateActionItemParams {
+export class SetActionItemParams {
   @Field(() => String)
   id: string;
 
+  @Field(() => String)
+  title: string;
+
   @Field(() => ActionItemStatus)
   status: ActionItemStatus;
+
+  @Field(() => Date, { nullable: true })
+  @IsDate({ message: Errors.get(ErrorType.journeyActionItemDeadline) })
+  deadline?: Date;
+
+  @Field(() => [RelatedEntity])
+  relatedEntities: RelatedEntity[];
+
+  @Field(() => String, { nullable: true })
+  description?: string;
+
+  @Field(() => ActionItemCategory, { nullable: true })
+  category?: ActionItemCategory;
+
+  @Field(() => ActionItemPriority)
+  priority: ActionItemPriority;
+
+  @Field(() => String, { nullable: true })
+  rejectNote?: string;
 }
 
 /**************************************************************************************************
@@ -140,6 +170,9 @@ export class ActionItem extends Identifier {
 
   @Field(() => String)
   createdBy: Types.ObjectId;
+
+  @Field(() => String)
+  updatedBy: Types.ObjectId;
 }
 
 /**************************************************************************************************

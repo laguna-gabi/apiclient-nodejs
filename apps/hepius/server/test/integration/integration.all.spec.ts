@@ -56,6 +56,7 @@ import {
   generateRequestAppointmentParams,
   generateRequestHeaders,
   generateScheduleAppointmentParams,
+  generateSetActionItemParams,
   generateSetGeneralNotesParams,
   generateSubmitCareWizardParams,
   generateSubmitQuestionnaireResponseParams,
@@ -94,10 +95,9 @@ import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/daily
 import { Member, ReplaceUserForMemberParams } from '../../src/member';
 import {
   ActionItem,
-  ActionItemStatus,
   ChangeMemberDnaParams,
-  CreateActionItemParams,
   DischargeTo,
+  SetActionItemParams,
   UpdateJournalTextParams,
 } from '../../src/journey';
 import { Internationalization } from '../../src/providers';
@@ -174,17 +174,6 @@ describe('Integration tests: all', () => {
       userId: resultNurse2.id,
     });
 
-    const { createActionItemParams: ai1, id: idAi1 } = await creators.createAndValidateActionItem(
-      member.id,
-      handler.mutations.createActionItem,
-    );
-    const { createActionItemParams: ai2, id: idAi2 } = await creators.createAndValidateActionItem(
-      member.id,
-      handler.mutations.createActionItem,
-    );
-    await updateActionItem(idAi1, handler.mutations.updateActionItem);
-    await updateActionItem(idAi2, handler.mutations.updateActionItem);
-
     const resultMember = await handler.queries.getMember({
       id: member.id,
       requestHeaders: generateRequestHeaders(member.authId),
@@ -203,11 +192,6 @@ describe('Integration tests: all', () => {
     compareAppointmentsOfUsers(appointmentPrimaryUser, resultMember.users);
 
     expect(resultJourney.scores).toEqual(appointmentNurse2.notes.scores);
-
-    //action items are desc sorted, so the last inserted action item is the 1st in the list
-    const actionItems = await handler.queries.getActionItems({ memberId: member.id });
-    compareActionItem(actionItems[0], ai2);
-    compareActionItem(actionItems[1], ai1);
   });
 
   /**
@@ -2660,6 +2644,35 @@ describe('Integration tests: all', () => {
     });
   });
 
+  describe('Action Items', () => {
+    it('should create, update, and get action items', async () => {
+      const { member } = await creators.createMemberUserAndOptionalOrg();
+
+      // create action items
+      const { id: id1 } = await creators.createAndValidateActionItem(
+        member.id,
+        handler.mutations.createActionItem,
+      );
+      const { id: id2 } = await creators.createAndValidateActionItem(
+        member.id,
+        handler.mutations.createActionItem,
+      );
+
+      // update action items
+      const setActionItemParams = generateSetActionItemParams({ id: id1 });
+      const setActionItemParams2 = generateSetActionItemParams({ id: id2 });
+      await handler.mutations.setActionItem({ setActionItemParams });
+      await handler.mutations.setActionItem({ setActionItemParams: setActionItemParams2 });
+
+      // get action items
+      const actionItems = await handler.queries.getActionItems({ memberId: member.id });
+
+      //action items are desc sorted, so the last inserted action item is the 1st in the list
+      compareActionItem(actionItems[0], setActionItemParams2);
+      compareActionItem(actionItems[1], setActionItemParams);
+    });
+  });
+
   it('should update user related channels on updated user', async () => {
     const { user, org } = await creators.createMemberUserAndOptionalOrg();
     await handler.createMemberWithRetries({
@@ -3068,18 +3081,15 @@ describe('Integration tests: all', () => {
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/
 
-  const updateActionItem = async (id: string, method) => {
-    const updateActionItemParams = { id, status: ActionItemStatus.completed };
-    await method({ updateActionItemParams });
-  };
-
-  const compareActionItem = (
-    actionItem: ActionItem,
-    createActionItemParams: CreateActionItemParams,
-  ) => {
-    expect(actionItem.title).toEqual(createActionItemParams.title);
-    expect(actionItem.status).toEqual(ActionItemStatus.completed);
-    expect(new Date(actionItem.deadline)).toEqual(createActionItemParams.deadline);
+  const compareActionItem = (actionItem: ActionItem, setActionItemParams: SetActionItemParams) => {
+    expect(actionItem.title).toEqual(setActionItemParams.title);
+    expect(actionItem.status).toEqual(setActionItemParams.status);
+    expect(actionItem.relatedEntities).toEqual(setActionItemParams.relatedEntities);
+    expect(actionItem.description).toEqual(setActionItemParams.description);
+    expect(actionItem.rejectNote).toEqual(setActionItemParams.rejectNote);
+    expect(actionItem.category).toEqual(setActionItemParams.category);
+    expect(actionItem.priority).toEqual(setActionItemParams.priority);
+    expect(new Date(actionItem.deadline)).toEqual(setActionItemParams.deadline);
   };
 
   const createAndValidateAvailabilities = async (count: number): Promise<Identifiers> => {

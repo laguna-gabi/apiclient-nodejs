@@ -22,6 +22,7 @@ import {
   generateRequestAppointmentParams,
   generateRequestHeaders,
   generateScheduleAppointmentParams,
+  generateSetActionItemParams,
   generateSetGeneralNotesParams,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
@@ -55,7 +56,6 @@ import {
 import {
   ActionItem,
   ActionItemDocument,
-  ActionItemStatus,
   Journal,
   JournalDocument,
   JourneyDocument,
@@ -302,8 +302,8 @@ describe('Integration tests : Audit', () => {
         await checkAuditValues<ActionItemDocument>(id, handler.actionItemModel, user1.id, user1.id),
       ).toBeTruthy();
 
-      await handler.mutations.updateActionItem({
-        updateActionItemParams: { id, status: ActionItemStatus.completed },
+      await handler.mutations.setActionItem({
+        setActionItemParams: generateSetActionItemParams({ id }),
         requestHeaders: generateRequestHeaders(user2.authId),
       });
 

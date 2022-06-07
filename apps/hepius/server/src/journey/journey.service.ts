@@ -25,6 +25,7 @@ import {
   JourneyDocument,
   SetGeneralNotesParams,
   UpdateJourneyParams,
+  nullableActionItemKeys,
 } from '.';
 import { Identifier } from '@argus/hepiusClient';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -37,7 +38,7 @@ import {
   CreateActionItemParams,
   Journal,
   JournalDocument,
-  UpdateActionItemParams,
+  SetActionItemParams,
   UpdateJournalParams,
 } from './';
 
@@ -203,14 +204,20 @@ export class JourneyService extends AlertService {
     return { id };
   }
 
-  async updateActionItem(updateActionItemParams: UpdateActionItemParams): Promise<void> {
-    const { id, status } = updateActionItemParams;
+  async setActionItem(setActionItemParams: SetActionItemParams): Promise<void> {
+    const { id, ...setParams } = setActionItemParams;
+
+    // This is required in order to allow overriding with undefined (removing properties from the object).
+    // Every nullable property that is not set in the setActionItemParams will be removed (unset).
+    const unsetParams = {};
+    nullableActionItemKeys.forEach((key) => {
+      if (!setActionItemParams[key]) unsetParams[key] = 1;
+    });
 
     const result = await this.actionItemModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id) },
-      { $set: { status } },
+      { $set: setParams, $unset: unsetParams },
     );
-
     if (!result) {
       throw new Error(Errors.get(ErrorType.journeyActionItemIdNotFound));
     }

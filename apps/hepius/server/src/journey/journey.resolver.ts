@@ -29,8 +29,8 @@ import {
   JournalUploadImageLink,
   Journey,
   JourneyService,
+  SetActionItemParams,
   SetGeneralNotesParams,
-  UpdateActionItemParams,
   UpdateJournalTextParams,
   UpdateJourneyParams,
 } from '.';
@@ -125,11 +125,11 @@ export class JourneyResolver {
 
   @Mutation(() => Boolean, { nullable: true })
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async updateActionItem(
-    @Args(camelCase(UpdateActionItemParams.name))
-    updateActionItemParams: UpdateActionItemParams,
+  async setActionItem(
+    @Args(camelCase(SetActionItemParams.name))
+    setActionItemParams: SetActionItemParams,
   ) {
-    return this.journeyService.updateActionItem(updateActionItemParams);
+    return this.journeyService.setActionItem(setActionItemParams);
   }
 
   @Query(() => [ActionItem])

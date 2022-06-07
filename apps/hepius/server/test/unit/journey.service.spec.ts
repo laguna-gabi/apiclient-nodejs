@@ -22,8 +22,8 @@ import {
   generateCreateJourneyParams,
   generateGetMemberUploadJournalImageLinkParams,
   generateRelatedEntity,
+  generateSetActionItemParams,
   generateSetGeneralNotesParams,
-  generateUpdateActionItemParams,
   generateUpdateJournalTextParams,
   generateUpdateJourneyParams,
 } from '../index';
@@ -420,21 +420,41 @@ describe(JourneyService.name, () => {
     });
   });
 
-  describe('updateActionItem', () => {
-    it('should update an existing action item status', async () => {
+  describe('setActionItem', () => {
+    it('should update an existing action item', async () => {
       const memberId = generateId();
       await service.create(generateCreateJourneyParams({ memberId }));
       const createActionItemParams = generateCreateActionItemParams({ memberId });
       const { id } = await service.insertActionItem(createActionItemParams);
 
-      const status = ActionItemStatus.completed;
-      await service.updateActionItem({ id, status });
+      const updateParams = generateSetActionItemParams({ id });
+      await service.setActionItem(updateParams);
       const results = await service.getActionItems(memberId);
-      expect(results[0].status).toEqual(status);
+      expect(results).toEqual(
+        expect.arrayContaining([expect.objectContaining({ ...updateParams })]),
+      );
+    });
+
+    it('should override current params, even when undefined', async () => {
+      const memberId = generateId();
+      await service.create(generateCreateJourneyParams({ memberId }));
+      const createActionItemParams = generateCreateActionItemParams({ memberId });
+      const { id } = await service.insertActionItem(createActionItemParams);
+
+      const updateParams = generateSetActionItemParams({ id });
+      delete updateParams.category;
+      delete updateParams.description;
+      await service.setActionItem(updateParams);
+      const results = await service.getActionItems(memberId);
+      expect(results).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ ...updateParams, category: undefined, description: undefined }),
+        ]),
+      );
     });
 
     it('should not be able to update status for a non existing action item', async () => {
-      await expect(service.updateActionItem(generateUpdateActionItemParams())).rejects.toThrow(
+      await expect(service.setActionItem(generateSetActionItemParams())).rejects.toThrow(
         Errors.get(ErrorType.journeyActionItemIdNotFound),
       );
     });

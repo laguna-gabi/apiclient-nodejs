@@ -12,7 +12,6 @@ import {
 } from '..';
 import { EndAppointmentParams } from '../../src/appointment';
 import { Member, defaultMemberParams } from '../../src/member';
-import { CreateActionItemParams } from '../../src/journey';
 import { Org } from '../../src/org';
 import { CreateUserParams } from '../../src/user';
 import { Appointment, AppointmentStatus, User, UserRole } from '@argus/hepiusClient';
@@ -167,14 +166,11 @@ export class Creators {
     return executeEndAppointment(); //triple checking end appointment with params
   };
 
-  createAndValidateActionItem = async (
-    memberId: string,
-    method,
-  ): Promise<{ id: string; createActionItemParams: CreateActionItemParams }> => {
+  createAndValidateActionItem = async (memberId: string, method): Promise<{ id: string }> => {
     const createActionItemParams = generateCreateActionItemParams({ memberId });
     const { id } = await method({ createActionItemParams });
     expect(id).toEqual(expect.any(String));
 
-    return { id, createActionItemParams };
+    return { id };
   };
 }
