@@ -52,6 +52,7 @@ export class MigrationCommand implements CommandRunner {
       }
     } catch (err) {
       console.error(ErrorColoring, `Migration Command: error: got: ${err.message}`);
+      throw err;
     }
   }
 
