@@ -9,6 +9,8 @@ import {
   QuestionnaireService,
 } from '.';
 import { CommonModule } from '../common';
+import { JourneyModule } from '../journey';
+import { ProvidersModule } from '../providers';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { CommonModule } from '../common';
       { name: Questionnaire.name, schema: QuestionnaireDto },
       { name: QuestionnaireResponse.name, schema: QuestionnaireResponseDto },
     ]),
+    JourneyModule,
+    ProvidersModule,
     CommonModule,
   ],
   providers: [QuestionnaireResolver, QuestionnaireService],

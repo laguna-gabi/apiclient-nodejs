@@ -21,7 +21,11 @@ import {
   SubmitQuestionnaireResponseParams,
 } from '.';
 import {
-  BaseService,
+  Alert,
+  AlertService,
+  AlertType,
+  DismissedAlert,
+  DismissedAlertDocument,
   ErrorType,
   Errors,
   EventType,
@@ -32,9 +36,11 @@ import {
   deleteMemberObjects,
 } from '../common';
 import { ISoftDelete } from '../db';
+import { Internationalization } from '../providers';
+import { JourneyService } from '../journey';
 
 @Injectable()
-export class QuestionnaireService extends BaseService {
+export class QuestionnaireService extends AlertService {
   private personasOptions = new PersonasOptions();
 
   constructor(
@@ -43,10 +49,14 @@ export class QuestionnaireService extends BaseService {
     @InjectModel(QuestionnaireResponse.name)
     private readonly questionnaireResponse: Model<QuestionnaireResponseDocument> &
       ISoftDelete<QuestionnaireResponseDocument>,
+    @InjectModel(DismissedAlert.name)
+    readonly dismissAlertModel: Model<DismissedAlertDocument>,
+    private readonly journeyService: JourneyService,
+    private readonly internationalization: Internationalization,
     readonly logger: LoggerService,
     readonly eventEmitter: EventEmitter2,
   ) {
-    super();
+    super(dismissAlertModel);
   }
 
   async createQuestionnaire(
@@ -95,6 +105,7 @@ export class QuestionnaireService extends BaseService {
       ...submitQuestionnaireResponseParams,
       questionnaireId: new Types.ObjectId(submitQuestionnaireResponseParams.questionnaireId),
       memberId: new Types.ObjectId(submitQuestionnaireResponseParams.memberId),
+      journeyId: new Types.ObjectId(submitQuestionnaireResponseParams.journeyId),
     });
 
     // 3. upload on-the-fly calculated information
@@ -126,8 +137,17 @@ export class QuestionnaireService extends BaseService {
     return out;
   }
 
-  async getQuestionnaireResponseByMemberId(memberId: string): Promise<QuestionnaireResponse[]> {
-    const qrs = await this.questionnaireResponse.find({ memberId: new Types.ObjectId(memberId) });
+  async getQuestionnaireResponses({
+    memberId,
+    journeyId,
+  }: {
+    memberId: string;
+    journeyId: string;
+  }): Promise<QuestionnaireResponse[]> {
+    const qrs = await this.questionnaireResponse.find({
+      memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
+    });
 
     // pre-populating results - calculated on-the-fly
     return Promise.all(
@@ -171,15 +191,63 @@ export class QuestionnaireService extends BaseService {
     }
   }
 
-  async getHealthPersona({ memberId }: { memberId: string }): Promise<HealthPersona | undefined> {
+  async getHealthPersona({
+    memberId,
+    journeyId,
+  }: {
+    memberId: string;
+    journeyId: string;
+  }): Promise<HealthPersona | undefined> {
     const result: QuestionnaireResponse = await this.getLatestQuestionnaireResponse({
       memberId,
+      journeyId,
       type: QuestionnaireType.lhp,
     });
 
     if (result) {
       return this.calculateHealthPersona(result.answers);
     }
+  }
+
+  async entityToAlerts(member): Promise<Alert[]> {
+    const templates = new Map<string, Questionnaire>();
+    const { id: journeyId } = await this.journeyService.getRecent(member.id);
+    const qrs = await this.getQuestionnaireResponses({ memberId: member.id, journeyId });
+
+    return Promise.all(
+      qrs.map(async (qr) => {
+        const template =
+          templates.get(qr.questionnaireId.toString()) ||
+          (await this.getQuestionnaireById(qr.questionnaireId.toString()));
+
+        templates.set(qr.questionnaireId.toString(), template);
+
+        const results = this.buildResult(qr.answers, template);
+
+        if (
+          results.score >= template.notificationScoreThreshold ||
+          (results.alert && QuestionnaireAlerts.get(template.type))
+        ) {
+          return {
+            id: `${qr.id}_${AlertType.assessmentSubmitScoreOverThreshold}`,
+            type: AlertType.assessmentSubmitScoreOverThreshold,
+            date: qr.createdAt,
+            text: this.internationalization.getAlerts(
+              AlertType.assessmentSubmitScoreOverThreshold,
+              {
+                member,
+                assessmentName: template.shortName,
+                assessmentScore:
+                  results.alert && QuestionnaireAlerts.get(template.type)
+                    ? QuestionnaireAlerts.get(template.type)
+                    : results.score.toString(),
+              },
+            ),
+            memberId: member.id,
+          } as Alert;
+        }
+      }),
+    );
   }
 
   private validate(answers: Answer[], questionnaire: Questionnaire) {
@@ -312,13 +380,20 @@ export class QuestionnaireService extends BaseService {
 
   private async getLatestQuestionnaireResponse({
     memberId,
+    journeyId,
     type,
   }: {
     memberId: string;
+    journeyId: string;
     type: QuestionnaireType;
   }): Promise<QuestionnaireResponse | undefined> {
     const result = await this.questionnaireResponse.aggregate([
-      { $match: { memberId: new Types.ObjectId(memberId) } },
+      {
+        $match: {
+          memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
+        },
+      },
       { $sort: { updatedAt: -1 } },
       {
         $lookup: {

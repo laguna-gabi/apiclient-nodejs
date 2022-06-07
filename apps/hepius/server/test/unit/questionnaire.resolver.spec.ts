@@ -16,13 +16,16 @@ import {
   defaultModules,
   generateCreateQuestionnaireParams,
   generateSubmitQuestionnaireResponseParams,
+  mockGenerateJourney,
   mockGenerateQuestionnaire,
 } from '../../test';
+import { JourneyService } from '../../src/journey';
 
 describe('QuestionnaireResolver', () => {
   let module: TestingModule;
   let resolver: QuestionnaireResolver;
   let service: QuestionnaireService;
+  let journeyService: JourneyService;
   let eventEmitter: EventEmitter2;
 
   beforeAll(async () => {
@@ -33,6 +36,7 @@ describe('QuestionnaireResolver', () => {
 
     resolver = module.get<QuestionnaireResolver>(QuestionnaireResolver);
     service = module.get<QuestionnaireService>(QuestionnaireService);
+    journeyService = module.get<JourneyService>(JourneyService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
   });
 
@@ -112,22 +116,30 @@ describe('QuestionnaireResolver', () => {
   });
 
   describe('getMemberQuestionnaireResponses', () => {
-    let spyOnServiceGetByMemberId: jest.SpyInstance;
+    let spyOnServiceGetQuestionnaireResponses: jest.SpyInstance;
+    let spyOnServiceGetRecentJourney: jest.SpyInstance;
 
     beforeEach(() => {
-      spyOnServiceGetByMemberId = jest.spyOn(service, 'getQuestionnaireResponseByMemberId');
-      spyOnServiceGetByMemberId.mockImplementation(() => undefined);
+      spyOnServiceGetQuestionnaireResponses = jest.spyOn(service, 'getQuestionnaireResponses');
+      spyOnServiceGetRecentJourney = jest.spyOn(journeyService, 'getRecent');
+      spyOnServiceGetQuestionnaireResponses.mockImplementation(() => undefined);
     });
 
     afterEach(() => {
-      spyOnServiceGetByMemberId.mockReset();
+      spyOnServiceGetQuestionnaireResponses.mockReset();
+      spyOnServiceGetRecentJourney.mockReset();
     });
 
     it('should get all member Questionnaire Responses', async () => {
-      const mId = generateId();
-      await resolver.getMemberQuestionnaireResponses(mId);
+      const memberId = generateId();
+      const mock = mockGenerateJourney({ memberId });
+      spyOnServiceGetRecentJourney.mockResolvedValueOnce(mock);
+      await resolver.getMemberQuestionnaireResponses(memberId);
 
-      expect(spyOnServiceGetByMemberId).toHaveBeenCalledWith(mId);
+      expect(spyOnServiceGetQuestionnaireResponses).toHaveBeenCalledWith({
+        memberId,
+        journeyId: mock.id,
+      });
     });
   });
 
@@ -155,33 +167,41 @@ describe('QuestionnaireResolver', () => {
     let spyOnServiceSubmitQR: jest.SpyInstance;
     let spyOnServiceGetHealthPersona: jest.SpyInstance;
     let spyOnServiceGetById: jest.SpyInstance;
+    let spyOnServiceGetRecentJourney: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnServiceSubmitQR = jest.spyOn(service, 'submitQuestionnaireResponse');
       spyOnServiceGetHealthPersona = jest.spyOn(service, 'getHealthPersona');
       spyOnServiceGetById = jest.spyOn(service, 'getQuestionnaireById');
+      spyOnServiceGetRecentJourney = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceSubmitQR.mockReset();
       spyOnServiceGetHealthPersona.mockReset();
       spyOnServiceGetById.mockReset();
+      spyOnServiceGetRecentJourney.mockReset();
     });
 
     it('should submit a Questionnaire Response', async () => {
       const qrSubmitParams = generateSubmitQuestionnaireResponseParams();
       spyOnServiceSubmitQR.mockResolvedValueOnce({ type: QuestionnaireType.phq9 });
+      const mock = mockGenerateJourney({ memberId: qrSubmitParams.memberId });
+      spyOnServiceGetRecentJourney.mockResolvedValueOnce(mock);
       await resolver.submitQuestionnaireResponse(UserRole.lagunaCoach, qrSubmitParams);
 
-      expect(spyOnServiceSubmitQR).toHaveBeenCalledWith({ ...qrSubmitParams });
+      expect(spyOnServiceSubmitQR).toHaveBeenCalledWith({ ...qrSubmitParams, journeyId: mock.id });
     });
 
     it(`should submit an ${QuestionnaireType.lhp} response and update health persona`, async () => {
       const healthPersona: HealthPersona = HealthPersona.active;
+      const qrSubmitParams = generateSubmitQuestionnaireResponseParams();
+      spyOnServiceGetRecentJourney.mockResolvedValueOnce(
+        mockGenerateJourney({ memberId: qrSubmitParams.memberId }),
+      );
       spyOnServiceGetHealthPersona.mockResolvedValueOnce(healthPersona);
       const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
-      const qrSubmitParams = generateSubmitQuestionnaireResponseParams();
       spyOnServiceSubmitQR.mockResolvedValueOnce({ type: QuestionnaireType.lhp });
       await resolver.submitQuestionnaireResponse(UserRole.lagunaCoach, qrSubmitParams);
 

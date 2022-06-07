@@ -46,6 +46,7 @@ import {
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateOrg,
+  mockGenerateQuestionnaireResponse,
   mockGenerateUser,
 } from '..';
 import {
@@ -84,7 +85,11 @@ import {
   StorageService,
   TwilioService,
 } from '../../src/providers';
-import { QuestionnaireAlerts, QuestionnaireType } from '../../src/questionnaire';
+import {
+  QuestionnaireAlerts,
+  QuestionnaireService,
+  QuestionnaireType,
+} from '../../src/questionnaire';
 import { UserService } from '../../src/user';
 import { TodoService } from '../../src/todo';
 
@@ -94,6 +99,7 @@ describe('MemberResolver', () => {
   let service: MemberService;
   let userService: UserService;
   let todoService: TodoService;
+  let questionnaireService: QuestionnaireService;
   let storage: StorageService;
   let cognitoService: CognitoService;
   let communicationResolver: CommunicationResolver;
@@ -115,6 +121,7 @@ describe('MemberResolver', () => {
     service = module.get<MemberService>(MemberService);
     userService = module.get<UserService>(UserService);
     todoService = module.get<TodoService>(TodoService);
+    questionnaireService = module.get<QuestionnaireService>(QuestionnaireService);
     storage = module.get<StorageService>(StorageService);
     cognitoService = module.get<CognitoService>(CognitoService);
     oneSignal = module.get<OneSignal>(OneSignal);
@@ -1674,11 +1681,13 @@ describe('MemberResolver', () => {
     let spyOnServiceGetAlerts;
     let spyOnActionItemsServiceGetAlerts;
     let spyOnTodoServiceGetAlerts;
+    let spyOnQuestionnareServiceGetAlerts;
     let spyOnServiceGetUserMembers;
     beforeEach(() => {
       spyOnServiceGetAlerts = jest.spyOn(service, 'getAlerts');
       spyOnActionItemsServiceGetAlerts = jest.spyOn(journeyService, 'getAlerts');
       spyOnTodoServiceGetAlerts = jest.spyOn(todoService, 'getAlerts');
+      spyOnQuestionnareServiceGetAlerts = jest.spyOn(questionnaireService, 'getAlerts');
       spyOnServiceGetUserMembers = jest.spyOn(service, 'getUserMembers');
     });
 
@@ -1686,6 +1695,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetAlerts.mockReset();
       spyOnActionItemsServiceGetAlerts.mockReset();
       spyOnTodoServiceGetAlerts.mockReset();
+      spyOnQuestionnareServiceGetAlerts.mockReset();
       spyOnServiceGetUserMembers.mockReset();
     });
 
@@ -1695,18 +1705,20 @@ describe('MemberResolver', () => {
       const alert = mockGenerateAlert();
       const actionItemsAlert = mockGenerateAlert();
       const todoAlert = mockGenerateAlert();
+      const questionnaireAlert = mockGenerateQuestionnaireResponse();
 
       const members = [mockGenerateMember()];
       spyOnServiceGetUserMembers.mockResolvedValue(members);
       spyOnServiceGetAlerts.mockResolvedValue([alert]);
       spyOnActionItemsServiceGetAlerts.mockResolvedValue([actionItemsAlert]);
       spyOnTodoServiceGetAlerts.mockResolvedValue([todoAlert]);
+      spyOnQuestionnareServiceGetAlerts.mockResolvedValue([questionnaireAlert]);
 
       const alerts = await resolver.getAlerts(userId, lastQueryAlert);
 
       expect(spyOnServiceGetAlerts).toBeCalledTimes(1);
       expect(spyOnServiceGetAlerts).toBeCalledWith(userId, members, lastQueryAlert);
-      expect(alerts).toEqual([alert, actionItemsAlert, todoAlert]);
+      expect(alerts).toEqual([alert, actionItemsAlert, todoAlert, questionnaireAlert]);
     });
   });
 

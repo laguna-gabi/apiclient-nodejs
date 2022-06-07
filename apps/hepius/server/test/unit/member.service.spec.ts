@@ -17,7 +17,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { articlesByDrg, queryDaysLimit } from 'config';
 import { sub } from 'date-fns';
-import { address, datatype, date, internet, lorem, name } from 'faker';
+import { address, datatype, date, internet, name } from 'faker';
 import { pickBy } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
@@ -31,7 +31,6 @@ import {
   generateAddCaregiverParams,
   generateAddInsuranceParams,
   generateCreateMemberParams,
-  generateCreateQuestionnaireParams,
   generateCreateUserParams,
   generateDateOnly,
   generateDeleteMemberParams,
@@ -45,7 +44,6 @@ import {
   loadSessionClient,
   mockGenerateDispatch,
   mockGenerateJourney,
-  mockGenerateQuestionnaireItem,
 } from '..';
 import { AppointmentDocument, AppointmentDto, AppointmentModule } from '../../src/appointment';
 import {
@@ -86,16 +84,6 @@ import {
 } from '../../src/member';
 import { Org, OrgDocument, OrgDto } from '../../src/org';
 import { Internationalization } from '../../src/providers';
-import {
-  AlertConditionType,
-  Questionnaire,
-  QuestionnaireDocument,
-  QuestionnaireDto,
-  QuestionnaireResponse,
-  QuestionnaireResponseDocument,
-  QuestionnaireResponseDto,
-  QuestionnaireType,
-} from '../../src/questionnaire';
 import { NotificationService } from '../../src/services';
 import { UserDocument, UserDto } from '../../src/user';
 import { confirmEmittedChangeEvent } from '../common';
@@ -111,8 +99,6 @@ describe('MemberService', () => {
   let modelAppointment: Model<AppointmentDocument>;
   let modelDismissedAlert: Model<DismissedAlertDocument>;
   let modelCaregiver: Model<CaregiverDocument>;
-  let modelQuestionnaire: Model<QuestionnaireDocument>;
-  let modelQuestionnaireResponse: Model<QuestionnaireResponseDocument>;
   let modelJourney: Model<JourneyDocument & defaultTimestampsDbValues>;
   let modelInsurance: Model<InsuranceDocument>;
   let i18nService: Internationalization;
@@ -141,11 +127,6 @@ describe('MemberService', () => {
     modelAppointment = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     modelDismissedAlert = model<DismissedAlertDocument>(DismissedAlert.name, DismissedAlertDto);
     modelCaregiver = model<CaregiverDocument>(Caregiver.name, CaregiverDto);
-    modelQuestionnaire = model<QuestionnaireDocument>(Questionnaire.name, QuestionnaireDto);
-    modelQuestionnaireResponse = model<QuestionnaireResponseDocument>(
-      QuestionnaireResponse.name,
-      QuestionnaireResponseDto,
-    );
     modelJourney = model<JourneyDocument & defaultTimestampsDbValues>(Journey.name, JourneyDto);
     modelInsurance = model<InsuranceDocument>(Insurance.name, InsuranceDto);
 
@@ -1415,91 +1396,6 @@ describe('MemberService', () => {
             type: AlertType.newChatMessageFromMember,
           },
         ]);
-      });
-    });
-
-    describe('entity based alerts', () => {
-      it.each([
-        [
-          'should return score over threshold assessment alerts - total score over threshold',
-          '2',
-          '2',
-        ],
-        [
-          'should return score over threshold assessment alerts - alert triggered by answer',
-          '3',
-          'Nearly Every Day',
-        ],
-        ['should not return any alerts for assessments', '1', undefined],
-      ])('%p', async (_, answer, expectedScore) => {
-        mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
-        // create a new member
-        const memberId = await generateMember();
-        const member = await service.get(memberId);
-        const expectedAlerts = [];
-
-        const { id: questionnaireId } = await modelQuestionnaire.create(
-          generateCreateQuestionnaireParams({
-            type: QuestionnaireType.phq9,
-            shortName: 'PHQ-9',
-            items: [
-              mockGenerateQuestionnaireItem({
-                code: 'q1',
-                options: [
-                  { label: lorem.words(3), value: 0 },
-                  { label: lorem.words(3), value: 1 },
-                  { label: lorem.words(3), value: 2 },
-                  { label: lorem.words(3), value: 3 },
-                ],
-                alertCondition: [{ type: AlertConditionType.equal, value: '3' }],
-              }),
-            ],
-            notificationScoreThreshold: 2,
-          }),
-        );
-
-        const qr = await modelQuestionnaireResponse.create({
-          questionnaireId,
-          memberId: new Types.ObjectId(memberId),
-          answers: [{ code: 'q1', value: answer }],
-        });
-
-        const alerts = await service.getAlerts(member.primaryUserId.toString(), [member]);
-
-        if (expectedScore !== undefined) {
-          expectedAlerts.push({
-            id: `${qr.id.toString()}_${AlertType.assessmentSubmitScoreOverThreshold}`,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            text: service.internationalization.getAlerts(
-              AlertType.assessmentSubmitScoreOverThreshold,
-              {
-                member,
-                assessmentName: 'PHQ-9',
-                assessmentScore: expectedScore,
-              },
-            ),
-            memberId,
-            type: AlertType.assessmentSubmitScoreOverThreshold,
-            date: qr.createdAt,
-            dismissed: false,
-            isNew: true,
-          });
-        }
-
-        expectedAlerts.push({
-          id: `${memberId}_${AlertType.memberAssigned}`,
-          memberId,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          text: service.internationalization.getAlerts(AlertType.memberAssigned, { member }),
-          type: AlertType.memberAssigned,
-          date: member.createdAt,
-          dismissed: false,
-          isNew: true,
-        });
-
-        expect(alerts).toEqual(expectedAlerts);
       });
     });
   });

@@ -281,10 +281,12 @@ describe('QuestionnaireService', () => {
       ],
     ])(`%s`, async (_, answers, expectedScore) => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       const { id } = await service.submitQuestionnaireResponse({
         questionnaireId: phq9TypeTemplate.id.toString(),
         memberId,
+        journeyId,
         answers,
       });
 
@@ -297,6 +299,7 @@ describe('QuestionnaireService', () => {
         updatedAt: expect.any(Date),
         createdAt: expect.any(Date),
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
         answers,
       });
 
@@ -311,11 +314,13 @@ describe('QuestionnaireService', () => {
 
     it('should fail to submit a questionnaire response - invalid questionnaire id', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       await expect(
         service.submitQuestionnaireResponse({
           questionnaireId: generateId(),
           memberId,
+          journeyId,
           answers: [
             { code: 'q1', value: '2' },
             { code: 'q2', value: '2' },
@@ -327,11 +332,13 @@ describe('QuestionnaireService', () => {
 
     it('should fail to submit a questionnaire response - invalid response', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       await expect(
         service.submitQuestionnaireResponse({
           questionnaireId: phq9TypeTemplate.id,
           memberId,
+          journeyId,
           answers: [
             { code: 'q1', value: '6' },
             { code: 'q2', value: '2' },
@@ -348,10 +355,12 @@ describe('QuestionnaireService', () => {
   describe('getQuestionnaireResponseById', () => {
     it('should get questionnaire response by id', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       const { id } = await service.submitQuestionnaireResponse({
         questionnaireId: phq9TypeTemplate.id.toString(),
         memberId,
+        journeyId,
         answers: [
           { code: 'q1', value: '2' },
           { code: 'q2', value: '2' },
@@ -369,6 +378,7 @@ describe('QuestionnaireService', () => {
         updatedAt: expect.any(Date),
         createdAt: expect.any(Date),
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
         answers: [
           { code: 'q1', value: '2' },
           { code: 'q2', value: '2' },
@@ -382,10 +392,12 @@ describe('QuestionnaireService', () => {
   describe('getQuestionnaireResponseByMemberId', () => {
     it('should get questionnaire responses by member id', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       const { id: id1 } = await service.submitQuestionnaireResponse({
         questionnaireId: phq9TypeTemplate.id.toString(),
         memberId,
+        journeyId,
         answers: [
           { code: 'q1', value: '2' },
           { code: 'q2', value: '2' },
@@ -396,6 +408,7 @@ describe('QuestionnaireService', () => {
       const { id: id2 } = await service.submitQuestionnaireResponse({
         questionnaireId: who5TypeTemplate.id.toString(),
         memberId,
+        journeyId,
         answers: [
           { code: 'q1', value: '2' },
           { code: 'q2', value: '1' },
@@ -405,10 +418,11 @@ describe('QuestionnaireService', () => {
       const { id: id3 } = await service.submitQuestionnaireResponse({
         questionnaireId: npsTypeTemplate.id.toString(),
         memberId,
+        journeyId,
         answers: [{ code: 'q1', value: '2' }],
       });
 
-      const qrs = await service.getQuestionnaireResponseByMemberId(memberId);
+      const qrs = await service.getQuestionnaireResponses({ memberId, journeyId });
 
       expect(qrs).toEqual([
         {
@@ -419,6 +433,7 @@ describe('QuestionnaireService', () => {
           updatedAt: expect.any(Date),
           createdAt: expect.any(Date),
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           answers: [
             { code: 'q1', value: '2' },
             { code: 'q2', value: '2' },
@@ -434,6 +449,7 @@ describe('QuestionnaireService', () => {
           updatedAt: expect.any(Date),
           createdAt: expect.any(Date),
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           answers: [
             { code: 'q1', value: '2' },
             { code: 'q2', value: '1' },
@@ -448,8 +464,56 @@ describe('QuestionnaireService', () => {
           updatedAt: expect.any(Date),
           createdAt: expect.any(Date),
           memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
           answers: [{ code: 'q1', value: '2' }],
           result: { alert: false, score: 2, severity: 'Detractor' },
+        },
+      ]);
+    });
+
+    it('should get questionnaire responses by member id + exclude non recent journey', async () => {
+      const memberId = generateId();
+      const journeyIdOld = generateId();
+      const journeyId = generateId();
+
+      await service.submitQuestionnaireResponse({
+        questionnaireId: phq9TypeTemplate.id.toString(),
+        memberId,
+        journeyId: journeyIdOld,
+        answers: [
+          { code: 'q1', value: '2' },
+          { code: 'q2', value: '2' },
+          { code: 'q3', value: '1' },
+        ],
+      });
+
+      const { id } = await service.submitQuestionnaireResponse({
+        questionnaireId: who5TypeTemplate.id.toString(),
+        memberId,
+        journeyId,
+        answers: [
+          { code: 'q1', value: '2' },
+          { code: 'q2', value: '1' },
+        ],
+      });
+
+      const qrs = await service.getQuestionnaireResponses({ memberId, journeyId });
+
+      expect(qrs).toEqual([
+        {
+          id,
+          questionnaireId: new Types.ObjectId(who5TypeTemplate.id.toString()),
+          deleted: false,
+          type: QuestionnaireType.who5,
+          updatedAt: expect.any(Date),
+          createdAt: expect.any(Date),
+          memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
+          answers: [
+            { code: 'q1', value: '2' },
+            { code: 'q2', value: '1' },
+          ],
+          result: { alert: false, score: undefined, severity: undefined },
         },
       ]);
     });
@@ -458,10 +522,12 @@ describe('QuestionnaireService', () => {
   describe('deleteMemberQuestionnaireResponses', () => {
     test.each([true, false])('should %p delete member questionnaire responses', async (hard) => {
       const memberId = generateId();
+      const journeyId = generateId();
 
       await service.submitQuestionnaireResponse({
         questionnaireId: phq9TypeTemplate.id.toString(),
         memberId,
+        journeyId,
         answers: [
           { code: 'q1', value: '2' },
           { code: 'q2', value: '2' },
@@ -472,19 +538,20 @@ describe('QuestionnaireService', () => {
       await service.submitQuestionnaireResponse({
         questionnaireId: who5TypeTemplate.id.toString(),
         memberId,
+        journeyId,
         answers: [
           { code: 'q1', value: '2' },
           { code: 'q2', value: '1' },
         ],
       });
 
-      let qrs = await service.getQuestionnaireResponseByMemberId(memberId);
+      let qrs = await service.getQuestionnaireResponses({ memberId, journeyId });
 
       expect(qrs).toHaveLength(2);
 
       await service.deleteMemberQuestionnaireResponses({ memberId, deletedBy: memberId, hard });
 
-      qrs = await service.getQuestionnaireResponseByMemberId(memberId);
+      qrs = await service.getQuestionnaireResponses({ memberId, journeyId });
 
       expect(qrs).toHaveLength(0);
 
@@ -755,11 +822,13 @@ describe('QuestionnaireService', () => {
   describe('getLatestQuestionnaireResponse', () => {
     let submitQuestionnaireResponse;
     const options = new PersonasOptions();
+    const journeyId = generateId();
 
     beforeAll(async () => {
       submitQuestionnaireResponse = {
         questionnaireId: lhpTypeTemplate.id.toString(),
         memberId: generateObjectId(),
+        journeyId: generateObjectId(journeyId),
         answers: [
           { code: 'q1', value: '3' },
           { code: 'q2', value: '1' },
@@ -770,7 +839,10 @@ describe('QuestionnaireService', () => {
     });
 
     it('should return undefined for a non existing member', async () => {
-      const result = await service.getHealthPersona({ memberId: generateId() });
+      const result = await service.getHealthPersona({
+        memberId: generateId(),
+        journeyId,
+      });
       expect(result).toBeUndefined();
     });
 
@@ -779,11 +851,15 @@ describe('QuestionnaireService', () => {
       const submitResponse = {
         questionnaireId: npsTypeTemplate.id.toString(),
         memberId: generateId(),
+        journeyId,
         answers: [{ code: 'q1', value: '2' }],
       };
       await service.submitQuestionnaireResponse(submitResponse);
 
-      const result = await service.getHealthPersona({ memberId: submitResponse.memberId });
+      const result = await service.getHealthPersona({
+        memberId: submitResponse.memberId,
+        journeyId: submitResponse.journeyId,
+      });
       expect(result).toBeUndefined();
     });
 
@@ -797,6 +873,7 @@ describe('QuestionnaireService', () => {
 
       const healthPersona = await service.getHealthPersona({
         memberId: submitQuestionnaireResponse.memberId,
+        journeyId: submitQuestionnaireResponse.journeyId,
       });
 
       expect(healthPersona).toEqual(HealthPersona.highEffort);
@@ -821,11 +898,15 @@ describe('QuestionnaireService', () => {
         const submitResponse = {
           questionnaireId: lhpTypeTemplate.id.toString(),
           memberId: generateId(),
+          journeyId: generateId(),
           answers,
         };
         await service.submitQuestionnaireResponse(submitResponse);
 
-        const result = await service.getHealthPersona({ memberId: submitResponse.memberId });
+        const result = await service.getHealthPersona({
+          memberId: submitResponse.memberId,
+          journeyId: submitResponse.journeyId,
+        });
         expect(result).toEqual(healthPersona);
       },
     );

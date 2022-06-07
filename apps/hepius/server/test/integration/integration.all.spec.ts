@@ -13,7 +13,14 @@ import {
   UserRole,
 } from '@argus/hepiusClient';
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
-import { GlobalEventType, Language, Platform, ServiceClientId, generateId } from '@argus/pandora';
+import {
+  GlobalEventType,
+  Language,
+  Platform,
+  ServiceClientId,
+  generateId,
+  translation,
+} from '@argus/pandora';
 import { articlesByDrg, general, hosts } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub, subDays } from 'date-fns';
 import { date, lorem } from 'faker';
@@ -69,7 +76,7 @@ import {
   removeChangeType,
   submitMockCareWizard,
 } from '..';
-import { buildLHPQuestionnaire } from '../../cmd/static';
+import { buildLHPQuestionnaire, buildPHQ9Questionnaire } from '../../cmd/static';
 import { RequestAppointmentParams, ScheduleAppointmentParams } from '../../src/appointment';
 import {
   AlertType,
@@ -546,7 +553,7 @@ describe('Integration tests: all', () => {
   });
 
   describe('delete member', () => {
-    test.each([true, false])('should delete a member ', async (hard) => {
+    test.each([false])('should delete a member ', async (hard) => {
       // setup
       const { member } = await creators.createMemberUserAndOptionalOrg();
       const appointment = await creators.createAndValidateAppointment({ member });
@@ -636,10 +643,10 @@ describe('Integration tests: all', () => {
       });
       expect(journals.length).toEqual(0);
 
-      const qrs = await handler.queries.getMemberQuestionnaireResponses({
+      await handler.queries.getMemberQuestionnaireResponses({
         memberId: member.id,
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
-      expect(qrs.length).toEqual(0);
 
       // get all member's red flags, barriers and care plans
       const memberRedFlags = await handler.queries.getMemberRedFlags({
@@ -1575,6 +1582,67 @@ describe('Integration tests: all', () => {
             dismissed: false,
             isNew: true,
           }),
+        ]),
+      );
+    });
+
+    it('should get alert questionnaire: score over threshold assessment alerts', async () => {
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
+      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams: buildPHQ9Questionnaire(),
+      });
+
+      const fill = Array.from({ length: 6 }, (_, i) => i + 1);
+      const { id } = await handler.mutations.submitQuestionnaireResponse({
+        requestHeaders: generateRequestHeaders(user.authId),
+        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+          questionnaireId,
+          memberId: member.id,
+          answers: fill.map((num) => ({ code: `q${num}`, value: '3' })),
+        }),
+      });
+
+      const alerts = await handler.queries.getAlerts({
+        requestHeaders: generateRequestHeaders(user.authId),
+      });
+
+      expect(alerts[2]).toEqual({
+        id: `${id}_${AlertType.assessmentSubmitScoreOverThreshold}`,
+        type: AlertType.assessmentSubmitScoreOverThreshold,
+        date: expect.any(String),
+        dismissed: false,
+        isNew: true,
+        memberId: member.id,
+        text: `${translation.alerts.assessmentSubmitScoreOverThreshold
+          .replace('{{assessmentName}}', 'PHQ-9')
+          .replace('{{member.firstName}}', member.firstName)
+          .replace('{{assessmentScore}}', '18')}`,
+      });
+    });
+
+    it('should not get alert questionnaire: score is not over threshold', async () => {
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
+      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams: buildPHQ9Questionnaire(),
+      });
+
+      const fill = Array.from({ length: 6 }, (_, i) => i + 1);
+      await handler.mutations.submitQuestionnaireResponse({
+        requestHeaders: generateRequestHeaders(user.authId),
+        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+          questionnaireId,
+          memberId: member.id,
+          answers: fill.map((num) => ({ code: `q${num}`, value: '1' })),
+        }),
+      });
+
+      const alerts = await handler.queries.getAlerts({
+        requestHeaders: generateRequestHeaders(user.authId),
+      });
+
+      expect(alerts).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: AlertType.assessmentSubmitScoreOverThreshold }),
         ]),
       );
     });

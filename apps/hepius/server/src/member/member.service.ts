@@ -25,7 +25,6 @@ import {
 } from '../common';
 import { ISoftDelete } from '../db';
 import { Internationalization } from '../providers';
-import { Questionnaire, QuestionnaireAlerts, QuestionnaireService } from '../questionnaire';
 import { NotificationService } from '../services';
 import {
   AddCaregiverParams,
@@ -72,7 +71,6 @@ export class MemberService extends AlertService {
     readonly dismissAlertModel: Model<DismissedAlertDocument>,
     private readonly notificationService: NotificationService,
     private readonly internationalization: Internationalization,
-    private readonly questionnaireService: QuestionnaireService,
     readonly logger: LoggerService,
   ) {
     super(dismissAlertModel);
@@ -592,9 +590,6 @@ export class MemberService extends AlertService {
     // collect actionItemOverdue alerts
     alerts = alerts.concat(await this.notificationDispatchToAlerts(member));
 
-    // Collect assessment related alerts
-    alerts = alerts.concat(await this.questionnaireToAlerts(member));
-
     return alerts;
   }
 
@@ -626,46 +621,6 @@ export class MemberService extends AlertService {
               text: this.internationalization.getAlerts(AlertType[dispatch.contentKey], { member }),
             } as Alert),
         ) || []
-    );
-  }
-
-  private async questionnaireToAlerts(member: Member): Promise<Alert[]> {
-    const templates = new Map<string, Questionnaire>();
-    const qrs = await this.questionnaireService.getQuestionnaireResponseByMemberId(member.id);
-
-    return Promise.all(
-      qrs.map(async (qr) => {
-        const template =
-          templates.get(qr.questionnaireId.toString()) ||
-          (await this.questionnaireService.getQuestionnaireById(qr.questionnaireId.toString()));
-
-        templates.set(qr.questionnaireId.toString(), template);
-
-        const results = this.questionnaireService.buildResult(qr.answers, template);
-
-        if (
-          results.score >= template.notificationScoreThreshold ||
-          (results.alert && QuestionnaireAlerts.get(template.type))
-        ) {
-          return {
-            id: `${qr.id}_${AlertType.assessmentSubmitScoreOverThreshold}`,
-            type: AlertType.assessmentSubmitScoreOverThreshold,
-            date: qr.createdAt,
-            text: this.internationalization.getAlerts(
-              AlertType.assessmentSubmitScoreOverThreshold,
-              {
-                member,
-                assessmentName: template.shortName,
-                assessmentScore:
-                  results.alert && QuestionnaireAlerts.get(template.type)
-                    ? QuestionnaireAlerts.get(template.type)
-                    : results.score.toString(),
-              },
-            ),
-            memberId: member.id,
-          } as Alert;
-        }
-      }),
     );
   }
 

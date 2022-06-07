@@ -26,12 +26,14 @@ import {
   MemberUserRouteInterceptor,
   Roles,
 } from '../common';
+import { JourneyService } from '../journey';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
 export class QuestionnaireResolver {
   constructor(
     private readonly questionnaireService: QuestionnaireService,
+    private readonly journeyService: JourneyService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -41,7 +43,7 @@ export class QuestionnaireResolver {
     @Args(camelCase(CreateQuestionnaireParams.name), { type: () => CreateQuestionnaireParams })
     createQuestionnaireParams: CreateQuestionnaireParams,
   ): Promise<Questionnaire> {
-    return this.questionnaireService.createQuestionnaire({ ...createQuestionnaireParams });
+    return this.questionnaireService.createQuestionnaire(createQuestionnaireParams);
   }
 
   @Query(() => [Questionnaire])
@@ -79,7 +81,8 @@ export class QuestionnaireResolver {
     )
     memberId: string,
   ): Promise<QuestionnaireResponse[]> {
-    return this.questionnaireService.getQuestionnaireResponseByMemberId(memberId);
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.questionnaireService.getQuestionnaireResponses({ memberId, journeyId });
   }
 
   @Query(() => QuestionnaireResponse, { nullable: true })
@@ -115,13 +118,18 @@ export class QuestionnaireResolver {
       throw new Error(Errors.get(ErrorType.questionnaireNotAssignableToMember));
     }
 
-    const result = await this.questionnaireService.submitQuestionnaireResponse(
-      submitQuestionnaireResponseParams,
-    );
+    const { memberId } = submitQuestionnaireResponseParams;
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    const result = await this.questionnaireService.submitQuestionnaireResponse({
+      ...submitQuestionnaireResponseParams,
+      journeyId,
+    });
 
     if (result.type === QuestionnaireType.lhp) {
-      const { memberId } = submitQuestionnaireResponseParams;
-      const healthPersona = await this.questionnaireService.getHealthPersona({ memberId });
+      const healthPersona = await this.questionnaireService.getHealthPersona({
+        memberId,
+        journeyId,
+      });
       const eventUpdateHealthPersonaParams: IEventUpdateHealthPersona = { memberId, healthPersona };
       this.eventEmitter.emit(EventType.onUpdateHealthPersona, eventUpdateHealthPersonaParams);
     }

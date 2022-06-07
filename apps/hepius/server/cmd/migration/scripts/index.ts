@@ -54,3 +54,4 @@ export * as m20220531090011 from './20220531090011-add-org-code';
 export * as m20220531151451 from './20220531151451-rename-action-item-status';
 export * as m20220602084553 from './20220602084553-move-readmission-risk-and-history-to-journey';
 export * as m20220606133319 from './20220606133319-recording-append-journeyId';
+export * as m20220530102011 from './20220530102011-move-questionare-response-data-to-journey';

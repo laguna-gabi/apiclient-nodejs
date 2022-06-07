@@ -82,7 +82,7 @@ import {
   StorageService,
   TwilioService,
 } from '../providers';
-import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
+import { QuestionnaireAlerts, QuestionnaireService, QuestionnaireType } from '../questionnaire';
 import { TodoService } from '../todo';
 import { UserService } from '../user';
 import {
@@ -127,6 +127,7 @@ export class MemberResolver extends MemberBase {
     readonly journeyService: JourneyService,
     readonly todoService: TodoService,
     readonly appointmentService: AppointmentService,
+    readonly questionnaireService: QuestionnaireService,
     readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {
@@ -592,8 +593,9 @@ export class MemberResolver extends MemberBase {
       members,
       lastQueryAlert,
     );
+    const qAlerts = await this.questionnaireService.getAlerts(userId, members, lastQueryAlert);
 
-    return memberAlerts.concat(journeyAlerts, todoAlerts, appointmentAlerts);
+    return memberAlerts.concat(journeyAlerts, todoAlerts, appointmentAlerts, qAlerts);
   }
 
   /************************************************************************************************

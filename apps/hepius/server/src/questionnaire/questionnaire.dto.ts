@@ -138,6 +138,8 @@ export class SubmitQuestionnaireResponseParams {
   @Field(() => String, { nullable: true })
   memberId?: string;
 
+  journeyId?: string;
+
   @ArrayNotEmpty({
     message: Errors.get(ErrorType.questionnaireResponseInvalidResponseEmptyAnswerList),
   })
@@ -265,6 +267,9 @@ export class QuestionnaireResponse extends Identifier {
   @Prop()
   @Field(() => String)
   memberId: Types.ObjectId;
+
+  @Prop()
+  journeyId: Types.ObjectId;
 
   @Prop()
   @Field(() => [Answer])
