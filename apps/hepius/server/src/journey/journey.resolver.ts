@@ -155,7 +155,8 @@ export class JourneyResolver {
     changeMemberDnaParams: ChangeMemberDnaParams,
   ): Promise<Admission> {
     this.dietaryMatcher.validate(changeMemberDnaParams.dietary);
-    return this.admissionService.change(changeMemberDnaParams);
+    const { id: journeyId } = await this.journeyService.getRecent(changeMemberDnaParams.memberId);
+    return this.admissionService.change({ ...changeMemberDnaParams, journeyId });
   }
 
   @Query(() => [Admission])
@@ -168,7 +169,8 @@ export class JourneyResolver {
     )
     memberId: string,
   ) {
-    return this.admissionService.get(memberId);
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.admissionService.get({ memberId, journeyId });
   }
 
   @Query(() => DietaryMatcher)

@@ -87,16 +87,29 @@ export class AdmissionService extends BaseService {
     };
   }
 
-  async get(memberId: string): Promise<Admission[]> {
-    const result = await this.admissionModel.find({ memberId: new Types.ObjectId(memberId) });
+  async get({
+    memberId,
+    journeyId,
+  }: {
+    memberId: string;
+    journeyId: string;
+  }): Promise<Admission[]> {
+    const result = await this.admissionModel.find({
+      memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
+    });
     return Promise.all(result.map(async (item) => this.populateAll(item)));
   }
 
   async change(changeMemberDnaParams: ChangeMemberDnaParams): Promise<Admission> {
     const setParams: ChangeMemberDnaParams = omitBy(changeMemberDnaParams, isNil);
-    const { memberId } = changeMemberDnaParams;
+    const { memberId, journeyId } = changeMemberDnaParams;
     let { id } = changeMemberDnaParams;
-    if (!Object.keys(setParams).some((key) => key !== 'memberId' && key !== 'id')) {
+    if (
+      !Object.keys(setParams).some(
+        (key) => key !== 'memberId' && key !== 'id' && key !== 'journeyId',
+      )
+    ) {
       throw new Error(Errors.get(ErrorType.admissionDataNotProvidedOnChangeDna));
     }
 
@@ -104,7 +117,14 @@ export class AdmissionService extends BaseService {
     if (setParams.diagnosis) {
       const { changeType, ...diagnoses }: ChangeAdmissionDiagnosisParams = setParams.diagnosis;
       const admissionCategory = AdmissionCategory.diagnoses;
-      result = await this.changeInternal(diagnoses, changeType, admissionCategory, memberId, id);
+      result = await this.changeInternal(
+        diagnoses,
+        changeType,
+        admissionCategory,
+        memberId,
+        journeyId,
+        id,
+      );
       id = result._id.toString();
     }
     if (setParams.treatmentRendered) {
@@ -116,6 +136,7 @@ export class AdmissionService extends BaseService {
         changeType,
         admissionCategory,
         memberId,
+        journeyId,
         id,
       );
       id = result._id.toString();
@@ -123,7 +144,14 @@ export class AdmissionService extends BaseService {
     if (setParams.medication) {
       const { changeType, ...medication }: ChangeAdmissionMedicationParams = setParams.medication;
       const admissionCategory = AdmissionCategory.medications;
-      result = await this.changeInternal(medication, changeType, admissionCategory, memberId, id);
+      result = await this.changeInternal(
+        medication,
+        changeType,
+        admissionCategory,
+        memberId,
+        journeyId,
+        id,
+      );
       id = result._id.toString();
     }
     if (setParams.externalAppointment) {
@@ -135,6 +163,7 @@ export class AdmissionService extends BaseService {
         changeType,
         admissionCategory,
         memberId,
+        journeyId,
         id,
       );
       id = result._id.toString();
@@ -142,7 +171,14 @@ export class AdmissionService extends BaseService {
     if (setParams.dietary) {
       const { changeType, ...dietary }: ChangeAdmissionDietaryParams = setParams.dietary;
       const admissionCategory = AdmissionCategory.dietaries;
-      result = await this.changeInternal(dietary, changeType, admissionCategory, memberId, id);
+      result = await this.changeInternal(
+        dietary,
+        changeType,
+        admissionCategory,
+        memberId,
+        journeyId,
+        id,
+      );
     }
 
     const singleItems = {};
@@ -154,7 +190,11 @@ export class AdmissionService extends BaseService {
     const noNilSingleItems = omitBy(singleItems, isNil);
     if (!isEmpty(noNilSingleItems)) {
       result = await this.updateSingleItem(
-        { ...noNilSingleItems, memberId: new Types.ObjectId(memberId) },
+        {
+          ...noNilSingleItems,
+          memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
+        },
         id,
       );
     }
@@ -213,11 +253,12 @@ export class AdmissionService extends BaseService {
     changeType: ChangeType,
     admissionCategory: AdmissionCategory,
     memberId: string,
+    journeyId: string,
     id: string,
   ): Promise<Admission> {
     switch (changeType) {
       case ChangeType.create:
-        return this.createRefObjects(element, admissionCategory, memberId, id);
+        return this.createRefObjects(element, admissionCategory, memberId, journeyId, id);
       case ChangeType.update:
         return this.updateRefObjects(element, admissionCategory);
       case ChangeType.delete:
@@ -229,6 +270,7 @@ export class AdmissionService extends BaseService {
     element: BaseCategory,
     admissionCategory: AdmissionCategory,
     memberId: string,
+    journeyId: string,
     id?: string,
   ): Promise<Admission> {
     const internalValue: InternalValue = this.matchMap[admissionCategory];
@@ -246,6 +288,7 @@ export class AdmissionService extends BaseService {
     } else {
       const result = await this.admissionModel.create({
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
         [`${admissionCategory}`]: _id,
       });
       return this.populateAll(result);

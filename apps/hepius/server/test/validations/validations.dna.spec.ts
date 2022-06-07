@@ -6,8 +6,7 @@ import {
   DietaryCategory,
   DietaryName,
 } from '../../src/journey';
-import { AdmissionHelper } from '../aux';
-import { Handler } from '../aux/handler';
+import { AdmissionHelper, AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import { lorem } from 'faker';
 import { generateId } from '@argus/pandora';
 
@@ -15,10 +14,16 @@ const stringError = `String cannot represent a non string value`;
 
 describe('Validations - DNA', () => {
   const handler: Handler = new Handler();
+  let creators: Creators;
   const admissionHelper: AdmissionHelper = new AdmissionHelper();
 
   beforeAll(async () => {
     await handler.beforeAll();
+    const appointmentsActions = new AppointmentsIntegrationActions(
+      handler.mutations,
+      handler.defaultUserRequestHeaders,
+    );
+    creators = new Creators(handler, appointmentsActions);
   }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
@@ -26,11 +31,12 @@ describe('Validations - DNA', () => {
   });
 
   describe('changeMemberDna', () => {
-    test.each([{ memberId: generateId() }, { memberId: generateId(), id: generateId() }])(
+    test.each([{}, { id: generateId() }])(
       'should fail as only %p is provided',
       async (changeMemberDnaParams) => {
+        const { member } = await creators.createMemberUserAndOptionalOrg();
         await handler.mutations.changeMemberDna({
-          changeMemberDnaParams,
+          changeMemberDnaParams: { ...changeMemberDnaParams, memberId: member.id },
           invalidFieldsErrors: [Errors.get(ErrorType.admissionDataNotProvidedOnChangeDna)],
         });
       },
@@ -92,9 +98,10 @@ describe('Validations - DNA', () => {
       `should fail to change ${AdmissionCategory.diagnoses} dna since $input is not valid`,
       async ({ admissionCategory, input, error }) => {
         /* eslint-enable max-len */
+        const { member } = await creators.createMemberUserAndOptionalOrg();
         const { field, method } = admissionHelper.mapper.get(admissionCategory);
         const changeMemberDnaParams: ChangeMemberDnaParams = {
-          memberId: generateId(),
+          memberId: member.id,
           [`${field}`]: method({ changeType: ChangeType.create, ...input }),
         };
         await handler.mutations.changeMemberDna({ changeMemberDnaParams, ...error });
@@ -151,9 +158,10 @@ describe('Validations - DNA', () => {
   });
 
   it('should throw error when dietary category and name mismatch', async () => {
+    const { member } = await creators.createMemberUserAndOptionalOrg();
     const { field, method } = admissionHelper.mapper.get(AdmissionCategory.diagnoses);
     const changeMemberDnaParams: ChangeMemberDnaParams = {
-      memberId: generateId(),
+      memberId: member.id,
       [`${field}`]: method({
         changeType: ChangeType.create,
         category: DietaryCategory.fiber,

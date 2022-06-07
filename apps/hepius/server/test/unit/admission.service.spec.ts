@@ -60,11 +60,13 @@ describe(AdmissionService.name, () => {
       const changeParams2 = method({ changeType: ChangeType.create });
 
       const memberId1 = generateId();
-      const ad1a = await change(field, changeParams1a, memberId1);
-      const ad1b = await change(field, changeParams1b, memberId1);
+      const journeyId1 = generateId();
+      const ad1a = await change(field, changeParams1a, memberId1, journeyId1);
+      const ad1b = await change(field, changeParams1b, memberId1, journeyId1);
 
       const memberId2 = generateId();
-      const res2 = await change(field, changeParams2, memberId2);
+      const journeyId2 = generateId();
+      const res2 = await change(field, changeParams2, memberId2, journeyId2);
 
       const { _id: id1a } = await model.findById(new Types.ObjectId(ad1a[admissionCategory][0].id));
       const { _id: id1b } = await model.findById(new Types.ObjectId(ad1b[admissionCategory][0].id));
@@ -203,14 +205,15 @@ describe(AdmissionService.name, () => {
     async (admissionCategory: AdmissionCategory) => {
       const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
       const memberId = generateId();
+      const journeyId = generateId();
 
       const changeParams = method({ changeType: ChangeType.create });
-      let result = await change(field, changeParams, memberId);
+      let result = await change(field, changeParams, memberId, journeyId);
 
       const { id } = await model.findById(new Types.ObjectId(result[admissionCategory][0].id));
 
       const changeParamsUpdate = method({ changeType: ChangeType.update, id });
-      result = await change(field, changeParamsUpdate, memberId, result.id.toString());
+      result = await change(field, changeParamsUpdate, memberId, journeyId, result.id.toString());
 
       expect(result).toMatchObject({
         memberId: new Types.ObjectId(memberId),
@@ -231,15 +234,17 @@ describe(AdmissionService.name, () => {
     async (admissionCategory: AdmissionCategory) => {
       const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
       const memberId = generateId();
+      const journeyId = generateId();
       const changeParams = method({ changeType: ChangeType.create });
 
-      const result = await change(field, changeParams, memberId);
+      const result = await change(field, changeParams, memberId, journeyId);
       const { id } = await model.findById(new Types.ObjectId(result[admissionCategory][0].id));
 
       const deleteResult = await change(
         field,
         method({ changeType: ChangeType.delete, id }),
         memberId,
+        journeyId,
         result.id.toString(),
       );
       const afterDeleteResult = await model.findById(new Types.ObjectId(id));
@@ -271,9 +276,9 @@ describe(AdmissionService.name, () => {
     const { field, method, errorNotFound } = admissionHelper.mapper.get(admissionCategory);
     const memberId = generateId();
 
-    await expect(change(field, method({ changeType, id: generateId() }), memberId)).rejects.toThrow(
-      Errors.get(errorNotFound),
-    );
+    await expect(
+      change(field, method({ changeType, id: generateId() }), memberId, generateId()),
+    ).rejects.toThrow(Errors.get(errorNotFound));
   };
 
   test.each`
@@ -288,11 +293,12 @@ describe(AdmissionService.name, () => {
     async ({ admissionCategory, key }) => {
       const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
       const memberId = generateId();
+      const journeyId = generateId();
 
       const changeParams = method({ changeType: ChangeType.create });
       changeParams[key] = null;
 
-      const result = await change(field, changeParams, memberId);
+      const result = await change(field, changeParams, memberId, journeyId);
 
       const categoryRes = await model.findById(new Types.ObjectId(result[admissionCategory][0].id));
       expect(categoryRes[key]).not.toBeDefined();
@@ -311,15 +317,16 @@ describe(AdmissionService.name, () => {
     async ({ admissionCategory, key }) => {
       const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
       const memberId = generateId();
+      const journeyId = generateId();
 
       const createParams = method({ changeType: ChangeType.create });
-      const result = await change(field, createParams, memberId);
+      const result = await change(field, createParams, memberId, journeyId);
 
       const { id } = await model.findById(new Types.ObjectId(result[admissionCategory][0].id));
       const updateParams = method({ changeType: ChangeType.update, id });
       updateParams[key] = null;
 
-      await change(field, updateParams, memberId, result.id.toString());
+      await change(field, updateParams, memberId, journeyId, result.id.toString());
 
       const categoryRes = await model.findById(new Types.ObjectId(id));
       expect(categoryRes[key]).toEqual(createParams[key]);
@@ -328,12 +335,13 @@ describe(AdmissionService.name, () => {
 
   it(`should return all populated existing values on ${ChangeType.create}`, async () => {
     const memberId = generateId();
-    const createResult = await createAllCategories(memberId);
+    const journeyId = generateId();
+    const createResult = await createAllCategories({ memberId, journeyId });
 
     //create another one and make sure it returns all the existing created values above
     const { field, method } = admissionHelper.mapper.get(AdmissionCategory.treatmentRendereds);
     const createParams = method({ changeType: ChangeType.create });
-    const changeResult = await change(field, createParams, memberId, createResult.id);
+    const changeResult = await change(field, createParams, memberId, journeyId, createResult.id);
 
     expect(changeResult[AdmissionCategory.treatmentRendereds]).toEqual([
       expect.objectContaining({ code: expect.any(String) }),
@@ -344,7 +352,8 @@ describe(AdmissionService.name, () => {
 
   it(`should return all populated existing values on ${ChangeType.update}`, async () => {
     const memberId = generateId();
-    let result = await createAllCategories(memberId);
+    const journeyId = generateId();
+    let result = await createAllCategories({ memberId, journeyId });
 
     //update one and make sure it returns all the existing created values above
     const { field, method, model } = admissionHelper.mapper.get(
@@ -354,7 +363,7 @@ describe(AdmissionService.name, () => {
       new Types.ObjectId(result[AdmissionCategory.treatmentRendereds][0].id),
     );
     const updateParams = method({ changeType: ChangeType.update, id });
-    result = await change(field, updateParams, memberId, result.id.toString());
+    result = await change(field, updateParams, memberId, journeyId, result.id.toString());
 
     expect(result[AdmissionCategory.treatmentRendereds]).toEqual([
       expect.objectContaining({ startDate: updateParams.startDate }),
@@ -364,7 +373,8 @@ describe(AdmissionService.name, () => {
 
   it(`should return all populated existing values on ${ChangeType.delete}`, async () => {
     const memberId = generateId();
-    const result = await createAllCategories(memberId);
+    const journeyId = generateId();
+    const result = await createAllCategories({ memberId, journeyId });
 
     //update one and make sure it returns all the existing created values above
     const { field, method, model } = admissionHelper.mapper.get(
@@ -374,7 +384,13 @@ describe(AdmissionService.name, () => {
       new Types.ObjectId(result[AdmissionCategory.treatmentRendereds][0].id),
     );
     const deleteParams = method({ changeType: ChangeType.delete, id });
-    const deleteResult = await change(field, deleteParams, memberId, result.id.toString());
+    const deleteResult = await change(
+      field,
+      deleteParams,
+      memberId,
+      journeyId,
+      result.id.toString(),
+    );
 
     expect(deleteResult[AdmissionCategory.treatmentRendereds]).toEqual([]);
     checkAllCategories(deleteResult);
@@ -382,16 +398,17 @@ describe(AdmissionService.name, () => {
 
   it('should return all 2 admissions for member with populated existing values', async () => {
     const memberId = generateId();
-    await createAllCategories(memberId);
-    await createAllCategories(memberId);
+    const journeyId = generateId();
+    await createAllCategories({ memberId, journeyId });
+    await createAllCategories({ memberId, journeyId });
 
-    const getResult = await service.get(memberId);
+    const getResult = await service.get({ memberId, journeyId });
     checkAllCategories(getResult[0]);
     checkAllCategories(getResult[1]);
   });
 
   it('should return empty result for no admissions per member', async () => {
-    const result = await service.get(generateId());
+    const result = await service.get({ memberId: generateId(), journeyId: generateId() });
     expect(result).toEqual([]);
   });
 
@@ -409,28 +426,45 @@ describe(AdmissionService.name, () => {
       'should delete member admissions and related data (hard=%p)',
       async (hard) => {
         const memberId = generateId();
+        const journeyId = generateId();
         const memberIdTestGroup = generateId();
+        const journeyIdTestGroup = generateId();
 
-        const generate = async ({ memberId, id }: { memberId: string; id?: string }) => {
+        const generate = async ({
+          memberId,
+          journeyId,
+          id,
+        }: {
+          memberId: string;
+          journeyId: string;
+          id?: string;
+        }) => {
           const changeType = ChangeType.create;
-          const changeMemberDnaParams = generateChangeMemberDnaParams({ changeType, memberId, id });
-          return service.change(changeMemberDnaParams);
+          const changeMemberDnaParams = generateChangeMemberDnaParams({
+            changeType,
+            memberId,
+            id,
+          });
+          return service.change({ ...changeMemberDnaParams, journeyId });
         };
 
-        await generate({ memberId });
-        const { id } = await generate({ memberId });
-        await generate({ memberId, id });
-        await generate({ memberId: memberIdTestGroup });
+        await generate({ memberId, journeyId });
+        const { id } = await generate({ memberId, journeyId });
+        await generate({ memberId, journeyId, id });
+        await generate({ memberId: memberIdTestGroup, journeyId: journeyIdTestGroup });
 
-        const admissionsBefore = await service.get(memberId);
+        const admissionsBefore = await service.get({ memberId, journeyId });
         expect(admissionsBefore.length).toEqual(2);
 
         await service.deleteAdmissions({ memberId, deletedBy: memberId, hard });
 
-        const admissionsAfter = await service.get(memberId);
+        const admissionsAfter = await service.get({ memberId, journeyId });
         expect(admissionsAfter.length).toEqual(0);
 
-        const admissionsMemberTestGroup = await service.get(memberIdTestGroup);
+        const admissionsMemberTestGroup = await service.get({
+          memberId: memberIdTestGroup,
+          journeyId: journeyIdTestGroup,
+        });
         expect(admissionsMemberTestGroup.length).toEqual(1);
 
         const checkInternals = async (model, memberId, expectedLength = 0) => {
@@ -451,13 +485,19 @@ describe(AdmissionService.name, () => {
     );
   });
 
-  const createAllCategories = async (memberId: string): Promise<Admission> => {
+  const createAllCategories = async ({
+    memberId,
+    journeyId,
+  }: {
+    memberId: string;
+    journeyId: string;
+  }): Promise<Admission> => {
     let result;
     //create synchronous categories(test fails on unique mongodb error for field memberId on async Promise.all)
     for (const admissionCategory of Object.values(AdmissionCategory)) {
       const { field, method } = admissionHelper.mapper.get(admissionCategory);
       const createParams1 = method({ changeType: ChangeType.create });
-      result = await change(field, createParams1, memberId, result?.id.toString());
+      result = await change(field, createParams1, memberId, journeyId, result?.id.toString());
     }
 
     return result;
@@ -482,8 +522,9 @@ describe(AdmissionService.name, () => {
     field: string,
     params,
     memberId: string,
+    journeyId: string,
     id?: string,
   ): Promise<Admission> => {
-    return service.change({ [`${field}`]: params, memberId, id });
+    return service.change({ [`${field}`]: params, memberId, journeyId, id });
   };
 });

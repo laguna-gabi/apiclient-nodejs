@@ -115,33 +115,42 @@ describe(JourneyResolver.name, () => {
   describe('Admission', () => {
     let spyOnServiceGetMemberAdmission: jest.SpyInstance;
     let spyOnServiceChangeMemberDna: jest.SpyInstance;
+    let spyOnServiceGetRecent: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnServiceGetMemberAdmission = jest.spyOn(admissionService, 'get');
       spyOnServiceChangeMemberDna = jest.spyOn(admissionService, 'change');
+      spyOnServiceGetRecent = jest.spyOn(service, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceGetMemberAdmission.mockReset();
       spyOnServiceChangeMemberDna.mockReset();
+      spyOnServiceGetRecent.mockReset();
     });
 
     it('should call get member admission', async () => {
-      spyOnServiceGetMemberAdmission.mockResolvedValueOnce(undefined);
-
       const memberId = generateId();
+      const journeyId = generateId();
+
+      spyOnServiceGetMemberAdmission.mockResolvedValueOnce(undefined);
+      spyOnServiceGetRecent.mockResolvedValueOnce({ id: journeyId });
+
       await resolver.getMemberAdmissions(memberId);
 
-      expect(spyOnServiceGetMemberAdmission).toBeCalledWith(memberId);
+      expect(spyOnServiceGetMemberAdmission).toBeCalledWith({ memberId, journeyId });
     });
 
     it('should call change member admission', async () => {
-      spyOnServiceChangeMemberDna.mockResolvedValueOnce(undefined);
-
       const memberId = generateId();
+      const journeyId = generateId();
+
+      spyOnServiceChangeMemberDna.mockResolvedValueOnce(undefined);
+      spyOnServiceGetRecent.mockResolvedValueOnce({ id: journeyId });
+
       await resolver.changeMemberDna([], { memberId });
 
-      expect(spyOnServiceChangeMemberDna).toBeCalledWith({ memberId });
+      expect(spyOnServiceChangeMemberDna).toBeCalledWith({ memberId, journeyId });
     });
 
     it('should return dietary matcher', async () => {

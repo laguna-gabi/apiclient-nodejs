@@ -534,6 +534,8 @@ export class ChangeMemberDnaParams {
   @Field()
   memberId: string;
 
+  journeyId?: string;
+
   /**
    * if id is provided, we're changing an existing admission entity.
    * if id is NOT provided, we're creating a new admission entity.
@@ -655,6 +657,9 @@ export const singleAdmissionItems = [
 export class Admission extends Identifier {
   @Prop({ type: Types.ObjectId, index: true })
   memberId: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, index: true })
+  journeyId: Types.ObjectId;
 
   /**
    * Single fields on admission
