@@ -3,7 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
-import { IsDate } from 'class-validator';
+import { IsDate, IsOptional } from 'class-validator';
 import { ErrorType, Errors } from '../common';
 import { Identifier } from '@argus/hepiusClient';
 import { DefaultSchemaOptions } from '@argus/pandora';
@@ -55,6 +55,7 @@ export class CreateActionItemParams {
 
   @Field(() => Date, { nullable: true })
   @IsDate({ message: Errors.get(ErrorType.journeyActionItemDeadline) })
+  @IsOptional()
   deadline?: Date;
 
   @Field(() => [RelatedEntity], { nullable: true })
