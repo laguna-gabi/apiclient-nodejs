@@ -650,8 +650,10 @@ describe('Integration tests: all', () => {
       });
       expect(memberCarePlans.length).toEqual(0);
 
-      const actionItems = await handler.queries.getActionItems({ memberId: member.id });
-      expect(actionItems.length).toEqual(0);
+      await handler.queries.getActionItems({
+        memberId: member.id,
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
     });
   });
 

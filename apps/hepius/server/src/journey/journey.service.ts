@@ -188,10 +188,10 @@ export class JourneyService extends AlertService {
 
   async insertActionItem(createActionItemParams: CreateActionItemParams): Promise<Identifier> {
     const { memberId, ...createParams } = createActionItemParams;
-    const recentJourney = await this.getRecent(memberId);
+    const { id: journeyId } = await this.getRecent(memberId);
     const identifiers = {
       memberId: new Types.ObjectId(memberId),
-      journeyId: new Types.ObjectId(recentJourney.id),
+      journeyId: new Types.ObjectId(journeyId),
     };
     const { id } = await this.actionItemModel.create({
       ...createParams,
@@ -224,8 +224,9 @@ export class JourneyService extends AlertService {
   }
 
   async getActionItems(memberId: string): Promise<ActionItem[]> {
+    const { id: journeyId } = await this.getRecent(memberId);
     return this.actionItemModel
-      .find({ memberId: new Types.ObjectId(memberId) })
+      .find({ memberId: new Types.ObjectId(memberId), journeyId: new Types.ObjectId(journeyId) })
       .sort({ updatedAt: -1 });
   }
 
