@@ -1,6 +1,12 @@
-import { BEFORE_ALL_TIMEOUT, generateSetGeneralNotesParams, generateUpdateJourneyParams } from '..';
+import {
+  BEFORE_ALL_TIMEOUT,
+  generateAddCaregiverParams,
+  generateRequestHeaders,
+  generateSetGeneralNotesParams,
+  generateUpdateJourneyParams,
+} from '..';
 import { Handler } from '../aux/handler';
-import { UpdateJourneyParams } from '../../src/journey';
+import { AddCaregiverParams, UpdateJourneyParams } from '../../src/journey';
 import { ErrorType, Errors } from '../../src/common';
 import { generateId } from '@argus/pandora';
 const stringError = `String cannot represent a non string value`;
@@ -125,6 +131,74 @@ describe('Validations - Journey', () => {
       await handler.mutations.setGeneralNotes({
         setGeneralNotesParams: { memberId: generateId(), ...input },
         invalidFieldsErrors: [Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided)],
+      });
+    });
+  });
+
+  describe('caregiver', () => {
+    describe('addCaregiver - invalid and missing fields', () => {
+      /* eslint-disable max-len */
+      test.each`
+        field             | error
+        ${'firstName'}    | ${`Field "firstName" of required type "String!" was not provided.`}
+        ${'lastName'}     | ${`Field "lastName" of required type "String!" was not provided.`}
+        ${'relationship'} | ${`Field "relationship" of required type "Relationship!" was not provided.`}
+        ${'phone'}        | ${`Field "phone" of required type "String!" was not provided.`}
+      `(`should fail to add a caregiver if $field is missing`, async (params) => {
+        const addCaregiverParams = generateAddCaregiverParams();
+        delete addCaregiverParams[params.field];
+        await handler.mutations.addCaregiver({
+          addCaregiverParams,
+          missingFieldError: params.error,
+        });
+      });
+
+      test.each`
+        input                                                                      | error
+        ${{ email: 'invalid' }}                                                    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverEmailInvalid)] }}
+        ${{ phone: 'invalid' }}                                                    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverPhoneInvalid)] }}
+        ${{ firstName: 'a' }}                                                      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverMinMaxLength)] }}
+        ${{ lastName: 'a' }}                                                       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverMinMaxLength)] }}
+        ${{ lastName: 'nameistoolong-nameistoolong-nameistoolong-nameistoolong' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverMinMaxLength)] }}
+      `(
+        /* eslint-enable max-len */
+        `should fail to add a caregiver due to invalid $input field`,
+        async (params) => {
+          const addCaregiverParams: AddCaregiverParams = generateAddCaregiverParams({
+            memberId: generateId(),
+            ...params.input,
+          });
+          await handler.mutations.addCaregiver({
+            addCaregiverParams,
+            ...params.error,
+          });
+        },
+      );
+    });
+
+    describe('deleteCaregiver', () => {
+      test.each`
+        input    | error
+        ${'123'} | ${[Errors.get(ErrorType.caregiverIdInvalid)]}
+      `(`should fail to delete caregiver by id $input is not a valid type`, async (params) => {
+        await handler.mutations.deleteCaregiver({
+          id: params.input,
+          invalidFieldsErrors: [params.error],
+          requestHeaders: handler.defaultUserRequestHeaders,
+        });
+      });
+    });
+
+    describe('getCaregivers', () => {
+      test.each`
+        input  | error
+        ${123} | ${stringError}
+      `(`should fail to get caregivers by member id $input is not a valid type`, async (params) => {
+        await handler.queries.getCaregivers({
+          memberId: params.input,
+          invalidFieldsError: params.error,
+          requestHeaders: generateRequestHeaders(handler.patientZero.authId),
+        });
       });
     });
   });

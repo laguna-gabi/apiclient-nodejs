@@ -56,3 +56,4 @@ export * as m20220602084553 from './20220602084553-move-readmission-risk-and-his
 export * as m20220606133319 from './20220606133319-recording-append-journeyId';
 export * as m20220530102011 from './20220530102011-move-questionare-response-data-to-journey';
 export * as m20220606174448 from './20220606174448-admission-append-journey';
+export * as m20220607135602 from './20220607135602-caregivers-append-journey';

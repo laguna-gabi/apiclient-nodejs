@@ -39,6 +39,8 @@ export class BaseCaregiverMutationParams {
   @Field(() => String, { nullable: true })
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId?: string;
+
+  journeyId?: string;
 }
 
 @InputType()

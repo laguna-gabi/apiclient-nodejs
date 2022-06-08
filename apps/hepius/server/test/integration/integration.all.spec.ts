@@ -619,8 +619,10 @@ describe('Integration tests: all', () => {
       const todos = await handler.todoModel.find({ memberId: member.id });
       expect(todos.length).toEqual(0);
 
-      const caregivers = await handler.queries.getCaregivers({ memberId: member.id });
-      expect(caregivers.length).toEqual(0);
+      await handler.queries.getCaregivers({
+        memberId: member.id,
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
 
       const journals = await handler.queries.getJournals({
         requestHeaders: generateRequestHeaders(handler.patientZero.authId),

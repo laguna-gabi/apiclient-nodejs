@@ -1,4 +1,4 @@
-import { Appointment, Caregiver } from '@argus/hepiusClient';
+import { Appointment } from '@argus/hepiusClient';
 import { EntityName } from '@argus/pandora';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
@@ -6,7 +6,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 import {
-  CaregiverDto,
   ControlMember,
   ControlMemberDto,
   Insurance,
@@ -18,7 +17,6 @@ import {
   MemberDto,
   MemberResolver,
   MemberService,
-  MemberTcpController,
 } from '.';
 import { AppointmentDto, AppointmentModule } from '../appointment';
 import { CommonModule, DismissedAlert, DismissedAlertDto, LoggerService } from '../common';
@@ -63,12 +61,6 @@ import { UserModule } from '../user';
         },
       },
       {
-        name: Caregiver.name,
-        imports: [CommonModule],
-        useFactory: ChangeEventFactoryProvider(EntityName.caregiver, CaregiverDto, 'memberId'),
-        inject: [EventEmitter2, LoggerService],
-      },
-      {
         name: Insurance.name,
         imports: [CommonModule],
         useFactory: ChangeEventFactoryProvider(EntityName.insurance, InsuranceDto, 'memberId'),
@@ -77,7 +69,7 @@ import { UserModule } from '../user';
     ]),
   ],
   providers: [MemberResolver, MemberService, ConfigsService],
-  controllers: [MemberController, MemberTcpController],
+  controllers: [MemberController],
   exports: [MemberService, MongooseModule],
 })
 export class MemberModule {}

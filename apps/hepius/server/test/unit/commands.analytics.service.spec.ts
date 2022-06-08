@@ -48,6 +48,7 @@ import {
   User,
   mockGenerateCaregiver,
 } from '@argus/hepiusClient';
+import { JourneyModule } from '../../src/journey';
 
 describe('Commands: AnalyticsService', () => {
   let module: TestingModule;
@@ -87,6 +88,7 @@ describe('Commands: AnalyticsService', () => {
         ProvidersModule,
         AnalyticsModule,
         CareModule,
+        JourneyModule,
       ),
       providers: [
         AnalyticsService,

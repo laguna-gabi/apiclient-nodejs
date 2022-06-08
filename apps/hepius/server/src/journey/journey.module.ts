@@ -6,6 +6,9 @@ import {
   Admission,
   AdmissionDto,
   AdmissionService,
+  CaregiverDto,
+  CaregiverResolver,
+  CaregiverService,
   Diagnosis,
   DiagnosisDto,
   Dietary,
@@ -19,13 +22,18 @@ import {
   JourneyDto,
   JourneyResolver,
   JourneyService,
+  JourneyTcpController,
   Medication,
   MedicationDto,
   TreatmentRendered,
   TreatmentRenderedDto,
 } from '.';
-import { CommonModule, DismissedAlert, DismissedAlertDto } from '../common';
+import { CommonModule, DismissedAlert, DismissedAlertDto, LoggerService } from '../common';
 import { ProvidersModule } from '../providers';
+import { Caregiver } from '@argus/hepiusClient';
+import { ChangeEventFactoryProvider } from '../db';
+import { EntityName } from '@argus/pandora';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -43,8 +51,24 @@ import { ProvidersModule } from '../providers';
       { name: Journal.name, schema: JournalDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
     ]),
+    MongooseModule.forFeatureAsync([
+      {
+        name: Caregiver.name,
+        imports: [CommonModule],
+        useFactory: ChangeEventFactoryProvider(EntityName.caregiver, CaregiverDto, 'memberId'),
+        inject: [EventEmitter2, LoggerService],
+      },
+    ]),
   ],
-  providers: [JourneyResolver, JourneyService, AdmissionService, DietaryHelper],
-  exports: [JourneyService, MongooseModule],
+  providers: [
+    JourneyResolver,
+    JourneyService,
+    CaregiverService,
+    CaregiverResolver,
+    AdmissionService,
+    DietaryHelper,
+  ],
+  controllers: [JourneyTcpController],
+  exports: [JourneyService, CaregiverResolver, MongooseModule],
 })
 export class JourneyModule {}

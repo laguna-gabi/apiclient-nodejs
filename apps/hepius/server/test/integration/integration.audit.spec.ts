@@ -46,7 +46,6 @@ import { delay, reformatDate } from '../../src/common';
 import { Communication, CommunicationDocument } from '../../src/communication';
 import { DailyReport, DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
-  CaregiverDocument,
   ControlMember,
   ControlMemberDocument,
   Member,
@@ -56,6 +55,7 @@ import {
 import {
   ActionItem,
   ActionItemDocument,
+  CaregiverDocument,
   Journal,
   JournalDocument,
   JourneyDocument,

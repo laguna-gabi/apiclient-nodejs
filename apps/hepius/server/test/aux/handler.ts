@@ -74,6 +74,8 @@ import {
   ActionItem,
   ActionItemDocument,
   ActionItemDto,
+  CaregiverDocument,
+  CaregiverDto,
   Journal,
   JournalDocument,
   JournalDto,
@@ -83,8 +85,6 @@ import {
   JourneyService,
 } from '../../src/journey';
 import {
-  CaregiverDocument,
-  CaregiverDto,
   ControlMember,
   ControlMemberDocument,
   ControlMemberDto,

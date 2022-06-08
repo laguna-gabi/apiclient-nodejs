@@ -1,4 +1,4 @@
-import { Appointment, AppointmentStatus, Caregiver, User } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, User } from '@argus/hepiusClient';
 import { AppointmentInternalKey, ChatInternalKey } from '@argus/irisClient';
 import {
   ChangeEventType,
@@ -18,7 +18,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { articlesByDrg, queryDaysLimit } from 'config';
 import { sub } from 'date-fns';
 import { address, datatype, date, internet, name } from 'faker';
-import { pickBy } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
 import {
@@ -28,7 +27,6 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
-  generateAddCaregiverParams,
   generateAddInsuranceParams,
   generateCreateMemberParams,
   generateCreateUserParams,
@@ -38,7 +36,6 @@ import {
   generateOrgParams,
   generateReplaceMemberOrgParams,
   generateScheduleAppointmentParams,
-  generateUpdateCaregiverParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   loadSessionClient,
@@ -57,11 +54,8 @@ import {
   PhoneType,
   defaultTimestampsDbValues,
 } from '../../src/common';
-import { Audit } from '../../src/db';
 import { Journey, JourneyDocument, JourneyDto } from '../../src/journey';
 import {
-  CaregiverDocument,
-  CaregiverDto,
   ControlMember,
   ControlMemberDocument,
   ControlMemberDto,
@@ -98,7 +92,6 @@ describe('MemberService', () => {
   let modelOrg: Model<OrgDocument>;
   let modelAppointment: Model<AppointmentDocument>;
   let modelDismissedAlert: Model<DismissedAlertDocument>;
-  let modelCaregiver: Model<CaregiverDocument>;
   let modelJourney: Model<JourneyDocument & defaultTimestampsDbValues>;
   let modelInsurance: Model<InsuranceDocument>;
   let i18nService: Internationalization;
@@ -126,7 +119,6 @@ describe('MemberService', () => {
     modelOrg = model<OrgDocument>(Org.name, OrgDto);
     modelAppointment = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     modelDismissedAlert = model<DismissedAlertDocument>(DismissedAlert.name, DismissedAlertDto);
-    modelCaregiver = model<CaregiverDocument>(Caregiver.name, CaregiverDto);
     modelJourney = model<JourneyDocument & defaultTimestampsDbValues>(Journey.name, JourneyDto);
     modelInsurance = model<InsuranceDocument>(Insurance.name, InsuranceDto);
 
@@ -929,11 +921,6 @@ describe('MemberService', () => {
       const memberId = await generateMember();
       const userId = generateId();
 
-      const { id: caregiverId } = await service.addCaregiver(
-        generateAddCaregiverParams({ memberId }),
-      );
-      await service.addCaregiver(generateAddCaregiverParams({ memberId }));
-
       const result = await service.deleteMember(
         generateDeleteMemberParams({ id: memberId, hard: false }),
         userId,
@@ -949,10 +936,6 @@ describe('MemberService', () => {
       const memberConfigDeletedResult = await memberConfigModel.findWithDeleted({
         memberId: new Types.ObjectId(memberId),
       });
-      // @ts-ignore
-      const caregiverDeletedResult = await modelCaregiver.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
       /* eslint-enable @typescript-eslint/ban-ts-comment */
 
       await checkDelete(memberDeletedResult, { _id: new Types.ObjectId(memberId) }, userId);
@@ -961,31 +944,12 @@ describe('MemberService', () => {
         { memberId: new Types.ObjectId(memberId) },
         userId,
       );
-      await checkDelete(caregiverDeletedResult, { memberId: new Types.ObjectId(memberId) }, userId);
 
       const resultHard = await service.deleteMember(
         generateDeleteMemberParams({ id: memberId, hard: true }),
         userId,
       );
       expect(resultHard).toBeTruthy();
-
-      /* eslint-disable @typescript-eslint/ban-ts-comment */
-      // @ts-ignore
-      const memberDeletedResultHard = await memberModel.findWithDeleted({
-        _id: new Types.ObjectId(memberId),
-      });
-      // @ts-ignore
-      const memberConfigDeletedResultHard = await memberConfigModel.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
-      // @ts-ignore
-      const caregiverDeletedResultHard = await modelCaregiver.findWithDeleted({ _id: caregiverId });
-      /* eslint-enable @typescript-eslint/ban-ts-comment */
-      [memberDeletedResultHard, memberConfigDeletedResultHard, caregiverDeletedResultHard].forEach(
-        (result) => {
-          expect(result).toEqual([]);
-        },
-      );
     });
   });
 
@@ -1056,125 +1020,6 @@ describe('MemberService', () => {
       });
 
       expect(afterObject.address).toEqual({ ...beforeObject.address, city });
-    });
-  });
-
-  describe('caregivers', () => {
-    let caregiverId;
-    let mockEventEmitterEmit: jest.SpyInstance;
-
-    beforeAll(() => {
-      mockEventEmitterEmit = jest.spyOn(module.get<EventEmitter2>(EventEmitter2), `emit`);
-    });
-
-    afterEach(() => {
-      mockEventEmitterEmit.mockReset();
-    });
-
-    it('should add a caregiver', async () => {
-      const memberId = generateId();
-
-      // start a session and set member id as client in store
-      loadSessionClient(memberId);
-
-      const caregiverParams = generateAddCaregiverParams({ memberId });
-      const { id } = await service.addCaregiver(caregiverParams);
-
-      caregiverId = id;
-
-      confirmEmittedChangeEvent(
-        mockEventEmitterEmit,
-        createChangeEvent({
-          action: ChangeEventType.updated,
-          entity: EntityName.caregiver,
-          memberId,
-        }),
-      );
-
-      const caregiver = await service.getCaregiver(id);
-
-      expect(caregiver).toEqual(
-        expect.objectContaining({
-          ...pickBy(
-            caregiverParams,
-            (value, key) => ['memberId', 'id', 'createdBy'].indexOf(key) >= 0,
-          ),
-          memberId: new Types.ObjectId(memberId),
-          createdBy: new Types.ObjectId(memberId),
-          updatedBy: new Types.ObjectId(memberId),
-          _id: new Types.ObjectId(id),
-        }),
-      );
-    });
-
-    it('should update a caregiver', async () => {
-      const memberId = generateId();
-      const updateCaregiverParams = generateUpdateCaregiverParams({
-        id: caregiverId,
-        memberId,
-      });
-
-      // start a session and set member id as client in store
-      loadSessionClient(memberId);
-
-      const { id, createdBy } = (await service.updateCaregiver(
-        updateCaregiverParams,
-      )) as Caregiver & Audit;
-
-      confirmEmittedChangeEvent(
-        mockEventEmitterEmit,
-        createChangeEvent({
-          action: ChangeEventType.updated,
-          entity: EntityName.caregiver,
-          memberId,
-        }),
-      );
-
-      const caregiver = await service.getCaregiver(id);
-      expect(caregiver).toEqual(
-        expect.objectContaining({
-          ...pickBy(updateCaregiverParams, (value, key) => key !== 'id' && key !== 'memberId'),
-          memberId: new Types.ObjectId(memberId),
-          updatedBy: new Types.ObjectId(memberId),
-          createdBy,
-          _id: new Types.ObjectId(id),
-        }),
-      );
-    });
-
-    it('should (hard) delete a soft deleted caregiver', async () => {
-      const memberId = generateId();
-      const caregiverParams = generateAddCaregiverParams({ memberId });
-      const { id } = await service.addCaregiver(caregiverParams);
-
-      await service.deleteCaregiver(id, memberId.toString());
-      await service.deleteCaregiver(id, memberId.toString(), true);
-
-      confirmEmittedChangeEvent(
-        mockEventEmitterEmit,
-        createChangeEvent({
-          action: ChangeEventType.deleted,
-          entity: EntityName.caregiver,
-          memberId,
-        }),
-      );
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const deletedCaregiver = await modelCaregiver.findOneWithDeleted({
-        _id: new Types.ObjectId(id),
-      });
-
-      expect(deletedCaregiver).toBeFalsy();
-    });
-
-    it('should get a caregiver by member id', async () => {
-      const memberId = generateId();
-      const updateCaregiverParams = generateUpdateCaregiverParams({ id: caregiverId, memberId });
-
-      const caregiver = await service.updateCaregiver(updateCaregiverParams);
-
-      expect(await service.getCaregiversByMemberId(memberId)).toEqual([caregiver]);
     });
   });
 

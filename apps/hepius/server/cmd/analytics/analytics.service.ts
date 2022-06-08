@@ -57,7 +57,8 @@ import {
   RedFlagTypeDocument,
 } from '../../src/care';
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
-import { CaregiverDocument, Member, MemberDocument, MemberService } from '../../src/member';
+import { Member, MemberDocument, MemberService } from '../../src/member';
+import { CaregiverDocument } from '../../src/journey';
 import { StorageService } from '../../src/providers';
 import {
   Questionnaire,

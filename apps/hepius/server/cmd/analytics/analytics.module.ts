@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Org, OrgDto } from '../../src/org';
 import { QuestionnaireModule } from '../../src/questionnaire';
 import { CareModule } from '../../src/care';
+import { JourneyModule } from '../../src/journey';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { CareModule } from '../../src/care';
     ProvidersModule,
     QuestionnaireModule,
     CareModule,
+    JourneyModule,
     MongooseModule.forFeature([{ name: Org.name, schema: OrgDto }]),
   ],
   providers: [AnalyticsService],

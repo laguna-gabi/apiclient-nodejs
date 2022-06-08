@@ -1,11 +1,4 @@
-import {
-  AppointmentStatus,
-  Caregiver,
-  Identifier,
-  MemberRole,
-  User,
-  UserRole,
-} from '@argus/hepiusClient';
+import { AppointmentStatus, Identifier, MemberRole, User, UserRole } from '@argus/hepiusClient';
 import {
   AlertInternalKey,
   ChatInternalKey,
@@ -87,7 +80,6 @@ import { QuestionnaireAlerts, QuestionnaireService, QuestionnaireType } from '..
 import { TodoService } from '../todo';
 import { UserService } from '../user';
 import {
-  AddCaregiverParams,
   AppointmentCompose,
   CancelNotifyParams,
   ChatMessageOrigin,
@@ -107,7 +99,6 @@ import {
   NotifyParams,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
-  UpdateCaregiverParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
 } from './index';
@@ -219,7 +210,6 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(UserRole.lagunaAdmin)
-  @Ace({ strategy: AceStrategy.rbac })
   async deleteMember(
     @Client('_id') userId,
     @Args(camelCase(DeleteMemberParams.name))
@@ -506,71 +496,6 @@ export class MemberResolver extends MemberBase {
       journalAudioDownloadLink,
     };
     await this.notifyCreateDispatch(dispatch);
-  }
-
-  /*************************************************************************************************
-   ******************************************* Caregivers ******************************************
-   ************************************************************************************************/
-
-  @Mutation(() => Caregiver)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
-  @MemberIdParam(MemberIdParamType.memberId)
-  @UseInterceptors(MemberUserRouteInterceptor)
-  async addCaregiver(
-    @Args(camelCase(AddCaregiverParams.name), { type: () => AddCaregiverParams })
-    addCaregiverParams: AddCaregiverParams,
-  ): Promise<Caregiver> {
-    return this.memberService.addCaregiver(addCaregiverParams);
-  }
-
-  @Mutation(() => Boolean)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
-  @Ace({ entityName: EntityName.caregiver, idLocator: `id`, entityMemberIdLocator: 'memberId' })
-  async deleteCaregiver(
-    @Args(
-      'id',
-      { type: () => String },
-      new IsValidObjectId(Errors.get(ErrorType.caregiverIdInvalid)),
-    )
-    id: string,
-    @Client('_id') deletedBy: string,
-  ): Promise<boolean | never> {
-    const caregiver = await this.memberService.getCaregiver(id);
-
-    if (caregiver) {
-      await this.memberService.deleteCaregiver(id, deletedBy);
-    }
-
-    return true;
-  }
-
-  @Mutation(() => Caregiver)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
-  @MemberIdParam(MemberIdParamType.memberId)
-  @UseInterceptors(MemberUserRouteInterceptor)
-  async updateCaregiver(
-    @Args(camelCase(UpdateCaregiverParams.name), { type: () => UpdateCaregiverParams })
-    updateCaregiverParams: UpdateCaregiverParams,
-  ): Promise<Caregiver> {
-    return this.memberService.updateCaregiver(updateCaregiverParams);
-  }
-
-  @Query(() => [Caregiver])
-  @MemberIdParam(MemberIdParamType.memberId)
-  @UseInterceptors(MemberUserRouteInterceptor)
-  @Roles(MemberRole.member, UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
-  async getCaregivers(
-    @Args(
-      'memberId',
-      { type: () => String, nullable: true },
-      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid), { nullable: true }),
-    )
-    memberId?: string,
-  ): Promise<Caregiver[]> {
-    return this.memberService.getCaregiversByMemberId(memberId);
   }
 
   /*************************************************************************************************

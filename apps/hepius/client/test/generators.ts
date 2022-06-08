@@ -15,6 +15,7 @@ import { generateId, generateObjectId, randomEnum } from '@argus/pandora';
 export const mockGenerateCaregiver = ({
   id = generateId(),
   memberId = generateObjectId(),
+  journeyId = generateObjectId(),
   firstName = name.firstName(),
   lastName = name.lastName(),
   email = internet.email(),
@@ -24,6 +25,7 @@ export const mockGenerateCaregiver = ({
   return {
     id,
     memberId,
+    journeyId,
     firstName,
     lastName,
     email,

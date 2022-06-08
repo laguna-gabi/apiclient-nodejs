@@ -28,6 +28,9 @@ export class Caregiver extends Identifier {
   @Field(() => String)
   memberId: Types.ObjectId;
 
+  @Prop({ index: true, type: Types.ObjectId })
+  journeyId: Types.ObjectId;
+
   @Prop()
   @Field(() => String)
   lastName: string;

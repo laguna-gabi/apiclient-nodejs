@@ -12,7 +12,6 @@ import * as request from 'supertest';
 import { v4 } from 'uuid';
 import {
   BEFORE_ALL_TIMEOUT,
-  generateAddCaregiverParams,
   generateCancelNotifyParams,
   generateCreateActionItemParams,
   generateCreateMemberParams,
@@ -37,7 +36,6 @@ import {
 } from '..';
 import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
 import {
-  AddCaregiverParams,
   CancelNotifyParams,
   CreateMemberParams,
   Honorific,
@@ -1035,61 +1033,6 @@ describe('Validations - member', () => {
         replaceMemberOrgParams: generateReplaceMemberOrgParams(),
         requestHeaders: handler.defaultUserRequestHeaders,
         missingFieldError: 'Forbidden resource',
-      });
-    });
-  });
-
-  describe('caregiver', () => {
-    describe('addCaregiver - invalid and missing fields', () => {
-      /* eslint-disable max-len */
-      test.each`
-        field             | error
-        ${'firstName'}    | ${`Field "firstName" of required type "String!" was not provided.`}
-        ${'lastName'}     | ${`Field "lastName" of required type "String!" was not provided.`}
-        ${'relationship'} | ${`Field "relationship" of required type "Relationship!" was not provided.`}
-        ${'phone'}        | ${`Field "phone" of required type "String!" was not provided.`}
-      `(`should fail to add a caregiver if $field is missing`, async (params) => {
-        const addCaregiverParams = generateAddCaregiverParams();
-        delete addCaregiverParams[params.field];
-        await handler.mutations.addCaregiver({
-          addCaregiverParams,
-          missingFieldError: params.error,
-        });
-      });
-
-      test.each`
-        input                                                                      | error
-        ${{ email: 'invalid' }}                                                    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverEmailInvalid)] }}
-        ${{ phone: 'invalid' }}                                                    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverPhoneInvalid)] }}
-        ${{ firstName: 'a' }}                                                      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverMinMaxLength)] }}
-        ${{ lastName: 'a' }}                                                       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverMinMaxLength)] }}
-        ${{ lastName: 'nameistoolong-nameistoolong-nameistoolong-nameistoolong' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverMinMaxLength)] }}
-      `(
-        /* eslint-enable max-len */
-        `should fail to add a caregiver due to invalid $input field`,
-        async (params) => {
-          const addCaregiverParams: AddCaregiverParams = generateAddCaregiverParams({
-            memberId: generateId(),
-            ...params.input,
-          });
-          await handler.mutations.addCaregiver({
-            addCaregiverParams,
-            ...params.error,
-          });
-        },
-      );
-    });
-
-    describe('getCaregivers', () => {
-      test.each`
-        input  | error
-        ${123} | ${stringError}
-      `(`should fail to get caregivers by member id $input is not a valid type`, async (params) => {
-        await handler.queries.getCaregivers({
-          memberId: params.input,
-          invalidFieldsError: params.error,
-          requestHeaders: generateRequestHeaders(handler.patientZero.authId),
-        });
       });
     });
   });

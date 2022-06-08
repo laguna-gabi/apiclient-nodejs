@@ -29,7 +29,6 @@ import { SubmitCareWizardParams } from '../../src/care/wizard.dto';
 import { Identifiers, RegisterForNotificationParams } from '../../src/common';
 import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
-  AddCaregiverParams,
   CancelNotifyParams,
   CreateMemberParams,
   DeleteDischargeDocumentParams,
@@ -39,11 +38,11 @@ import {
   NotifyParams,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
-  UpdateCaregiverParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
 } from '../../src/member';
 import {
+  AddCaregiverParams,
   Admission,
   ChangeMemberDnaParams,
   CreateActionItemParams,
@@ -51,6 +50,7 @@ import {
   Journal,
   SetActionItemParams,
   SetGeneralNotesParams,
+  UpdateCaregiverParams,
   UpdateJournalTextParams,
   UpdateJourneyParams,
 } from '../../src/journey';
@@ -1331,7 +1331,6 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        console.log({ ex });
         return isResultValid({
           errors: ex.response.errors,
           missingFieldError,

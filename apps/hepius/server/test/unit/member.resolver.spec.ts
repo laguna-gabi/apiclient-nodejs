@@ -25,7 +25,6 @@ import { v4 } from 'uuid';
 import {
   dbDisconnect,
   defaultModules,
-  generateAddCaregiverParams,
   generateAppointmentComposeParams,
   generateCommunication,
   generateCreateMemberParams,
@@ -37,7 +36,6 @@ import {
   generateReplaceMemberOrgParams,
   generateScheduleAppointmentParams,
   generateUniqueUrl,
-  generateUpdateCaregiverParams,
   generateUpdateClientSettings,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
@@ -811,66 +809,6 @@ describe('MemberResolver', () => {
         id: fileName,
       });
       expect(result).toBeTruthy();
-    });
-  });
-
-  describe('caregiver', () => {
-    let spyOnAddCaregiverServiceMethod;
-    let spyOnUpdateCaregiverServiceMethod;
-    let spyOnGetCaregiversByMemberIdServiceMethod;
-    let spyOnDeleteCaregiverServiceMethod;
-    let spyOnGetCaregiverServiceMethod;
-
-    beforeEach(() => {
-      spyOnAddCaregiverServiceMethod = jest.spyOn(service, 'addCaregiver');
-      spyOnUpdateCaregiverServiceMethod = jest.spyOn(service, 'updateCaregiver');
-      spyOnGetCaregiversByMemberIdServiceMethod = jest.spyOn(service, 'getCaregiversByMemberId');
-      spyOnDeleteCaregiverServiceMethod = jest.spyOn(service, 'deleteCaregiver');
-      spyOnGetCaregiverServiceMethod = jest.spyOn(service, 'getCaregiver');
-    });
-    afterEach(() => {
-      spyOnAddCaregiverServiceMethod.mockReset();
-      spyOnUpdateCaregiverServiceMethod.mockReset();
-      spyOnGetCaregiversByMemberIdServiceMethod.mockReset();
-      spyOnDeleteCaregiverServiceMethod.mockReset();
-      spyOnGetCaregiverServiceMethod.mockReset();
-    });
-
-    it('should add a caregiver', async () => {
-      const memberId = generateId();
-      const addCaregiverParams = generateAddCaregiverParams({ memberId });
-      await resolver.addCaregiver(addCaregiverParams);
-      expect(spyOnAddCaregiverServiceMethod).toBeCalledTimes(1);
-      expect(spyOnAddCaregiverServiceMethod).toBeCalledWith(addCaregiverParams);
-    });
-
-    it('should update a caregiver with the inferred memberId', async () => {
-      const memberId = generateId();
-      const updateCaregiverParams = generateUpdateCaregiverParams({ memberId });
-      await resolver.updateCaregiver(updateCaregiverParams);
-      expect(spyOnUpdateCaregiverServiceMethod).toBeCalledTimes(1);
-      expect(spyOnUpdateCaregiverServiceMethod).toBeCalledWith(updateCaregiverParams);
-    });
-
-    it('should get all caregiver for a member', async () => {
-      const memberId = generateId();
-
-      await resolver.getCaregivers(memberId);
-      expect(spyOnGetCaregiversByMemberIdServiceMethod).toBeCalledTimes(1);
-      expect(spyOnGetCaregiversByMemberIdServiceMethod).toBeCalledWith(memberId);
-    });
-
-    it('should delete a caregiver', async () => {
-      const caregiverId = generateId();
-      const memberId = generateId();
-
-      spyOnGetCaregiverServiceMethod.mockImplementationOnce(async () => {
-        return { memberId };
-      });
-      await resolver.deleteCaregiver(caregiverId, memberId.toString());
-
-      expect(spyOnDeleteCaregiverServiceMethod).toBeCalledTimes(1);
-      expect(spyOnDeleteCaregiverServiceMethod).toBeCalledWith(caregiverId, memberId.toString());
     });
   });
 

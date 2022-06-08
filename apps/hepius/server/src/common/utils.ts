@@ -17,6 +17,7 @@ import { DailyReportDocument } from '../dailyReport';
 import { ISoftDelete } from '../db';
 import {
   AdmissionDocument,
+  CaregiverDocument,
   DiagnosisDocument,
   DietaryDocument,
   ExternalAppointmentDocument,
@@ -25,7 +26,7 @@ import {
   MedicationDocument,
   TreatmentRenderedDocument,
 } from '../journey';
-import { CaregiverDocument, InsuranceDocument } from '../member';
+import { InsuranceDocument } from '../member';
 import { QuestionnaireResponseDocument } from '../questionnaire';
 import { RecordingDocument } from '../recording';
 import { TodoDocument, TodoDoneDocument } from '../todo';

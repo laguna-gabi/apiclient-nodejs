@@ -1,16 +1,20 @@
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { LoggingInterceptor } from '../common';
-import { MemberService } from '.';
 import { MessagePattern, Transport } from '@nestjs/microservices';
 import { Caregiver, HepiusMessagePatterns } from '@argus/hepiusClient';
+import { CaregiverService, JourneyService } from '.';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller()
-export class MemberTcpController {
-  constructor(readonly memberService: MemberService) {}
+export class JourneyTcpController {
+  constructor(
+    readonly journeyService: JourneyService,
+    readonly caregiverService: CaregiverService,
+  ) {}
 
   @MessagePattern({ cmd: HepiusMessagePatterns.getCaregiversByMemberId }, Transport.TCP)
   async getCaregiversByMemberId({ memberId }: { memberId: string }): Promise<Caregiver[]> {
-    return this.memberService.getCaregiversByMemberId(memberId);
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.caregiverService.getCaregivers({ memberId, journeyId });
   }
 }

@@ -1,4 +1,4 @@
-import { Appointment, AppointmentStatus, Caregiver } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus } from '@argus/hepiusClient';
 import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -27,10 +27,8 @@ import { ISoftDelete } from '../db';
 import { Internationalization } from '../providers';
 import { NotificationService } from '../services';
 import {
-  AddCaregiverParams,
   AddInsuranceParams,
   AppointmentCompose,
-  CaregiverDocument,
   ControlMember,
   ControlMemberDocument,
   DeleteMemberParams,
@@ -46,7 +44,6 @@ import {
   NotNullableMemberKeys,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
-  UpdateCaregiverParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
 } from './index';
@@ -61,8 +58,6 @@ export class MemberService extends AlertService {
       ISoftDelete<MemberConfigDocument>,
     @InjectModel(ControlMember.name)
     private readonly controlMemberModel: Model<ControlMemberDocument>,
-    @InjectModel(Caregiver.name)
-    private readonly caregiverModel: Model<CaregiverDocument> & ISoftDelete<CaregiverDocument>,
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
     @InjectModel(Insurance.name)
@@ -360,11 +355,6 @@ export class MemberService extends AlertService {
       serviceName: MemberService.name,
     };
 
-    await deleteMemberObjects<Model<CaregiverDocument> & ISoftDelete<CaregiverDocument>>({
-      model: this.caregiverModel,
-      ...data,
-    });
-
     await deleteMemberObjects<Model<InsuranceDocument> & ISoftDelete<InsuranceDocument>>({
       model: this.insuranceModel,
       ...data,
@@ -504,50 +494,6 @@ export class MemberService extends AlertService {
     }
 
     return member;
-  }
-
-  /*************************************************************************************************
-   ******************************************* Caregivers ******************************************
-   ************************************************************************************************/
-
-  async addCaregiver(addCaregiverParams: AddCaregiverParams): Promise<Caregiver> {
-    return this.caregiverModel.create({
-      ...addCaregiverParams,
-      memberId: new Types.ObjectId(addCaregiverParams.memberId),
-    });
-  }
-
-  async deleteCaregiver(id: string, deletedBy: string, hard?: boolean) {
-    if (hard) {
-      return this.caregiverModel.remove({ _id: new Types.ObjectId(id) });
-    } else {
-      const caregiver = await this.caregiverModel.findOne({
-        _id: new Types.ObjectId(id),
-      });
-      await caregiver?.delete(new Types.ObjectId(deletedBy));
-    }
-  }
-
-  async getCaregiver(id: string): Promise<Caregiver> {
-    return this.caregiverModel.findOne({ _id: new Types.ObjectId(id) });
-  }
-
-  async updateCaregiver(updateCaregiverParams: UpdateCaregiverParams): Promise<Caregiver> {
-    return this.caregiverModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(updateCaregiverParams.id) },
-      {
-        $set: {
-          ...updateCaregiverParams,
-          memberId: new Types.ObjectId(updateCaregiverParams.memberId),
-        },
-      },
-      { upsert: true, new: true },
-    );
-  }
-
-  async getCaregiversByMemberId(memberId: string): Promise<Caregiver[]> {
-    const res = await this.caregiverModel.find({ memberId: new Types.ObjectId(memberId) });
-    return res;
   }
 
   /*************************************************************************************************
