@@ -74,8 +74,6 @@ export const FRAGMENT_MEMBER = gql`
     drgDesc
     phoneSecondary
     phoneSecondaryType
-    generalNotes
-    nurseNotes
     admitDate
     createdAt
     honorific

@@ -631,26 +631,6 @@ export class Member extends Identifier {
   @Field(() => Address, { nullable: true })
   address?: Address;
 
-  /**
-   * will be @deprecated soon
-   * use admission.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true, deprecationReason })
-  generalNotes?: string;
-
-  /**
-   * will be @deprecated soon
-   * use admission.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true, deprecationReason })
-  nurseNotes?: string;
-
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   admitDate?: string;
