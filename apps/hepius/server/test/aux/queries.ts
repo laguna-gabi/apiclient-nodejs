@@ -147,7 +147,6 @@ export class Queries {
           expect(ex.response.errors[0]?.message || ex.response.errors[0][0]?.message).toContain(
             invalidFieldsError,
           );
-          return;
         }
       });
 
@@ -193,7 +192,6 @@ export class Queries {
           expect(ex.response.errors[0]?.message || ex.response.errors[0][0]?.message).toContain(
             invalidFieldsError,
           );
-          return;
         }
       });
 
@@ -218,10 +216,7 @@ export class Queries {
         { id },
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getMember;
   };
@@ -254,7 +249,6 @@ export class Queries {
         } else if (missingFieldError) {
           expect(ex.response.errors[0].message).toMatch(missingFieldError);
         }
-        return;
       });
 
     return result?.getMemberUploadDischargeDocumentsLinks;
@@ -458,10 +452,7 @@ export class Queries {
         { orgId },
         this.defaultUserRequestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
     return result?.getMembersAppointments;
   };
 
@@ -509,10 +500,7 @@ export class Queries {
         { id },
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
     return result?.getAppointment;
   };
 
@@ -611,10 +599,7 @@ export class Queries {
         { id },
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(invalidFieldsError).toEqual(ex.response.errors[0].message);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getMemberConfig;
   };
@@ -691,10 +676,7 @@ export class Queries {
         {},
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getOrgs;
   };
@@ -726,10 +708,7 @@ export class Queries {
         { memberId },
         this.defaultUserRequestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getRecordings;
   };
@@ -759,10 +738,7 @@ export class Queries {
         { id },
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getJournal;
   };
@@ -852,43 +828,44 @@ export class Queries {
         { getMemberUploadJournalAudioLinkParams },
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getMemberUploadJournalAudioLink;
   };
 
   getDailyReports = async ({
     dailyReportQueryInput,
+    invalidFieldsError,
   }: {
     dailyReportQueryInput: DailyReportQueryInput;
+    invalidFieldsError?: string;
   }) => {
-    const { getDailyReports } = await this.client.request(
-      gql`
-        query getDailyReports($dailyReportQueryInput: DailyReportQueryInput!) {
-          getDailyReports(dailyReportQueryInput: $dailyReportQueryInput) {
-            data {
-              memberId
-              date
-              categories {
-                rank
-                category
+    const result = await this.client
+      .request(
+        gql`
+          query getDailyReports($dailyReportQueryInput: DailyReportQueryInput!) {
+            getDailyReports(dailyReportQueryInput: $dailyReportQueryInput) {
+              data {
+                memberId
+                date
+                categories {
+                  rank
+                  category
+                }
+                statsOverThreshold
               }
-              statsOverThreshold
-            }
-            metadata {
-              minDate
+              metadata {
+                minDate
+              }
             }
           }
-        }
-      `,
-      { dailyReportQueryInput },
-      this.defaultUserRequestHeaders,
-    );
+        `,
+        { dailyReportQueryInput },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
-    return getDailyReports;
+    return result?.getDailyReports;
   };
 
   getCaregivers = async ({
@@ -918,10 +895,7 @@ export class Queries {
         { memberId },
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getCaregivers;
   };
@@ -978,10 +952,7 @@ export class Queries {
         { memberId },
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getTodos;
   };
@@ -1014,7 +985,6 @@ export class Queries {
         expect(ex.response.errors[0].message || ex.response.errors[0][0].message).toMatch(
           invalidFieldsError,
         );
-        return;
       });
 
     return result?.getTodoDones;
@@ -1049,10 +1019,7 @@ export class Queries {
         { memberId },
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getMemberRedFlags;
   };
@@ -1091,10 +1058,7 @@ export class Queries {
         { memberId },
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getMemberCarePlans;
   };
@@ -1175,10 +1139,7 @@ export class Queries {
         { id },
         this.defaultUserRequestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getQuestionnaire;
   };
@@ -1214,10 +1175,7 @@ export class Queries {
         { id },
         this.defaultUserRequestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getQuestionnaireResponse;
   };
@@ -1253,10 +1211,7 @@ export class Queries {
         { memberId },
         this.defaultUserRequestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getMemberQuestionnaireResponses;
   };
@@ -1334,10 +1289,7 @@ export class Queries {
         { memberId },
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getMemberBarriers;
   };
@@ -1381,10 +1333,7 @@ export class Queries {
         { memberId },
         requestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getMemberAdmissions;
   };
@@ -1428,10 +1377,7 @@ export class Queries {
         { memberId },
         this.defaultUserRequestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getJourneys;
   };
@@ -1456,10 +1402,7 @@ export class Queries {
         { id },
         this.defaultUserRequestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getJourney;
   };
@@ -1484,10 +1427,7 @@ export class Queries {
         { memberId },
         this.defaultUserRequestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getRecentJourney;
   };
@@ -1526,10 +1466,7 @@ export class Queries {
         { memberId },
         this.defaultUserRequestHeaders,
       )
-      .catch((ex) => {
-        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
-        return;
-      });
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getActionItems;
   };

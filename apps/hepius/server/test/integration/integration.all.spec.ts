@@ -546,6 +546,7 @@ describe('Integration tests: all', () => {
         appointmentId: appointment.id,
         end: new Date(),
       });
+      const memberId = member.id;
       await handler.mutations.updateRecording({ updateRecordingParams: recording });
 
       const startDate = date.past();
@@ -563,7 +564,7 @@ describe('Integration tests: all', () => {
       });
 
       const requestHeaders = generateRequestHeaders(member.authId);
-      await createTodos(member.id, requestHeaders);
+      await createTodos(memberId, requestHeaders);
 
       const { id: journalId } = await handler.mutations.createJournal({ requestHeaders });
       await handler.mutations.updateJournalText({
@@ -571,89 +572,115 @@ describe('Integration tests: all', () => {
         updateJournalTextParams: generateUpdateJournalTextParams({ id: journalId }),
       });
 
-      const addCaregiverParams = generateAddCaregiverParams({ memberId: member.id });
+      const addCaregiverParams = generateAddCaregiverParams({ memberId });
       await handler.mutations.addCaregiver({ addCaregiverParams, requestHeaders });
 
-      await submitMockCareWizard(handler, member.id);
+      await submitMockCareWizard(handler, memberId);
 
       // submit QR for member
-      await submitQR(member.id);
+      await submitQR(memberId);
 
       await handler.mutations.createActionItem({
-        createActionItemParams: generateCreateActionItemParams({ memberId: member.id }),
+        createActionItemParams: generateCreateActionItemParams({ memberId }),
       });
 
       // delete member
-      const deleteMemberParams = generateDeleteMemberParams({ id: member.id, hard });
+      const deleteMemberParams = generateDeleteMemberParams({ id: memberId, hard });
       const result = await handler.mutations.deleteMember({ deleteMemberParams });
       expect(result).toBeTruthy();
       await delay(500);
 
       // test that everything was deleted
       await handler.queries.getMember({
-        id: member.id,
+        id: memberId,
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
         requestHeaders: handler.defaultAdminRequestHeaders,
       });
 
       const communication = await handler.queries.getCommunication({
-        getCommunicationParams: { memberId: member.id, userId: member.primaryUserId.toString() },
+        getCommunicationParams: { memberId, userId: member.primaryUserId.toString() },
       });
       expect(communication).toBeNull();
 
-      const recordings = await handler.recordingModel.find({ memberId: member.id });
+      await handler.queries.getRecordings({
+        memberId,
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
+      const recordings = await handler.recordingModel.find({ memberId });
       expect(recordings.length).toEqual(0);
 
-      const dailyReports = await handler.queries.getDailyReports({
+      await handler.queries.getDailyReports({
         dailyReportQueryInput: {
-          memberId: member.id,
+          memberId,
           startDate: day1,
           endDate: day2,
         },
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
-      expect(dailyReports.data.length).toEqual(0);
+      const dailyReports = await handler.dailyReportModel.find({ memberId });
+      expect(dailyReports.length).toEqual(0);
 
       const appointmentResult = await handler.queries.getAppointment({ id: appointment.id });
       expect(appointmentResult).toBeNull();
 
-      const todos = await handler.todoModel.find({ memberId: member.id });
-      expect(todos.length).toEqual(0);
-
-      await handler.queries.getCaregivers({
-        memberId: member.id,
+      await handler.queries.getTodos({
+        memberId,
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
-
-      const journals = await handler.queries.getJournals({
-        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
+      const todos = await handler.todoModel.find({ memberId });
+      expect(todos.length).toEqual(0);
+      await handler.queries.getTodoDones({
+        getTodoDonesParams: generateGetTodoDonesParams({ memberId }),
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
+      const todoDones = await handler.todoDoneModel.find({ memberId });
+      expect(todoDones.length).toEqual(0);
+
+      await handler.queries.getCaregivers({
+        memberId,
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
+      const caregivers = await handler.caregiverModel.find({ memberId });
+      expect(caregivers.length).toEqual(0);
+
+      const journals = await handler.journalModel.find({ memberId });
       expect(journals.length).toEqual(0);
 
       await handler.queries.getMemberQuestionnaireResponses({
-        memberId: member.id,
+        memberId,
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
+      const questionnaireRes = await handler.questionnaireResponseModel.find({ memberId });
+      expect(questionnaireRes.length).toEqual(0);
 
       // get all member's red flags, barriers and care plans
       await handler.queries.getMemberRedFlags({
-        memberId: member.id,
+        memberId,
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
+      const redFlags = await handler.redFlagModel.find({ memberId });
+      expect(redFlags.length).toEqual(0);
 
       await handler.queries.getMemberBarriers({
-        memberId: member.id,
+        memberId,
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
+      const berriers = await handler.barrierModel.find({ memberId });
+      expect(berriers.length).toEqual(0);
 
       await handler.queries.getMemberCarePlans({
-        memberId: member.id,
+        memberId,
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
+      const careplans = await handler.caregiverModel.find({ memberId });
+      expect(careplans.length).toEqual(0);
 
       await handler.queries.getActionItems({
-        memberId: member.id,
+        memberId,
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
+      const actionItems = await handler.actionItemModel.find({ memberId });
+      expect(actionItems.length).toEqual(0);
     });
   });
 

@@ -112,19 +112,15 @@ export class DailyReportResolver {
     )
     dailyReportQueryInput: DailyReportQueryInput,
   ): Promise<DailyReportResults> {
-    try {
-      const recentJourney = await this.journeyService.getRecent(dailyReportQueryInput.memberId);
-      return {
-        data: await this.dailyReportService.getDailyReports({
-          ...dailyReportQueryInput,
-          journeyId: recentJourney.id,
-        }),
-        metadata: {
-          minDate: await this.dailyReportService.getOldestDailyReportRecord(recentJourney.id),
-        },
-      };
-    } catch (ex) {
-      return { data: [] };
-    }
+    const recentJourney = await this.journeyService.getRecent(dailyReportQueryInput.memberId);
+    return {
+      data: await this.dailyReportService.getDailyReports({
+        ...dailyReportQueryInput,
+        journeyId: recentJourney.id,
+      }),
+      metadata: {
+        minDate: await this.dailyReportService.getOldestDailyReportRecord(recentJourney.id),
+      },
+    };
   }
 }
