@@ -11,8 +11,13 @@ export class IsValidObjectId implements PipeTransform {
     this.options = options;
   }
 
-  transform(value: string) {
-    if ((value && !Types.ObjectId.isValid(value)) || (!value && !this.options.nullable)) {
+  transform(value: string | string[]) {
+    const inspectedValue = typeof value === 'string' ? [value] : value;
+
+    if (
+      (inspectedValue && inspectedValue.find((v) => !Types.ObjectId.isValid(v))) ||
+      (!inspectedValue && !this.options.nullable)
+    ) {
       throw new Error(this.message);
     }
 

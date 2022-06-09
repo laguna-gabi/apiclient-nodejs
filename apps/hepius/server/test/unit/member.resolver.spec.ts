@@ -378,7 +378,7 @@ describe('MemberResolver', () => {
     let spyOnServiceGetByOrg;
     beforeEach(() => {
       spyOnServiceGet = jest.spyOn(service, 'get');
-      spyOnServiceGetByOrg = jest.spyOn(service, 'getByOrg');
+      spyOnServiceGetByOrg = jest.spyOn(service, 'getByOrgs');
     });
 
     afterEach(() => {
@@ -428,23 +428,23 @@ describe('MemberResolver', () => {
   });
 
   describe('getMembers', () => {
-    let spyOnServiceGetByOrg;
+    let spyOnServiceGetByOrgs;
     beforeEach(() => {
-      spyOnServiceGetByOrg = jest.spyOn(service, 'getByOrg');
+      spyOnServiceGetByOrgs = jest.spyOn(service, 'getByOrgs');
     });
 
     afterEach(() => {
-      spyOnServiceGetByOrg.mockReset();
+      spyOnServiceGetByOrgs.mockReset();
     });
 
     it('should get members for a given orgId', async () => {
       const member = mockGenerateMember();
       const getByOrgResult = [{ ...member, platform: Platform.android }];
-      spyOnServiceGetByOrg.mockImplementationOnce(async () => getByOrgResult);
-      const result = await resolver.getMembers(member.org.id);
+      spyOnServiceGetByOrgs.mockImplementationOnce(async () => getByOrgResult);
+      const result = await resolver.getMembers([member.org.id]);
 
-      expect(spyOnServiceGetByOrg).toBeCalledTimes(1);
-      expect(spyOnServiceGetByOrg).toBeCalledWith(member.org.id);
+      expect(spyOnServiceGetByOrgs).toBeCalledTimes(1);
+      expect(spyOnServiceGetByOrgs).toBeCalledWith([member.org.id]);
       expect(result).toEqual(getByOrgResult);
     });
 
@@ -454,12 +454,12 @@ describe('MemberResolver', () => {
         { ...members[0], platform: Platform.android },
         { ...members[1], platform: Platform.ios },
       ];
-      spyOnServiceGetByOrg.mockImplementationOnce(async () => getByOrgResult);
+      spyOnServiceGetByOrgs.mockImplementationOnce(async () => getByOrgResult);
 
       const result = await resolver.getMembers();
 
-      expect(spyOnServiceGetByOrg).toBeCalledTimes(1);
-      expect(spyOnServiceGetByOrg).toBeCalledWith(undefined);
+      expect(spyOnServiceGetByOrgs).toBeCalledTimes(1);
+      expect(spyOnServiceGetByOrgs).toBeCalledWith(undefined);
       expect(result).toEqual(getByOrgResult);
     });
   });

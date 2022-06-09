@@ -191,7 +191,7 @@ export class Mutations {
     orgParams,
     missingFieldError,
     invalidFieldsErrors,
-    requestHeaders = this.defaultUserRequestHeaders,
+    requestHeaders = this.defaultAdminRequestHeaders,
   }: {
     orgParams: CreateOrgParams;
     missingFieldError?: string;
@@ -225,7 +225,7 @@ export class Mutations {
     memberParams,
     missingFieldError,
     invalidFieldsErrors,
-    requestHeaders = this.defaultUserRequestHeaders,
+    requestHeaders = this.defaultAdminRequestHeaders,
   }: {
     memberParams: CreateMemberParams;
     missingFieldError?: string;
@@ -1331,6 +1331,7 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
+        console.log({ ex });
         return isResultValid({
           errors: ex.response.errors,
           missingFieldError,

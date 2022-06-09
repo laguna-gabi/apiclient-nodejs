@@ -385,18 +385,18 @@ export class Queries {
   };
 
   getMembers = async ({
-    orgId,
+    orgIds,
     requestHeaders = this.defaultUserRequestHeaders,
   }: {
-    orgId?: string;
+    orgIds?: string[];
     requestHeaders?;
   }): Promise<{ errors?; members? }> => {
     let errorsObject = {};
     const result = await this.client
       .request(
         gql`
-          query getMembers($orgId: String) {
-            getMembers(orgId: $orgId) {
+          query getMembers($orgIds: [String!]) {
+            getMembers(orgIds: $orgIds) {
               id
               name
               phone
@@ -422,7 +422,7 @@ export class Queries {
             }
           }
         `,
-        { orgId },
+        { orgIds },
         requestHeaders,
       )
       .catch((ex) => {

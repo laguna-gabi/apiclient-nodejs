@@ -164,9 +164,10 @@ export class MemberService extends AlertService {
     return this.getById(member._id);
   }
 
-  async getByOrg(orgId?: string): Promise<MemberSummary[]> {
-    const filter = orgId ? { org: new Types.ObjectId(orgId) } : {};
-
+  async getByOrgs(orgIds?: string[]): Promise<MemberSummary[]> {
+    const filter = orgIds?.length
+      ? { org: { $in: orgIds.map((orgId) => new Types.ObjectId(orgId)) } }
+      : {};
     let result = await this.memberModel.aggregate([
       { $match: filter },
       {

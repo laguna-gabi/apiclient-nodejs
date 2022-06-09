@@ -59,7 +59,7 @@ export class Creators {
   };
 
   createAndValidateOrg = async ({
-    requestHeaders = this.handler.defaultUserRequestHeaders,
+    requestHeaders = this.handler.defaultAdminRequestHeaders,
   }: { requestHeaders? } = {}): Promise<Org> => {
     const orgParams = generateOrgParams();
     const { id } = await this.handler.mutations.createOrg({ orgParams, requestHeaders });

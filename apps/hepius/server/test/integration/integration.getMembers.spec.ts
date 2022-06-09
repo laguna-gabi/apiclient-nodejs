@@ -31,7 +31,9 @@ describe('Integration tests : getMembers', () => {
     const memberConfig1 = await handler.queries.getMemberConfig({ id: member1.id });
     const memberConfig2 = await handler.queries.getMemberConfig({ id: member2.id });
 
-    const membersResult = await handler.queries.getMembers({ orgId: org.id });
+    const membersResult = await handler.queries.getMembers({
+      orgIds: [org.id],
+    });
 
     const compareResults = (
       result: MemberSummary,
@@ -92,7 +94,7 @@ describe('Integration tests : getMembers', () => {
       id: member.id,
       requestHeaders,
     });
-    const { errors, members } = await handler.queries.getMembers({ orgId: org.id });
+    const { errors, members } = await handler.queries.getMembers({ orgIds: [org.id] });
     expect(errors).toEqual(undefined);
     expect(members.length).toEqual(1);
     expect(Date.parse(members[0].firstLoggedInAt)).toEqual(journey.firstLoggedInAt.getTime());
@@ -133,7 +135,7 @@ describe('Integration tests : getMembers', () => {
     });
 
     const appointment = await creators.createAndValidateAppointment({ member });
-    const membersResult = await handler.queries.getMembers({ orgId: org.id });
+    const membersResult = await handler.queries.getMembers({ orgIds: [org.id] });
 
     const journey = await handler.queries.getRecentJourney({ memberId: member.id });
     expect(journey.scores.adherence).toBeGreaterThanOrEqual(1);

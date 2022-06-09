@@ -248,13 +248,13 @@ describe('MemberService', () => {
 
   describe('getMembers', () => {
     it('should return empty list for non existing orgId', async () => {
-      const result = await service.getByOrg(generateId());
+      const result = await service.getByOrgs([generateId()]);
       expect(result).toEqual([]);
     });
 
     it('should return empty list for no members on org', async () => {
       const orgId = await generateOrg();
-      const result = await service.getByOrg(orgId);
+      const result = await service.getByOrgs([orgId]);
       expect(result).toEqual([]);
     });
 
@@ -267,7 +267,7 @@ describe('MemberService', () => {
 
       await generateMember(orgId2);
 
-      const result = await service.getByOrg(orgId1);
+      const result = await service.getByOrgs([orgId1]);
       expect(result.length).toEqual(2);
       expect(result).toEqual(
         expect.arrayContaining([
@@ -285,7 +285,7 @@ describe('MemberService', () => {
       const { memberId: memberId1b } = await generateMember(orgId1);
       const { memberId: memberId2 } = await generateMember(orgId2);
 
-      const result = await service.getByOrg();
+      const result = await service.getByOrgs();
       expect(result.length).toBeGreaterThan(3);
       expect(result).toEqual(
         expect.arrayContaining([
@@ -301,7 +301,7 @@ describe('MemberService', () => {
       const orgId = await generateOrg();
 
       const { memberId } = await generateMember(orgId, primaryUserId);
-      const result = await service.getByOrg(orgId);
+      const result = await service.getByOrgs([orgId]);
       const member = await service.get(memberId);
       const memberConfig = await service.getMemberConfig(memberId);
       const primaryUser = await modelUser.findOne({ _id: primaryUserId });
@@ -342,7 +342,7 @@ describe('MemberService', () => {
       const memberId = createdMember.id;
       await modelJourney.create(mockGenerateJourney({ memberId }));
 
-      const result = await service.getByOrg(orgId);
+      const result = await service.getByOrgs([orgId]);
       const member = await service.get(memberId);
       const memberConfig = await service.getMemberConfig(memberId);
       const primaryUser = await modelUser.findById(primaryUserId);
@@ -377,7 +377,7 @@ describe('MemberService', () => {
       const { memberId, journeyId } = await generateMember(orgId);
       await generateAppointment({ memberId, userId, journeyId, status: AppointmentStatus.done });
 
-      const result = await service.getByOrg(orgId);
+      const result = await service.getByOrgs([orgId]);
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(
         expect.objectContaining({
@@ -422,7 +422,7 @@ describe('MemberService', () => {
         start: start2,
       });
 
-      const result = await service.getByOrg(orgId);
+      const result = await service.getByOrgs([orgId]);
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(
         expect.objectContaining({
@@ -471,7 +471,7 @@ describe('MemberService', () => {
       });
       await deletedAppointment.delete(new Types.ObjectId(userId2));
 
-      const result = await service.getByOrg(orgId);
+      const result = await service.getByOrgs([orgId]);
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(
         expect.objectContaining({
@@ -490,7 +490,7 @@ describe('MemberService', () => {
       start.setHours(start.getHours() + 4);
       const appointment = await generateAppointment({ userId, memberId, journeyId, start });
 
-      const result = await service.getByOrg(orgId);
+      const result = await service.getByOrgs([orgId]);
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(
         expect.objectContaining({
@@ -513,7 +513,7 @@ describe('MemberService', () => {
       }
 
       const startTime = performance.now();
-      const result = await service.getByOrg(orgId);
+      const result = await service.getByOrgs([orgId]);
       const endTime = performance.now();
       expect(result.length).toEqual(10);
       expect(endTime - startTime).toBeLessThan(1000);

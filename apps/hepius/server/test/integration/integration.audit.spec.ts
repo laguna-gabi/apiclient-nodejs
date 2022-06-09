@@ -497,11 +497,16 @@ describe('Integration tests : Audit', () => {
 
       const { id } = await handler.mutations.createMember({
         memberParams,
-        requestHeaders: generateRequestHeaders(user1.authId),
+        requestHeaders: generateRequestHeaders(adminUser1.authId),
       });
 
       expect(
-        await checkAuditValues<MemberDocument>(id, handler.memberModel, user1.id, user1.id),
+        await checkAuditValues<MemberDocument>(
+          id,
+          handler.memberModel,
+          adminUser1.id,
+          adminUser1.id,
+        ),
       ).toBeTruthy();
 
       const { id: cid } = await handler.communicationModel.findOne({
@@ -512,8 +517,8 @@ describe('Integration tests : Audit', () => {
         await checkAuditValues<CommunicationDocument>(
           cid,
           handler.communicationModel,
-          user1.id,
-          user1.id,
+          adminUser1.id,
+          adminUser1.id,
         ),
       ).toBeTruthy();
     });
@@ -545,7 +550,7 @@ describe('Integration tests : Audit', () => {
       handler.featureFlagService.spyOnFeatureFlagControlGroup.mockImplementationOnce(
         async () => true,
       );
-      const requestHeaders = generateRequestHeaders(user1.authId);
+      const requestHeaders = generateRequestHeaders(adminUser1.authId);
 
       const orgParams = generateOrgParams();
       const { id: orgId } = await handler.mutations.createOrg({ orgParams, requestHeaders });
@@ -556,8 +561,8 @@ describe('Integration tests : Audit', () => {
         await checkAuditValues<ControlMemberDocument>(
           id,
           handler.controlMemberModel,
-          user1.id,
-          user1.id,
+          adminUser1.id,
+          adminUser1.id,
         ),
       ).toBeTruthy();
     });

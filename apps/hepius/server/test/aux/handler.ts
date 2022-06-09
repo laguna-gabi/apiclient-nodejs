@@ -377,7 +377,6 @@ export class Handler extends BaseHandler {
   createMemberWithRetries = async ({ memberParams }: { memberParams: CreateMemberParams }) => {
     let result = await this.mutations.createMember({
       memberParams,
-      requestHeaders: this.defaultUserRequestHeaders,
     });
 
     if (!result) {
@@ -387,7 +386,6 @@ export class Handler extends BaseHandler {
 
       result = await this.mutations.createMember({
         memberParams,
-        requestHeaders: this.defaultUserRequestHeaders,
       });
 
       spyOnGetAvailableUsers.mockReset();

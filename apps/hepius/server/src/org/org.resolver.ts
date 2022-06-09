@@ -19,7 +19,8 @@ export class OrgResolver {
   constructor(private readonly orgService: OrgService) {}
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async createOrg(
     @Args(camelCase(CreateOrgParams.name))
     createOrgParams: CreateOrgParams,

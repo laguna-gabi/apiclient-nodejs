@@ -266,18 +266,6 @@ describe('Validations - member', () => {
         invalidFieldsError: params.error,
       });
     });
-
-    test.each`
-      field    | error
-      ${'123'} | ${Errors.get(ErrorType.memberOrgIdInvalid)}
-      ${123}   | ${stringError}
-    `(`should fail to get member by id - value $field is invalid`, async (params) => {
-      const { errors } = await handler.queries.getMembers({
-        orgId: params.field,
-      });
-
-      expect(errors[0].message).toContain(params.error);
-    });
   });
 
   describe('getMembersAppointments', () => {

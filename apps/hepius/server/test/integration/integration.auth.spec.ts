@@ -60,7 +60,7 @@ describe('Integration tests : RBAC / ACE', () => {
   // eslint-disable-next-line max-len
   it('expecting `member` to be denied access to a secure (`coach` only) endpoint (RBAC)', async () => {
     const { errors } = await handler.queries.getMembers({
-      orgId: handler.lagunaOrg.id,
+      orgIds: [handler.lagunaOrg.id],
       requestHeaders,
     });
 
@@ -188,4 +188,62 @@ describe('Integration tests : RBAC / ACE', () => {
       }
     },
   );
+
+  test.each([Access.allowed, Access.denied])(
+    // eslint-disable-next-line max-len
+    `expecting non-Laguna (customer) coach to be %p to query by org id based on org provisioning`,
+    async (access) => {
+      const {
+        user: { id: userId, authId, orgs },
+        member: { id: memberId },
+      } = await creators.createMemberUserAndOptionalOrg();
+
+      await handler.mutations.updateUser({
+        updateUserParams: generateUpdateUserParams({
+          id: userId,
+          roles: [UserRole.coach], // <- coach role
+          orgs,
+        }),
+        requestHeaders: handler.defaultAdminRequestHeaders,
+      });
+      const orgIds = access === Access.allowed ? orgs.map((org) => org.toString()) : [generateId()];
+      const result = await handler.queries.getMembers({
+        orgIds,
+        requestHeaders: generateRequestHeaders(authId),
+      });
+
+      // only the member for which this coach user is provisioned for will
+      if (access === Access.allowed) {
+        expect(result.members.length).toEqual(1);
+        expect(result.members[0].id).toEqual(memberId);
+      } else {
+        expect(result.members).toEqual(undefined);
+      }
+    },
+  );
+
+  // eslint-disable-next-line max-len
+  it(`expecting non-Laguna (customer) coach to be allowed to query by org id based on org provisioning - empty org list`, async () => {
+    const {
+      user: { id: userId, authId, orgs },
+      member: { id },
+    } = await creators.createMemberUserAndOptionalOrg();
+
+    await handler.mutations.updateUser({
+      updateUserParams: generateUpdateUserParams({
+        id: userId,
+        roles: [UserRole.coach], // <- coach role
+        orgs,
+      }),
+      requestHeaders: handler.defaultAdminRequestHeaders,
+    });
+
+    const result = await handler.queries.getMembers({
+      requestHeaders: generateRequestHeaders(authId),
+    });
+
+    // only the member for which this coach user is provisioned for will
+    expect(result.members.length).toEqual(1);
+    expect(result.members[0].id).toEqual(id);
+  });
 });

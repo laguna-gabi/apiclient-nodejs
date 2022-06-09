@@ -135,7 +135,8 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async createMember(
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
@@ -179,16 +180,17 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [MemberSummary])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.byOrg, idLocator: 'orgIds' })
   async getMembers(
     @Args(
-      'orgId',
-      { type: () => String, nullable: true },
+      'orgIds',
+      { type: () => [String], nullable: true },
       new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid), { nullable: true }),
     )
-    orgId?: string,
+    orgIds?: string[],
   ): Promise<MemberSummary[]> {
-    return this.memberService.getByOrg(orgId);
+    return this.memberService.getByOrgs(orgIds);
   }
 
   @Query(() => [AppointmentCompose])
@@ -210,6 +212,7 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
   async deleteMember(
     @Client('_id') userId,
     @Args(camelCase(DeleteMemberParams.name))
