@@ -76,6 +76,7 @@ export class CareService extends BaseService {
       {
         ...params,
         memberId: new Types.ObjectId(params.memberId),
+        journeyId: new Types.ObjectId(params.journeyId),
         type: new Types.ObjectId(params.type),
       },
       isNil,
@@ -83,9 +84,15 @@ export class CareService extends BaseService {
     return this.redFlagModel.create(createParams);
   }
 
-  async getMemberRedFlags(memberId: string): Promise<RedFlag[]> {
+  async getMemberRedFlags({
+    memberId,
+    journeyId,
+  }: {
+    memberId: string;
+    journeyId: string;
+  }): Promise<RedFlag[]> {
     return this.redFlagModel
-      .find({ memberId: new Types.ObjectId(memberId) })
+      .find({ memberId: new Types.ObjectId(memberId), journeyId: new Types.ObjectId(journeyId) })
       .populate([{ path: 'type', strictPopulate: false }]);
   }
 
@@ -123,13 +130,14 @@ export class CareService extends BaseService {
 
   async createBarrier(params: CreateBarrierParams): Promise<Barrier> {
     this.logger.info(params, CareService.name, this.createBarrier.name);
-    const { memberId, type, redFlagId } = params;
+    const { memberId, journeyId, type, redFlagId } = params;
     await this.validateBarrier(memberId, type, redFlagId);
 
     const createParams: Partial<CreateBarrierParams> = omitBy(
       {
         ...params,
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
         redFlagId: redFlagId ? new Types.ObjectId(redFlagId) : undefined,
         type: new Types.ObjectId(type),
       },
@@ -179,14 +187,22 @@ export class CareService extends BaseService {
     return result;
   }
 
-  async getMemberBarriers(memberId: string): Promise<Barrier[]> {
-    return this.barrierModel.find({ memberId: new Types.ObjectId(memberId) }).populate([
-      {
-        path: 'type',
-        strictPopulate: false,
-        populate: { path: 'carePlanTypes', strictPopulate: false },
-      },
-    ]);
+  async getMemberBarriers({
+    memberId,
+    journeyId,
+  }: {
+    memberId: string;
+    journeyId: string;
+  }): Promise<Barrier[]> {
+    return this.barrierModel
+      .find({ memberId: new Types.ObjectId(memberId), journeyId: new Types.ObjectId(journeyId) })
+      .populate([
+        {
+          path: 'type',
+          strictPopulate: false,
+          populate: { path: 'carePlanTypes', strictPopulate: false },
+        },
+      ]);
   }
 
   async getBarrier(id: string): Promise<Barrier> {
@@ -227,13 +243,14 @@ export class CareService extends BaseService {
 
   async createCarePlan(params: CreateCarePlanParams): Promise<CarePlan> {
     this.logger.info(params, CareService.name, this.createCarePlan.name);
-    const { memberId, type, barrierId } = params;
+    const { memberId, journeyId, type, barrierId } = params;
     const carePlanType = await this.validateCarePlan(type, barrierId, memberId);
 
     const createParams: Partial<CreateCarePlanParams> = omitBy(
       {
         ...params,
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
         barrierId: new Types.ObjectId(barrierId),
         type: new Types.ObjectId(carePlanType),
       },
@@ -289,9 +306,15 @@ export class CareService extends BaseService {
     return result;
   }
 
-  async getMemberCarePlans(memberId: string): Promise<CarePlan[]> {
+  async getMemberCarePlans({
+    memberId,
+    journeyId,
+  }: {
+    memberId: string;
+    journeyId: string;
+  }): Promise<CarePlan[]> {
     return this.carePlanModel
-      .find({ memberId: new Types.ObjectId(memberId) })
+      .find({ memberId: new Types.ObjectId(memberId), journeyId: new Types.ObjectId(journeyId) })
       .populate([{ path: 'type', strictPopulate: false }]);
   }
 
@@ -306,10 +329,7 @@ export class CareService extends BaseService {
     description: string;
     isCustom?: boolean;
   }): Promise<CarePlanType> {
-    return this.carePlanTypeModel.create({
-      description,
-      isCustom,
-    });
+    return this.carePlanTypeModel.create({ description, isCustom });
   }
 
   async getCarePlanType(id: string): Promise<CarePlanType> {

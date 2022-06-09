@@ -32,11 +32,15 @@ import {
   UserRole,
 } from '@argus/hepiusClient';
 import { EntityName } from '@argus/pandora';
+import { JourneyService } from '../journey';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
 export class CareResolver {
-  constructor(private readonly careService: CareService) {}
+  constructor(
+    private readonly careService: CareService,
+    private readonly journeyService: JourneyService,
+  ) {}
 
   /**************************************************************************************************
    ******************************************** Red Flag ********************************************
@@ -53,7 +57,8 @@ export class CareResolver {
     )
     memberId: string,
   ): Promise<RedFlag[]> {
-    return this.careService.getMemberRedFlags(memberId);
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.careService.getMemberRedFlags({ memberId, journeyId });
   }
 
   @Query(() => [RedFlagType])
@@ -89,7 +94,8 @@ export class CareResolver {
   async createBarrier(
     @Args(camelCase(CreateBarrierParams.name)) createBarrierParams: CreateBarrierParams,
   ): Promise<Barrier> {
-    return this.careService.createBarrier(createBarrierParams);
+    const { id: journeyId } = await this.journeyService.getRecent(createBarrierParams.memberId);
+    return this.careService.createBarrier({ ...createBarrierParams, journeyId });
   }
 
   @Mutation(() => Barrier)
@@ -112,7 +118,8 @@ export class CareResolver {
     )
     memberId: string,
   ): Promise<Barrier[]> {
-    return this.careService.getMemberBarriers(memberId);
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.careService.getMemberBarriers({ memberId, journeyId });
   }
 
   /**************************************************************************************************
@@ -132,7 +139,8 @@ export class CareResolver {
   async createCarePlan(
     @Args(camelCase(CreateCarePlanParams.name)) createCarePlanParams: CreateCarePlanParams,
   ): Promise<CarePlan> {
-    return this.careService.createCarePlan(createCarePlanParams);
+    const { id: journeyId } = await this.journeyService.getRecent(createCarePlanParams.memberId);
+    return this.careService.createCarePlan({ ...createCarePlanParams, journeyId });
   }
 
   @Mutation(() => CarePlan)
@@ -155,7 +163,8 @@ export class CareResolver {
     )
     memberId: string,
   ): Promise<CarePlan[]> {
-    return this.careService.getMemberCarePlans(memberId);
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.careService.getMemberCarePlans({ memberId, journeyId });
   }
 
   @Mutation(() => Boolean)
@@ -176,9 +185,11 @@ export class CareResolver {
   ): Promise<Identifiers> {
     const { memberId, redFlag } = submitCareWizardParams;
     const { barriers, ...redFlagParams } = redFlag;
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
     const { id: redFlagId } = await this.careService.createRedFlag({
       ...redFlagParams,
       memberId,
+      journeyId,
     });
     const submittedCarePlans = [];
     await Promise.all(
@@ -187,6 +198,7 @@ export class CareResolver {
         const { id: barrierId } = await this.careService.createBarrier({
           ...barrierParams,
           memberId,
+          journeyId,
           redFlagId,
         });
         await Promise.all(
@@ -194,6 +206,7 @@ export class CareResolver {
             const { id: carePlanId } = await this.careService.createCarePlan({
               ...carePlan,
               memberId,
+              journeyId,
               barrierId,
             });
             submittedCarePlans.push(carePlanId);

@@ -29,6 +29,8 @@ export class CreateBarrierParams extends BaseBarrierParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
+
+  journeyId?: string;
 }
 
 @InputType()

@@ -95,13 +95,14 @@ describe('CareService', () => {
 
     it('should get multiple red flags by memberId', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const type = await generateRedFlagType();
       const params = generateCreateRedFlagParams({ memberId, type });
       const { id } = await service.createRedFlag(params);
       const params2 = generateCreateRedFlagParams({ memberId, type });
       const { id: id2 } = await service.createRedFlag(params2);
 
-      const result = await service.getMemberRedFlags(memberId);
+      const result = await service.getMemberRedFlags({ memberId, journeyId });
       expect(result).toEqual([
         expect.objectContaining({
           ...params,
@@ -119,7 +120,10 @@ describe('CareService', () => {
     });
 
     it('should return empty list when there are no red flags for member', async () => {
-      const result = await service.getMemberRedFlags(generateId());
+      const result = await service.getMemberRedFlags({
+        memberId: generateId(),
+        journeyId: generateId(),
+      });
       expect(result).toEqual([]);
     });
 
@@ -188,14 +192,15 @@ describe('CareService', () => {
       'should create a barrier with and without red flag: %p',
       async (withRedFlag) => {
         const memberId = generateId();
-        const redFlagId = await generateRedFlag(memberId);
+        const journeyId = generateId();
+        const redFlagId = await generateRedFlag({ memberId, journeyId });
         const type = await generateBarrierType();
         const params = generateCreateBarrierParams({
           memberId,
           redFlagId: withRedFlag ? redFlagId : undefined,
           type: type,
         });
-        const { id } = await service.createBarrier(params);
+        const { id } = await service.createBarrier({ ...params, journeyId });
 
         const result = await service.getBarrier(id);
         expect(result).toEqual(
@@ -221,26 +226,28 @@ describe('CareService', () => {
 
     it('should fail to create a barrier with a wrong barrier type', async () => {
       const memberId = generateId();
-      const redFlagId = await generateRedFlag(memberId);
+      const journeyId = generateId();
+      const redFlagId = await generateRedFlag({ memberId, journeyId });
       const params = generateCreateBarrierParams({
         memberId,
         redFlagId,
         type: generateId(),
       });
-      await expect(service.createBarrier(params)).rejects.toThrow(
+      await expect(service.createBarrier({ ...params, journeyId })).rejects.toThrow(
         Error(Errors.get(ErrorType.barrierTypeNotFound)),
       );
     });
 
     it('should fail to create a barrier with a wrong redFlagId', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const type = await generateBarrierType();
       const params = generateCreateBarrierParams({
         memberId,
         redFlagId: generateId(),
         type: type,
       });
-      await expect(service.createBarrier(params)).rejects.toThrow(
+      await expect(service.createBarrier({ ...params, journeyId })).rejects.toThrow(
         Error(Errors.get(ErrorType.redFlagNotFound)),
       );
     });
@@ -253,37 +260,35 @@ describe('CareService', () => {
         redFlagId,
         type: type,
       });
-      await expect(service.createBarrier(params)).rejects.toThrow(
+      await expect(service.createBarrier({ ...params, journeyId: generateId() })).rejects.toThrow(
         Error(Errors.get(ErrorType.memberIdInconsistent)),
       );
     });
 
     it('should get multiple barriers by memberId', async () => {
       const memberId = generateId();
-      const redFlagId = await generateRedFlag(memberId);
+      const journeyId = generateId();
+      const redFlagId = await generateRedFlag({ memberId, journeyId });
       const type = await generateBarrierType();
       const params = generateCreateBarrierParams({
         memberId,
-
         redFlagId,
         type,
       });
-      const { id } = await service.createBarrier(params);
+      const { id } = await service.createBarrier({ ...params, journeyId });
       const params2 = generateCreateBarrierParams({
         memberId,
-
         redFlagId,
         type,
       });
-      const { id: id2 } = await service.createBarrier(params2);
+      const { id: id2 } = await service.createBarrier({ ...params2, journeyId });
 
-      const result = await service.getMemberBarriers(memberId);
+      const result = await service.getMemberBarriers({ memberId, journeyId });
       expect(result).toEqual([
         expect.objectContaining({
           ...params,
           status: BarrierStatus.active,
           memberId: new Types.ObjectId(memberId),
-
           redFlagId: new Types.ObjectId(redFlagId),
           type: expect.objectContaining({ id: type }),
           id,
@@ -301,15 +306,15 @@ describe('CareService', () => {
 
     it('should update barriers and set completedAt', async () => {
       const memberId = generateId();
-      const redFlagId = await generateRedFlag(memberId);
+      const journeyId = generateId();
+      const redFlagId = await generateRedFlag({ memberId, journeyId });
       const type = await generateBarrierType();
       const params = generateCreateBarrierParams({
         memberId,
-
         redFlagId,
         type,
       });
-      const { id } = await service.createBarrier(params);
+      const { id } = await service.createBarrier({ ...params, journeyId });
       const barrierBefore = await service.getBarrier(id);
       expect(barrierBefore.completedAt).toBeUndefined();
 
@@ -327,15 +332,15 @@ describe('CareService', () => {
       'should not override optional field %p when not set from params',
       async (param) => {
         const memberId = generateId();
-        const redFlagId = await generateRedFlag(memberId);
+        const journeyId = generateId();
+        const redFlagId = await generateRedFlag({ memberId, journeyId });
         const type = await generateBarrierType();
         const params = generateCreateBarrierParams({
           memberId,
-
           redFlagId,
           type,
         });
-        const { id } = await service.createBarrier(params);
+        const { id } = await service.createBarrier({ ...params, journeyId });
         const barrierBefore = await service.getBarrier(id);
         expect(barrierBefore.completedAt).toBeUndefined();
 
@@ -356,7 +361,10 @@ describe('CareService', () => {
     );
 
     it('should return empty list when there are no barriers for member', async () => {
-      const result = await service.getMemberBarriers(generateId());
+      const result = await service.getMemberBarriers({
+        memberId: generateId(),
+        journeyId: generateId(),
+      });
       expect(result).toEqual([]);
     });
 
@@ -420,7 +428,8 @@ describe('CareService', () => {
     describe('create', () => {
       it('should create a custom care plan', async () => {
         const memberId = generateId();
-        const barrierId = await generateBarrier(memberId);
+        const journeyId = generateId();
+        const barrierId = await generateBarrier({ memberId, journeyId });
         const custom = lorem.words(4);
         const carePlanTypeInput = generateCarePlanTypeInput({ custom });
         const params = generateCreateCarePlanParams({
@@ -428,7 +437,7 @@ describe('CareService', () => {
           barrierId,
           memberId,
         });
-        const { id } = await service.createCarePlan(params);
+        const { id } = await service.createCarePlan({ ...params, journeyId });
 
         const result = await service.getCarePlan(id);
         const carePlanType = await service.getCarePlanType(result.type.toString());
@@ -452,7 +461,8 @@ describe('CareService', () => {
 
       it('should create a care plan with a specific type', async () => {
         const memberId = generateId();
-        const barrierId = await generateBarrier(memberId);
+        const journeyId = generateId();
+        const barrierId = await generateBarrier({ memberId, journeyId });
         const carePlanTypeId = await generateCarePlanType();
         const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
         const params = generateCreateCarePlanParams({
@@ -460,7 +470,7 @@ describe('CareService', () => {
           barrierId,
           memberId,
         });
-        const { id } = await service.createCarePlan(params);
+        const { id } = await service.createCarePlan({ ...params, journeyId });
         const result = await service.getCarePlan(id);
 
         delete params.type;
@@ -478,7 +488,8 @@ describe('CareService', () => {
 
       it('should fail to create a care plan with a wrong care plan type', async () => {
         const memberId = generateId();
-        const barrierId = await generateBarrier(memberId);
+        const journeyId = generateId();
+        const barrierId = await generateBarrier({ memberId, journeyId });
 
         const params = generateCreateCarePlanParams({
           barrierId,
@@ -486,7 +497,7 @@ describe('CareService', () => {
           type: generateCarePlanTypeInput({ id: generateId() }),
         });
 
-        await expect(service.createCarePlan(params)).rejects.toThrow(
+        await expect(service.createCarePlan({ ...params, journeyId })).rejects.toThrow(
           Error(Errors.get(ErrorType.carePlanTypeNotFound)),
         );
       });
@@ -499,9 +510,9 @@ describe('CareService', () => {
           type: carePlanTypeInput,
         });
 
-        await expect(service.createCarePlan(params)).rejects.toThrow(
-          Error(Errors.get(ErrorType.barrierNotFound)),
-        );
+        await expect(
+          service.createCarePlan({ ...params, journeyId: generateId() }),
+        ).rejects.toThrow(Error(Errors.get(ErrorType.barrierNotFound)));
       });
 
       it('should fail to create a care plan with an inconsistent memberId', async () => {
@@ -513,9 +524,9 @@ describe('CareService', () => {
           type: carePlanTypeInput,
         });
 
-        await expect(service.createCarePlan(params)).rejects.toThrow(
-          Error(Errors.get(ErrorType.memberIdInconsistent)),
-        );
+        await expect(
+          service.createCarePlan({ ...params, journeyId: generateId() }),
+        ).rejects.toThrow(Error(Errors.get(ErrorType.memberIdInconsistent)));
       });
     });
 
@@ -524,23 +535,22 @@ describe('CareService', () => {
         const carePlanTypeId = await generateCarePlanType();
         const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
         const memberId = generateId();
-        const barrierId = await generateBarrier(memberId);
+        const journeyId = generateId();
+        const barrierId = await generateBarrier({ memberId, journeyId });
         const params = generateCreateCarePlanParams({
           memberId,
-
           type: carePlanTypeInput,
           barrierId,
         });
-        const { id } = await service.createCarePlan(params);
+        const { id } = await service.createCarePlan({ ...params, journeyId });
         const params2 = generateCreateCarePlanParams({
           memberId,
-
           type: carePlanTypeInput,
           barrierId,
         });
-        const { id: id2 } = await service.createCarePlan(params2);
+        const { id: id2 } = await service.createCarePlan({ ...params2, journeyId });
 
-        const result = await service.getMemberCarePlans(memberId);
+        const result = await service.getMemberCarePlans({ memberId, journeyId });
         delete params.type;
         delete params2.type;
         expect(result).toEqual([
@@ -548,7 +558,6 @@ describe('CareService', () => {
             ...params,
             memberId: new Types.ObjectId(params.memberId),
             barrierId: new Types.ObjectId(params.barrierId),
-
             type: expect.objectContaining({ id: carePlanTypeId }),
             id,
           }),
@@ -563,7 +572,10 @@ describe('CareService', () => {
       });
 
       it('should return empty list when there are no care plans for member', async () => {
-        const result = await service.getMemberCarePlans(generateId());
+        const result = await service.getMemberCarePlans({
+          memberId: generateId(),
+          journeyId: generateId(),
+        });
         expect(result).toEqual([]);
       });
     });
@@ -571,16 +583,16 @@ describe('CareService', () => {
     describe('update', () => {
       it('should update care plans and set completedAt', async () => {
         const memberId = generateId();
-        const barrierId = await generateBarrier(memberId);
+        const journeyId = generateId();
+        const barrierId = await generateBarrier({ memberId, journeyId });
         const carePlanTypeId = await generateCarePlanType();
         const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
         const params = generateCreateCarePlanParams({
           memberId,
-
           type: carePlanTypeInput,
           barrierId,
         });
-        const { id } = await service.createCarePlan(params);
+        const { id } = await service.createCarePlan({ ...params, journeyId });
         const carePlanBefore = await service.getCarePlan(id);
         expect(carePlanBefore.completedAt).toBeUndefined();
 
@@ -598,7 +610,8 @@ describe('CareService', () => {
         'should not override optional field %p when not set from params',
         async (param) => {
           const memberId = generateId();
-          const barrierId = await generateBarrier(memberId);
+          const journeyId = generateId();
+          const barrierId = await generateBarrier({ memberId, journeyId });
           const carePlanTypeId = await generateCarePlanType();
           const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
           const params = generateCreateCarePlanParams({
@@ -606,7 +619,7 @@ describe('CareService', () => {
             type: carePlanTypeInput,
             barrierId,
           });
-          const { id } = await service.createCarePlan(params);
+          const { id } = await service.createCarePlan({ ...params, journeyId });
           const carePlanBefore = await service.getCarePlan(id);
           expect(carePlanBefore.completedAt).toBeUndefined();
 
@@ -629,8 +642,9 @@ describe('CareService', () => {
     describe('delete', () => {
       it('should successfully delete a care plan', async () => {
         const memberId = generateId();
+        const journeyId = generateId();
         const userId = generateId();
-        const barrierId = await generateBarrier(memberId);
+        const barrierId = await generateBarrier({ memberId, journeyId });
         const carePlanTypeId = await generateCarePlanType();
         const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
         const params = generateCreateCarePlanParams({
@@ -638,7 +652,7 @@ describe('CareService', () => {
           type: carePlanTypeInput,
           barrierId,
         });
-        const { id } = await service.createCarePlan(params);
+        const { id } = await service.createCarePlan({ ...params, journeyId });
         const carePlanBefore = await service.getCarePlan(id);
         expect(carePlanBefore).not.toBeNull();
 
@@ -703,6 +717,7 @@ describe('CareService', () => {
       async (hard) => {
         const redFlagType = await generateRedFlagType();
         const memberId = generateId();
+        const journeyId = generateId();
         const redFlagParams = generateCreateRedFlagParams({ memberId, type: redFlagType });
         const { id: redFlagId } = await service.createRedFlag(redFlagParams);
         const barrierType = await generateBarrierType();
@@ -711,7 +726,7 @@ describe('CareService', () => {
           redFlagId,
           type: barrierType,
         });
-        const { id: barrierId } = await service.createBarrier(params);
+        const { id: barrierId } = await service.createBarrier({ ...params, journeyId });
 
         const carePlanTypeId = await generateCarePlanType();
         const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
@@ -720,7 +735,7 @@ describe('CareService', () => {
           barrierId,
           memberId,
         });
-        const { id: carePlanId } = await service.createCarePlan(carePlanParams);
+        const { id: carePlanId } = await service.createCarePlan({ ...carePlanParams, journeyId });
         const redFlag = await service.getRedFlag(redFlagId);
         const barrier = await service.getBarrier(barrierId);
         const carePlan = await service.getCarePlan(carePlanId);
@@ -757,6 +772,7 @@ describe('CareService', () => {
     it('should hard delete after soft delete - member care process (Red flags, barriers and care plans)', async () => {
       const redFlagType = await generateRedFlagType();
       const memberId = generateId();
+      const journeyId = generateId();
       const redFlagParams = generateCreateRedFlagParams({ memberId, type: redFlagType });
       const { id: redFlagId } = await service.createRedFlag(redFlagParams);
       const barrierType = await generateBarrierType();
@@ -765,7 +781,7 @@ describe('CareService', () => {
         redFlagId,
         type: barrierType,
       });
-      const { id: barrierId } = await service.createBarrier(params);
+      const { id: barrierId } = await service.createBarrier({ ...params, journeyId });
 
       const carePlanTypeId = await generateCarePlanType();
       const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
@@ -774,7 +790,7 @@ describe('CareService', () => {
         barrierId,
         memberId,
       });
-      const { id: carePlanId } = await service.createCarePlan(carePlanParams);
+      const { id: carePlanId } = await service.createCarePlan({ ...carePlanParams, journeyId });
       const redFlag = await service.getRedFlag(redFlagId);
       const barrier = await service.getBarrier(barrierId);
       const carePlan = await service.getCarePlan(carePlanId);
@@ -826,22 +842,28 @@ describe('CareService', () => {
     return id;
   };
 
-  const generateBarrier = async (memberId = generateId()): Promise<string> => {
-    const redFlagId = await generateRedFlag(memberId);
+  const generateBarrier = async ({
+    memberId = generateId(),
+    journeyId = generateId(),
+  } = {}): Promise<string> => {
+    const redFlagId = await generateRedFlag({ memberId, journeyId });
     const type = await generateBarrierType();
     const params = generateCreateBarrierParams({
       memberId,
       redFlagId,
       type,
     });
-    const { id } = await service.createBarrier(params);
+    const { id } = await service.createBarrier({ ...params, journeyId });
     return id;
   };
 
-  const generateRedFlag = async (memberId = generateId()): Promise<string> => {
+  const generateRedFlag = async ({
+    memberId = generateId(),
+    journeyId = generateId(),
+  } = {}): Promise<string> => {
     const type = await generateRedFlagType();
     const params = generateCreateRedFlagParams({ memberId, type });
-    const { id } = await service.createRedFlag(params);
+    const { id } = await service.createRedFlag({ ...params, journeyId });
     return id;
   };
 

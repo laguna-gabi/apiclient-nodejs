@@ -37,6 +37,7 @@ export const mockGenerateCaregiver = ({
 export const mockGenerateCarePlan = ({
   id = generateId(),
   memberId = generateObjectId(),
+  journeyId = generateObjectId(),
   createdAt = fakerDate.past(1),
   updatedAt = fakerDate.past(0.5),
   dueDate = fakerDate.future(0.5),
@@ -50,6 +51,7 @@ export const mockGenerateCarePlan = ({
   return {
     id,
     memberId,
+    journeyId,
     createdAt,
     updatedAt,
     dueDate,
@@ -77,6 +79,7 @@ export const mockGenerateCarePlanType = ({
 export const mockGenerateBarrier = ({
   id = generateId(),
   memberId = generateObjectId(),
+  journeyId = generateObjectId(),
   createdAt = fakerDate.past(1),
   updatedAt = fakerDate.past(0.5),
   status = BarrierStatus.active,
@@ -89,6 +92,7 @@ export const mockGenerateBarrier = ({
   return {
     id,
     memberId,
+    journeyId,
     createdAt,
     updatedAt,
     status,

@@ -8,20 +8,23 @@ import {
   HepiusMessagePatterns,
 } from '@argus/hepiusClient';
 import { CareService } from './care.service';
+import { JourneyService } from '../journey';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller()
 export class CareTcpController {
-  constructor(readonly careService: CareService) {}
+  constructor(readonly careService: CareService, private readonly journeyService: JourneyService) {}
 
   @MessagePattern({ cmd: HepiusMessagePatterns.getMemberCarePlans }, Transport.TCP)
   async getMemberCarePlans({ memberId }: { memberId: string }): Promise<CarePlan[]> {
-    return this.careService.getMemberCarePlans(memberId);
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.careService.getMemberCarePlans({ memberId, journeyId });
   }
 
   @MessagePattern({ cmd: HepiusMessagePatterns.getMemberBarriers }, Transport.TCP)
   async getMemberBarriers({ memberId }: { memberId: string }): Promise<Barrier[]> {
-    return this.careService.getMemberBarriers(memberId);
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    return this.careService.getMemberBarriers({ memberId, journeyId });
   }
 
   @MessagePattern({ cmd: HepiusMessagePatterns.createCarePlan }, Transport.TCP)
@@ -30,6 +33,7 @@ export class CareTcpController {
   }: {
     createCarePlanParams: CreateCarePlanParams;
   }): Promise<CarePlan> {
-    return this.careService.createCarePlan(createCarePlanParams);
+    const { id: journeyId } = await this.journeyService.getRecent(createCarePlanParams.memberId);
+    return this.careService.createCarePlan({ ...createCarePlanParams, journeyId });
   }
 }

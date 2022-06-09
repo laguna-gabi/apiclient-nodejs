@@ -537,7 +537,7 @@ describe('Integration tests: all', () => {
   });
 
   describe('delete member', () => {
-    test.each([false])('should delete a member ', async (hard) => {
+    test.each([false, true])('should delete a member ', async (hard) => {
       // setup
       const { member } = await creators.createMemberUserAndOptionalOrg();
       const appointment = await creators.createAndValidateAppointment({ member });
@@ -635,20 +635,20 @@ describe('Integration tests: all', () => {
       });
 
       // get all member's red flags, barriers and care plans
-      const memberRedFlags = await handler.queries.getMemberRedFlags({
+      await handler.queries.getMemberRedFlags({
         memberId: member.id,
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
-      expect(memberRedFlags.length).toEqual(0);
 
-      const memberBarriers = await handler.queries.getMemberBarriers({
+      await handler.queries.getMemberBarriers({
         memberId: member.id,
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
-      expect(memberBarriers.length).toEqual(0);
 
-      const memberCarePlans = await handler.queries.getMemberCarePlans({
+      await handler.queries.getMemberCarePlans({
         memberId: member.id,
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
-      expect(memberCarePlans.length).toEqual(0);
 
       await handler.queries.getActionItems({
         memberId: member.id,

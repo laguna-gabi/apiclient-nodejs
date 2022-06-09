@@ -47,6 +47,9 @@ export class BaseCare extends Identifier {
   @Field(() => String)
   memberId: Types.ObjectId;
 
+  @Prop({ index: true, type: Types.ObjectId })
+  journeyId: Types.ObjectId;
+
   @Prop({ type: Types.ObjectId })
   @Field(() => String, { nullable: true })
   createdBy?: Types.ObjectId;
@@ -179,4 +182,6 @@ export class CreateCarePlanParams extends BaseCarePlanParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
+
+  journeyId?: string;
 }

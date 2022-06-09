@@ -16,11 +16,13 @@ import {
 } from '..';
 import { CareModule, CareResolver, CareService } from '../../src/care';
 import { LoggerService } from '../../src/common';
+import { JourneyService } from '../../src/journey';
 
 describe('CareResolver', () => {
   let module: TestingModule;
   let service: CareService;
   let resolver: CareResolver;
+  let journeyService: JourneyService;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -30,6 +32,7 @@ describe('CareResolver', () => {
 
     resolver = module.get<CareResolver>(CareResolver);
     service = module.get<CareService>(CareService);
+    journeyService = module.get<JourneyService>(JourneyService);
     mockLogger(module.get<LoggerService>(LoggerService));
   });
 
@@ -42,11 +45,13 @@ describe('CareResolver', () => {
     let spyOnServiceGetMemberRedFlags;
     let spyOnServiceUpdateRedFlag;
     let spyOnServiceGetRedFlagTypes;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceGetMemberRedFlags = jest.spyOn(service, 'getMemberRedFlags');
       spyOnServiceUpdateRedFlag = jest.spyOn(service, 'updateRedFlag');
       spyOnServiceGetRedFlagTypes = jest.spyOn(service, 'getRedFlagTypes');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
       spyOnServiceUpdateRedFlag.mockImplementationOnce(async () => undefined);
     });
 
@@ -54,14 +59,17 @@ describe('CareResolver', () => {
       spyOnServiceGetMemberRedFlags.mockReset();
       spyOnServiceUpdateRedFlag.mockReset();
       spyOnServiceGetRedFlagTypes.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should get red flags by memberId', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
+      spyOnJourneyServiceGetRecent.mockReturnValueOnce({ id: journeyId });
       await resolver.getMemberRedFlags(memberId);
 
       expect(spyOnServiceGetMemberRedFlags).toBeCalledTimes(1);
-      expect(spyOnServiceGetMemberRedFlags).toBeCalledWith(memberId);
+      expect(spyOnServiceGetMemberRedFlags).toBeCalledWith({ memberId, journeyId });
     });
 
     it('should update a red flag', async () => {
@@ -83,12 +91,14 @@ describe('CareResolver', () => {
     let spyOnServiceUpdateBarrier;
     let spyOnServiceGetBarrierTypes;
     let spyOnServiceCreateBarrier;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceGetMemberBarriers = jest.spyOn(service, 'getMemberBarriers');
       spyOnServiceUpdateBarrier = jest.spyOn(service, 'updateBarrier');
       spyOnServiceCreateBarrier = jest.spyOn(service, 'createBarrier');
       spyOnServiceGetBarrierTypes = jest.spyOn(service, 'getBarrierTypes');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
       spyOnServiceUpdateBarrier.mockImplementationOnce(async () => true);
       spyOnServiceCreateBarrier.mockImplementationOnce(async () => undefined);
     });
@@ -98,22 +108,27 @@ describe('CareResolver', () => {
       spyOnServiceUpdateBarrier.mockReset();
       spyOnServiceCreateBarrier.mockReset();
       spyOnServiceGetBarrierTypes.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should create a barrier', async () => {
       const params = generateCreateBarrierParams();
+      const journeyId = generateId();
+      spyOnJourneyServiceGetRecent.mockReturnValueOnce({ id: journeyId });
       await resolver.createBarrier(params);
 
       expect(spyOnServiceCreateBarrier).toBeCalledTimes(1);
-      expect(spyOnServiceCreateBarrier).toBeCalledWith(params);
+      expect(spyOnServiceCreateBarrier).toBeCalledWith({ ...params, journeyId });
     });
 
     it('should get barriers by memberId', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
+      spyOnJourneyServiceGetRecent.mockReturnValueOnce({ id: journeyId });
       await resolver.getMemberBarriers(memberId);
 
       expect(spyOnServiceGetMemberBarriers).toBeCalledTimes(1);
-      expect(spyOnServiceGetMemberBarriers).toBeCalledWith(memberId);
+      expect(spyOnServiceGetMemberBarriers).toBeCalledWith({ memberId, journeyId });
     });
 
     it('should update a barrier', async () => {
@@ -136,6 +151,7 @@ describe('CareResolver', () => {
     let spyOnServiceUpdateCarePlan;
     let spyOnServiceGetCarePlanTypes;
     let spyOnServiceDeleteCarePlan;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceCreateCarePlan = jest.spyOn(service, 'createCarePlan');
@@ -143,6 +159,7 @@ describe('CareResolver', () => {
       spyOnServiceUpdateCarePlan = jest.spyOn(service, 'updateCarePlan');
       spyOnServiceGetCarePlanTypes = jest.spyOn(service, 'getCarePlanTypes');
       spyOnServiceDeleteCarePlan = jest.spyOn(service, 'deleteCarePlan');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
       spyOnServiceCreateCarePlan.mockImplementationOnce(async () => undefined);
       spyOnServiceUpdateCarePlan.mockImplementationOnce(async () => true);
       spyOnServiceDeleteCarePlan.mockImplementationOnce(async () => true);
@@ -154,22 +171,27 @@ describe('CareResolver', () => {
       spyOnServiceUpdateCarePlan.mockReset();
       spyOnServiceGetCarePlanTypes.mockReset();
       spyOnServiceDeleteCarePlan.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should create a care plan', async () => {
       const params = generateCreateCarePlanParams();
+      const journeyId = generateId();
+      spyOnJourneyServiceGetRecent.mockReturnValueOnce({ id: journeyId });
       await resolver.createCarePlan(params);
 
       expect(spyOnServiceCreateCarePlan).toBeCalledTimes(1);
-      expect(spyOnServiceCreateCarePlan).toBeCalledWith({ ...params });
+      expect(spyOnServiceCreateCarePlan).toBeCalledWith({ ...params, journeyId });
     });
 
     it('should get care plans by memberId', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
+      spyOnJourneyServiceGetRecent.mockReturnValueOnce({ id: journeyId });
       await resolver.getMemberCarePlans(memberId);
 
       expect(spyOnServiceGetMemberCarePlans).toBeCalledTimes(1);
-      expect(spyOnServiceGetMemberCarePlans).toBeCalledWith(memberId);
+      expect(spyOnServiceGetMemberCarePlans).toBeCalledWith({ memberId, journeyId });
     });
 
     it('should update a care plan', async () => {
@@ -204,11 +226,13 @@ describe('CareResolver', () => {
     let spyOnServiceCreateCarePlan;
     let spyOnServiceCreateBarrier;
     let spyOnServiceCreateRedFlag;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceCreateCarePlan = jest.spyOn(service, 'createCarePlan');
       spyOnServiceCreateRedFlag = jest.spyOn(service, 'createRedFlag');
       spyOnServiceCreateBarrier = jest.spyOn(service, 'createBarrier');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
       spyOnServiceCreateRedFlag.mockImplementation(async () => {
         return { id: generateId() };
       });
@@ -224,11 +248,13 @@ describe('CareResolver', () => {
       spyOnServiceCreateCarePlan.mockReset();
       spyOnServiceCreateBarrier.mockReset();
       spyOnServiceCreateRedFlag.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should get create all relevant entities from the wizard result', async () => {
       // setup wizard result
       const memberId = generateId();
+      const journeyId = generateId();
       const carePlan1 = generateCreateCarePlanParamsWizard();
       const carePlan2 = generateCreateCarePlanParamsWizard();
       const carePlan3 = generateCreateCarePlanParamsWizard();
@@ -239,6 +265,7 @@ describe('CareResolver', () => {
       const redFlag = generateCreateRedFlagParamsWizard({
         barriers: [barrier1, barrier2],
       });
+      spyOnJourneyServiceGetRecent.mockReturnValueOnce({ id: journeyId });
       const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
 
       const result = await resolver.submitCareWizard(wizardParams);
@@ -247,7 +274,7 @@ describe('CareResolver', () => {
       // test red flags
       delete redFlag.barriers;
       expect(spyOnServiceCreateRedFlag).toHaveBeenCalledTimes(1);
-      expect(spyOnServiceCreateRedFlag).toBeCalledWith({ ...redFlag, memberId });
+      expect(spyOnServiceCreateRedFlag).toBeCalledWith({ ...redFlag, memberId, journeyId });
 
       // test barriers
       expect(spyOnServiceCreateBarrier).toHaveBeenCalledTimes(2);
@@ -256,6 +283,7 @@ describe('CareResolver', () => {
         expect(spyOnServiceCreateBarrier).toHaveBeenCalledWith({
           ...barrier,
           memberId,
+          journeyId,
           redFlagId: expect.any(String),
         });
       }
@@ -266,6 +294,7 @@ describe('CareResolver', () => {
         expect(spyOnServiceCreateCarePlan).toHaveBeenCalledWith({
           ...carePlan,
           memberId,
+          journeyId,
           barrierId: expect.any(String),
         });
       }

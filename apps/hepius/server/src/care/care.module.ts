@@ -18,9 +18,11 @@ import { CareTcpController } from './care.tcp.controller';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ChangeEventFactoryProvider } from '../db';
 import { EntityName } from '@argus/pandora';
+import { JourneyModule } from '../journey';
 @Module({
   imports: [
     CommonModule,
+    JourneyModule,
     MongooseModule.forFeature([
       { name: CarePlanType.name, schema: CarePlanTypeDto },
       { name: BarrierType.name, schema: BarrierTypeDto },

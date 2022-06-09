@@ -26,6 +26,8 @@ export class CreateRedFlagParams extends BaseRedFlagParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
+
+  journeyId?: string;
 }
 
 @InputType()
