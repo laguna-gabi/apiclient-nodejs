@@ -609,22 +609,24 @@ export const generateSetActionItemParams = ({
 export const generateRequestAppointmentParams = ({
   userId = generateId(),
   memberId = generateId(),
+  journeyId,
   notBefore = fakerDate.soon(3),
 }: Partial<RequestAppointmentParams> = {}): RequestAppointmentParams => {
-  return { userId, memberId, notBefore };
+  return { userId, memberId, journeyId, notBefore };
 };
 
 export const generateScheduleAppointmentParams = ({
   id,
   userId = generateId(),
   memberId = generateId(),
+  journeyId,
   method = AppointmentMethod.chat,
   start = fakerDate.soon(4),
   end,
 }: Partial<ScheduleAppointmentParams> = {}): ScheduleAppointmentParams => {
   const endNew = new Date(start);
   endNew.setHours(endNew.getHours() + 2);
-  return { id, userId, memberId, method, start, end: end || endNew };
+  return { id, userId, memberId, journeyId, method, start, end: end || endNew };
 };
 
 export const generateEndAppointmentParams = ({

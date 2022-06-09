@@ -31,6 +31,7 @@ import {
   UpdatedAppointmentAction,
 } from '../../src/common';
 import { Appointment, AppointmentMethod, AppointmentStatus } from '@argus/hepiusClient';
+import { JourneyModule, JourneyService } from '../../src/journey';
 
 // mock uuid.v4
 jest.mock('uuid', () => {
@@ -44,6 +45,7 @@ describe('AppointmentResolver', () => {
   let resolver: AppointmentResolver;
   let controller: AppointmentController;
   let service: AppointmentService;
+  let journeyService: JourneyService;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter;
   const fakeUUID = datatype.uuid();
@@ -51,12 +53,13 @@ describe('AppointmentResolver', () => {
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      imports: defaultModules().concat(AppointmentModule),
+      imports: defaultModules().concat(AppointmentModule, JourneyModule),
     }).compile();
 
     resolver = module.get<AppointmentResolver>(AppointmentResolver);
     controller = module.get<AppointmentController>(AppointmentController);
     service = module.get<AppointmentService>(AppointmentService);
+    journeyService = module.get<JourneyService>(JourneyService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     mockLogger(module.get<LoggerService>(LoggerService));
@@ -72,21 +75,25 @@ describe('AppointmentResolver', () => {
   describe('requestAppointment', () => {
     let spyOnServiceInsert;
     let spyOnServiceGet;
+    let spyOnJourneyServiceGetRecent;
+
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'request');
       spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceInsert.mockReset();
       spyOnServiceGet.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
     it('should create an appointment', async () => {
       const params = generateRequestAppointmentParams();
+      const journeyId = generateId();
       const id = generateId();
-
       const appointment = {
         ...params,
         id,
@@ -95,17 +102,23 @@ describe('AppointmentResolver', () => {
         link: generateAppointmentLink(id),
       };
       spyOnServiceInsert.mockImplementationOnce(async () => appointment);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       await resolver.requestAppointment(appointment);
 
+      expect(spyOnJourneyServiceGetRecent).toHaveBeenCalledWith(params.memberId);
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith(appointment);
+      expect(spyOnServiceInsert).toHaveBeenCalledWith({
+        ...appointment,
+        journeyId,
+      });
       expect(spyOnEventEmitter).toBeCalled();
     });
   });
 
   describe('getAppointment', () => {
     let spyOnServiceGet;
+
     beforeEach(() => {
       spyOnServiceGet = jest.spyOn(service, 'get');
     });
@@ -137,23 +150,28 @@ describe('AppointmentResolver', () => {
   describe('scheduleAppointment', () => {
     let spyOnServiceSchedule;
     let spyOnServiceGet;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceSchedule = jest.spyOn(service, 'schedule');
       spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceSchedule.mockReset();
       spyOnServiceGet.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
     it('should not notify user & member for past appointments', async () => {
+      const journeyId = generateId();
       const appointment = generateScheduleAppointmentParams({
         start: addMinutes(new Date(), -10),
         end: addMinutes(new Date(), 20),
       });
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       await resolver.scheduleAppointment(appointment);
 
@@ -190,19 +208,27 @@ describe('AppointmentResolver', () => {
       ${'resolver'}   | ${async (appointment) => await resolver.scheduleAppointment(appointment)}
       ${'controller'} | ${async (appointment) => await controller.scheduleAppointment(appointment)}
     `(`should get an appointment via $type for a given id`, async (params) => {
+      const journeyId = generateId();
       const appointment = generateScheduleAppointmentParams();
       const mockResult = { ...appointment, status: AppointmentStatus.scheduled, id: generateId() };
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
       spyOnServiceSchedule.mockImplementationOnce(async () => mockResult);
       spyOnServiceGet.mockImplementationOnce(async () => undefined);
 
       const result = await params.method(appointment);
 
       expect(result).toEqual(mockResult);
+      expect(spyOnServiceSchedule).toBeCalledWith({
+        ...appointment,
+        journeyId,
+      });
     });
 
     it(`should not allow editing appointment on status=${AppointmentStatus.done}`, async () => {
+      const journeyId = generateId();
       const appointment = generateScheduleAppointmentParams();
       const mockResult = { ...appointment, status: AppointmentStatus.scheduled, id: generateId() };
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
       spyOnServiceSchedule.mockImplementationOnce(async () => mockResult);
 
       const result = await resolver.scheduleAppointment(appointment);
@@ -220,8 +246,10 @@ describe('AppointmentResolver', () => {
     });
 
     it(`should allow editing ${AppointmentStatus.scheduled} appointment`, async () => {
+      const journeyId = generateId();
       const appointment = generateScheduleAppointmentParams();
       const mockResult = { ...appointment, status: AppointmentStatus.scheduled, id: generateId() };
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
       spyOnServiceSchedule.mockImplementationOnce(async () => mockResult);
       spyOnServiceGet.mockImplementationOnce(async () => undefined);
 
@@ -236,12 +264,15 @@ describe('AppointmentResolver', () => {
     });
 
     it('should validate that on schedule appointment, internal events are sent', async () => {
+      const journeyId = generateId();
       const status = AppointmentStatus.scheduled;
       const appointment = generateScheduleAppointmentParams();
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
       spyOnServiceSchedule.mockImplementationOnce(async () => ({ ...appointment, status }));
       spyOnServiceGet.mockImplementationOnce(async () => undefined);
 
       const result = await resolver.scheduleAppointment(appointment);
+
       const eventParams: IEventOnUpdatedAppointment = {
         updatedAppointmentAction: UpdatedAppointmentAction.edit,
         memberId: result.memberId.toString(),
@@ -399,17 +430,20 @@ describe('AppointmentResolver', () => {
     let spyOnServiceGetFutureAppointments;
     let spyOnScheduleAppointment;
     let spyOnRequestAppointment;
+    let spyOnJourneyServiceGetRecent;
 
     beforeEach(() => {
       spyOnServiceGetFutureAppointments = jest.spyOn(service, 'getFutureAppointments');
       spyOnScheduleAppointment = jest.spyOn(resolver, 'scheduleAppointment');
       spyOnRequestAppointment = jest.spyOn(resolver, 'requestAppointment');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceGetFutureAppointments.mockReset();
       spyOnScheduleAppointment.mockReset();
       spyOnRequestAppointment.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
@@ -418,6 +452,7 @@ describe('AppointmentResolver', () => {
       const oldUserId = generateId();
       const newUserId = generateId();
       const memberId = generateId();
+      const journeyId = generateId();
 
       const mockAppointments = [];
       for (let step = 0; step < 5; step++) {
@@ -426,6 +461,7 @@ describe('AppointmentResolver', () => {
         mockAppointments.push(appointment);
       }
       spyOnServiceGetFutureAppointments.mockImplementationOnce(async () => mockAppointments);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const params: IEventOnUpdatedUserCommunication = {
         oldUserId,
@@ -451,10 +487,12 @@ describe('AppointmentResolver', () => {
       const oldUserId = generateId();
       const newUserId = generateId();
       const memberId = generateId();
+      const journeyId = generateId();
 
       const appointment = generateScheduleAppointmentParams({ userId: oldUserId, memberId });
       appointment['status'] = AppointmentStatus.requested;
       spyOnServiceGetFutureAppointments.mockImplementationOnce(async () => [appointment]);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const params: IEventOnUpdatedUserCommunication = {
         oldUserId,
@@ -483,7 +521,9 @@ describe('AppointmentResolver', () => {
     });
 
     it("shouldn't reschedule appointments if there are no future appointments", async () => {
+      const journeyId = generateId();
       spyOnServiceGetFutureAppointments.mockImplementationOnce(async () => []);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const params: IEventOnUpdatedUserCommunication = {
         oldUserId: generateId(),

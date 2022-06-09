@@ -8,7 +8,6 @@ import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
 import { Alert, AlertType, DismissedAlert, DismissedAlertDocument } from '../../src/common';
-import { AppointmentDocument } from '../appointment';
 import {
   AlertService,
   DbErrors,
@@ -58,8 +57,6 @@ export class MemberService extends AlertService {
       ISoftDelete<MemberConfigDocument>,
     @InjectModel(ControlMember.name)
     private readonly controlMemberModel: Model<ControlMemberDocument>,
-    @InjectModel(Appointment.name)
-    private readonly appointmentModel: Model<AppointmentDocument>,
     @InjectModel(Insurance.name)
     private readonly insuranceModel: Model<InsuranceDocument> & ISoftDelete<InsuranceDocument>,
     @InjectModel(DismissedAlert.name)
@@ -199,6 +196,14 @@ export class MemberService extends AlertService {
         },
       },
       {
+        $lookup: {
+          from: 'appointments',
+          localField: 'recentJourney._id',
+          foreignField: 'journeyId',
+          as: 'appointments',
+        },
+      },
+      {
         $project: {
           id: '$_id',
           name: { $concat: ['$firstName', ' ', '$lastName'] },
@@ -216,18 +221,29 @@ export class MemberService extends AlertService {
           firstLoggedInAt: '$recentJourney.firstLoggedInAt',
           isGraduated: '$recentJourney.isGraduated',
           graduationDate: '$recentJourney.graduationDate',
+          appointments: {
+            $filter: {
+              input: '$appointments',
+              as: 'appointments',
+              cond: { $eq: ['$$appointments.deleted', false] },
+            },
+          },
         },
       },
     ]);
 
     result = await this.memberModel.populate(result, [
-      { path: 'users', options: { populate: 'appointments' } },
+      {
+        path: 'users',
+        options: { populate: 'appointments' },
+      },
       { path: 'org' },
     ]);
-
     return result.map((item) => {
-      const { appointmentsCount, nextAppointment } = this.calculateAppointments(item);
-      const primaryUser = item.users.filter((user) => user.id === item.primaryUserId.toString())[0];
+      const { appointmentsCount, nextAppointment } = this.calculateAppointments(item.appointments);
+      const [primaryUser] = item.users.filter((user) => user.id === item.primaryUserId.toString());
+
+      delete item.primaryUserId;
       delete item.users;
       delete item._id;
 
@@ -240,23 +256,41 @@ export class MemberService extends AlertService {
     startDate.setDate(startDate.getDate() - queryDaysLimit.getMembersAppointments);
 
     return this.memberModel.aggregate([
-      {
-        $project: {
-          _id: 0,
-          members: '$$ROOT',
-        },
-      },
-      { $match: orgId ? { 'members.org': new Types.ObjectId(orgId) } : {} },
+      { $match: orgId ? { org: new Types.ObjectId(orgId) } : {} },
       {
         $lookup: {
-          localField: 'members._id',
+          from: 'journeys',
+          localField: '_id',
+          foreignField: 'memberId',
+          as: 'journeys',
+        },
+      },
+      { $addFields: { recentJourney: { $last: '$journeys' } } },
+      {
+        $lookup: {
+          localField: '_id',
           from: 'appointments',
           foreignField: 'memberId',
           as: 'a',
         },
       },
       { $unwind: { path: '$a' } },
-      { $match: { 'a.deleted': false, 'a.start': { $gt: startDate } } },
+      {
+        $match: {
+          'a.deleted': false,
+          'a.start': { $gt: startDate },
+          $expr: {
+            $eq: [
+              {
+                $toObjectId: '$a.journeyId',
+              },
+              {
+                $toObjectId: '$recentJourney._id',
+              },
+            ],
+          },
+        },
+      },
       {
         $lookup: {
           localField: 'a.userId',
@@ -269,8 +303,9 @@ export class MemberService extends AlertService {
       { $sort: { 'a.start': -1 } },
       {
         $project: {
-          memberId: '$members._id',
-          memberName: { $concat: ['$members.firstName', ' ', '$members.lastName'] },
+          _id: 0,
+          memberId: '$_id',
+          memberName: { $concat: ['$firstName', ' ', '$lastName'] },
           userId: '$a.userId',
           userName: { $concat: ['$u.firstName', ' ', '$u.lastName'] },
           start: '$a.start',
@@ -571,17 +606,9 @@ export class MemberService extends AlertService {
   }
 
   private calculateAppointments = (
-    member: Member,
+    appointments: Appointment[],
   ): { appointmentsCount: number; nextAppointment: Date } => {
-    const allAppointments = member.users
-      .map((user) => user.appointments)
-      .reduce((acc = [], current) => acc.concat(current), [])
-      .filter(
-        (app: AppointmentDocument) =>
-          app.memberId.toString() === member.id.toString() && !app.get('deleted'),
-      );
-
-    const nextAppointment = allAppointments
+    const nextAppointment = appointments
       .filter(
         (appointment) =>
           appointment?.status === AppointmentStatus.scheduled &&
@@ -591,7 +618,7 @@ export class MemberService extends AlertService {
         appointment1.start.getTime() > appointment2.start.getTime() ? 1 : -1,
       )[0]?.start;
 
-    const appointmentsCount = allAppointments.filter(
+    const appointmentsCount = appointments.filter(
       (appointment) => appointment?.status !== AppointmentStatus.requested,
     ).length;
 

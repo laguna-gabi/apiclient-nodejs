@@ -33,6 +33,8 @@ export class RequestAppointmentParams {
   @IsString()
   @IsOptional()
   id?: string;
+
+  journeyId?: string;
 }
 
 @InputType()
@@ -74,6 +76,8 @@ export class ScheduleAppointmentParams {
   @IsString() /* for rest api */
   @IsOptional() /* for rest api */
   id?: string;
+
+  journeyId?: string;
 }
 
 /**************************************************************************************************

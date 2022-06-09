@@ -10,6 +10,7 @@ import {
 } from '.';
 import { CommonModule, DismissedAlert, DismissedAlertDto } from '../common';
 import { CommunicationModule } from '../communication';
+import { JourneyModule } from '../journey';
 import { OrgModule } from '../org';
 import { ProvidersModule } from '../providers';
 import { Recording, RecordingDto } from '../recording';
@@ -19,6 +20,7 @@ import { Recording, RecordingDto } from '../recording';
     ProvidersModule,
     CommunicationModule,
     CommonModule,
+    JourneyModule,
     MongooseModule.forFeature([
       { name: Appointment.name, schema: AppointmentDto },
       { name: Notes.name, schema: NotesDto },

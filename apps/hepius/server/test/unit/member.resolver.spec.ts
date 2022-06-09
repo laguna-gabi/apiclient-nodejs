@@ -90,6 +90,7 @@ import {
 } from '../../src/questionnaire';
 import { UserService } from '../../src/user';
 import { TodoService } from '../../src/todo';
+import { AppointmentService } from '../../src/appointment';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -98,6 +99,7 @@ describe('MemberResolver', () => {
   let userService: UserService;
   let todoService: TodoService;
   let questionnaireService: QuestionnaireService;
+  let appointmentService: AppointmentService;
   let storage: StorageService;
   let cognitoService: CognitoService;
   let communicationResolver: CommunicationResolver;
@@ -120,6 +122,7 @@ describe('MemberResolver', () => {
     userService = module.get<UserService>(UserService);
     todoService = module.get<TodoService>(TodoService);
     questionnaireService = module.get<QuestionnaireService>(QuestionnaireService);
+    appointmentService = module.get<AppointmentService>(AppointmentService);
     storage = module.get<StorageService>(StorageService);
     cognitoService = module.get<CognitoService>(CognitoService);
     oneSignal = module.get<OneSignal>(OneSignal);
@@ -1619,30 +1622,39 @@ describe('MemberResolver', () => {
     let spyOnServiceGetAlerts;
     let spyOnActionItemsServiceGetAlerts;
     let spyOnTodoServiceGetAlerts;
+    let spyOnAppointmentServiceGetAlerts;
     let spyOnQuestionnareServiceGetAlerts;
     let spyOnServiceGetUserMembers;
+    let spyOnJourneyServiceGetRecent;
+
     beforeEach(() => {
       spyOnServiceGetAlerts = jest.spyOn(service, 'getAlerts');
       spyOnActionItemsServiceGetAlerts = jest.spyOn(journeyService, 'getAlerts');
       spyOnTodoServiceGetAlerts = jest.spyOn(todoService, 'getAlerts');
+      spyOnAppointmentServiceGetAlerts = jest.spyOn(appointmentService, 'getAlerts');
       spyOnQuestionnareServiceGetAlerts = jest.spyOn(questionnaireService, 'getAlerts');
       spyOnServiceGetUserMembers = jest.spyOn(service, 'getUserMembers');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceGetAlerts.mockReset();
       spyOnActionItemsServiceGetAlerts.mockReset();
       spyOnTodoServiceGetAlerts.mockReset();
+      spyOnAppointmentServiceGetAlerts.mockReset();
       spyOnQuestionnareServiceGetAlerts.mockReset();
       spyOnServiceGetUserMembers.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should call getAlerts', async () => {
+      const journeyId = generateId();
       const userId = generateId();
       const lastQueryAlert = date.past(1);
       const alert = mockGenerateAlert();
       const actionItemsAlert = mockGenerateAlert();
       const todoAlert = mockGenerateAlert();
+      const appointmentAlert = mockGenerateAlert();
       const questionnaireAlert = mockGenerateQuestionnaireResponse();
 
       const members = [mockGenerateMember()];
@@ -1650,13 +1662,21 @@ describe('MemberResolver', () => {
       spyOnServiceGetAlerts.mockResolvedValue([alert]);
       spyOnActionItemsServiceGetAlerts.mockResolvedValue([actionItemsAlert]);
       spyOnTodoServiceGetAlerts.mockResolvedValue([todoAlert]);
+      spyOnAppointmentServiceGetAlerts.mockResolvedValue([appointmentAlert]);
       spyOnQuestionnareServiceGetAlerts.mockResolvedValue([questionnaireAlert]);
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       const alerts = await resolver.getAlerts(userId, lastQueryAlert);
 
       expect(spyOnServiceGetAlerts).toBeCalledTimes(1);
       expect(spyOnServiceGetAlerts).toBeCalledWith(userId, members, lastQueryAlert);
-      expect(alerts).toEqual([alert, actionItemsAlert, todoAlert, questionnaireAlert]);
+      expect(alerts).toEqual([
+        alert,
+        actionItemsAlert,
+        todoAlert,
+        appointmentAlert,
+        questionnaireAlert,
+      ]);
     });
   });
 

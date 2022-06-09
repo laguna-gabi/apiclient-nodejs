@@ -38,6 +38,7 @@ import {
   LoggerService,
   defaultTimestampsDbValues,
 } from '../../src/common';
+import { JourneyModule, JourneyService } from '../../src/journey';
 import { MemberModule } from '../../src/member';
 import {
   Recording,
@@ -52,6 +53,7 @@ import { mockGenerateMember } from '../generators';
 describe('AppointmentService', () => {
   let module: TestingModule;
   let service: AppointmentService;
+  let journeyService: JourneyService;
   let recordingService: RecordingService;
   let eventEmitter: EventEmitter2;
   let appointmentModel: Model<AppointmentDocument & defaultTimestampsDbValues>;
@@ -62,10 +64,16 @@ describe('AppointmentService', () => {
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      imports: defaultModules().concat(AppointmentModule, RecordingModule, MemberModule),
+      imports: defaultModules().concat(
+        AppointmentModule,
+        RecordingModule,
+        MemberModule,
+        JourneyModule,
+      ),
     }).compile();
 
     service = module.get<AppointmentService>(AppointmentService);
+    journeyService = module.get<JourneyService>(JourneyService);
     recordingService = module.get<RecordingService>(RecordingService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     mockLogger(module.get<LoggerService>(LoggerService));
@@ -163,10 +171,12 @@ describe('AppointmentService', () => {
     it('should update an appointment notBefore for an existing memberId and userId', async () => {
       const memberId = generateId();
       const userId = generateId();
+      const journeyId = generateId();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId,
         userId,
+        journeyId,
         notBeforeHours: 12,
       });
       validateNewAppointmentEvent(memberId, userId, id1);
@@ -178,6 +188,7 @@ describe('AppointmentService', () => {
       } = await requestAppointment({
         memberId,
         userId,
+        journeyId,
         notBeforeHours: 8,
       });
       expect(spyOnEventEmitter).not.toBeCalled();
@@ -222,12 +233,14 @@ describe('AppointmentService', () => {
 
     it('should crate a new appointment for an existing memberId and different userId', async () => {
       const memberId = generateId();
+      const journeyId = generateId();
       const userId1 = generateId();
       const userId2 = generateId();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId,
         userId: userId1,
+        journeyId,
         notBeforeHours: 5,
       });
       validateNewAppointmentEvent(memberId, userId1, id1);
@@ -235,6 +248,7 @@ describe('AppointmentService', () => {
       const { id: id2, record: record2 } = await requestAppointment({
         memberId,
         userId: userId2,
+        journeyId,
         notBeforeHours: 2,
       });
       validateNewAppointmentEvent(memberId, userId2, id2);
@@ -246,12 +260,15 @@ describe('AppointmentService', () => {
 
     it('should crate a new appointment for an existing userId and different memberId', async () => {
       const memberId1 = generateId();
+      const journeyId1 = generateId();
       const memberId2 = generateId();
+      const journeyId2 = generateId();
       const userId = generateId();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId: memberId1,
         userId,
+        journeyId: journeyId1,
         notBeforeHours: 5,
       });
       validateNewAppointmentEvent(memberId1, userId, id1);
@@ -259,6 +276,7 @@ describe('AppointmentService', () => {
       const { id: id2, record: record2 } = await requestAppointment({
         memberId: memberId2,
         userId,
+        journeyId: journeyId2,
         notBeforeHours: 2,
       });
       validateNewAppointmentEvent(memberId2, userId, id2);
@@ -446,7 +464,8 @@ describe('AppointmentService', () => {
     );
 
     it('should override requested appointment on scheduled appointment', async () => {
-      const requestAppointmentParams = generateRequestAppointmentParams();
+      const journeyId = generateId();
+      const requestAppointmentParams = generateRequestAppointmentParams({ journeyId });
       const { id } = await service.request(requestAppointmentParams);
 
       validateNewAppointmentEvent(
@@ -459,6 +478,7 @@ describe('AppointmentService', () => {
       const scheduleAppointmentParams = generateScheduleAppointmentParams({
         userId: requestAppointmentParams.userId,
         memberId: requestAppointmentParams.memberId,
+        journeyId: requestAppointmentParams.journeyId,
       });
 
       const { id: scheduledId } = await service.schedule(scheduleAppointmentParams);
@@ -468,12 +488,14 @@ describe('AppointmentService', () => {
     });
 
     it('should override requested appointment when calling schedule appointment', async () => {
-      const requestAppointmentParams = generateRequestAppointmentParams();
+      const journeyId = generateId();
+      const requestAppointmentParams = generateRequestAppointmentParams({ journeyId });
       const { id: requestedId } = await service.request(requestAppointmentParams);
 
       const scheduledAppointmentParams = generateScheduleAppointmentParams({
         memberId: requestAppointmentParams.memberId,
         userId: requestAppointmentParams.userId,
+        journeyId: requestAppointmentParams.journeyId,
       });
       const { id: scheduledId } = await service.schedule(scheduledAppointmentParams);
 
@@ -670,6 +692,7 @@ describe('AppointmentService', () => {
     it('should get only future appointments that are not of status done', async () => {
       const userId = generateId();
       const memberId = generateId();
+      const journeyId = generateId();
 
       // schedule past appointments
       const pastAppointments = [];
@@ -677,6 +700,7 @@ describe('AppointmentService', () => {
         const pastAppointment = generateScheduleAppointmentParams({
           userId,
           memberId,
+          journeyId,
           start: subDays(new Date(), step),
         });
         pastAppointments.push(await service.schedule(pastAppointment));
@@ -688,6 +712,7 @@ describe('AppointmentService', () => {
         const futureAppointment = generateScheduleAppointmentParams({
           userId,
           memberId,
+          journeyId,
           start: addDays(new Date(), step),
         });
         futureAppointments.push(await service.schedule(futureAppointment));
@@ -696,7 +721,7 @@ describe('AppointmentService', () => {
       // change one of the future appointments to 'done'
       await service.end({ id: futureAppointments[0].id.toString() });
 
-      const result = await service.getFutureAppointments(userId, memberId);
+      const result = await service.getFutureAppointments({ userId, memberId, journeyId });
       futureAppointments.shift();
       expect(result).toEqual(futureAppointments);
     });
@@ -825,16 +850,19 @@ describe('AppointmentService', () => {
 
   describe('alerts', () => {
     let mockNotificationGetDispatchesByClientSenderId: jest.SpyInstance;
+    let spyOnJourneyServiceGetRecent;
 
     beforeAll(() => {
       mockNotificationGetDispatchesByClientSenderId = jest.spyOn(
         module.get<NotificationService>(NotificationService),
         `getDispatchesByClientSenderId`,
       );
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       mockNotificationGetDispatchesByClientSenderId.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should return appointment reviewed alerts', async () => {
@@ -843,9 +871,11 @@ describe('AppointmentService', () => {
       const member = mockGenerateMember();
       const memberId = member.id;
       const userId = member.primaryUserId.toString();
+      const journeyId = generateId();
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
       // Create a reviewed recording
-      const recordingParams = generateUpdateRecordingParams({ memberId, userId });
+      const recordingParams = generateUpdateRecordingParams({ memberId, userId, journeyId });
       const { id: recordingId } = await recordingService.updateRecording(recordingParams);
 
       const recordingReviewParams = generateUpdateRecordingReviewParams({
@@ -855,10 +885,13 @@ describe('AppointmentService', () => {
 
       const updatedRecording = await recordingModel.findOne({
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
       });
 
       // Create a recording without a review - we are not expecting to see this review alert
-      await recordingService.updateRecording(generateUpdateRecordingParams({ memberId, userId }));
+      await recordingService.updateRecording(
+        generateUpdateRecordingParams({ memberId, userId, journeyId }),
+      );
 
       const alerts = await service.getAlerts(userId, [member]);
 
@@ -883,8 +916,10 @@ describe('AppointmentService', () => {
       const member = mockGenerateMember();
       const memberId = member.id;
       const userId = member.primaryUserId.toString();
+      const journeyId = generateId();
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
 
-      const appointmentParams = generateScheduleAppointmentParams({ memberId, userId });
+      const appointmentParams = generateScheduleAppointmentParams({ memberId, userId, journeyId });
       const { id: appointmentId } = await service.schedule(appointmentParams);
 
       const endDate = sub(new Date(), { days: 2 });
@@ -917,10 +952,12 @@ describe('AppointmentService', () => {
   const requestAppointment = async ({
     memberId,
     userId,
+    journeyId,
     notBeforeHours,
   }: {
     memberId: string;
     userId: string;
+    journeyId: string;
     notBeforeHours: number;
   }) => {
     const notBefore = new Date();
@@ -929,6 +966,7 @@ describe('AppointmentService', () => {
     const appointmentParams = generateRequestAppointmentParams({
       memberId,
       userId,
+      journeyId,
       notBefore,
     });
 

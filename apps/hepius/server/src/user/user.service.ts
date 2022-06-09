@@ -59,49 +59,47 @@ export class UserService extends BaseService {
   }
 
   async getUsers(roles: UserRole[]): Promise<UserSummary[]> {
-    const result = await this.userModel.aggregate([
-      { $match: { roles: { $in: roles } } },
-      {
-        $lookup: {
-          from: 'members',
-          localField: '_id',
-          foreignField: 'primaryUserId',
-          as: 'members',
+    const [result, usersMembersCurrentJourneys] = await Promise.all([
+      this.userModel.aggregate([
+        { $match: { roles: { $in: roles } } },
+        {
+          $lookup: {
+            from: 'members',
+            localField: '_id',
+            foreignField: 'primaryUserId',
+            as: 'members',
+          },
         },
-      },
-      {
-        $lookup: {
-          from: 'journeys',
-          localField: 'members._id',
-          foreignField: 'memberId',
-          as: 'members.journeys',
+        {
+          $lookup: {
+            from: 'appointments',
+            localField: 'appointments',
+            foreignField: '_id',
+            as: 'appointments',
+          },
         },
-      },
-      {
-        $lookup: {
-          from: 'appointments',
-          localField: 'appointments',
-          foreignField: '_id',
-          as: 'appointments',
+
+        { $addFields: { id: '$_id' } },
+        {
+          $addFields: {
+            currentMembersCount: { $size: '$members' },
+          },
         },
-      },
-      { $addFields: { id: '$_id' } },
-      { $unset: '_id' },
+        { $unset: '_id' },
+        { $unset: 'members' },
+      ]),
+      this.getUsersMembersCurrentJourneys(),
     ]);
 
     return result.map((res) => {
-      const currentMembers = [];
-      res.members.journeys.forEach((journey) => {
-        if (!currentMembers.some((id) => id.toString() === journey.memberId.toString())) {
-          currentMembers.push(journey.memberId);
-        }
-      });
-      delete res.members;
       const { appointments, ...rest } = res;
       return {
         ...rest,
-        currentMembersCount: currentMembers.length,
-        appointments: appointments.map(({ _id, ...app }) => ({ ...app, id: _id })),
+        appointments: appointments
+          .map(({ _id, ...app }) => ({ ...app, id: _id }))
+          .filter((app) =>
+            usersMembersCurrentJourneys.some((journeyId) => journeyId.equals(app.journeyId)),
+          ),
       };
     });
   }
@@ -163,86 +161,89 @@ export class UserService extends BaseService {
     const { appointmentId, userId, defaultSlotsCount, allowEmptySlotsResponse, maxSlots } =
       this.removeNotNullable(getSlotsParams, NotNullableSlotsKeys);
 
-    const [slotsObject] = await this.userModel.aggregate([
-      ...(userId
-        ? [{ $match: { _id: new Types.ObjectId(userId) } }]
-        : [
-            { $unwind: { path: '$appointments' } },
-            { $match: { appointments: new Types.ObjectId(appointmentId) } },
-            {
-              $lookup: {
-                from: 'appointments',
-                localField: 'appointments',
-                foreignField: '_id',
-                as: 'userAp',
-              },
-            },
-            {
-              $lookup: {
-                from: 'members',
-                localField: 'userAp.memberId',
-                foreignField: '_id',
-                as: 'me',
-              },
-            },
-          ]),
-      {
-        $lookup: {
-          from: 'appointments',
-          localField: '_id',
-          foreignField: 'userId',
-          as: 'ap',
-        },
-      },
-      {
-        $lookup: {
-          from: 'availabilities',
-          localField: '_id',
-          foreignField: 'userId',
-          as: 'av',
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          user: {
-            id: '$_id',
-            firstName: '$firstName',
-            roles: '$roles',
-            avatar: '$avatar',
-            description: '$description',
-          },
-          member: {
-            id: { $arrayElemAt: ['$me._id', 0] },
-            firstName: { $arrayElemAt: ['$me.firstName', 0] },
-          },
-          appointment: {
-            id: { $arrayElemAt: ['$userAp._id', 0] },
-            start: { $arrayElemAt: ['$userAp.start', 0] },
-            method: { $arrayElemAt: ['$userAp.method', 0] },
-            memberId: { $arrayElemAt: ['$userAp.memberId', 0] },
-            userId: { $arrayElemAt: ['$userAp.userId', 0] },
-            notBefore: { $arrayElemAt: ['$userAp.notBefore', 0] },
-            duration: `${defaultSlotsParams.duration}`,
-          },
-          ap: {
-            $filter: {
-              input: '$ap',
-              as: 'ap',
-              cond: { $eq: ['$$ap.deleted', false] },
-            },
-          },
-          availabilities: allowEmptySlotsResponse
-            ? {
-                $filter: {
-                  input: '$av',
-                  as: 'availability',
-                  cond: { $gte: ['$$availability.end', new Date()] },
+    const [[slotsObject], usersMembersCurrentJourneys] = await Promise.all([
+      this.userModel.aggregate([
+        ...(userId
+          ? [{ $match: { _id: new Types.ObjectId(userId) } }]
+          : [
+              { $unwind: { path: '$appointments' } },
+              { $match: { appointments: new Types.ObjectId(appointmentId) } },
+              {
+                $lookup: {
+                  from: 'appointments',
+                  localField: 'appointments',
+                  foreignField: '_id',
+                  as: 'userAp',
                 },
-              }
-            : '$av',
+              },
+              {
+                $lookup: {
+                  from: 'members',
+                  localField: 'userAp.memberId',
+                  foreignField: '_id',
+                  as: 'me',
+                },
+              },
+            ]),
+        {
+          $lookup: {
+            from: 'appointments',
+            localField: '_id',
+            foreignField: 'userId',
+            as: 'ap',
+          },
         },
-      },
+        {
+          $lookup: {
+            from: 'availabilities',
+            localField: '_id',
+            foreignField: 'userId',
+            as: 'av',
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            user: {
+              id: '$_id',
+              firstName: '$firstName',
+              roles: '$roles',
+              avatar: '$avatar',
+              description: '$description',
+            },
+            member: {
+              id: { $arrayElemAt: ['$me._id', 0] },
+              firstName: { $arrayElemAt: ['$me.firstName', 0] },
+            },
+            appointment: {
+              id: { $arrayElemAt: ['$userAp._id', 0] },
+              start: { $arrayElemAt: ['$userAp.start', 0] },
+              method: { $arrayElemAt: ['$userAp.method', 0] },
+              memberId: { $arrayElemAt: ['$userAp.memberId', 0] },
+              userId: { $arrayElemAt: ['$userAp.userId', 0] },
+              notBefore: { $arrayElemAt: ['$userAp.notBefore', 0] },
+              duration: `${defaultSlotsParams.duration}`,
+            },
+            ap: {
+              $filter: {
+                input: '$ap',
+                as: 'ap',
+                cond: { $eq: ['$$ap.deleted', false] },
+              },
+            },
+            availabilities: allowEmptySlotsResponse
+              ? {
+                  $filter: {
+                    input: '$av',
+                    as: 'availability',
+                    cond: { $gte: ['$$availability.end', new Date()] },
+                  },
+                }
+              : '$av',
+          },
+        },
+      ]),
+      this.getUsersMembersCurrentJourneys(),
     ]);
 
     if (!slotsObject) {
@@ -256,7 +257,9 @@ export class UserService extends BaseService {
 
     slotsObject.slots = this.slotService.getSlots(
       slotsObject.availabilities,
-      slotsObject.ap,
+      slotsObject.ap.filter((app) =>
+        usersMembersCurrentJourneys.some((journeyId) => journeyId.equals(app.journeyId)),
+      ),
       defaultSlotsParams.duration,
       maxSlots || defaultSlotsParams.maxSlots,
       notBefore,
@@ -489,5 +492,52 @@ export class UserService extends BaseService {
     } catch (ex) {
       this.logger.error(params, UserService.name, this.updateUserAppointments.name, formatEx(ex));
     }
+  }
+
+  /*************************************************************************************************
+   ******************************************** Helpers ********************************************
+   ************************************************************************************************/
+
+  private async getUsersMembersCurrentJourneys(): Promise<Types.ObjectId[]> {
+    const [result] = await this.userModel.aggregate([
+      {
+        $lookup: {
+          from: 'members',
+          localField: '_id',
+          foreignField: 'primaryUserId',
+          as: 'members',
+        },
+      },
+      {
+        $unwind: {
+          path: '$members',
+        },
+      },
+      {
+        $lookup: {
+          from: 'journeys',
+          localField: 'members._id',
+          foreignField: 'memberId',
+          as: 'journeys',
+        },
+      },
+      {
+        $addFields: {
+          recentJourney: {
+            $last: '$journeys',
+          },
+        },
+      },
+      {
+        $group: {
+          _id: '',
+          journeys: {
+            $push: '$recentJourney._id',
+          },
+        },
+      },
+    ]);
+
+    return result?.journeys;
   }
 }

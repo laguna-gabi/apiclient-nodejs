@@ -17,11 +17,13 @@ import {
 import { CommunicationResolver } from '../communication';
 import { Bitly } from '../providers';
 import { Appointment } from '@argus/hepiusClient';
+import { JourneyService } from '../journey';
 
 export class AppointmentBase {
   constructor(
     protected readonly appointmentService: AppointmentService,
     protected readonly communicationResolver: CommunicationResolver,
+    protected readonly journeyService: JourneyService,
     protected readonly bitly: Bitly,
     protected readonly eventEmitter: EventEmitter2,
     protected readonly logger: LoggerService,
@@ -29,7 +31,13 @@ export class AppointmentBase {
 
   async scheduleAppointment(scheduleAppointmentParams: ScheduleAppointmentParams) {
     await this.appointmentService.validateUpdateAppointment(scheduleAppointmentParams.id);
-    const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
+    const { id: journeyId } = await this.journeyService.getRecent(
+      scheduleAppointmentParams.memberId,
+    );
+    const appointment = await this.appointmentService.schedule({
+      ...scheduleAppointmentParams,
+      journeyId,
+    });
 
     this.updateAppointmentExternalData(appointment);
     await this.deleteDispatchesOnScheduleAppointment(appointment.memberId.toString());

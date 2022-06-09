@@ -31,6 +31,7 @@ import {
   LoggerService,
 } from '../common';
 import { ISoftDelete } from '../db';
+import { JourneyService } from '../journey';
 import { Member } from '../member';
 import { Internationalization } from '../providers';
 import { Recording, RecordingDocument } from '../recording';
@@ -48,6 +49,7 @@ export class AppointmentService extends AlertService {
     @InjectModel(Recording.name)
     private readonly recordingModel: Model<RecordingDocument> & ISoftDelete<RecordingDocument>,
     private readonly internationalization: Internationalization,
+    readonly journeyService: JourneyService,
     private eventEmitter: EventEmitter2,
     readonly logger: LoggerService,
   ) {
@@ -60,6 +62,7 @@ export class AppointmentService extends AlertService {
       : {
           userId: new Types.ObjectId(params.userId),
           memberId: new Types.ObjectId(params.memberId),
+          journeyId: new Types.ObjectId(params.journeyId),
           status: AppointmentStatus.requested,
         };
 
@@ -69,6 +72,8 @@ export class AppointmentService extends AlertService {
         {
           $set: {
             userId: new Types.ObjectId(params.userId),
+            memberId: new Types.ObjectId(params.memberId),
+            journeyId: new Types.ObjectId(params.journeyId),
             notBefore: params.notBefore,
             status: AppointmentStatus.requested,
             deleted: false,
@@ -95,11 +100,20 @@ export class AppointmentService extends AlertService {
     return this.replaceId(result);
   }
 
-  async getFutureAppointments(userId: string, memberId: string): Promise<Appointment[]> {
+  async getFutureAppointments({
+    userId,
+    memberId,
+    journeyId,
+  }: {
+    userId: string;
+    memberId: string;
+    journeyId: string;
+  }): Promise<Appointment[]> {
     const result = await this.appointmentModel
       .find({
         userId: new Types.ObjectId(userId),
         memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
         status: { $ne: AppointmentStatus.done },
         start: { $gte: new Date() },
       })
@@ -113,6 +127,7 @@ export class AppointmentService extends AlertService {
       : {
           userId: new Types.ObjectId(params.userId),
           memberId: new Types.ObjectId(params.memberId),
+          journeyId: new Types.ObjectId(params.journeyId),
           status: { $eq: AppointmentStatus.requested },
         };
 
@@ -125,6 +140,7 @@ export class AppointmentService extends AlertService {
           $set: {
             userId: new Types.ObjectId(params.userId),
             memberId: new Types.ObjectId(params.memberId),
+            journeyId: new Types.ObjectId(params.journeyId),
             method: params.method,
             start: params.start,
             end: params.end,
@@ -150,6 +166,7 @@ export class AppointmentService extends AlertService {
 
     return this.replaceId(object.value);
   }
+
   async validateOverlap(params: ScheduleAppointmentParams) {
     const sharedQuery = {
       userId: new Types.ObjectId(params.userId),
@@ -414,8 +431,10 @@ export class AppointmentService extends AlertService {
     });
 
     // grab all `scheduled` (status) appointments where `end` occurred more than 24hrs ago (overdue for submit)
+    const { id: journeyId } = await this.journeyService.getRecent(member.id);
     const appointments = await this.appointmentModel.find({
       memberId: new Types.ObjectId(member.id),
+      journeyId: new Types.ObjectId(journeyId),
       status: AppointmentStatus.scheduled,
       end: { $lte: sub(new Date(), { days: 1 }) },
     });

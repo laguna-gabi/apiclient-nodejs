@@ -36,6 +36,9 @@ export class Appointment extends Identifier {
   @Field(() => String)
   memberId: Types.ObjectId;
 
+  @Prop({ index: true, type: Types.ObjectId })
+  journeyId: Types.ObjectId;
+
   @Prop({ isNaN: true })
   @Field(() => Date, { nullable: true })
   notBefore: Date;

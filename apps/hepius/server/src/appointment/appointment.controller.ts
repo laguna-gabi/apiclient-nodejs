@@ -5,6 +5,7 @@ import { LoggerService, LoggingInterceptor, Public, apiPrefix } from '../common'
 import { CommunicationResolver } from '../communication';
 import { Bitly } from '../providers';
 import { Appointment } from '@argus/hepiusClient';
+import { JourneyService } from '../journey';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/appointments`)
@@ -12,11 +13,12 @@ export class AppointmentController extends AppointmentBase {
   constructor(
     readonly appointmentService: AppointmentService,
     readonly communicationResolver: CommunicationResolver,
+    readonly journeyService: JourneyService,
     readonly bitly: Bitly,
     readonly eventEmitter: EventEmitter2,
     readonly logger: LoggerService,
   ) {
-    super(appointmentService, communicationResolver, bitly, eventEmitter, logger);
+    super(appointmentService, communicationResolver, journeyService, bitly, eventEmitter, logger);
   }
 
   @Public()

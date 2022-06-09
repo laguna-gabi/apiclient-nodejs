@@ -40,6 +40,7 @@ import { CommunicationResolver } from '../communication';
 import { Member } from '../member';
 import { Bitly } from '../providers';
 import { Appointment, AppointmentStatus, MemberRole, Notes, UserRole } from '@argus/hepiusClient';
+import { JourneyService } from '../journey';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Appointment)
@@ -47,11 +48,12 @@ export class AppointmentResolver extends AppointmentBase {
   constructor(
     readonly appointmentService: AppointmentService,
     readonly communicationResolver: CommunicationResolver,
+    readonly journeyService: JourneyService,
     readonly bitly: Bitly,
     readonly eventEmitter: EventEmitter2,
     readonly logger: LoggerService,
   ) {
-    super(appointmentService, communicationResolver, bitly, eventEmitter, logger);
+    super(appointmentService, communicationResolver, journeyService, bitly, eventEmitter, logger);
   }
 
   @Mutation(() => Appointment)
@@ -61,7 +63,13 @@ export class AppointmentResolver extends AppointmentBase {
     @Args(camelCase(RequestAppointmentParams.name))
     requestAppointmentParams: RequestAppointmentParams,
   ) {
-    const appointment = await this.appointmentService.request(requestAppointmentParams);
+    const { id: journeyId } = await this.journeyService.getRecent(
+      requestAppointmentParams.memberId,
+    );
+    const appointment = await this.appointmentService.request({
+      ...requestAppointmentParams,
+      journeyId,
+    });
 
     this.notifyRequestAppointment(appointment);
 
@@ -150,10 +158,12 @@ export class AppointmentResolver extends AppointmentBase {
     this.logger.info(params, AppointmentResolver.name, this.onNewMember.name);
     const { member, user } = params;
     try {
+      const { id: journeyId } = await this.journeyService.getRecent(member.id);
       const requestAppointmentParams: RequestAppointmentParams = {
         memberId: member.id,
         userId: user.id,
         notBefore: add(new Date(), { hours: 2 }),
+        journeyId,
       };
       const { id: appointmentId } = await this.appointmentService.request(requestAppointmentParams);
       await this.notifyRegistration({ member, userId: user.id, appointmentId });
@@ -184,10 +194,12 @@ export class AppointmentResolver extends AppointmentBase {
   @OnEvent(EventType.onUpdatedUserCommunication, { async: true })
   async updateUserInAppointments(params: IEventOnUpdatedUserCommunication) {
     this.logger.info(params, AppointmentResolver.name, this.updateUserInAppointments.name);
-    const appointments = await this.appointmentService.getFutureAppointments(
-      params.oldUserId,
-      params.memberId,
-    );
+    const { id: journeyId } = await this.journeyService.getRecent(params.memberId);
+    const appointments = await this.appointmentService.getFutureAppointments({
+      userId: params.oldUserId,
+      memberId: params.memberId,
+      journeyId,
+    });
 
     if (appointments.length == 0) return;
 
