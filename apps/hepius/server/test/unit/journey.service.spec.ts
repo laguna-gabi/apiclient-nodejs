@@ -90,6 +90,18 @@ describe(JourneyService.name, () => {
     );
   });
 
+  describe('ControlJourney', () => {
+    it('should create and get recent control journey', async () => {
+      const memberId = generateId();
+
+      const { id } = await service.createControl(generateCreateJourneyParams({ memberId }));
+
+      const matchObject = { memberId: new Types.ObjectId(memberId), admissions: [] };
+      const recentJourney = await service.getRecentControl(memberId);
+      expect(recentJourney).toMatchObject({ id, ...matchObject });
+    });
+  });
+
   describe('updateMemberConfigLoggedInAt', () => {
     it('should update member config login time and not update firstLogin on 2nd time', async () => {
       const memberId = generateId();

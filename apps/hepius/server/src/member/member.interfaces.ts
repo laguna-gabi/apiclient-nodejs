@@ -97,6 +97,7 @@ export class MemberBase {
     this.logger.info(params, MemberBase.name, this.createControlMember.name);
     const controlMember = await this.memberService.insertControl(params);
     this.notifyUpdatedMemberConfig({ member: controlMember });
+    await this.journeyService.createControl({ memberId: controlMember.id });
 
     const contentKey = RegisterInternalKey.newControlMember;
     const newControlMemberEvent: IInternalDispatch = {

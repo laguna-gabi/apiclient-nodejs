@@ -126,6 +126,9 @@ export class Journey extends Identifier {
   scores?: Scores;
 }
 
+@Schema(DefaultSchemaOptions)
+export class ControlJourney extends Journey {}
+
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
@@ -133,3 +136,5 @@ export type JourneyDocument = Journey & Document & ISoftDelete<Journey>;
 export const JourneyDto = audit(
   SchemaFactory.createForClass(Journey).plugin(mongooseDelete, useFactoryOptions),
 );
+export type ControlJourneyDocument = ControlJourney & Document;
+export const ControlJourneyDto = audit(SchemaFactory.createForClass(ControlJourney));

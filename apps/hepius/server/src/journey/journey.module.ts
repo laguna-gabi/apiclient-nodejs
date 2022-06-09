@@ -9,6 +9,8 @@ import {
   CaregiverDto,
   CaregiverResolver,
   CaregiverService,
+  ControlJourney,
+  ControlJourneyDto,
   Diagnosis,
   DiagnosisDto,
   Dietary,
@@ -41,6 +43,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
     ProvidersModule,
     MongooseModule.forFeature([
       { name: Journey.name, schema: JourneyDto },
+      { name: ControlJourney.name, schema: ControlJourneyDto },
       { name: Diagnosis.name, schema: DiagnosisDto },
       { name: TreatmentRendered.name, schema: TreatmentRenderedDto },
       { name: Medication.name, schema: MedicationDto },

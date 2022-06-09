@@ -19,6 +19,8 @@ import {
 import { ISoftDelete } from '../db';
 import {
   ActionItemPriority,
+  ControlJourney,
+  ControlJourneyDocument,
   CreateJourneyParams,
   GraduateMemberParams,
   Journey,
@@ -47,6 +49,9 @@ export class JourneyService extends AlertService {
   constructor(
     @InjectModel(Journey.name)
     private readonly journeyModel: Model<JourneyDocument> & ISoftDelete<JourneyDocument>,
+    @InjectModel(ControlJourney.name)
+    private readonly controlJourneyModel: Model<ControlJourneyDocument> &
+      ISoftDelete<ControlJourneyDocument>,
     @InjectModel(ActionItem.name)
     private readonly actionItemModel: Model<ActionItemDocument> & ISoftDelete<ActionItemDocument>,
     @InjectModel(Journal.name)
@@ -60,9 +65,11 @@ export class JourneyService extends AlertService {
   }
 
   async create(params: CreateJourneyParams): Promise<Identifier> {
-    const memberIdObject = { memberId: new Types.ObjectId(params.memberId) };
-    const { _id: id } = await this.journeyModel.create(memberIdObject);
-    return { id };
+    return this.createSub(params, this.journeyModel);
+  }
+
+  async createControl(params: CreateJourneyParams): Promise<Identifier> {
+    return this.createSub(params, this.controlJourneyModel);
   }
 
   async get(journeyId: string): Promise<Journey> {
@@ -75,14 +82,11 @@ export class JourneyService extends AlertService {
   }
 
   async getRecent(memberId: string): Promise<Journey> {
-    const [result] = await this.journeyModel
-      .find({ memberId: new Types.ObjectId(memberId) })
-      .sort({ _id: -1 })
-      .limit(1);
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.memberNotFound));
-    }
-    return result;
+    return this.getRecentSub(memberId, this.journeyModel);
+  }
+
+  async getRecentControl(memberId: string): Promise<Journey> {
+    return this.getRecentSub(memberId, this.controlJourneyModel);
   }
 
   async getAll({ memberId }: { memberId: string }): Promise<Journey[]> {
@@ -355,6 +359,28 @@ export class JourneyService extends AlertService {
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
+  private async createSub(
+    params: CreateJourneyParams,
+    model: Model<JourneyDocument | ControlJourneyDocument>,
+  ): Promise<Identifier> {
+    const { _id: id } = await model.create({ memberId: new Types.ObjectId(params.memberId) });
+    return { id };
+  }
+
+  async getRecentSub(
+    memberId: string,
+    model: Model<JourneyDocument | ControlJourneyDocument>,
+  ): Promise<Journey> {
+    const [result] = await model
+      .find({ memberId: new Types.ObjectId(memberId) })
+      .sort({ _id: -1 })
+      .limit(1);
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+    return result;
+  }
+
   private async updateReadmissionRiskHistory(id: Types.ObjectId, setParams) {
     return this.journeyModel.findByIdAndUpdate(
       id,
