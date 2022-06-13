@@ -175,15 +175,10 @@ export class JourneyService extends AlertService {
    ****************************************** General notes ****************************************
    ************************************************************************************************/
   async setGeneralNotes(setGeneralNotesParams: SetGeneralNotesParams): Promise<void> {
-    const setParams = omitBy(
-      {
-        generalNotes: setGeneralNotesParams.note,
-        nurseNotes: setGeneralNotesParams.nurseNotes,
-      },
-      isNil,
-    );
     const recent = await this.getRecent(setGeneralNotesParams.memberId);
-    await this.journeyModel.findByIdAndUpdate(recent.id, { $set: setParams });
+    await this.journeyModel.findByIdAndUpdate(new Types.ObjectId(recent.id), {
+      $set: { generalNotes: setGeneralNotesParams.note },
+    });
   }
 
   /*************************************************************************************************

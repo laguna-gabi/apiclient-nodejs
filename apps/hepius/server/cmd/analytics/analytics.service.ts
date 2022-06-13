@@ -562,7 +562,6 @@ export class AnalyticsService {
         : undefined,
       coach_id: member.memberDetails.primaryUserId?.toString(),
       general_notes: member.recentJourney?.generalNotes,
-      nurse_notes: member.recentJourney?.nurseNotes,
       marital_status: member.memberDetails.maritalStatus,
       height: member.memberDetails.height,
       weight: member.memberDetails.weight,

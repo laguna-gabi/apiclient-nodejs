@@ -312,21 +312,6 @@ export function IsObjectIds(options?: ValidationOptions) {
   };
 }
 
-export function IsNoteOrNurseNoteProvided(options?: ValidationOptions) {
-  return (object, propertyName: string) => {
-    registerDecorator({
-      target: object.constructor,
-      propertyName,
-      options,
-      validator: {
-        validate(object, args: ValidationArguments) {
-          return !isNil(args.object['note']) || !isNil(args.object['nurseNotes']);
-        },
-      },
-    });
-  };
-}
-
 export function IsCronExpression(options: ValidationOptions) {
   return (object, propertyName: string) => {
     registerDecorator({

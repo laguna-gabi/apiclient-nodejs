@@ -37,7 +37,6 @@ export enum ErrorType {
   memberIdInvalid = 9224,
   memberIdInconsistent = 9225,
   memberIdMetadataMissing = 9229,
-  memberNotesAndNurseNotesNotProvided = 9230,
   memberUploadAlreadyExistingGeneralDocument = 9231,
   memberHeightNotInRange = 9232,
   memberWeightNotInRange = 9233,
@@ -245,7 +244,6 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberOrgIdInvalid.valueOf(), `orgId ${objectIdFormat}`],
   [ErrorType.memberIdInvalid.valueOf(), `memberId ${objectIdFormat}`],
   [ErrorType.memberIdMetadataMissing.valueOf(), `@MemberIdParam is missing on route`],
-  [ErrorType.memberNotesAndNurseNotesNotProvided.valueOf(), `Notes or nurseNotes must be provided`],
   [
     ErrorType.memberUploadAlreadyExistingGeneralDocument.valueOf(),
     `can not upload an already existing document`,

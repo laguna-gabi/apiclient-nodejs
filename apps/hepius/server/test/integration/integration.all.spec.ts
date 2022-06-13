@@ -990,7 +990,7 @@ describe('Integration tests: all', () => {
       expect(appointment.notes).toBeNull();
     });
 
-    it('should be able to set note for and nurseNotes for a member', async () => {
+    it('should be able to set note for a member', async () => {
       const { member } = await creators.createMemberUserAndOptionalOrg();
 
       const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
@@ -998,10 +998,9 @@ describe('Integration tests: all', () => {
 
       const result = await handler.queries.getRecentJourney({ memberId: member.id });
       expect(result.generalNotes).toEqual(setGeneralNotesParams.note);
-      expect(result.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
     });
 
-    it('should accept empty note or nurseNotes for a member', async () => {
+    it('should accept empty note for a member', async () => {
       const { member } = await creators.createMemberUserAndOptionalOrg();
 
       const params1 = generateSetGeneralNotesParams({
@@ -1012,17 +1011,12 @@ describe('Integration tests: all', () => {
 
       const result1 = await handler.queries.getRecentJourney({ memberId: member.id });
       expect(result1.generalNotes).toEqual(params1.note);
-      expect(result1.nurseNotes).toEqual(params1.nurseNotes);
 
-      const params2 = generateSetGeneralNotesParams({
-        memberId: member.id,
-        nurseNotes: '',
-      });
+      const params2 = generateSetGeneralNotesParams({ memberId: member.id });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams: params2 });
 
       const result2 = await handler.queries.getRecentJourney({ memberId: member.id });
       expect(result2.generalNotes).toEqual(params2.note);
-      expect(result2.nurseNotes).toEqual(params2.nurseNotes);
     });
   });
 
@@ -2910,6 +2904,7 @@ describe('Integration tests: all', () => {
       admissionSummary: expect.any(String),
       drg: expect.any(String),
       drgDesc: expect.any(String),
+      nurseNotes: expect.any(String),
       warningSigns: expect.any(Array),
       activity: expect.objectContaining({ stairs: expect.any(Array) }),
       woundCare: expect.objectContaining({ general: expect.any(Array) }),
@@ -2974,6 +2969,7 @@ describe('Integration tests: all', () => {
       admissionSummary,
       drg,
       drgDesc,
+      nurseNotes,
       warningSigns,
       activity,
       woundCare,
@@ -2999,6 +2995,7 @@ describe('Integration tests: all', () => {
         admissionSummary,
         drg,
         drgDesc,
+        nurseNotes,
         warningSigns,
         activity,
         woundCare,
@@ -3034,6 +3031,7 @@ describe('Integration tests: all', () => {
       admissionSummary: null,
       drg: null,
       drgDesc: null,
+      nurseNotes: null,
       warningSigns: null,
       activity: generateAdmissionActivityParams(),
       woundCare: generateAdmissionWoundCareParams(),
@@ -3069,6 +3067,7 @@ describe('Integration tests: all', () => {
         admissionSummary: expect.any(String),
         drg: expect.any(String),
         drgDesc: expect.any(String),
+        nurseNotes: expect.any(String),
         warningSigns: expect.any(Array),
         activity: expect.objectContaining({ stairs: expect.any(Array) }),
         woundCare: expect.objectContaining({ general: expect.any(Array) }),

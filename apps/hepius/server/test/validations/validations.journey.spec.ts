@@ -93,7 +93,6 @@ describe('Validations - Journey', () => {
       field
       ${{ memberId: 123 }}
       ${{ note: 123 }}
-      ${{ nurseNotes: 123 }}
     `(`should fail to set notes since $input is not a valid type`, async (params) => {
       const setGeneralNotesParams = generateSetGeneralNotesParams({ ...params.field });
       await handler.mutations.setGeneralNotes({
@@ -107,30 +106,6 @@ describe('Validations - Journey', () => {
       await handler.mutations.setGeneralNotes({
         setGeneralNotesParams,
         invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)],
-      });
-    });
-
-    it(`should fail to set notes since $input does not contain notes or nurseNotes`, async () => {
-      await handler.mutations.setGeneralNotes({
-        setGeneralNotesParams: { memberId: generateId() },
-        invalidFieldsErrors: [Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided)],
-      });
-    });
-
-    test.each([
-      { note: undefined, nurseNotes: undefined },
-      { note: undefined, nurseNotes: null },
-      { note: null, nurseNotes: undefined },
-      { note: null, nurseNotes: null },
-      { note: undefined },
-      { note: null },
-      { nurseNotes: undefined },
-      { nurseNotes: null },
-      {},
-    ])('should fail to set notes since %p does not contain notes or nurseNotes', async (input) => {
-      await handler.mutations.setGeneralNotes({
-        setGeneralNotesParams: { memberId: generateId(), ...input },
-        invalidFieldsErrors: [Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided)],
       });
     });
   });

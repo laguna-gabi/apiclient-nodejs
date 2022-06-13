@@ -109,6 +109,7 @@ describe(AdmissionService.name, () => {
     { admissionSummary: lorem.sentences() },
     { drg: lorem.word() },
     { drgDesc: lorem.sentences() },
+    { nurseNotes: lorem.sentences() },
     { warningSigns: [WarningSigns.confusion, WarningSigns.passingOut] },
     { activity: generateAdmissionActivityParams() },
     { woundCare: generateAdmissionWoundCareParams() },
@@ -152,6 +153,7 @@ describe(AdmissionService.name, () => {
     ${'admissionSummary'}    | ${lorem.sentences()}                  | ${lorem.sentences()}
     ${'drg'}                 | ${lorem.word()}                       | ${lorem.word()}
     ${'drgDesc'}             | ${lorem.sentence()}                   | ${lorem.sentence()}
+    ${'nurseNotes'}          | ${lorem.sentence()}                   | ${lorem.sentence()}
     ${'warningSigns'}        | ${[WarningSigns.severeDizziness]}     | ${[WarningSigns.confusion, WarningSigns.passingOut]}
     ${'activity'}            | ${generateAdmissionActivityParams()}  | ${generateAdmissionActivityParams()}
     ${'woundCare'}           | ${generateAdmissionWoundCareParams()} | ${generateAdmissionWoundCareParams()}
@@ -183,6 +185,7 @@ describe(AdmissionService.name, () => {
     ${'admissionSummary'}    | ${lorem.sentences()}
     ${'drg'}                 | ${lorem.word()}
     ${'drgDesc'}             | ${lorem.sentences()}
+    ${'nurseNotes'}          | ${lorem.sentences()}
     ${'warningSigns'}        | ${[WarningSigns.confusion, WarningSigns.severeDizziness]}
   `(`should not update $field when its null`, async ({ field, input }) => {
     const memberId = generateId();

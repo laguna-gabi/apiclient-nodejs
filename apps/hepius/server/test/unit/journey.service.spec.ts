@@ -285,7 +285,6 @@ describe(JourneyService.name, () => {
       await service.setGeneralNotes(generalNotes);
 
       const result = await service.getRecent(memberId);
-
       expect(result.generalNotes).toEqual(generalNotes.note);
     });
 
@@ -301,26 +300,10 @@ describe(JourneyService.name, () => {
       await service.create(generateCreateJourneyParams({ memberId }));
 
       const notes = generateSetGeneralNotesParams({ memberId });
-      delete notes.nurseNotes;
       await service.setGeneralNotes(notes);
 
       const result = await service.getRecent(memberId);
       expect(result.generalNotes).toEqual(notes.note);
-      expect(result.nurseNotes).toBeUndefined();
-    });
-
-    it('should set nurse notes', async () => {
-      const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
-
-      const notes = generateSetGeneralNotesParams({ memberId });
-      delete notes.note;
-      await service.setGeneralNotes(notes);
-
-      const result = await service.getRecent(memberId);
-
-      expect(result.nurseNotes).toEqual(notes.nurseNotes);
-      expect(result.generalNotes).toBeUndefined();
     });
 
     it('should override general notes when provided', async () => {
@@ -332,92 +315,25 @@ describe(JourneyService.name, () => {
 
       const notes2 = generateSetGeneralNotesParams({ memberId });
       notes2.note = lorem.sentence();
-      delete notes2.nurseNotes;
       await service.setGeneralNotes(notes2);
 
       const result = await service.getRecent(memberId);
-
-      expect(result.nurseNotes).toEqual(notes1.nurseNotes);
       expect(result.generalNotes).toEqual(notes2.note);
     });
 
-    it('should override nurse notes when provided', async () => {
-      const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
-
-      const notes1 = generateSetGeneralNotesParams({ memberId });
-      await service.setGeneralNotes(notes1);
-
-      const notes2 = generateSetGeneralNotesParams({ memberId });
-      notes2.nurseNotes = lorem.sentence();
-      delete notes2.note;
-      await service.setGeneralNotes(notes2);
-
-      const result = await service.getRecent(memberId);
-
-      expect(result.nurseNotes).toEqual(notes2.nurseNotes);
-      expect(result.generalNotes).toEqual(notes1.note);
-    });
-
-    it('should set notes and then nurse notes', async () => {
-      const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
-
-      const notes1 = generateSetGeneralNotesParams({ memberId });
-      delete notes1.nurseNotes;
-      await service.setGeneralNotes(notes1);
-
-      const notes2 = generateSetGeneralNotesParams({ memberId });
-      delete notes2.note;
-      await service.setGeneralNotes(notes2);
-
-      const result = await service.getRecent(memberId);
-
-      expect(result.nurseNotes).toEqual(notes2.nurseNotes);
-      expect(result.generalNotes).toEqual(notes1.note);
-    });
-
-    it('should set nurse notes and then general notes', async () => {
-      const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
-
-      const notes1 = generateSetGeneralNotesParams({ memberId });
-      delete notes1.note;
-      await service.setGeneralNotes(notes1);
-
-      const notes2 = generateSetGeneralNotesParams({ memberId });
-      delete notes2.nurseNotes;
-      await service.setGeneralNotes(notes2);
-
-      const result = await service.getRecent(memberId);
-
-      expect(result.nurseNotes).toEqual(notes1.nurseNotes);
-      expect(result.generalNotes).toEqual(notes2.note);
-    });
-
-    it('should be able to set empty notes or generalNotes similar to harmony calls', async () => {
+    it('should be able to set empty notes similar to harmony calls', async () => {
       const memberId = generateId();
       await service.create(generateCreateJourneyParams({ memberId }));
 
       const params1 = generateSetGeneralNotesParams({ memberId });
       await service.setGeneralNotes(params1);
       const result1 = await service.getRecent(memberId);
-      expect(result1.nurseNotes).toEqual(params1.nurseNotes);
       expect(result1.generalNotes).toEqual(params1.note);
 
       const params2 = generateSetGeneralNotesParams({ memberId, note: '' });
-      delete params2.nurseNotes;
       await service.setGeneralNotes(params2);
       const result2 = await service.getRecent(memberId);
-      expect(result2.nurseNotes).toEqual(params1.nurseNotes);
       expect(result2.generalNotes).toEqual(params2.note);
-
-      const params3 = generateSetGeneralNotesParams({ memberId, nurseNotes: '' });
-      delete params3.note;
-      await service.setGeneralNotes(params3);
-      const result3 = await service.getRecent(memberId);
-      expect(result3.nurseNotes).toEqual(params3.nurseNotes);
-      expect(result3.generalNotes).toEqual(params2.note);
     });
   });
 

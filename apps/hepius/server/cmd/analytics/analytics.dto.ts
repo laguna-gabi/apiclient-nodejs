@@ -169,8 +169,6 @@ export class MemberData {
   dc_instructions_load_date?: string;
   @Column('blob', { nullable: true })
   general_notes?: string;
-  @Column('blob', { nullable: true })
-  nurse_notes?: string;
   @CreateDateColumn()
   load_datetime?: Date;
   @UpdateDateColumn()

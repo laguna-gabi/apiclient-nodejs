@@ -410,7 +410,6 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
       city: fakerAddress.city(),
       state: fakerAddress.state(),
     },
-    nurse_notes: lorem.sentence(),
     general_notes: lorem.sentence(),
     deceased: { cause: lorem.sentence(), date: generateDateOnly(deceasedDate) },
   };
@@ -522,7 +521,6 @@ export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey
   readmissionRisk: ReadmissionRisk.low,
   isGraduated: false,
   generalNotes: lorem.sentence(),
-  nurseNotes: lorem.sentence(),
 });
 
 export const generateUpdateMemberConfigParams = ({
@@ -797,9 +795,8 @@ export const generateAppointmentLink = (appointmentId: string) => {
 export const generateSetGeneralNotesParams = ({
   memberId = generateId(),
   note = lorem.sentence(),
-  nurseNotes = lorem.sentence(),
 }: Partial<SetGeneralNotesParams> = {}): SetGeneralNotesParams => {
-  return { memberId, note, nurseNotes };
+  return { memberId, note };
 };
 
 export const generateUpdateJournalTextParams = ({
@@ -1741,6 +1738,7 @@ export const generateChangeMemberDnaParams = ({
     admissionSummary: lorem.sentences(),
     drg: lorem.word(),
     drgDesc: lorem.sentence(),
+    nurseNotes: lorem.sentence(),
     warningSigns: [WarningSigns.confusion],
     activity: generateAdmissionActivityParams(),
     woundCare: generateAdmissionWoundCareParams(),

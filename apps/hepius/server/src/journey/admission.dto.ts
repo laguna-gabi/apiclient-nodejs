@@ -586,6 +586,9 @@ export class ChangeMemberDnaParams {
   @Field(() => String, { nullable: true })
   drgDesc?: string;
 
+  @Field(() => String, { nullable: true })
+  nurseNotes?: string;
+
   @Field(() => [WarningSigns], { nullable: true })
   warningSigns?: WarningSigns[];
 
@@ -647,6 +650,7 @@ export const singleAdmissionItems = [
   'admissionSummary',
   'drg',
   'drgDesc',
+  'nurseNotes',
   'warningSigns',
   'activity',
   'woundCare',
@@ -711,6 +715,10 @@ export class Admission extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   drgDesc?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  nurseNotes?: string;
 
   @Prop({ type: [String], enum: WarningSigns, isNan: true })
   @Field(() => [WarningSigns], { nullable: true })

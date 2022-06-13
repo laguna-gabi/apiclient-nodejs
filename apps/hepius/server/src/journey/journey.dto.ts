@@ -5,7 +5,7 @@ import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier, IsObjectId, Scores } from '@argus/hepiusClient';
 import { IsOptional } from 'class-validator';
-import { ErrorType, Errors, IsNoteOrNurseNoteProvided } from '../common';
+import { ErrorType, Errors } from '../common';
 import { DefaultSchemaOptions } from '@argus/pandora';
 
 /**************************************************************************************************
@@ -63,12 +63,8 @@ export class SetGeneralNotesParams {
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
-  @Field(() => String, { nullable: true })
-  note?: string;
-
-  @Field(() => String, { nullable: true })
-  @IsNoteOrNurseNoteProvided({ message: Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided) })
-  nurseNotes?: string;
+  @Field(() => String)
+  note: string;
 }
 /***************************************************************************************************
  ********************************* Return params for gql methods **********************************
@@ -116,10 +112,6 @@ export class Journey extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   generalNotes?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  nurseNotes?: string;
 
   @Prop({ isNaN: true })
   @Field(() => Scores, { nullable: true })

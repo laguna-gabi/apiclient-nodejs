@@ -132,6 +132,7 @@ export const FRAGMENT_ADMISSION = gql`
     admissionSummary
     drg
     drgDesc
+    nurseNotes
     warningSigns
     createdAt
     updatedAt
@@ -210,7 +211,6 @@ export const FRAGMENT_JOURNEY = gql`
     isGraduated
     graduationDate
     generalNotes
-    nurseNotes
     scores {
       adherence
       adherenceText
