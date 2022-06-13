@@ -13,8 +13,8 @@ import { v4 } from 'uuid';
 import {
   BEFORE_ALL_TIMEOUT,
   generateCancelNotifyParams,
-  generateCreateActionItemParams,
   generateCreateMemberParams,
+  generateCreateOrSetActionItemParams,
   generateDateOnly,
   generateDeleteDischargeDocumentParams,
   generateDeleteMemberParams,
@@ -28,7 +28,6 @@ import {
   generateReplaceMemberOrgParams,
   generateReplaceUserForMemberParams,
   generateRequestHeaders,
-  generateSetActionItemParams,
   generateUniqueUrl,
   generateUpdateJournalTextParams,
   generateUpdateMemberParams,
@@ -636,66 +635,19 @@ describe('Validations - member', () => {
   });
 
   describe('action items', () => {
-    describe('createActionItem', () => {
+    describe('createOrSetActionItem', () => {
       /* eslint-disable max-len */
       test.each`
-        field         | error
-        ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
-        ${'title'}    | ${`Field "title" of required type "String!" was not provided.`}
-      `(
-        /* eslint-enable max-len */
-        `should fail to create actionItem since mandatory field $field is missing`,
-        async (params) => {
-          const createActionItemParams = generateCreateActionItemParams();
-          delete createActionItemParams[params.field];
-          await handler.mutations.createActionItem({
-            createActionItemParams,
-            missingFieldError: params.error,
-          });
-        },
-      );
-
-      /* eslint-disable max-len */
-      test.each`
-        input                        | error
-        ${{ memberId: 123 }}         | ${{ missingFieldError: stringError }}
-        ${{ title: 123 }}            | ${{ missingFieldError: stringError }}
-        ${{ description: 123 }}      | ${{ missingFieldError: stringError }}
-        ${{ relatedEntities: 123 }}  | ${{ missingFieldError: 'Expected type "RelatedEntityInput" to be an object' }}
-        ${{ status: 123 }}           | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
-        ${{ priority: 123 }}         | ${`Field "priority" of required type "ActionItemPriority!" was not provided.`}
-        ${{ category: 123 }}         | ${`Field "category" of required type "ActionItemCategory!" was not provided.`}
-        ${{ status: 123 }}           | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
-        ${{ priority: 123 }}         | ${`Field "priority" of required type "ActionItemPriority!" was not provided.`}
-        ${{ category: 123 }}         | ${`Field "category" of required type "ActionItemCategory!" was not provided.`}
-        ${{ deadline: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyActionItemDeadline)] }}
-      `(
-        /* eslint-enable max-len */
-        `should fail to create actionItem since setting $input is not a valid type`,
-        async (params) => {
-          const createActionItemParams = generateCreateActionItemParams({ ...params.input });
-          await handler.mutations.createActionItem({ createActionItemParams, ...params.error });
-        },
-      );
-    });
-
-    describe('setActionItem', () => {
-      /* eslint-disable max-len */
-      test.each`
-        field                | error
-        ${'id'}              | ${`Field "id" of required type "String!" was not provided.`}
-        ${'title'}           | ${`Field "title" of required type "String!" was not provided.`}
-        ${'status'}          | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
-        ${'priority'}        | ${`Field "priority" of required type "ActionItemPriority!" was not provided.`}
-        ${'relatedEntities'} | ${`Field "relatedEntities" of required type "[RelatedEntityInput!]!" was not provided.`}
+        field      | error
+        ${'title'} | ${`Field "title" of required type "String!" was not provided.`}
       `(
         /* eslint-enable max-len */
         `should fail to update actionItem since mandatory field $field is missing`,
         async (params) => {
-          const setActionItemParams = generateSetActionItemParams();
-          delete setActionItemParams[params.field];
-          await handler.mutations.setActionItem({
-            setActionItemParams,
+          const createOrSetActionItemParams = generateCreateOrSetActionItemParams();
+          delete createOrSetActionItemParams[params.field];
+          await handler.mutations.createOrSetActionItem({
+            createOrSetActionItemParams,
             missingFieldError: params.error,
           });
         },
@@ -715,11 +667,11 @@ describe('Validations - member', () => {
         ${{ deadline: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyActionItemDeadline)] }}
       `(`should fail to update actionItem since $input is not a valid type`, async (params) => {
         /* eslint-enable max-len */
-        const setActionItemParams = generateSetActionItemParams({
+        const createOrSetActionItemParams = generateCreateOrSetActionItemParams({
           ...params.input,
         });
-        await handler.mutations.setActionItem({
-          setActionItemParams,
+        await handler.mutations.createOrSetActionItem({
+          createOrSetActionItemParams,
           ...params.error,
         });
       });

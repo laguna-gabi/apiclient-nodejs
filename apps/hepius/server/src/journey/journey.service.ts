@@ -37,10 +37,9 @@ import {
   ActionItem,
   ActionItemDocument,
   ActionItemStatus,
-  CreateActionItemParams,
+  CreateOrSetActionItemParams,
   Journal,
   JournalDocument,
-  SetActionItemParams,
   UpdateJournalParams,
 } from './';
 
@@ -185,41 +184,49 @@ export class JourneyService extends AlertService {
    ****************************************** Action item ******************************************
    ************************************************************************************************/
 
-  async insertActionItem(createActionItemParams: CreateActionItemParams): Promise<Identifier> {
-    const { memberId, ...createParams } = createActionItemParams;
-    const { id: journeyId } = await this.getRecent(memberId);
-    const identifiers = {
-      memberId: new Types.ObjectId(memberId),
-      journeyId: new Types.ObjectId(journeyId),
+  async createOrSetActionItem(
+    createOrSetActionItemParams: CreateOrSetActionItemParams,
+  ): Promise<Identifier> {
+    const { id, memberId, ...params } = createOrSetActionItemParams;
+
+    const setParams = {
+      ...params,
+      status: params.status || ActionItemStatus.active,
+      priority: params.priority || ActionItemPriority.normal,
+      relatedEntities: params.relatedEntities || [],
     };
-    const { id } = await this.actionItemModel.create({
-      ...createParams,
-      status: ActionItemStatus.active,
-      priority: createParams.priority || ActionItemPriority.normal,
-      relatedEntities: createParams.relatedEntities || [],
-      ...identifiers,
-    });
 
-    return { id };
-  }
-
-  async setActionItem(setActionItemParams: SetActionItemParams): Promise<void> {
-    const { id, ...setParams } = setActionItemParams;
-
-    // This is required in order to allow overriding with undefined (removing properties from the object).
-    // Every nullable property that is not set in the setActionItemParams will be removed (unset).
-    const unsetParams = {};
-    nullableActionItemKeys.forEach((key) => {
-      if (!setActionItemParams[key]) unsetParams[key] = 1;
-    });
-
-    const result = await this.actionItemModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id) },
-      { $set: setParams, $unset: unsetParams },
-    );
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.journeyActionItemIdNotFound));
+    let result;
+    // if there's an id in the request, perform an update
+    if (id) {
+      // This is required in order to allow overriding with undefined (removing properties from the object).
+      // Every nullable property that is not set in the createOrSetActionItemParams will be removed (unset).
+      const unsetParams = {};
+      nullableActionItemKeys.forEach((key) => {
+        if (!createOrSetActionItemParams[key]) unsetParams[key] = 1;
+      });
+      result = await this.actionItemModel.findByIdAndUpdate(
+        new Types.ObjectId(id),
+        { $set: setParams, $unset: unsetParams },
+        {
+          new: true,
+        },
+      );
+      if (!result) {
+        throw new Error(Errors.get(ErrorType.journeyActionItemIdNotFound));
+      }
+    } else {
+      // create a new action item
+      const { id: journeyId } = await this.getRecent(memberId);
+      const createParams = {
+        ...setParams,
+        memberId: new Types.ObjectId(memberId),
+        journeyId: new Types.ObjectId(journeyId),
+      };
+      result = await this.actionItemModel.create(createParams);
     }
+
+    return result;
   }
 
   async getActionItems(memberId: string): Promise<ActionItem[]> {

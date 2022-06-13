@@ -11,9 +11,9 @@ import {
   generateAddCaregiverParams,
   generateAvailabilityInput,
   generateCarePlanTypeInput,
-  generateCreateActionItemParams,
   generateCreateCarePlanParams,
   generateCreateMemberParams,
+  generateCreateOrSetActionItemParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateCreateUserParams,
@@ -22,7 +22,6 @@ import {
   generateRequestAppointmentParams,
   generateRequestHeaders,
   generateScheduleAppointmentParams,
-  generateSetActionItemParams,
   generateSetGeneralNotesParams,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
@@ -289,8 +288,8 @@ describe('Integration tests : Audit', () => {
 
   describe(ActionItem.name, () => {
     it('should update createdBy and updatedBy fields for action item api', async () => {
-      const { id } = await handler.mutations.createActionItem({
-        createActionItemParams: {
+      const { id } = await handler.mutations.createOrSetActionItem({
+        createOrSetActionItemParams: {
           memberId: handler.patientZero.id,
           title: lorem.sentence(),
           deadline: addDays(new Date(), 1),
@@ -302,8 +301,8 @@ describe('Integration tests : Audit', () => {
         await checkAuditValues<ActionItemDocument>(id, handler.actionItemModel, user1.id, user1.id),
       ).toBeTruthy();
 
-      await handler.mutations.setActionItem({
-        setActionItemParams: generateSetActionItemParams({ id }),
+      await handler.mutations.createOrSetActionItem({
+        createOrSetActionItemParams: generateCreateOrSetActionItemParams({ id }),
         requestHeaders: generateRequestHeaders(user2.authId),
       });
 
@@ -451,9 +450,9 @@ describe('Integration tests : Audit', () => {
       await delay(2000); // wait for event to finish
 
       // Create Action Item for Member (user2) - this will update the list of actions items
-      const createActionItemParams = generateCreateActionItemParams({ memberId });
-      const { id: actionItemId } = await handler.mutations.createActionItem({
-        createActionItemParams,
+      const createOrSetActionItemParams = generateCreateOrSetActionItemParams({ memberId });
+      const { id: actionItemId } = await handler.mutations.createOrSetActionItem({
+        createOrSetActionItemParams,
         requestHeaders: generateRequestHeaders(user2.authId),
       });
 

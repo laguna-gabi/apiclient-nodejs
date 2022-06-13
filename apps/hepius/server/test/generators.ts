@@ -107,8 +107,8 @@ import {
   ChangeAdmissionTreatmentRenderedParams,
   ChangeMemberDnaParams,
   ClinicalStatus,
-  CreateActionItemParams,
   CreateJourneyParams,
+  CreateOrSetActionItemParams,
   DiagnosisSeverity,
   DietaryCategory,
   DietaryName,
@@ -125,7 +125,6 @@ import {
   RelatedEntity,
   RelatedEntityType,
   SecondaryDiagnosisType,
-  SetActionItemParams,
   SetGeneralNotesParams,
   UpdateCaregiverParams,
   UpdateJournalTextParams,
@@ -553,26 +552,6 @@ export const generateUpdateMemberConfigParams = ({
   };
 };
 
-export const generateCreateActionItemParams = ({
-  memberId = generateId(),
-  title = lorem.words(2),
-  description = lorem.words(2),
-  category = randomEnum(ActionItemCategory) as ActionItemCategory,
-  priority,
-  deadline = fakerDate.soon(3),
-  relatedEntities,
-}: Partial<CreateActionItemParams> = {}): CreateActionItemParams => {
-  return {
-    memberId,
-    title,
-    deadline,
-    description,
-    category,
-    priority,
-    relatedEntities,
-  };
-};
-
 export const generateRelatedEntity = ({
   id = generateId(),
   type = randomEnum(RelatedEntityType) as RelatedEntityType,
@@ -580,8 +559,9 @@ export const generateRelatedEntity = ({
   return { id, type };
 };
 
-export const generateSetActionItemParams = ({
-  id = generateId(),
+export const generateCreateOrSetActionItemParams = ({
+  id,
+  memberId,
   title = lorem.words(2),
   description = lorem.words(2),
   category = randomEnum(ActionItemCategory) as ActionItemCategory,
@@ -590,10 +570,11 @@ export const generateSetActionItemParams = ({
   rejectNote = lorem.words(2),
   deadline = fakerDate.soon(3),
   relatedEntities = [],
-}: Partial<SetActionItemParams> = {}): SetActionItemParams => {
+}: Partial<CreateOrSetActionItemParams> = {}): CreateOrSetActionItemParams => {
   return {
     id,
     title,
+    memberId,
     deadline,
     description,
     category,

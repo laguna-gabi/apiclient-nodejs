@@ -86,8 +86,8 @@ describe('Integration tests : getMembers', () => {
 
     await creators.createAndValidateAppointment({ member });
     const appointment = await appointmentsActions.scheduleAppointment({ member });
-    await creators.createAndValidateActionItem(member.id, handler.mutations.createActionItem);
-    await creators.createAndValidateActionItem(member.id, handler.mutations.createActionItem);
+    await creators.createAndValidateActionItem(member.id);
+    await creators.createAndValidateActionItem(member.id);
 
     const requestHeaders = generateRequestHeaders(member.authId);
     const memberResult = await handler.queries.getMember({

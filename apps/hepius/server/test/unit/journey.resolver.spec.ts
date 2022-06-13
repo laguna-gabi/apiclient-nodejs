@@ -1,8 +1,7 @@
 import {
-  generateCreateActionItemParams,
+  generateCreateOrSetActionItemParams,
   generateGetMemberUploadJournalAudioLinkParams,
   generateGetMemberUploadJournalImageLinkParams,
-  generateSetActionItemParams,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
   generateUpdateJournalTextParams,
@@ -180,47 +179,24 @@ describe(JourneyResolver.name, () => {
     });
   });
 
-  describe('createActionItem', () => {
-    let spyOnServiceInsertActionItem;
+  describe('ActionItem', () => {
+    let spyOnServiceCreateOrSetActionItem;
     beforeEach(() => {
-      spyOnServiceInsertActionItem = jest.spyOn(service, 'insertActionItem');
+      spyOnServiceCreateOrSetActionItem = jest.spyOn(service, 'createOrSetActionItem');
     });
 
     afterEach(() => {
-      spyOnServiceInsertActionItem.mockReset();
+      spyOnServiceCreateOrSetActionItem.mockReset();
     });
 
-    it('should create an action item', async () => {
-      spyOnServiceInsertActionItem.mockImplementationOnce(async () => ({
-        id: generateId(),
-      }));
+    it('should set an action item', async () => {
+      spyOnServiceCreateOrSetActionItem.mockImplementationOnce(async () => mockGenerateMember());
 
-      const params = generateCreateActionItemParams();
-      await resolver.createActionItem(params);
+      const createOrSetActionItem = generateCreateOrSetActionItemParams();
+      await resolver.createOrSetActionItem(createOrSetActionItem);
 
-      expect(spyOnServiceInsertActionItem).toBeCalledTimes(1);
-      expect(spyOnServiceInsertActionItem).toBeCalledWith(params);
-    });
-  });
-
-  describe('setActionItem', () => {
-    let spyOnServiceSetActionItem;
-    beforeEach(() => {
-      spyOnServiceSetActionItem = jest.spyOn(service, 'setActionItem');
-    });
-
-    afterEach(() => {
-      spyOnServiceSetActionItem.mockReset();
-    });
-
-    it('should update an action item', async () => {
-      spyOnServiceSetActionItem.mockImplementationOnce(async () => mockGenerateMember());
-
-      const setActionItem = generateSetActionItemParams();
-      await resolver.setActionItem(setActionItem);
-
-      expect(spyOnServiceSetActionItem).toBeCalledTimes(1);
-      expect(spyOnServiceSetActionItem).toBeCalledWith(setActionItem);
+      expect(spyOnServiceCreateOrSetActionItem).toBeCalledTimes(1);
+      expect(spyOnServiceCreateOrSetActionItem).toBeCalledWith(createOrSetActionItem);
     });
   });
 

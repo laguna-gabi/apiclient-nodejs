@@ -45,13 +45,27 @@ export const nullableActionItemKeys = ['deadline', 'description', 'rejectNote', 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
+
+/**
+ * Performs create or set for action items (set if there's an Id, create otherwise)
+ * In the case of action items we are requires to allow removing attributes on update.
+ * That's the reason we're using set instead of update (similar to PUT vs PATCH)
+ * Calling CreateOrSetActionItem requires ALL attributes from the original dto,
+ * because we will replace the old object the new one.
+ */
 @InputType({ isAbstract: true })
-export class CreateActionItemParams {
-  @Field(() => String)
-  memberId: string;
+export class CreateOrSetActionItemParams {
+  @Field(() => String, { nullable: true })
+  id?: string;
+
+  @Field(() => String, { nullable: true })
+  memberId?: string;
 
   @Field(() => String)
   title: string;
+
+  @Field(() => ActionItemStatus, { nullable: true })
+  status?: ActionItemStatus;
 
   @Field(() => Date, { nullable: true })
   @IsDate({ message: Errors.get(ErrorType.journeyActionItemDeadline) })
@@ -69,40 +83,6 @@ export class CreateActionItemParams {
 
   @Field(() => ActionItemPriority, { nullable: true })
   priority?: ActionItemPriority;
-}
-
-/**
- * In the case of action items we are requires to allow removing attributes on update.
- * That's the reason we're using set instead of update (similar to PUT vs PATCH)
- * Calling SetActionItem requires ALL attributes from the original dto,
- * because we will replace the old object the new one.
- */
-@InputType({ isAbstract: true })
-export class SetActionItemParams {
-  @Field(() => String)
-  id: string;
-
-  @Field(() => String)
-  title: string;
-
-  @Field(() => ActionItemStatus)
-  status: ActionItemStatus;
-
-  @Field(() => Date, { nullable: true })
-  @IsDate({ message: Errors.get(ErrorType.journeyActionItemDeadline) })
-  deadline?: Date;
-
-  @Field(() => [RelatedEntity])
-  relatedEntities: RelatedEntity[];
-
-  @Field(() => String, { nullable: true })
-  description?: string;
-
-  @Field(() => ActionItemCategory, { nullable: true })
-  category?: ActionItemCategory;
-
-  @Field(() => ActionItemPriority)
-  priority: ActionItemPriority;
 
   @Field(() => String, { nullable: true })
   rejectNote?: string;

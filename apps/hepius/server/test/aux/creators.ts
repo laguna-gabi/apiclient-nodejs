@@ -3,8 +3,8 @@ import { v4 } from 'uuid';
 import { AppointmentsIntegrationActions, Handler } from '.';
 import {
   generateAppointmentLink,
-  generateCreateActionItemParams,
   generateCreateMemberParams,
+  generateCreateOrSetActionItemParams,
   generateCreateUserParams,
   generateEndAppointmentParams,
   generateOrgParams,
@@ -166,9 +166,11 @@ export class Creators {
     return executeEndAppointment(); //triple checking end appointment with params
   };
 
-  createAndValidateActionItem = async (memberId: string, method): Promise<{ id: string }> => {
-    const createActionItemParams = generateCreateActionItemParams({ memberId });
-    const { id } = await method({ createActionItemParams });
+  createAndValidateActionItem = async (memberId: string): Promise<{ id: string }> => {
+    const createOrSetActionItemParams = generateCreateOrSetActionItemParams({ memberId });
+    const { id } = await this.handler.mutations.createOrSetActionItem({
+      createOrSetActionItemParams,
+    });
     expect(id).toEqual(expect.any(String));
 
     return { id };

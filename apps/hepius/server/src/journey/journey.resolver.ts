@@ -19,7 +19,7 @@ import {
   AdmissionService,
   AudioType,
   ChangeMemberDnaParams,
-  CreateActionItemParams,
+  CreateOrSetActionItemParams,
   DietaryHelper,
   DietaryMatcher,
   GetMemberUploadJournalAudioLinkParams,
@@ -30,7 +30,6 @@ import {
   JournalUploadImageLink,
   Journey,
   JourneyService,
-  SetActionItemParams,
   SetGeneralNotesParams,
   UpdateJournalTextParams,
   UpdateJourneyParams,
@@ -124,24 +123,13 @@ export class JourneyResolver {
    ****************************************** Action items *****************************************
    ************************************************************************************************/
 
-  @Mutation(() => Identifier)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
-  @Ace({ entityName: EntityName.member, idLocator: `memberId` })
-  async createActionItem(
-    @Args(camelCase(CreateActionItemParams.name))
-    createActionItemParams: CreateActionItemParams,
+  @Mutation(() => ActionItem)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  async createOrSetActionItem(
+    @Args(camelCase(CreateOrSetActionItemParams.name))
+    createOrSetActionItemParams: CreateOrSetActionItemParams,
   ) {
-    return this.journeyService.insertActionItem(createActionItemParams);
-  }
-
-  @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
-  @Ace({ entityName: EntityName.actionitem, idLocator: `id`, entityMemberIdLocator: 'memberId' })
-  async setActionItem(
-    @Args(camelCase(SetActionItemParams.name))
-    setActionItemParams: SetActionItemParams,
-  ) {
-    return this.journeyService.setActionItem(setActionItemParams);
+    return this.journeyService.createOrSetActionItem(createOrSetActionItemParams);
   }
 
   @Query(() => [ActionItem])

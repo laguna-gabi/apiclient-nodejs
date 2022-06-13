@@ -45,10 +45,9 @@ import {
   AddCaregiverParams,
   Admission,
   ChangeMemberDnaParams,
-  CreateActionItemParams,
+  CreateOrSetActionItemParams,
   GraduateMemberParams,
   Journal,
-  SetActionItemParams,
   SetGeneralNotesParams,
   UpdateCaregiverParams,
   UpdateJournalTextParams,
@@ -458,59 +457,29 @@ export class Mutations {
     return updateNotes;
   };
 
-  createActionItem = async ({
-    createActionItemParams,
+  createOrSetActionItem = async ({
+    createOrSetActionItemParams,
     missingFieldError,
     invalidFieldsErrors,
     requestHeaders = this.defaultUserRequestHeaders,
   }: {
-    createActionItemParams: CreateActionItemParams;
-    missingFieldError?: string;
-    invalidFieldsErrors?: string[];
-    requestHeaders?;
-  }): Promise<Identifier> => {
-    const { createActionItem } = await this.client
-      .request(
-        gql`
-          mutation CreateActionItem($createActionItemParams: CreateActionItemParams!) {
-            createActionItem(createActionItemParams: $createActionItemParams) {
-              id
-            }
-          }
-        `,
-        { createActionItemParams },
-        requestHeaders,
-      )
-      .catch((ex) => {
-        return isResultValid({
-          errors: ex.response.errors,
-          missingFieldError,
-          invalidFieldsErrors,
-        });
-      });
-
-    return createActionItem;
-  };
-
-  setActionItem = async ({
-    setActionItemParams,
-    missingFieldError,
-    invalidFieldsErrors,
-    requestHeaders = this.defaultUserRequestHeaders,
-  }: {
-    setActionItemParams: SetActionItemParams;
+    createOrSetActionItemParams: CreateOrSetActionItemParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
     requestHeaders?;
   }) => {
-    const { setActionItem } = await this.client
+    const { createOrSetActionItem } = await this.client
       .request(
         gql`
-          mutation setActionItem($setActionItemParams: SetActionItemParams!) {
-            setActionItem(setActionItemParams: $setActionItemParams)
+          mutation createOrSetActionItem(
+            $createOrSetActionItemParams: CreateOrSetActionItemParams!
+          ) {
+            createOrSetActionItem(createOrSetActionItemParams: $createOrSetActionItemParams) {
+              id
+            }
           }
         `,
-        { setActionItemParams },
+        { createOrSetActionItemParams },
         requestHeaders,
       )
       .catch((ex) => {
@@ -521,7 +490,7 @@ export class Mutations {
         });
       });
 
-    return setActionItem;
+    return createOrSetActionItem;
   };
 
   createAvailabilities = async ({

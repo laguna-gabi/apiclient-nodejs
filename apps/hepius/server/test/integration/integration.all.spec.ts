@@ -37,13 +37,13 @@ import {
   generateAvailabilityInput,
   generateCarePlanTypeInput,
   generateChangeMemberDnaParams,
-  generateCreateActionItemParams,
   generateCreateBarrierParams,
   generateCreateBarrierParamsWizard,
   generateCreateCarePlanParams,
   generateCreateCarePlanParamsWizard,
   generateCreateJourneyParams,
   generateCreateMemberParams,
+  generateCreateOrSetActionItemParams,
   generateCreateQuestionnaireParams,
   generateCreateRedFlagParamsWizard,
   generateCreateTodoDoneParams,
@@ -56,7 +56,6 @@ import {
   generateRequestAppointmentParams,
   generateRequestHeaders,
   generateScheduleAppointmentParams,
-  generateSetActionItemParams,
   generateSetGeneralNotesParams,
   generateSubmitCareWizardParams,
   generateSubmitQuestionnaireResponseParams,
@@ -95,9 +94,10 @@ import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/daily
 import { Member, ReplaceUserForMemberParams } from '../../src/member';
 import {
   ActionItem,
+  ActionItemStatus,
   ChangeMemberDnaParams,
+  CreateOrSetActionItemParams,
   DischargeTo,
-  SetActionItemParams,
   UpdateJournalTextParams,
 } from '../../src/journey';
 import { Internationalization } from '../../src/providers';
@@ -580,8 +580,8 @@ describe('Integration tests: all', () => {
       // submit QR for member
       await submitQR(memberId);
 
-      await handler.mutations.createActionItem({
-        createActionItemParams: generateCreateActionItemParams({ memberId }),
+      await handler.mutations.createOrSetActionItem({
+        createOrSetActionItemParams: generateCreateOrSetActionItemParams({ memberId }),
       });
 
       // delete member
@@ -1296,20 +1296,15 @@ describe('Integration tests: all', () => {
       const { member, user, org } = await creators.createMemberUserAndOptionalOrg();
       member1 = member;
       // add an overdue Action Item - within range (less than 30 days since deadline)
-      await handler.mutations.createActionItem({
-        createActionItemParams: generateCreateActionItemParams({
+      await handler.mutations.createOrSetActionItem({
+        createOrSetActionItemParams: generateCreateOrSetActionItemParams({
           memberId: member1.id,
+          status: ActionItemStatus.active,
           deadline: sub(new Date(), { days: 29 }),
         }),
       });
       actionItem = (await handler.queries.getActionItems({ memberId: member1.id }))[0];
-      // add a `reached` Action Item (should not trigger an alert)
-      await handler.mutations.createActionItem({
-        createActionItemParams: generateCreateActionItemParams({
-          memberId: member1.id,
-          deadline: sub(new Date(), { days: 31 }),
-        }),
-      });
+
       const { id } = await handler.createMemberWithRetries({
         memberParams: generateCreateMemberParams({ orgId: org.id, userId: user.id }),
       });
@@ -2674,27 +2669,23 @@ describe('Integration tests: all', () => {
       const { member } = await creators.createMemberUserAndOptionalOrg();
 
       // create action items
-      const { id: id1 } = await creators.createAndValidateActionItem(
-        member.id,
-        handler.mutations.createActionItem,
-      );
-      const { id: id2 } = await creators.createAndValidateActionItem(
-        member.id,
-        handler.mutations.createActionItem,
-      );
+      const { id: id1 } = await creators.createAndValidateActionItem(member.id);
+      const { id: id2 } = await creators.createAndValidateActionItem(member.id);
 
       // update action items
-      const setActionItemParams = generateSetActionItemParams({ id: id1 });
-      const setActionItemParams2 = generateSetActionItemParams({ id: id2 });
-      await handler.mutations.setActionItem({ setActionItemParams });
-      await handler.mutations.setActionItem({ setActionItemParams: setActionItemParams2 });
+      const createOrSetActionItemParams = generateCreateOrSetActionItemParams({ id: id1 });
+      const setActionItemParams2 = generateCreateOrSetActionItemParams({ id: id2 });
+      await handler.mutations.createOrSetActionItem({ createOrSetActionItemParams });
+      await handler.mutations.createOrSetActionItem({
+        createOrSetActionItemParams: setActionItemParams2,
+      });
 
       // get action items
       const actionItems = await handler.queries.getActionItems({ memberId: member.id });
 
       //action items are desc sorted, so the last inserted action item is the 1st in the list
       compareActionItem(actionItems[0], setActionItemParams2);
-      compareActionItem(actionItems[1], setActionItemParams);
+      compareActionItem(actionItems[1], createOrSetActionItemParams);
     });
   });
 
@@ -3111,15 +3102,18 @@ describe('Integration tests: all', () => {
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/
 
-  const compareActionItem = (actionItem: ActionItem, setActionItemParams: SetActionItemParams) => {
-    expect(actionItem.title).toEqual(setActionItemParams.title);
-    expect(actionItem.status).toEqual(setActionItemParams.status);
-    expect(actionItem.relatedEntities).toEqual(setActionItemParams.relatedEntities);
-    expect(actionItem.description).toEqual(setActionItemParams.description);
-    expect(actionItem.rejectNote).toEqual(setActionItemParams.rejectNote);
-    expect(actionItem.category).toEqual(setActionItemParams.category);
-    expect(actionItem.priority).toEqual(setActionItemParams.priority);
-    expect(new Date(actionItem.deadline)).toEqual(setActionItemParams.deadline);
+  const compareActionItem = (
+    actionItem: ActionItem,
+    createOrSetActionItemParams: CreateOrSetActionItemParams,
+  ) => {
+    expect(actionItem.title).toEqual(createOrSetActionItemParams.title);
+    expect(actionItem.status).toEqual(createOrSetActionItemParams.status);
+    expect(actionItem.relatedEntities).toEqual(createOrSetActionItemParams.relatedEntities);
+    expect(actionItem.description).toEqual(createOrSetActionItemParams.description);
+    expect(actionItem.rejectNote).toEqual(createOrSetActionItemParams.rejectNote);
+    expect(actionItem.category).toEqual(createOrSetActionItemParams.category);
+    expect(actionItem.priority).toEqual(createOrSetActionItemParams.priority);
+    expect(new Date(actionItem.deadline)).toEqual(createOrSetActionItemParams.deadline);
   };
 
   const createAndValidateAvailabilities = async (count: number): Promise<Identifiers> => {
