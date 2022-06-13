@@ -459,9 +459,9 @@ describe('UserService', () => {
 
     it('there should not be a slot overlapping a scheduled appointment', async () => {
       const journeyId = generateId();
-      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => [
-        generateObjectId(journeyId),
-      ]);
+      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => {
+        return { journeyIds: [generateObjectId(journeyId)] };
+      });
 
       const user = await service.insert(generateCreateUserParams());
       await createDefaultAvailabilities(user.id);
@@ -499,6 +499,8 @@ describe('UserService', () => {
 
     // eslint-disable-next-line max-len
     it(`should return ${defaultSlotsParams.defaultSlots} default slots if availability in the past`, async () => {
+      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => []);
+
       const user = await service.insert(generateCreateUserParams());
       await availabilityResolver.createAvailabilities(user.id, [
         generateAvailabilityInput({
@@ -517,6 +519,8 @@ describe('UserService', () => {
 
     // eslint-disable-next-line max-len
     it(`should return ${defaultSlotsParams.defaultSlots} default slots if there is no availability`, async () => {
+      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => []);
+
       const user = await service.insert(generateCreateUserParams());
       const result = await service.getSlots({
         userId: user.id,
@@ -528,6 +532,8 @@ describe('UserService', () => {
 
     /* eslint-disable-next-line max-len */
     it('should return specific default slots if there is no availability and got defaultSlotsCount', async () => {
+      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => []);
+
       const user = await service.insert(generateCreateUserParams());
       const result = await service.getSlots({
         userId: user.id,
@@ -540,6 +546,8 @@ describe('UserService', () => {
 
     /* eslint-disable-next-line max-len */
     it('should return 0 slots if there is no availability and allowEmptySlotsResponse=true', async () => {
+      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => []);
+
       const user = await service.insert(generateCreateUserParams());
       const result = await service.getSlots({
         userId: user.id,
@@ -553,6 +561,8 @@ describe('UserService', () => {
 
     /* eslint-disable-next-line max-len */
     it('should return slots if availabilities exists and allowEmptySlotsResponse=true', async () => {
+      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => []);
+
       const user = await service.insert(generateCreateUserParams());
       await availabilityResolver.createAvailabilities(user.id, [
         generateAvailabilityInput({
@@ -575,6 +585,8 @@ describe('UserService', () => {
     test.each([true, false])(
       'should not return past slots when allowEmptySlotsResponse=true (%p}',
       async (allowEmptySlotsResponse) => {
+        spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => []);
+
         const user = await service.insert(generateCreateUserParams());
         await availabilityResolver.createAvailabilities(user.id, [
           generateAvailabilityInput({
@@ -597,6 +609,8 @@ describe('UserService', () => {
     );
 
     it("should not return past slots for 'not before' in the past", async () => {
+      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => []);
+
       const user = await service.insert(generateCreateUserParams());
       await availabilityResolver.createAvailabilities(user.id, [
         generateAvailabilityInput({
@@ -615,11 +629,6 @@ describe('UserService', () => {
     it(`should return ${
       defaultSlotsParams.defaultSlots - 1
     } slots from today and the next from tomorrow`, async () => {
-      const journeyId = generateId();
-      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => [
-        generateObjectId(journeyId),
-      ]);
-
       const result = await preformGetUserSlots();
 
       for (let index = 0; index < defaultSlotsParams.defaultSlots + 1; index++) {
@@ -637,22 +646,12 @@ describe('UserService', () => {
     });
 
     it('should return more then default(9) slots if maxSlots is given', async () => {
-      const journeyId = generateId();
-      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => [
-        generateObjectId(journeyId),
-      ]);
-
       const result = await preformGetUserSlots({ maxSlots: 10 });
       expect(result.slots.length).toBe(10);
     });
 
     // eslint-disable-next-line max-len
     it(`should return ${defaultSlotsParams.defaultSlots} slots only from today if capped by notAfter to this midnight`, async () => {
-      const journeyId = generateId();
-      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => [
-        generateObjectId(journeyId),
-      ]);
-
       const result = await preformGetUserSlots({ notAfter: startOfTomorrow() });
       expect(result.slots.length).toBe(defaultSlotsParams.defaultSlots + 1);
       for (let index = 0; index < defaultSlotsParams.defaultSlots - 1; index++) {
@@ -663,11 +662,6 @@ describe('UserService', () => {
     });
 
     it('check slots default properties and order', async () => {
-      const journeyId = generateId();
-      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => [
-        generateObjectId(journeyId),
-      ]);
-
       const result = await preformGetUserSlots();
 
       for (let index = 1; index < defaultSlotsParams.maxSlots; index++) {
@@ -684,9 +678,9 @@ describe('UserService', () => {
     /* eslint-disable-next-line max-len */
     it('should return default slots from appointments "notBefore" if not specified in params', async () => {
       const journeyId = generateId();
-      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => [
-        generateObjectId(journeyId),
-      ]);
+      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => {
+        return { journeyIds: [generateObjectId(journeyId)] };
+      });
 
       const user = await service.insert(generateCreateUserParams());
       const future = add(startOfToday(), { days: 2, hours: 17 });
@@ -716,9 +710,9 @@ describe('UserService', () => {
 
     it('should include deleted appointment slot time', async () => {
       const journeyId = generateId();
-      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => [
-        generateObjectId(journeyId),
-      ]);
+      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => {
+        return { journeyIds: [generateObjectId(journeyId)] };
+      });
 
       const user = await service.insert(generateCreateUserParams());
       await createDefaultAvailabilities(user.id);
@@ -726,7 +720,7 @@ describe('UserService', () => {
       const appointment = await scheduleAppointmentWithDate({
         memberId: generateId(),
         userId: user.id,
-        journeyId: generateId(),
+        journeyId,
         start: add(startOfTomorrow(), { hours: 11 }),
         end: add(startOfTomorrow(), { hours: 11, minutes: defaultSlotsParams.duration }),
       });
@@ -743,13 +737,18 @@ describe('UserService', () => {
     });
 
     const preformGetUserSlots = async (override: Partial<GetSlotsParams> = {}) => {
+      const journeyId = generateId();
+      spyOnServiceGetUsersMembersCurrentJourneys.mockImplementationOnce(async () => {
+        return { journeyIds: [generateObjectId(journeyId)] };
+      });
+
       const user = await service.insert(generateCreateUserParams());
       await createDefaultAvailabilities(user.id);
 
       await scheduleAppointmentWithDate({
         memberId: generateId(),
         userId: user.id,
-        journeyId: generateId(),
+        journeyId,
         start: add(startOfToday(), { hours: 9 }),
         end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
       });

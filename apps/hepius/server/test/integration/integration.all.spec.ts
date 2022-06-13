@@ -899,7 +899,7 @@ describe('Integration tests: all', () => {
       );
     }, 10000);
 
-    it('should not exclude graduated members from summing members count on getUsers', async () => {
+    it('should exclude graduated members from summing members count on getUsers', async () => {
       const { member: member1, user } = await creators.createMemberUserAndOptionalOrg();
       const { member: member2 } = await creators.createMemberUserAndOptionalOrg();
       const { member: member3 } = await creators.createMemberUserAndOptionalOrg();
@@ -924,7 +924,7 @@ describe('Integration tests: all', () => {
       const users = await handler.queries.getUsers();
       expect(
         users.filter((userSummary) => userSummary.id === user.id)[0].currentMembersCount,
-      ).toEqual(3);
+      ).toEqual(2);
     }, 10000);
   });
 
