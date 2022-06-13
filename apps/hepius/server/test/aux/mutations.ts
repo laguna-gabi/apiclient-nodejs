@@ -1331,7 +1331,6 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        console.log({ ex });
         return isResultValid({
           errors: ex.response.errors,
           missingFieldError,
