@@ -103,16 +103,16 @@ export class UserResolver {
   }
 
   @Query(() => [UserSummary])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.byOrg, idLocator: 'orgIds' })
   async getUsers(
-    @Args('roles', {
-      type: () => [UserRole],
+    @Args('orgIds', {
+      type: () => [String],
       nullable: true,
-      defaultValue: [UserRole.lagunaCoach, UserRole.lagunaNurse],
     })
-    roles: UserRole[] = [UserRole.lagunaCoach, UserRole.lagunaNurse],
+    orgIds?: string[],
   ): Promise<UserSummary[]> {
-    const users = await this.userService.getUsers(roles);
+    const users = await this.userService.getUsers(orgIds);
     const usersStatusMap = await this.cognitoService.listUsersStatus();
 
     const array = [];
@@ -128,7 +128,8 @@ export class UserResolver {
   }
 
   @Query(() => Slots)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.byOrg, idLocator: 'orgIds' })
   async getUserSlots(
     @Args(camelCase(GetSlotsParams.name)) getSlotsParams: GetSlotsParams,
   ): Promise<Slots> {
@@ -154,12 +155,10 @@ export class UserResolver {
   }
 
   @Query(() => UserConfig)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async getUserConfig(
-    @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.userIdInvalid)))
-    id: string,
-  ): Promise<UserConfig> {
-    return this.userService.getUserConfig(id);
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.token })
+  async getUserConfig(@Client('_id') userId): Promise<UserConfig> {
+    return this.userService.getUserConfig(userId);
   }
 
   @Mutation(() => Boolean)

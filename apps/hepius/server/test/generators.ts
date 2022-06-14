@@ -290,11 +290,13 @@ export const generateGetSlotsParams = ({
   userId = null,
   appointmentId = null,
   notBefore = null,
+  orgIds,
 }: Partial<GetSlotsParams> = {}): GetSlotsParams => {
   return {
     userId,
     appointmentId,
     notBefore,
+    orgIds,
   };
 };
 

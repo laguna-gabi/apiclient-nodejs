@@ -31,13 +31,22 @@ export class AvailabilityResolver {
   }
 
   @Query(() => [AvailabilitySlot])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async getAvailabilities(): Promise<AvailabilitySlot[]> {
-    return this.availabilityService.get();
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.byOrg, idLocator: 'orgIds' })
+  async getAvailabilities(
+    @Args(
+      'orgIds',
+      { type: () => [String], nullable: true },
+      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid), { nullable: true }),
+    )
+    orgIds?: string[],
+  ): Promise<AvailabilitySlot[]> {
+    return this.availabilityService.get(orgIds);
   }
 
   @Mutation(() => Boolean)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.token })
   async deleteAvailability(
     @Client('_id') userId,
     @Args(

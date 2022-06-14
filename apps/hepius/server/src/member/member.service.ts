@@ -252,12 +252,14 @@ export class MemberService extends AlertService {
     });
   }
 
-  async getMembersAppointments(orgId?: string): Promise<AppointmentCompose[]> {
+  async getMembersAppointments(orgIds?: string[]): Promise<AppointmentCompose[]> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - queryDaysLimit.getMembersAppointments);
 
     return this.memberModel.aggregate([
-      { $match: orgId ? { org: new Types.ObjectId(orgId) } : {} },
+      {
+        $match: orgIds ? { org: { $in: orgIds.map((org) => new Types.ObjectId(org)) } } : {},
+      },
       {
         $lookup: {
           from: 'journeys',

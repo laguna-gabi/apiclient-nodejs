@@ -58,10 +58,12 @@ export class UserService extends BaseService {
     return this.userModel.findById(id).populate('appointments');
   }
 
-  async getUsers(roles: UserRole[]): Promise<UserSummary[]> {
+  async getUsers(orgIds?: string[]): Promise<UserSummary[]> {
     const { journeyIds, memberIds } = await this.getUsersMembersCurrentJourneys();
     const result = await this.userModel.aggregate([
-      { $match: { roles: { $in: roles } } },
+      {
+        $match: orgIds ? { orgs: { $in: orgIds.map((orgId) => new Types.ObjectId(orgId)) } } : {},
+      },
       {
         $lookup: {
           from: 'members',
@@ -177,10 +179,38 @@ export class UserService extends BaseService {
     const { journeyIds } = await this.getUsersMembersCurrentJourneys();
     const [slotsObject] = await this.userModel.aggregate([
       ...(userId
-        ? [{ $match: { _id: new Types.ObjectId(userId) } }]
+        ? [
+            {
+              $match: {
+                $and: [
+                  { _id: new Types.ObjectId(userId) },
+                  getSlotsParams.orgIds
+                    ? {
+                        orgs: {
+                          $in: getSlotsParams.orgIds.map((orgId) => new Types.ObjectId(orgId)),
+                        },
+                      }
+                    : {}, // ACE
+                ],
+              },
+            },
+          ]
         : [
             { $unwind: { path: '$appointments' } },
-            { $match: { appointments: new Types.ObjectId(appointmentId) } },
+            {
+              $match: {
+                $and: [
+                  { appointments: new Types.ObjectId(appointmentId) },
+                  getSlotsParams.orgIds
+                    ? {
+                        orgs: {
+                          $in: getSlotsParams.orgIds.map((orgId) => new Types.ObjectId(orgId)),
+                        },
+                      }
+                    : {}, // ACE
+                ],
+              },
+            },
             {
               $lookup: {
                 from: 'appointments',

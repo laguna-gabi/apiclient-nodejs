@@ -124,7 +124,7 @@ import {
 } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
 import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
-
+import { intersection } from 'lodash';
 export class Handler extends BaseHandler {
   sendBird;
   oneSignal;
@@ -402,7 +402,9 @@ export const initClients = async (
   eventEmitter: EventEmitter2,
   roles: UserRole[],
 ) => {
-  const users = await userService.getUsers(roles);
+  const users = (await userService.getUsers()).filter(
+    (user) => intersection(roles, user.roles).length,
+  );
   let sub;
   if (users.length === 0) {
     const createUserParams = generateCreateUserParams({ roles });

@@ -1,7 +1,7 @@
 import { Barrier, BarrierType, CarePlan, CarePlanType, Caregiver } from '@argus/hepiusClient';
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
-import { isResultValid } from '..';
+import { generateGetSlotsParams, isResultValid } from '..';
 import { RedFlag, RedFlagType } from '../../src/care';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
@@ -112,7 +112,16 @@ export class Queries {
     return getUsers;
   };
 
-  getUserSlots = async (getSlotsParams: GetSlotsParams, invalidFieldsError?: string) => {
+  getUserSlots = async (
+    {
+      getSlotsParams,
+      invalidFieldsError,
+      requestHeaders = this.defaultUserRequestHeaders,
+    }: { getSlotsParams: GetSlotsParams; invalidFieldsError?: string; requestHeaders? } = {
+      getSlotsParams: generateGetSlotsParams(),
+      requestHeaders: this.defaultUserRequestHeaders,
+    },
+  ) => {
     const result = await this.client
       .request(
         gql`
@@ -140,7 +149,7 @@ export class Queries {
           }
         `,
         { getSlotsParams },
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         if (invalidFieldsError) {
@@ -433,12 +442,20 @@ export class Queries {
     return { ...resultObject, ...errorsObject };
   };
 
-  getMembersAppointments = async (orgId?: string, invalidFieldsError?: string) => {
+  getMembersAppointments = async ({
+    orgIds,
+    invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    orgIds?: string[];
+    invalidFieldsError?: string;
+    requestHeaders?;
+  } = {}) => {
     const result = await this.client
       .request(
         gql`
-          query getMembersAppointments($orgId: String) {
-            getMembersAppointments(orgId: $orgId) {
+          query getMembersAppointments($orgIds: [String!]) {
+            getMembersAppointments(orgIds: $orgIds) {
               memberId
               memberName
               userId
@@ -449,8 +466,8 @@ export class Queries {
             }
           }
         `,
-        { orgId },
-        this.defaultUserRequestHeaders,
+        { orgIds },
+        requestHeaders,
       )
       .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
     return result?.getMembersAppointments;
@@ -504,11 +521,11 @@ export class Queries {
     return result?.getAppointment;
   };
 
-  getAvailabilities = async ({ requestHeaders }: { requestHeaders }) => {
+  getAvailabilities = async ({ orgIds, requestHeaders }: { orgIds?: string[]; requestHeaders }) => {
     const { getAvailabilities } = await this.client.request(
       gql`
-        query getAvailabilities {
-          getAvailabilities {
+        query getAvailabilities($orgIds: [String!]) {
+          getAvailabilities(orgIds: $orgIds) {
             id
             start
             end
@@ -517,7 +534,7 @@ export class Queries {
           }
         }
       `,
-      undefined,
+      { orgIds },
       requestHeaders,
     );
 
@@ -604,24 +621,18 @@ export class Queries {
     return result?.getMemberConfig;
   };
 
-  getUserConfig = async ({
-    id,
-    invalidFieldsError,
-  }: {
-    id: string;
-    invalidFieldsError?: string;
-  }) => {
+  getUserConfig = async ({ invalidFieldsError }: { invalidFieldsError?: string }) => {
     const result = await this.client
       .request(
         gql`
-          query getUserConfig($id: String!) {
-            getUserConfig(id: $id) {
+          query getUserConfig {
+            getUserConfig {
               userId
               accessToken
             }
           }
         `,
-        { id },
+        {},
         this.defaultUserRequestHeaders,
       )
       .catch((ex) => {
@@ -631,25 +642,37 @@ export class Queries {
     return result?.getUserConfig;
   };
 
-  getOrg = async ({ id }: { id: string }) => {
-    const { getOrg } = await this.client.request(
-      gql`
-        query getOrg($id: String!) {
-          getOrg(id: $id) {
-            id
-            name
-            type
-            zipCode
-            trialDuration
-            code
+  getOrg = async ({
+    id,
+    requestHeaders = this.defaultUserRequestHeaders,
+    invalidFieldsError,
+  }: {
+    id: string;
+    requestHeaders?;
+    invalidFieldsError?: string;
+  }) => {
+    const result = await this.client
+      .request(
+        gql`
+          query getOrg($id: String!) {
+            getOrg(id: $id) {
+              id
+              name
+              type
+              zipCode
+              trialDuration
+              code
+            }
           }
-        }
-      `,
-      { id },
-      this.defaultUserRequestHeaders,
-    );
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
+      });
 
-    return getOrg;
+    return result?.getOrg;
   };
 
   getOrgs = async ({

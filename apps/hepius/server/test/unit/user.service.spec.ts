@@ -103,7 +103,7 @@ describe('UserService', () => {
       const user2 = generateCreateUserParams();
       await service.insert(user2);
 
-      const result = await service.getUsers([UserRole.lagunaCoach, UserRole.lagunaNurse]);
+      const result = await service.getUsers();
       expect(result.length).toBeGreaterThanOrEqual(2);
     }, 10000);
 

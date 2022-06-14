@@ -3,6 +3,7 @@ import { v4 } from 'uuid';
 import { AppointmentsIntegrationActions, Handler } from '.';
 import {
   generateAppointmentLink,
+  generateAvailabilityInput,
   generateCreateMemberParams,
   generateCreateOrSetActionItemParams,
   generateCreateUserParams,
@@ -15,6 +16,7 @@ import { Member, defaultMemberParams } from '../../src/member';
 import { Org } from '../../src/org';
 import { CreateUserParams } from '../../src/user';
 import { Appointment, AppointmentStatus, User, UserRole } from '@argus/hepiusClient';
+import { Identifiers } from '../../src/common';
 
 export class Creators {
   constructor(
@@ -24,11 +26,11 @@ export class Creators {
 
   createAndValidateUser = async ({
     roles,
-    orgId,
-  }: { roles?: UserRole[]; orgId?: string } = {}): Promise<User> => {
+    orgs,
+  }: { roles?: UserRole[]; orgs?: string[] } = {}): Promise<User> => {
     const createUserParams: CreateUserParams = generateCreateUserParams({
       roles,
-      ...(orgId ? { orgs: [orgId] } : {}),
+      orgs,
     });
 
     this.handler.cognitoService.spyOnCognitoServiceAddUser.mockResolvedValueOnce({
@@ -174,5 +176,26 @@ export class Creators {
     expect(id).toEqual(expect.any(String));
 
     return { id };
+  };
+
+  createAndValidateAvailabilities = async (count: number, user: User): Promise<Identifiers> => {
+    const availabilities = Array.from(Array(count)).map(() => generateAvailabilityInput());
+    const requestHeaders = generateRequestHeaders(user.authId);
+
+    const { ids } = await this.handler.mutations.createAvailabilities({
+      requestHeaders,
+      availabilities,
+    });
+
+    expect(ids.length).toEqual(availabilities.length);
+
+    const availabilitiesResult = await this.handler.queries.getAvailabilities({ requestHeaders });
+    const resultFiltered = availabilitiesResult.filter(
+      (availability) => availability.userId === user.id,
+    );
+
+    expect(resultFiltered.length).toEqual(availabilities.length);
+
+    return { ids };
   };
 }

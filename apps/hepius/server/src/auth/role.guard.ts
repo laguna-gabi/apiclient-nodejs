@@ -3,6 +3,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { BaseGuard } from '.';
 import { DecoratorType } from '../common';
+import { intersection } from 'lodash';
 
 @Injectable()
 export class RolesGuard extends BaseGuard implements CanActivate {
@@ -19,7 +20,7 @@ export class RolesGuard extends BaseGuard implements CanActivate {
     const request = this.getRequest(context);
 
     const user = request?.user as { roles: string[]; orgs: string[] };
-    if (user?.roles?.find((role) => role == UserRole.lagunaAdmin)) {
+    if (user?.roles?.includes(UserRole.lagunaAdmin)) {
       return true;
     }
 
@@ -30,7 +31,7 @@ export class RolesGuard extends BaseGuard implements CanActivate {
       return this.reflector.get<boolean>(DecoratorType.isPublic, context.getHandler());
     }
 
-    if (user.roles.find((role) => allowedRoles.includes(role))) {
+    if (!!intersection(user.roles, allowedRoles)?.length) {
       return true;
     }
 

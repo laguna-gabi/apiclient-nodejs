@@ -66,7 +66,7 @@ describe('AvailabilityResolver', () => {
       await resolver.getAvailabilities();
 
       expect(spyOnServiceGet).toBeCalledTimes(1);
-      expect(spyOnServiceGet).toBeCalledWith();
+      expect(spyOnServiceGet).toBeCalledWith(undefined);
     });
   });
 

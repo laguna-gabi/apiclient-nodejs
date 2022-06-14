@@ -33,7 +33,14 @@ import {
   generateUpdateMemberParams,
   urls,
 } from '..';
-import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
+import {
+  ErrorType,
+  Errors,
+  HttpErrorCodes,
+  HttpErrorMessage,
+  maxLength,
+  minLength,
+} from '../../src/common';
 import {
   CancelNotifyParams,
   CreateMemberParams,
@@ -94,7 +101,7 @@ describe('Validations - member', () => {
     `(`should set default value if exists for optional field $field`, async (params) => {
       /* eslint-enable max-len */
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-      await creators.createAndValidateUser({ orgId });
+      await creators.createAndValidateUser({ orgs: [orgId] });
       const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
       delete memberParams[params.field];
 
@@ -118,7 +125,7 @@ describe('Validations - member', () => {
       ${'height'}        | ${generateRandomHeight()}
     `(`should be able to set value for optional field $field`, async (params) => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-      await creators.createAndValidateUser({ orgId });
+      await creators.createAndValidateUser({ orgs: [orgId] });
       const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
       memberParams[params.field] = params.value;
 
@@ -134,7 +141,7 @@ describe('Validations - member', () => {
 
     it('should set value for optional field dischargeDate', async () => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-      await creators.createAndValidateUser({ orgId });
+      await creators.createAndValidateUser({ orgs: [orgId] });
       const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
 
       memberParams.dischargeDate = generateDateOnly(date.soon(3));
@@ -264,16 +271,6 @@ describe('Validations - member', () => {
         id: params.field,
         invalidFieldsError: params.error,
       });
-    });
-  });
-
-  describe('getMembersAppointments', () => {
-    test.each`
-      field    | error
-      ${'123'} | ${Errors.get(ErrorType.memberOrgIdInvalid)}
-      ${123}   | ${stringError}
-    `(`should fail to get member appointments by id - value $field is invalid`, async (params) => {
-      await handler.queries.getMembersAppointments(params.field, params.error);
     });
   });
 
@@ -431,7 +428,7 @@ describe('Validations - member', () => {
       'should fail on sending metadata.when in the past for type %p',
       async (type) => {
         const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-        await creators.createAndValidateUser({ orgId });
+        await creators.createAndValidateUser({ orgs: [orgId] });
         const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
         const { id } = await handler.mutations.createMember({ memberParams });
         const member = await handler.queries.getMember({
@@ -964,7 +961,7 @@ describe('Validations - member', () => {
       await handler.mutations.replaceMemberOrg({
         replaceMemberOrgParams: generateReplaceMemberOrgParams(),
         requestHeaders: handler.defaultUserRequestHeaders,
-        missingFieldError: 'Forbidden resource',
+        missingFieldError: HttpErrorMessage.get(HttpErrorCodes.forbidden),
       });
     });
   });

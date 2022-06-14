@@ -1,4 +1,4 @@
-import { MemberRole, RoleTypes, User, UserRole } from '@argus/hepiusClient';
+import { MemberRole, RoleTypes, User, isLagunaUser } from '@argus/hepiusClient';
 import { EntityName } from '@argus/pandora';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -29,7 +29,8 @@ export class AceGuard extends BaseGuard implements CanActivate {
     if (
       isPublic ||
       aceOptions?.strategy === AceStrategy.token ||
-      aceOptions?.strategy === AceStrategy.rbac
+      aceOptions?.strategy === AceStrategy.rbac ||
+      aceOptions?.strategy === AceStrategy.custom
     ) {
       return true;
     }
@@ -39,13 +40,7 @@ export class AceGuard extends BaseGuard implements CanActivate {
     const client = request?.user;
 
     // #1: if user is a Laguna user {(lagunaCoach, lagunaNurse or lagunaAdmin) we can(Activate) - no ACE required
-    if (
-      (client as User).roles.find((role) =>
-        [UserRole.lagunaCoach, UserRole.lagunaAdmin, UserRole.lagunaNurse].includes(
-          role as UserRole,
-        ),
-      )
-    ) {
+    if (isLagunaUser(client?.roles)) {
       return true;
     }
 
@@ -77,7 +72,7 @@ export class AceGuard extends BaseGuard implements CanActivate {
           // #3: if client is a user we allow/deny access based on org provisioning
           if (Types.ObjectId.isValid(memberId)) {
             const member = await this.entityResolver.getEntityById(Member.name, memberId);
-            return !!client.orgs?.find((org) => org.toString() === member?.org.id);
+            return !!client.orgs?.find((org) => org.toString() === member?.org.toString());
           }
         }
     }

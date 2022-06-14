@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { MemberRole, UserRole } from '@argus/hepiusClient';
+import { MemberRole, UserRole, isLagunaUser } from '@argus/hepiusClient';
 import { EntityName, generateId, generateObjectId, mockProcessWarnings } from '@argus/pandora';
 import { createMock } from '@golevelup/ts-jest';
 import { ExecutionContext } from '@nestjs/common';
@@ -99,7 +99,7 @@ describe(AceGuard.name, () => {
 
       spyOnMockEntityResolver.mockResolvedValue({
         _id: generateObjectId(),
-        org: { id: generateId() },
+        org: generateObjectId(),
       });
 
       const guard = new AceGuard(mockReflector, mockEntityResolver);
@@ -132,7 +132,7 @@ describe(AceGuard.name, () => {
 
       spyOnMockEntityResolver.mockResolvedValue({
         _id: generateObjectId(),
-        org: { id: orgId }, // <- same orgId as the client provisioned org id
+        org: new Types.ObjectId(orgId), // <- same orgId as the client provisioned org id
       });
       const guard = new AceGuard(mockReflector, mockEntityResolver);
 
@@ -174,7 +174,7 @@ describe(AceGuard.name, () => {
       // the second call to the entity resolver will get us the member with the org association (`orgId`)
       spyOnMockEntityResolver.mockResolvedValueOnce({
         _id: generateObjectId(),
-        org: { id: orgId }, // <- same orgId as the client provisioned org id
+        org: new Types.ObjectId(orgId), // <- same orgId as the client provisioned org id
       });
 
       const guard = new AceGuard(mockReflector, mockEntityResolver);
@@ -219,7 +219,7 @@ describe(AceGuard.name, () => {
       // the second call to the entity resolver will get us the member with the org association (`orgId`)
       spyOnMockEntityResolver.mockResolvedValueOnce({
         _id: generateObjectId(),
-        org: { id: generateId() }, // <- NOT the same orgId as the client provisioned org id
+        org: generateObjectId(), // <- NOT the same orgId as the client provisioned org id
       });
 
       const guard = new AceGuard(mockReflector, mockEntityResolver);
@@ -454,5 +454,18 @@ describe(AceGuard.name, () => {
         expect(await guard.canActivate(mockExecutionContext)).toBeTruthy();
       },
     );
+  });
+
+  test.each`
+    roles                                           | isLagunaUser
+    ${[UserRole.coach]}                             | ${false}
+    ${[MemberRole.member]}                          | ${false}
+    ${[UserRole.lagunaCoach]}                       | ${true}
+    ${[UserRole.lagunaCoach, UserRole.lagunaAdmin]} | ${true}
+    ${[]}                                           | ${false}
+    ${undefined}                                    | ${false}
+    ${['lagunaCoach', 'lagunaAdmin']}               | ${true}
+  `('isLagunaUser === $isLagunaUser when user has roles: $roles', (params) => {
+    expect(isLagunaUser(params.roles)).toBe(params.isLagunaUser);
   });
 });

@@ -527,7 +527,7 @@ describe('MemberService', () => {
       await generateMember(orgId);
       await generateMember(orgId);
 
-      const result = await service.getMembersAppointments(orgId);
+      const result = await service.getMembersAppointments([orgId]);
       expect(result).toEqual([]);
     });
 
@@ -554,7 +554,7 @@ describe('MemberService', () => {
         numberOfAppointments: member2AppointmentsCount,
       });
 
-      const result = await service.getMembersAppointments(orgId);
+      const result = await service.getMembersAppointments([orgId]);
       expect(result.length).toEqual(member1AppointmentsCount + member2AppointmentsCount);
       expect(result).toEqual(
         expect.arrayContaining([
@@ -603,7 +603,7 @@ describe('MemberService', () => {
         numberOfAppointments: 1,
       });
 
-      const result = await service.getMembersAppointments(orgId1.toString());
+      const result = await service.getMembersAppointments([orgId1.toString()]);
       expect(result.length).toEqual(memberAppointmentsCount);
       expect(result).toEqual(
         expect.arrayContaining([
@@ -642,7 +642,7 @@ describe('MemberService', () => {
         numberOfAppointments: member2AppointmentsCount,
       });
 
-      const result = await service.getMembersAppointments(orgId);
+      const result = await service.getMembersAppointments([orgId]);
       const isSorted = result
         .map((item) => item.start)
         .every((v, i, a) => !i || a[i - 1].getTime() >= v.getTime());
@@ -678,7 +678,7 @@ describe('MemberService', () => {
         start: startDate2,
       });
 
-      const result = await service.getMembersAppointments(orgId);
+      const result = await service.getMembersAppointments([orgId]);
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(
         expect.objectContaining({

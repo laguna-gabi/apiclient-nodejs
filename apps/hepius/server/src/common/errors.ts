@@ -489,9 +489,17 @@ export const DbErrors = {
   duplicateKey: 11000,
 };
 
+export enum HttpErrorCodes {
+  'forbidden' = 403,
+}
+
+export const HttpErrorMessage: Map<HttpErrorCodes, string> = new Map([
+  [HttpErrorCodes.forbidden.valueOf(), `Forbidden resource`],
+]);
+
 export const LogAsWarning = new Set([
   ...Errors.values(),
-  'Forbidden resource',
+  HttpErrorMessage.get(HttpErrorCodes.forbidden),
   'Unauthorized',
   'Argument passed in must be a single String of 12 bytes or a string of 24 hex characters',
 ]);

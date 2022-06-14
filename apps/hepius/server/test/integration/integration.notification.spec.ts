@@ -788,7 +788,7 @@ describe('Integration tests: notifications', () => {
     // eslint-disable-next-line max-len
     it(`replaceUserForMember: should updateSenderClientIdToRecipientClientId for member dispatches`, async () => {
       const { member, org } = await creators.createMemberUserAndOptionalOrg();
-      const replacedUser = await creators.createAndValidateUser({ orgId: org.id });
+      const replacedUser = await creators.createAndValidateUser({ orgs: [org.id] });
 
       await delay(500);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events

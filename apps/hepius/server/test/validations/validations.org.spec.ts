@@ -1,6 +1,6 @@
 import { generateId } from '@argus/pandora';
 import { BEFORE_ALL_TIMEOUT, generateOrgParams } from '..';
-import { ErrorType, Errors } from '../../src/common';
+import { ErrorType, Errors, HttpErrorCodes, HttpErrorMessage } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
 import { Handler } from '../aux';
 
@@ -66,7 +66,7 @@ describe('Validations - org', () => {
   it('should fail to get orgs if role not admin', async () => {
     await handler.queries.getOrgs({
       requestHeaders: handler.defaultUserRequestHeaders,
-      invalidFieldsError: 'Forbidden resource',
+      invalidFieldsError: HttpErrorMessage.get(HttpErrorCodes.forbidden),
     });
   });
 });

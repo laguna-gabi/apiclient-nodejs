@@ -194,16 +194,17 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [AppointmentCompose])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.byOrg, idLocator: 'orgIds' })
   async getMembersAppointments(
     @Args(
-      'orgId',
-      { type: () => String, nullable: true },
+      'orgIds',
+      { type: () => [String], nullable: true },
       new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid), { nullable: true }),
     )
-    orgId?: string,
+    orgIds?: string[],
   ): Promise<AppointmentCompose[]> {
-    return this.memberService.getMembersAppointments(orgId);
+    return this.memberService.getMembersAppointments(orgIds);
   }
 
   /*************************************************************************************************

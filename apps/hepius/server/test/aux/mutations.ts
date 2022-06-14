@@ -530,9 +530,11 @@ export class Mutations {
   deleteAvailability = async ({
     id,
     invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     id: string;
     invalidFieldsError?: string;
+    requestHeaders?;
   }): Promise<Identifiers> => {
     const result = await this.client
       .request(
@@ -542,7 +544,7 @@ export class Mutations {
           }
         `,
         { id },
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         if (invalidFieldsError) {

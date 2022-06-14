@@ -27,6 +27,6 @@ export class EntityResolver {
   }
 
   private getCollectionName(name: string): string {
-    return name.toLocaleLowerCase() + 's';
+    return name.toLowerCase() + 's';
   }
 }

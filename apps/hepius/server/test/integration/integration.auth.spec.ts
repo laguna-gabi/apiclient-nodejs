@@ -3,13 +3,20 @@ import { generateId } from '@argus/pandora';
 import {
   BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
+  generateAvailabilityInput,
+  generateOrgParams,
   generateRequestHeaders,
+  generateScheduleAppointmentParams,
   generateUpdateCarePlanParams,
   generateUpdateUserParams,
   submitMockCareWizard,
 } from '..';
-import { AceOptions, DecoratorType } from '../../src/common';
+import { AceOptions, DecoratorType, HttpErrorCodes, HttpErrorMessage } from '../../src/common';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
+import { isEqual, sortBy } from 'lodash';
+import { add, startOfToday, startOfTomorrow } from 'date-fns';
+import { defaultSlotsParams } from '../../src/user';
+import { date as fakerDate } from 'faker';
 
 enum Access {
   allowed = 'allowed',
@@ -36,7 +43,8 @@ describe('Integration tests : RBAC / ACE', () => {
     await handler.afterAll();
   });
 
-  it.skip('to confirm that all endpoints include ACE annotation', async () => {
+  it('to confirm that all endpoints include ACE annotation', async () => {
+    const waiverList = ['createOrSetActionItem'];
     // identify all routes with @Roles annotation where @Ace is not defined
     expect(
       (
@@ -49,7 +57,7 @@ describe('Integration tests : RBAC / ACE', () => {
             !handler.reflector.get<AceOptions>(
               DecoratorType.aceOptions,
               method.discoveredMethod.handler,
-            ),
+            ) && !!waiverList.includes[method.discoveredMethod.methodName],
         )
         .map(
           (method) => `'${method.discoveredMethod.methodName}': endpoint is missing ACE annotation`,
@@ -64,7 +72,7 @@ describe('Integration tests : RBAC / ACE', () => {
       requestHeaders,
     });
 
-    expect(errors?.[0]?.message).toBe('Forbidden resource');
+    expect(errors?.[0]?.message).toBe(HttpErrorMessage.get(HttpErrorCodes.forbidden));
   });
 
   // eslint-disable-next-line max-len
@@ -105,15 +113,21 @@ describe('Integration tests : RBAC / ACE', () => {
         requestHeaders: handler.defaultAdminRequestHeaders,
       });
 
-      const result = await handler.mutations.addCaregiver({
-        addCaregiverParams: generateAddCaregiverParams({ memberId: member.id }),
-        requestHeaders: generateRequestHeaders(user.authId),
-      });
-
       if (access === Access.allowed) {
-        expect(result).toBeTruthy();
+        expect(
+          await handler.mutations.addCaregiver({
+            addCaregiverParams: generateAddCaregiverParams({ memberId: member.id }),
+            requestHeaders: generateRequestHeaders(user.authId),
+          }),
+        ).toBeTruthy();
       } else {
-        expect(result).toBeFalsy();
+        expect(
+          await handler.mutations.addCaregiver({
+            addCaregiverParams: generateAddCaregiverParams({ memberId: member.id }),
+            requestHeaders: generateRequestHeaders(user.authId),
+            missingFieldError: HttpErrorMessage.get(HttpErrorCodes.forbidden),
+          }),
+        ).toBeFalsy();
       }
     },
   );
@@ -124,20 +138,24 @@ describe('Integration tests : RBAC / ACE', () => {
     async (access) => {
       const { member } = await creators.createMemberUserAndOptionalOrg();
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       // `addCaregiver` request is allowed for customer coach
-      const result = await handler.mutations.addCaregiver({
-        addCaregiverParams: generateAddCaregiverParams({
-          memberId: access === Access.allowed ? undefined : generateId(),
-        }), // <- when member id is undefined it is properly populated, however, if set we compare to client id
-        requestHeaders: generateRequestHeaders(member.authId),
-      });
-
       if (access === Access.allowed) {
-        expect(result).toBeTruthy();
+        expect(
+          await handler.mutations.addCaregiver({
+            addCaregiverParams: generateAddCaregiverParams(), // <- when member id is undefined it is properly populated, however, if set we compare to client id
+            requestHeaders: generateRequestHeaders(member.authId),
+          }),
+        ).toBeTruthy();
       } else {
-        expect(result).toBeFalsy();
+        expect(
+          await handler.mutations.addCaregiver({
+            addCaregiverParams: generateAddCaregiverParams({
+              memberId: generateId(), // <- when member id set we compare to client id
+            }),
+            requestHeaders: generateRequestHeaders(member.authId),
+            missingFieldError: HttpErrorMessage.get(HttpErrorCodes.forbidden),
+          }),
+        ).toBeFalsy();
       }
     },
   );
@@ -176,15 +194,21 @@ describe('Integration tests : RBAC / ACE', () => {
         requestHeaders: handler.defaultAdminRequestHeaders,
       });
 
-      const result = await handler.mutations.updateCarePlan({
-        updateCarePlanParams,
-        requestHeaders: generateRequestHeaders(authId),
-      });
-
       if (access === Access.allowed) {
-        expect(result).toBeTruthy();
+        expect(
+          await handler.mutations.updateCarePlan({
+            updateCarePlanParams,
+            requestHeaders: generateRequestHeaders(authId),
+          }),
+        ).toBeTruthy();
       } else {
-        expect(result).toBeFalsy();
+        expect(
+          await handler.mutations.updateCarePlan({
+            updateCarePlanParams,
+            requestHeaders: generateRequestHeaders(authId),
+            missingFieldError: HttpErrorMessage.get(HttpErrorCodes.forbidden),
+          }),
+        ).toBeFalsy();
       }
     },
   );
@@ -218,6 +242,7 @@ describe('Integration tests : RBAC / ACE', () => {
         expect(result.members[0].id).toEqual(memberId);
       } else {
         expect(result.members).toEqual(undefined);
+        expect(result.errors[0].message).toContain(HttpErrorMessage.get(HttpErrorCodes.forbidden));
       }
     },
   );
@@ -246,4 +271,239 @@ describe('Integration tests : RBAC / ACE', () => {
     expect(result.members.length).toEqual(1);
     expect(result.members[0].id).toEqual(id);
   });
+
+  // eslint-disable-next-line max-len
+  it(`expecting non-Laguna (customer) coach to see only availability of own organization`, async () => {
+    // availability for coach user#1 in random org
+    const user1 = await creators.createAndValidateUser({ roles: [UserRole.coach] });
+    const { ids: user1Availabilities } = await creators.createAndValidateAvailabilities(5, user1);
+
+    // availability for coach user#2 in random org
+    const user2 = await creators.createAndValidateUser({ roles: [UserRole.coach] });
+    await creators.createAndValidateAvailabilities(5, user2);
+
+    // coach user#3 provisioned for user1's orgs and user2's orgs
+    const user3 = await creators.createAndValidateUser({
+      roles: [UserRole.coach],
+      orgs: [...user1.orgs, ...user2.orgs],
+    });
+
+    //  coach user#1 should see only own organization
+    expect(
+      isEqual(
+        sortBy(
+          (
+            await handler.queries.getAvailabilities({
+              requestHeaders: generateRequestHeaders(user1.authId),
+            })
+          ).map((availability) => availability.id),
+        ),
+        sortBy(user1Availabilities),
+      ),
+    ).toBeTruthy();
+
+    // coach user#3 should see both user1's and user2's availabilities
+    expect(
+      (
+        await handler.queries.getAvailabilities({
+          requestHeaders: generateRequestHeaders(user3.authId),
+        })
+      ).map((availability) => availability.id).length,
+    ).toEqual(10);
+  });
+
+  // eslint-disable-next-line max-len
+  it('expecting non-Laguna (customer) coach to see only slots of own organization', async () => {
+    const { member, org } = await creators.createMemberUserAndOptionalOrg();
+    const user1 = await creators.createAndValidateUser({
+      roles: [UserRole.coach],
+      orgs: [org.id],
+    });
+
+    const user2 = await creators.createAndValidateUser({
+      roles: [UserRole.coach],
+      orgs: [generateId()],
+    });
+
+    await handler.mutations.createAvailabilities({
+      requestHeaders: generateRequestHeaders(user1.authId),
+      availabilities: [
+        generateAvailabilityInput({
+          start: add(startOfToday(), { hours: 10 }),
+          end: add(startOfToday(), { hours: 22 }),
+        }),
+        generateAvailabilityInput({
+          start: add(startOfTomorrow(), { hours: 10 }),
+          end: add(startOfTomorrow(), { hours: 22 }),
+        }),
+      ],
+    });
+
+    const appointmentParams = generateScheduleAppointmentParams({
+      memberId: member.id,
+      userId: user1.id,
+      start: add(startOfToday(), { hours: 9 }),
+      end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
+    });
+    const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
+
+    expect(
+      (
+        await handler.queries.getUserSlots({
+          getSlotsParams: {
+            appointmentId: appointment.id,
+            notBefore: add(startOfToday(), { hours: 10 }),
+          },
+          requestHeaders: generateRequestHeaders(user1.authId),
+        })
+      )?.slots?.length,
+    ).toBeTruthy();
+
+    expect(
+      (
+        await handler.queries.getUserSlots({
+          getSlotsParams: {
+            appointmentId: appointment.id,
+            notBefore: add(startOfToday(), { hours: 10 }),
+          },
+          requestHeaders: generateRequestHeaders(user2.authId), // user2 is not allowed to access user1 data
+        })
+      )?.slots?.length,
+    ).toBeFalsy();
+  });
+
+  it('expecting non-Laguna (customer) coach to see only users in own organization', async () => {
+    const org1 = generateId();
+
+    const user1 = await creators.createAndValidateUser({
+      roles: [UserRole.coach],
+      orgs: [org1],
+    });
+
+    const user2 = await creators.createAndValidateUser({
+      roles: [UserRole.coach],
+      orgs: [org1, generateId()],
+    });
+
+    const user3 = await creators.createAndValidateUser({
+      roles: [UserRole.coach],
+      orgs: [generateId()],
+    });
+
+    // user1 should be able to see self and user2
+    expect(
+      (
+        await handler.queries.getUsers({
+          requestHeaders: generateRequestHeaders(user1.authId),
+        })
+      ).map((user) => user.id),
+    ).toEqual([user1.id, user2.id]);
+
+    // user3 should be able to see only self
+    expect(
+      (
+        await handler.queries.getUsers({
+          requestHeaders: generateRequestHeaders(user3.authId),
+        })
+      ).map((user) => user.id),
+    ).toEqual([user3.id]);
+  });
+
+  it('expecting non-Laguna (customer) coach to only get own org data', async () => {
+    const { id: orgId1 } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
+
+    const { id: orgId2 } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
+
+    const user = await creators.createAndValidateUser({
+      roles: [UserRole.coach],
+      orgs: [orgId1],
+    });
+
+    expect(
+      (
+        await handler.queries.getOrg({
+          id: orgId1,
+          requestHeaders: generateRequestHeaders(user.authId),
+        })
+      )?.id,
+    ).toEqual(orgId1);
+
+    await handler.queries.getOrg({
+      id: orgId2,
+      requestHeaders: generateRequestHeaders(user.authId),
+      invalidFieldsError: 'Forbidden',
+    });
+  });
+
+  it('expecting non-Laguna (customer) coach to only get appointments in own org', async () => {
+    const { member: member1, org } = await creators.createMemberUserAndOptionalOrg();
+    const { member: member2 } = await creators.createMemberUserAndOptionalOrg();
+    const start = fakerDate.soon(4);
+
+    // `coach` user provisioned for member1 organization
+    const user = await creators.createAndValidateUser({
+      roles: [UserRole.coach],
+      orgs: [org.id, generateId()],
+    });
+
+    await creators.handler.mutations.scheduleAppointment({
+      appointmentParams: generateScheduleAppointmentParams({
+        memberId: member1.id,
+        userId: user.id,
+        start,
+      }),
+    });
+    await creators.handler.mutations.scheduleAppointment({
+      appointmentParams: generateScheduleAppointmentParams({
+        memberId: member1.id,
+        userId: user.id,
+        start: add(start, { days: 1 }),
+      }),
+    });
+    await creators.handler.mutations.scheduleAppointment({
+      appointmentParams: generateScheduleAppointmentParams({
+        memberId: member2.id,
+        userId: generateId(),
+      }),
+    });
+
+    const result = await creators.handler.queries.getMembersAppointments({
+      orgIds: [org.id],
+      requestHeaders: generateRequestHeaders(user.authId),
+    });
+
+    expect(result.length).toEqual(2);
+    expect(result.find((appointment) => appointment.memberId !== member1.id)).toBeUndefined();
+  });
+
+  test.each([Access.allowed, Access.denied])(
+    'expecting non-Laguna (customer) coach to only get member in own org',
+    async (access) => {
+      const { member: member1, org } = await creators.createMemberUserAndOptionalOrg();
+      const { member: member2 } = await creators.createMemberUserAndOptionalOrg();
+
+      // `coach` user provisioned for member1 organization
+      const user = await creators.createAndValidateUser({
+        roles: [UserRole.coach],
+        orgs: [org.id, generateId()],
+      });
+
+      if (access === Access.allowed) {
+        expect(
+          await handler.queries.getMember({
+            id: member1.id,
+            requestHeaders: generateRequestHeaders(user.authId),
+          }),
+        ).toBeTruthy();
+      } else {
+        expect(
+          await handler.queries.getMember({
+            id: member2.id,
+            requestHeaders: generateRequestHeaders(user.authId),
+            invalidFieldsError: HttpErrorMessage.get(HttpErrorCodes.forbidden),
+          }),
+        ).toBeFalsy();
+      }
+    },
+  );
 });

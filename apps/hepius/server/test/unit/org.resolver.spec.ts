@@ -1,3 +1,4 @@
+import { UserRole } from '@argus/hepiusClient';
 import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { dbDisconnect, defaultModules, generateOrgParams, mockGenerateOrg } from '..';
@@ -63,7 +64,7 @@ describe('OrgResolver', () => {
       spyOnServiceGet.mockImplementationOnce(() => generatedOrgParams);
 
       const id = generateId();
-      const result = await resolver.getOrg(id);
+      const result = await resolver.getOrg(undefined, [UserRole.lagunaAdmin], id);
 
       expect(spyOnServiceGet).toBeCalledTimes(1);
       expect(spyOnServiceGet).toBeCalledWith(id);

@@ -479,10 +479,10 @@ describe('MemberResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => appointmentComposes);
 
       const orgId = generateId();
-      const result = await resolver.getMembersAppointments(orgId);
+      const result = await resolver.getMembersAppointments([orgId]);
 
       expect(spyOnServiceGet).toBeCalledTimes(1);
-      expect(spyOnServiceGet).toBeCalledWith(orgId);
+      expect(spyOnServiceGet).toBeCalledWith([orgId]);
       expect(result).toEqual(appointmentComposes);
     });
 

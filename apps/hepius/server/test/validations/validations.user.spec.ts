@@ -178,7 +178,7 @@ describe('Validations - user', () => {
   `(`should fail to request slots since $field is not valid`, async (params) => {
     const getSlotsParams: GetSlotsParams = generateGetSlotsParams(params.input);
 
-    await handler.queries.getUserSlots(getSlotsParams, params.errors);
+    await handler.queries.getUserSlots({ getSlotsParams, invalidFieldsError: params.errors });
   });
 
   test.each`
@@ -187,23 +187,6 @@ describe('Validations - user', () => {
     ${'appointmentId'} | ${{ appointmentId: '123' }} | ${Errors.get(ErrorType.appointmentIdInvalid)}
   `(`should fail to request slots since $field is not valid`, async (params) => {
     await handler.queries.getUserSlotsByAppointmentId(params.input, params.errors);
-  });
-
-  it('should throw error on non existing userConfig', async () => {
-    await handler.queries.getUserConfig({
-      id: generateId(),
-      invalidFieldsError: Errors.get(ErrorType.userNotFound),
-    });
-  });
-
-  test.each`
-    field   | input  | error
-    ${'id'} | ${123} | ${'String cannot represent a non string value'}
-  `(`should fail to getUserConfig since $field is not valid,`, async (params) => {
-    await handler.queries.getUserConfig({
-      id: params.input,
-      invalidFieldsError: params.error,
-    });
   });
 
   it('rest: should return 404 on no appointmentId given', async () => {

@@ -21,7 +21,10 @@ export class AvailabilityService {
   }
 
   async delete(id: string, deletedBy: string): Promise<boolean> {
-    const result = await this.availabilityModel.findById(new Types.ObjectId(id));
+    const result = await this.availabilityModel.findOne({
+      _id: new Types.ObjectId(id),
+      userId: new Types.ObjectId(deletedBy),
+    });
     if (!result) {
       throw new Error(Errors.get(ErrorType.availabilityNotFound));
     }
@@ -29,7 +32,7 @@ export class AvailabilityService {
     return true;
   }
 
-  async get(): Promise<AvailabilitySlot[]> {
+  async get(orgIds?: string[]): Promise<AvailabilitySlot[]> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - queryDaysLimit.getAvailabilities);
 
@@ -59,6 +62,11 @@ export class AvailabilityService {
           path: '$users',
           preserveNullAndEmptyArrays: false,
         },
+      },
+      {
+        $match: orgIds
+          ? { 'users.orgs': { $in: orgIds.map((orgId) => new Types.ObjectId(orgId)) } }
+          : {},
       },
       {
         $project: {

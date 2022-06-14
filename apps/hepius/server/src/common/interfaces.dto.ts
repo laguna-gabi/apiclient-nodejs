@@ -215,7 +215,8 @@ export interface SeverityLevelInterface {
 export const defaultEntityMemberIdLocator = 'memberId';
 
 export enum AceStrategy {
-  token = 'token', // value is populated from token (user id, member id, orgs, etc) (ACE skipped)
+  custom = 'custom', // ACE us handled downstream from guard
+  token = 'token', // value are populated from token (user id, member id, orgs, etc)
   rbac = 'rbac', // RBAC guard is sufficient (ACE skipped)
   byOrg = 'byOrg', // request carries org id(s) which can be validated against the client provisioned orgs
   byMember = 'byMember', // request carries an entity id which is either a member id or can be traced back to a member

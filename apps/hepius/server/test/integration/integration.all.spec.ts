@@ -85,7 +85,6 @@ import {
   Errors,
   EventType,
   IEventOnUpdatedUser,
-  Identifiers,
   ItemType,
   delay,
   reformatDate,
@@ -153,11 +152,11 @@ describe('Integration tests: all', () => {
     const { id: orgId } = await creators.createAndValidateOrg();
     const resultNurse1 = await creators.createAndValidateUser({
       roles: [UserRole.lagunaNurse, UserRole.lagunaCoach],
-      orgId,
+      orgs: [orgId],
     });
     const resultNurse2 = await creators.createAndValidateUser({
       roles: [UserRole.lagunaNurse],
-      orgId,
+      orgs: [orgId],
     });
 
     const { member } = await creators.createMemberUserAndOptionalOrg();
@@ -287,7 +286,7 @@ describe('Integration tests: all', () => {
     await creators.handler.mutations.scheduleAppointment({ appointmentParams: params2a });
     await creators.handler.mutations.requestAppointment({ appointmentParams: params2b });
 
-    const result = await creators.handler.queries.getMembersAppointments(org.id);
+    const result = await creators.handler.queries.getMembersAppointments({ orgIds: [org.id] });
     const resultMember1 = await creators.handler.queries.getMember({
       id: member1.id,
       requestHeaders: generateRequestHeaders(member1.authId),
@@ -446,7 +445,7 @@ describe('Integration tests: all', () => {
 
   it('should assign user from the same org to member', async () => {
     const org = await creators.createAndValidateOrg();
-    const { id: userId } = await creators.createAndValidateUser({ orgId: org.id });
+    const { id: userId } = await creators.createAndValidateUser({ orgs: [org.id] });
     const memberParams = generateCreateMemberParams({ orgId: org.id, userId });
     handler.featureFlagService.spyOnFeatureFlagControlGroup.mockImplementationOnce(
       async () => false,
@@ -496,7 +495,7 @@ describe('Integration tests: all', () => {
     expect(initialMember.users.length).toEqual(1);
     expect(initialMember.users[0].id).toEqual(member.primaryUserId);
 
-    const newUser = await creators.createAndValidateUser({ orgId: member.org.id });
+    const newUser = await creators.createAndValidateUser({ orgs: [member.org.id] });
     //calling twice, to check that the user wasn't added twice to users list
     const appointment1 = await params.method({ userId: newUser.id, memberId: member.id });
     const start = new Date(appointment1.end);
@@ -518,7 +517,7 @@ describe('Integration tests: all', () => {
   describe('new member + member registration scheduling', () => {
     it('should delete timeout for member if an appointment is scheduled', async () => {
       const { member } = await creators.createMemberUserAndOptionalOrg();
-      const primaryUser = await creators.createAndValidateUser({ orgId: member.org.id });
+      const primaryUser = await creators.createAndValidateUser({ orgs: [member.org.id] });
       const appointmentParams: RequestAppointmentParams = generateRequestAppointmentParams({
         memberId: member.id,
         userId: primaryUser.id,
@@ -688,7 +687,7 @@ describe('Integration tests: all', () => {
     it('should set new user for a given member', async () => {
       const { member, user, org } = await creators.createMemberUserAndOptionalOrg();
       const oldUserId = member.primaryUserId.toString();
-      const newUser = await creators.createAndValidateUser({ orgId: org.id });
+      const newUser = await creators.createAndValidateUser({ orgs: [org.id] });
       const requestHeadersOldUser = generateRequestHeaders(user.authId);
       const requestHeadersNewUser = generateRequestHeaders(newUser.authId);
 
@@ -772,11 +771,22 @@ describe('Integration tests: all', () => {
 
   describe('user', () => {
     it('should set,get,delete availability of users', async () => {
-      await createAndValidateAvailabilities(2);
-      const { ids } = await createAndValidateAvailabilities(5);
+      const user1 = await creators.createAndValidateUser();
+      const user2 = await creators.createAndValidateUser();
+      const { ids } = await creators.createAndValidateAvailabilities(5, user1);
 
-      const result = await handler.mutations.deleteAvailability({ id: ids[0] });
+      let result = await handler.mutations.deleteAvailability({
+        id: ids[0],
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
       expect(result).toBeTruthy();
+
+      // expecting user2 to NOT be allowed to delete user1's availability
+      result = await handler.mutations.deleteAvailability({
+        id: ids[1],
+        requestHeaders: generateRequestHeaders(user2.authId),
+        invalidFieldsError: Errors.get(ErrorType.availabilityNotFound),
+      });
     });
 
     /* eslint-disable max-len */
@@ -801,9 +811,11 @@ describe('Integration tests: all', () => {
       });
 
       const result = await handler.queries.getUserSlots({
-        appointmentId: appointment.id,
-        notBefore: add(startOfToday(), { hours: 10 }),
-        ...additionalGetSlotsParams,
+        getSlotsParams: {
+          appointmentId: appointment.id,
+          notBefore: add(startOfToday(), { hours: 10 }),
+          ...additionalGetSlotsParams,
+        },
       });
 
       expect(result.slots.length).toBe(expectedDefaultSlots);
@@ -811,7 +823,7 @@ describe('Integration tests: all', () => {
 
     it('should get user slots', async () => {
       const { member, org } = await creators.createMemberUserAndOptionalOrg();
-      const user = await creators.createAndValidateUser({ orgId: org.id });
+      const user = await creators.createAndValidateUser({ orgs: [org.id] });
 
       await handler.mutations.createAvailabilities({
         requestHeaders: generateRequestHeaders(user.authId),
@@ -836,8 +848,10 @@ describe('Integration tests: all', () => {
       const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
 
       const result = await handler.queries.getUserSlots({
-        appointmentId: appointment.id,
-        notBefore: add(startOfToday(), { hours: 10 }),
+        getSlotsParams: {
+          appointmentId: appointment.id,
+          notBefore: add(startOfToday(), { hours: 10 }),
+        },
       });
 
       expect(result).toEqual(
@@ -2723,7 +2737,7 @@ describe('Integration tests: all', () => {
 
   it('should update only primary user related channels on updated user', async () => {
     const { user: user2, member, org } = await creators.createMemberUserAndOptionalOrg();
-    const user1 = await creators.createAndValidateUser({ orgId: org.id });
+    const user1 = await creators.createAndValidateUser({ orgs: [org.id] });
 
     /**
      * adding user1 to member and user2 sendbird channel
@@ -2762,7 +2776,7 @@ describe('Integration tests: all', () => {
 
   it('should not update secondary user related channels on updated user', async () => {
     const { member, org } = await creators.createMemberUserAndOptionalOrg();
-    const user = await creators.createAndValidateUser({ orgId: org.id });
+    const user = await creators.createAndValidateUser({ orgs: [org.id] });
 
     /**
      * adding user1 to member and user2 sendbird channel
@@ -3114,28 +3128,6 @@ describe('Integration tests: all', () => {
     expect(actionItem.category).toEqual(createOrSetActionItemParams.category);
     expect(actionItem.priority).toEqual(createOrSetActionItemParams.priority);
     expect(new Date(actionItem.deadline)).toEqual(createOrSetActionItemParams.deadline);
-  };
-
-  const createAndValidateAvailabilities = async (count: number): Promise<Identifiers> => {
-    const user = await creators.createAndValidateUser();
-    const availabilities = Array.from(Array(count)).map(() => generateAvailabilityInput());
-    const requestHeaders = generateRequestHeaders(user.authId);
-
-    const { ids } = await handler.mutations.createAvailabilities({
-      requestHeaders,
-      availabilities,
-    });
-
-    expect(ids.length).toEqual(availabilities.length);
-
-    const availabilitiesResult = await handler.queries.getAvailabilities({ requestHeaders });
-    const resultFiltered = availabilitiesResult.filter(
-      (availability) => availability.userId === user.id,
-    );
-
-    expect(resultFiltered.length).toEqual(availabilities.length);
-
-    return { ids };
   };
 
   const createTodos = async (memberId: string, requestHeaders) => {

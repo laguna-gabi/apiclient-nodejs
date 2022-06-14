@@ -100,4 +100,6 @@ export class GetSlotsParams {
   @IsOptional()
   @Field(() => Number, { defaultValue: defaultSlotsParams.maxSlots })
   maxSlots?: number;
+
+  orgIds?: string[];
 }
