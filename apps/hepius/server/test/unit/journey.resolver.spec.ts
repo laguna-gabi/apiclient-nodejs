@@ -245,6 +245,7 @@ describe(JourneyResolver.name, () => {
       text = lorem.sentence(),
       published = false,
       updatedAt = new Date(),
+      createdAt = new Date(),
       imageFormat = ImageFormat.png,
       audioFormat = AudioFormat.mp3,
     }: Partial<Journal> = {}): Journal => {
@@ -255,6 +256,7 @@ describe(JourneyResolver.name, () => {
         text,
         published,
         updatedAt,
+        createdAt,
         imageFormat,
         audioFormat,
       };

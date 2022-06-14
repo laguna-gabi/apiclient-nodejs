@@ -732,6 +732,7 @@ export class Queries {
               text
               published
               updatedAt
+              createdAt
             }
           }
         `,
@@ -754,6 +755,7 @@ export class Queries {
               text
               published
               updatedAt
+              createdAt
             }
           }
         `,

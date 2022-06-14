@@ -136,6 +136,9 @@ export class Journal extends Identifier {
 
   @Field(() => Date)
   updatedAt: Date;
+
+  @Field(() => Date)
+  createdAt: Date;
 }
 
 /**************************************************************************************************

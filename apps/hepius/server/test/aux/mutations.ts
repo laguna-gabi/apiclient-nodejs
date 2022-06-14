@@ -625,6 +625,7 @@ export class Mutations {
               text
               published
               updatedAt
+              createdAt
             }
           }
         `,

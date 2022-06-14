@@ -567,6 +567,7 @@ describe(JourneyService.name, () => {
         published: journal.published,
         text: journal.text,
         updatedAt: journal.updatedAt,
+        createdAt: journal.createdAt,
       });
     });
 
