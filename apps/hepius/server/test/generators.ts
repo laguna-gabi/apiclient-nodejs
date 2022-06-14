@@ -10,7 +10,6 @@ import {
   MemberRole,
   Notes,
   Relationship,
-  RoleTypes,
   Scores,
   User,
   UserRole,
@@ -188,115 +187,49 @@ import {
 } from '../src/todo';
 import { CreateUserParams, GetSlotsParams, UpdateUserParams } from '../src/user';
 
-export const generateCreateUserParams = ({
-  roles = [UserRole.lagunaCoach],
-  firstName = name.firstName(21),
-  lastName = name.lastName(21),
-  email = generateEmail(),
-  avatar = image.imageUrl(),
-  description = lorem.sentence(),
-  phone = generatePhone(),
-  title = name.title(),
-  maxMembers = defaultUserParams.maxMembers,
-  languages = [Language.en, Language.es],
-  orgs = [generateId(), generateId()],
-}: Partial<CreateUserParams> = {}): CreateUserParams => {
-  return {
-    firstName,
-    lastName,
-    email,
-    roles,
-    avatar,
-    description,
-    phone,
-    title,
-    maxMembers,
-    languages,
-    orgs,
-  };
-};
+/**************************************************************************************************
+ ********************************************* Member *********************************************
+ *************************************************************************************************/
 
-export const generateUpdateUserParams = ({
-  id = generateId(),
-  roles = [UserRole.lagunaNurse],
-  firstName = name.firstName(21),
-  lastName = name.lastName(21),
-  avatar = image.imageUrl(),
-  description = lorem.sentence(),
-  title = name.title(),
-  maxMembers = defaultUserParams.maxMembers + 1,
-  languages = [Language.en, Language.es],
-  orgs = [generateId(), generateId()],
-}: Partial<UpdateUserParams> = {}): UpdateUserParams => {
-  return {
-    id,
-    firstName,
-    lastName,
-    roles,
-    avatar,
-    description,
-    title,
-    maxMembers,
-    languages,
-    orgs,
-  };
-};
-
-export const generateMemberConfig = ({
-  memberId = generateObjectId(),
-  externalUserId = v4(),
-  platform = Platform.ios,
-  isPushNotificationsEnabled = true,
-  accessToken = generateId(),
-  articlesPath = system.directoryPath(),
-  language = defaultMemberParams.language,
-}: Partial<MemberConfig> = {}): MemberConfig => {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  return {
-    memberId,
-    externalUserId,
-    platform,
-    accessToken,
-    isPushNotificationsEnabled,
-    articlesPath,
-    language,
-  };
-};
-
-export const mockGenerateUser = (): User => {
+export const mockGenerateMember = (primaryUser?: User): Member => {
   const firstName = name.firstName();
   const lastName = name.lastName();
+  const user = primaryUser || mockGenerateUser();
+  const admitDate = subDays(new Date(), 7);
+  const dischargeDate = addDays(admitDate, 2);
+  const deceasedDate = addDays(admitDate, 3);
   return {
     id: generateId(),
+    authId: v4(),
+    primaryUserId: generateObjectId(user.id),
+    phone: generatePhone(),
+    phoneType: 'mobile',
+    deviceId: datatype.uuid(),
+    admitDate: generateDateOnly(admitDate),
+    dischargeDate: generateDateOnly(dischargeDate),
     firstName,
     lastName,
-    email: generateEmail(),
-    roles: [UserRole.lagunaCoach],
-    avatar: image.imageUrl(),
-    description: lorem.sentence(),
+    dateOfBirth: generateDateOnly(fakerDate.past()),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    org: { _id: generateId(), ...generateOrgParams() },
+    users: [user],
+    sex: defaultMemberParams.sex,
     createdAt: fakerDate.past(1),
-    phone: generatePhone(),
-    authId: v4(),
-    username: firstName,
-    lastMemberAssignedAt: new Date(0),
-    lastQueryAlert: fakerDate.past(2),
-    inEscalationGroup: true,
-    orgs: [generateId(), generateId()],
-  };
-};
-
-export const generateGetSlotsParams = ({
-  userId = null,
-  appointmentId = null,
-  notBefore = null,
-  orgIds,
-}: Partial<GetSlotsParams> = {}): GetSlotsParams => {
-  return {
-    userId,
-    appointmentId,
-    notBefore,
-    orgIds,
+    updatedAt: fakerDate.past(1),
+    honorific: defaultMemberParams.honorific,
+    roles: [MemberRole.member],
+    race: defaultMemberParams.race,
+    maritalStatus: MaritalStatus.single,
+    zipCode: generateZipCode(),
+    fellowName: generateFellowName(),
+    address: {
+      street: fakerAddress.streetName(),
+      city: fakerAddress.city(),
+      state: fakerAddress.state(),
+    },
+    general_notes: lorem.sentence(),
+    deceased: { cause: lorem.sentence(), date: generateDateOnly(deceasedDate) },
   };
 };
 
@@ -374,64 +307,6 @@ export const generateInternalCreateMemberParams = ({
   };
 };
 
-export const mockGenerateMember = (primaryUser?: User): Member => {
-  const firstName = name.firstName();
-  const lastName = name.lastName();
-  const user = primaryUser || mockGenerateUser();
-  const admitDate = subDays(new Date(), 7);
-  const dischargeDate = addDays(admitDate, 2);
-  const deceasedDate = addDays(admitDate, 3);
-  return {
-    id: generateId(),
-    authId: v4(),
-    primaryUserId: generateObjectId(user.id),
-    phone: generatePhone(),
-    phoneType: 'mobile',
-    deviceId: datatype.uuid(),
-    admitDate: generateDateOnly(admitDate),
-    dischargeDate: generateDateOnly(dischargeDate),
-    firstName,
-    lastName,
-    dateOfBirth: generateDateOnly(fakerDate.past()),
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    org: { _id: generateId(), ...generateOrgParams() },
-    users: [user],
-    sex: defaultMemberParams.sex,
-    createdAt: fakerDate.past(1),
-    updatedAt: fakerDate.past(1),
-    honorific: defaultMemberParams.honorific,
-    roles: [MemberRole.member],
-    race: defaultMemberParams.race,
-    maritalStatus: MaritalStatus.single,
-    zipCode: generateZipCode(),
-    fellowName: generateFellowName(),
-    address: {
-      street: fakerAddress.streetName(),
-      city: fakerAddress.city(),
-      state: fakerAddress.state(),
-    },
-    general_notes: lorem.sentence(),
-    deceased: { cause: lorem.sentence(), date: generateDateOnly(deceasedDate) },
-  };
-};
-
-export const mockGenerateOrg = ({
-  id = generateId(),
-  type = OrgType.hospital,
-  name = company.companyName(),
-  trialDuration = datatype.number(),
-  zipCode = fakerAddress.zipCode(),
-}: Partial<Org> = {}): Org => {
-  return {
-    id,
-    type,
-    name,
-    trialDuration,
-    zipCode,
-  };
-};
-
 export const generateUpdateMemberParams = ({
   id = generateId(),
   authId = v4(),
@@ -487,6 +362,87 @@ export const generateUpdateMemberParams = ({
   };
 };
 
+export const generateAppointmentComposeParams = (): AppointmentCompose => {
+  const start = fakerDate.soon(5);
+  const end = new Date(start);
+  end.setHours(end.getHours() + 2);
+
+  return {
+    memberId: generateId(),
+    memberName: `${name.firstName()} ${name.lastName()}`,
+    userId: generateId(),
+    userName: `${name.firstName()} ${name.lastName()}`,
+    start,
+    end,
+    status: AppointmentStatus.scheduled,
+  };
+};
+
+export const generateDeleteDischargeDocumentParams = ({
+  memberId = generateId(),
+  dischargeDocumentType = DischargeDocumentType.Instructions,
+}: // eslint-disable-next-line max-len
+Partial<DeleteDischargeDocumentParams> = {}): DeleteDischargeDocumentParams => {
+  return { memberId, dischargeDocumentType };
+};
+
+export const generateUpdateClientSettings = ({
+  member,
+  memberConfig,
+  journey,
+}: {
+  member?: Member;
+  memberConfig?: MemberConfig;
+  journey?: Journey;
+}): IUpdateClientSettings => {
+  return {
+    type: InnerQueueTypes.updateClientSettings,
+    id: memberConfig?.memberId?.toString() || member.id.toString(),
+    clientCategory: ClientCategory.member,
+    phone: member?.phone,
+    firstName: member?.firstName,
+    lastName: member?.lastName,
+    orgName: member?.org?.name,
+    zipCode: member?.zipCode || member?.org?.zipCode,
+    language: memberConfig?.language,
+    platform: memberConfig?.platform,
+    isPushNotificationsEnabled: memberConfig?.isPushNotificationsEnabled,
+    isAppointmentsReminderEnabled: memberConfig?.isAppointmentsReminderEnabled,
+    isRecommendationsEnabled: memberConfig?.isRecommendationsEnabled,
+    isTodoNotificationsEnabled: memberConfig?.isTodoNotificationsEnabled,
+    externalUserId: memberConfig?.externalUserId,
+    firstLoggedInAt: journey?.firstLoggedInAt,
+  };
+};
+
+export const generateDeleteMemberParams = ({
+  id = generateId(),
+  hard = false,
+}: Partial<DeleteMemberParams> = {}) => {
+  return {
+    id,
+    hard,
+  };
+};
+
+export const generateReplaceUserForMemberParams = ({
+  userId = generateId(),
+  memberId = generateId(),
+}: Partial<ReplaceUserForMemberParams> = {}): ReplaceUserForMemberParams => {
+  return { userId, memberId };
+};
+
+export const generateReplaceMemberOrgParams = ({
+  memberId = generateId(),
+  orgId = generateId(),
+}: Partial<ReplaceMemberOrgParams> = {}): ReplaceMemberOrgParams => {
+  return { memberId, orgId };
+};
+
+/**************************************************************************************************
+ ****************************************** MemberConfig ******************************************
+ *************************************************************************************************/
+
 export const mockGenerateMemberConfig = ({
   platform = Platform.ios,
   isPushNotificationsEnabled = true,
@@ -512,17 +468,27 @@ export const mockGenerateMemberConfig = ({
   };
 };
 
-export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey => ({
-  id: generateId(),
-  memberId: new Types.ObjectId(memberId),
-  firstLoggedInAt: fakerDate.past(2),
-  lastLoggedInAt: fakerDate.past(1),
-  fellowName: generateFellowName(),
-  admissions: [],
-  readmissionRisk: ReadmissionRisk.low,
-  isGraduated: false,
-  generalNotes: lorem.sentence(),
-});
+export const generateMemberConfig = ({
+  memberId = generateObjectId(),
+  externalUserId = v4(),
+  platform = Platform.ios,
+  isPushNotificationsEnabled = true,
+  accessToken = generateId(),
+  articlesPath = system.directoryPath(),
+  language = defaultMemberParams.language,
+}: Partial<MemberConfig> = {}): MemberConfig => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return {
+    memberId,
+    externalUserId,
+    platform,
+    accessToken,
+    isPushNotificationsEnabled,
+    articlesPath,
+    language,
+  };
+};
 
 export const generateUpdateMemberConfigParams = ({
   memberId = generateId(),
@@ -554,6 +520,68 @@ export const generateUpdateMemberConfigParams = ({
   };
 };
 
+/**************************************************************************************************
+ ********************************************* Journey ********************************************
+ *************************************************************************************************/
+
+export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey => ({
+  id: generateId(),
+  memberId: new Types.ObjectId(memberId),
+  firstLoggedInAt: fakerDate.past(2),
+  lastLoggedInAt: fakerDate.past(1),
+  fellowName: generateFellowName(),
+  admissions: [],
+  readmissionRisk: ReadmissionRisk.low,
+  isGraduated: false,
+  generalNotes: lorem.sentence(),
+});
+
+export const generateCreateJourneyParams = ({
+  memberId = generateId(),
+}: Partial<CreateJourneyParams> = {}): CreateJourneyParams => ({
+  memberId,
+});
+
+export const generateUpdateJourneyParams = ({
+  memberId = generateId(),
+  fellowName = generateFellowName(),
+  readmissionRisk = ReadmissionRisk.low,
+}: Partial<UpdateJourneyParams> = {}): UpdateJourneyParams => ({
+  memberId,
+  fellowName,
+  readmissionRisk,
+});
+
+export const generateSetGeneralNotesParams = ({
+  memberId = generateId(),
+  note = lorem.sentence(),
+}: Partial<SetGeneralNotesParams> = {}): SetGeneralNotesParams => {
+  return { memberId, note };
+};
+
+export const generateAddCaregiverParams = ({
+  firstName = name.firstName(),
+  lastName = name.lastName(),
+  email = internet.email(),
+  relationship = Relationship.neighbour,
+  phone = '+12133734253',
+  memberId,
+}: Partial<AddCaregiverParams> = {}): AddCaregiverParams => {
+  return { firstName, lastName, email, relationship, phone, memberId };
+};
+
+export const generateUpdateCaregiverParams = ({
+  id = generateId(),
+  firstName = name.firstName(),
+  lastName = name.lastName(),
+  email = internet.email(),
+  relationship = Relationship.neighbour,
+  phone = '+12133734253',
+  memberId,
+}: Partial<UpdateCaregiverParams> = {}): UpdateCaregiverParams => {
+  return { id, firstName, lastName, email, relationship, phone, memberId };
+};
+
 export const generateRelatedEntity = ({
   id = generateId(),
   type = randomEnum(RelatedEntityType) as RelatedEntityType,
@@ -561,31 +589,189 @@ export const generateRelatedEntity = ({
   return { id, type };
 };
 
-export const generateCreateOrSetActionItemParams = ({
-  id,
-  memberId,
-  title = lorem.words(2),
-  description = lorem.words(2),
-  category = randomEnum(ActionItemCategory) as ActionItemCategory,
-  status = randomEnum(ActionItemStatus) as ActionItemStatus,
-  priority = randomEnum(ActionItemPriority) as ActionItemPriority,
-  rejectNote = lorem.words(2),
-  deadline = fakerDate.soon(3),
-  relatedEntities = [],
-}: Partial<CreateOrSetActionItemParams> = {}): CreateOrSetActionItemParams => {
+/**************************************************************************************************
+ ********************************************* User ***********************************************
+ *************************************************************************************************/
+
+export const mockGenerateUser = (): User => {
+  const firstName = name.firstName();
+  const lastName = name.lastName();
   return {
-    id,
-    title,
-    memberId,
-    deadline,
-    description,
-    category,
-    status,
-    priority,
-    rejectNote,
-    relatedEntities,
+    id: generateId(),
+    firstName,
+    lastName,
+    email: generateEmail(),
+    roles: [UserRole.lagunaCoach],
+    avatar: image.imageUrl(),
+    description: lorem.sentence(),
+    createdAt: fakerDate.past(1),
+    phone: generatePhone(),
+    authId: v4(),
+    username: firstName,
+    lastMemberAssignedAt: new Date(0),
+    lastQueryAlert: fakerDate.past(2),
+    inEscalationGroup: true,
+    orgs: [generateId(), generateId()],
   };
 };
+
+export const generateCreateUserParams = ({
+  roles = [UserRole.lagunaCoach],
+  firstName = name.firstName(21),
+  lastName = name.lastName(21),
+  email = generateEmail(),
+  avatar = image.imageUrl(),
+  description = lorem.sentence(),
+  phone = generatePhone(),
+  title = name.title(),
+  maxMembers = defaultUserParams.maxMembers,
+  languages = [Language.en, Language.es],
+  orgs = [generateId(), generateId()],
+}: Partial<CreateUserParams> = {}): CreateUserParams => {
+  return {
+    firstName,
+    lastName,
+    email,
+    roles,
+    avatar,
+    description,
+    phone,
+    title,
+    maxMembers,
+    languages,
+    orgs,
+  };
+};
+
+export const generateUpdateUserParams = ({
+  id = generateId(),
+  roles = [UserRole.lagunaNurse],
+  firstName = name.firstName(21),
+  lastName = name.lastName(21),
+  avatar = image.imageUrl(),
+  description = lorem.sentence(),
+  title = name.title(),
+  maxMembers = defaultUserParams.maxMembers + 1,
+  languages = [Language.en, Language.es],
+  orgs = [generateId(), generateId()],
+}: Partial<UpdateUserParams> = {}): UpdateUserParams => {
+  return {
+    id,
+    firstName,
+    lastName,
+    roles,
+    avatar,
+    description,
+    title,
+    maxMembers,
+    languages,
+    orgs,
+  };
+};
+
+export const generateGetSlotsParams = ({
+  userId = null,
+  appointmentId = null,
+  notBefore = null,
+  orgIds,
+}: Partial<GetSlotsParams> = {}): GetSlotsParams => {
+  return {
+    userId,
+    appointmentId,
+    notBefore,
+    orgIds,
+  };
+};
+
+/**************************************************************************************************
+ **************************************** Notification ********************************************
+ *************************************************************************************************/
+
+export const generateNotifyParams = ({
+  userId = generateId(),
+  memberId = generateId(),
+  type = NotificationType.call,
+  metadata = { peerId: v4(), content: 'test' },
+}: Partial<NotifyParams> = {}): NotifyParams => {
+  return { userId, memberId, type, metadata };
+};
+
+export const generateNotifyContentParams = ({
+  userId = generateId(),
+  memberId = generateId(),
+  contentKey = ExternalKey.setCallPermissions,
+  metadata = { questionnaireId: generateId() },
+}: Partial<NotifyContentParams> = {}): NotifyContentParams => {
+  return { userId, memberId, contentKey, metadata };
+};
+
+export const generateCancelNotifyParams = ({
+  memberId = generateId(),
+  type = CancelNotificationType.cancelCall,
+  metadata = { peerId: v4() },
+}: Partial<CancelNotifyParams> = {}): CancelNotifyParams => {
+  return { memberId, type, metadata };
+};
+
+export const mockGenerateDispatch = ({
+  dispatchId = generateId(),
+  notificationType = randomEnum(NotificationType) as NotificationType,
+  recipientClientId = generateId(),
+  senderClientId = generateId(),
+  contentKey = randomEnum(RegisterInternalKey) as ContentKey,
+  sentAt = fakerDate.recent(20),
+  triggersAt = fakerDate.recent(20),
+  correlationId = generateId(),
+  serviceName = ServiceName.hepius,
+  type = InnerQueueTypes.createDispatch,
+}: Partial<Dispatch> = {}): Dispatch => {
+  return {
+    dispatchId,
+    notificationType,
+    recipientClientId,
+    senderClientId,
+    contentKey,
+    sentAt,
+    triggersAt,
+    correlationId,
+    serviceName,
+    type,
+  };
+};
+
+/**************************************************************************************************
+ ********************************************* Org ************************************************
+ *************************************************************************************************/
+
+export const mockGenerateOrg = ({
+  id = generateId(),
+  type = OrgType.hospital,
+  name = company.companyName(),
+  trialDuration = datatype.number(),
+  zipCode = fakerAddress.zipCode(),
+}: Partial<Org> = {}): Org => {
+  return {
+    id,
+    type,
+    name,
+    trialDuration,
+    zipCode,
+  };
+};
+
+export const generateOrgParams = ({
+  type = OrgType.hospital,
+  name = `${lorem.word()}.${v4()}`,
+  trialDuration = datatype.number({ min: 1, max: 100 }),
+  zipCode = generateZipCode(),
+  code,
+}: Partial<CreateOrgParams> = {}): CreateOrgParams => {
+  return { type, name, trialDuration: trialDuration, zipCode, code: code || name };
+};
+
+/**************************************************************************************************
+ ***************************************** Appointment ********************************************
+ *************************************************************************************************/
 
 export const generateRequestAppointmentParams = ({
   userId = generateId(),
@@ -643,87 +829,17 @@ export const generateNotesParams = ({
   };
 };
 
-export const mockGenerateAlert = ({
-  memberId = generateId(),
-  type = randomEnum(AlertType) as AlertType,
-  date = fakerDate.past(),
-  isNew = false,
-  dismissed = false,
-  text = lorem.sentence(),
-}: Partial<Alert> = {}): Alert => {
-  return {
-    id: `${generateId()}_${type}`,
-    date,
-    type,
-    text,
-    memberId,
-    isNew,
-    dismissed,
-  };
-};
-
-export const mockGenerateDispatch = ({
-  dispatchId = generateId(),
-  notificationType = randomEnum(NotificationType) as NotificationType,
-  recipientClientId = generateId(),
-  senderClientId = generateId(),
-  contentKey = randomEnum(RegisterInternalKey) as ContentKey,
-  sentAt = fakerDate.recent(20),
-  triggersAt = fakerDate.recent(20),
-  correlationId = generateId(),
-  serviceName = ServiceName.hepius,
-  type = InnerQueueTypes.createDispatch,
-}: Partial<Dispatch> = {}): Dispatch => {
-  return {
-    dispatchId,
-    notificationType,
-    recipientClientId,
-    senderClientId,
-    contentKey,
-    sentAt,
-    triggersAt,
-    correlationId,
-    serviceName,
-    type,
-  };
-};
-
 export const generateUpdateNotesParams = ({
   appointmentId = generateId(),
   notes = generateNotesParams(),
 }: Partial<UpdateNotesParams> = {}): UpdateNotesParams => {
   return { appointmentId, notes };
 };
+export const generateAppointmentLink = (appointmentId: string) => `${hosts.app}/${appointmentId}`;
 
-export const generateOrgParams = ({
-  type = OrgType.hospital,
-  name = `${lorem.word()}.${v4()}`,
-  trialDuration = datatype.number({ min: 1, max: 100 }),
-  zipCode = generateZipCode(),
-  code,
-}: Partial<CreateOrgParams> = {}): CreateOrgParams => {
-  return { type, name, trialDuration: trialDuration, zipCode, code: code || name };
-};
-
-export const generateAppointmentComposeParams = (): AppointmentCompose => {
-  const start = fakerDate.soon(5);
-  const end = new Date(start);
-  end.setHours(end.getHours() + 2);
-
-  return {
-    memberId: generateId(),
-    memberName: `${name.firstName()} ${name.lastName()}`,
-    userId: generateId(),
-    userName: `${name.firstName()} ${name.lastName()}`,
-    start,
-    end,
-    status: AppointmentStatus.scheduled,
-  };
-};
-
-export const generateRandomName = (length: number): string => {
-  return lorem.words(length).substr(0, length);
-};
+/**************************************************************************************************
+ ****************************************** Availability ******************************************
+ *************************************************************************************************/
 
 export const generateAvailabilityInput = ({
   start = fakerDate.soon(),
@@ -734,12 +850,9 @@ export const generateAvailabilityInput = ({
   return { start, end: end || endNew };
 };
 
-export const generateGetCommunicationParams = ({
-  userId = generateId(),
-  memberId = generateId(),
-}: Partial<GetCommunicationParams> = {}): GetCommunicationParams => {
-  return { userId, memberId };
-};
+/**************************************************************************************************
+ *************************************** Communication ********************************************
+ *************************************************************************************************/
 
 export const generateCommunication = ({
   userId = v4(),
@@ -749,128 +862,16 @@ export const generateCommunication = ({
   return { memberId, userId, sendBirdChannelUrl };
 };
 
-export const generateReplaceUserForMemberParams = ({
+export const generateGetCommunicationParams = ({
   userId = generateId(),
   memberId = generateId(),
-}: Partial<ReplaceUserForMemberParams> = {}): ReplaceUserForMemberParams => {
+}: Partial<GetCommunicationParams> = {}): GetCommunicationParams => {
   return { userId, memberId };
 };
 
-export const generateReplaceMemberOrgParams = ({
-  memberId = generateId(),
-  orgId = generateId(),
-}: Partial<ReplaceMemberOrgParams> = {}): ReplaceMemberOrgParams => {
-  return { memberId, orgId };
-};
-
-export const generateDeleteDischargeDocumentParams = ({
-  memberId = generateId(),
-  dischargeDocumentType = DischargeDocumentType.Instructions,
-}: // eslint-disable-next-line max-len
-Partial<DeleteDischargeDocumentParams> = {}): DeleteDischargeDocumentParams => {
-  return { memberId, dischargeDocumentType };
-};
-
-export const generateAppointmentLink = (appointmentId: string) => {
-  return `${hosts.app}/${appointmentId}`;
-};
-
-export const generateSetGeneralNotesParams = ({
-  memberId = generateId(),
-  note = lorem.sentence(),
-}: Partial<SetGeneralNotesParams> = {}): SetGeneralNotesParams => {
-  return { memberId, note };
-};
-
-export const generateUpdateJournalTextParams = ({
-  id = generateId(),
-  text = lorem.sentence(),
-}: Partial<UpdateJournalTextParams> = {}): UpdateJournalTextParams => {
-  return { id, text };
-};
-
-export const generateGetMemberUploadJournalImageLinkParams = ({
-  id = generateId(),
-  imageFormat = ImageFormat.png,
-}: Partial<GetMemberUploadJournalImageLinkParams> = {}): GetMemberUploadJournalImageLinkParams => {
-  return { id, imageFormat };
-};
-
-export const generateGetMemberUploadJournalAudioLinkParams = ({
-  id = generateId(),
-  audioFormat = AudioFormat.mp3,
-}: Partial<GetMemberUploadJournalAudioLinkParams> = {}): GetMemberUploadJournalAudioLinkParams => {
-  return { id, audioFormat };
-};
-
-export const generateDateOnly = (date: Date): string => {
-  return format(date, momentFormats.date);
-};
-
-export const generateNotifyParams = ({
-  userId = generateId(),
-  memberId = generateId(),
-  type = NotificationType.call,
-  metadata = { peerId: v4(), content: 'test' },
-}: Partial<NotifyParams> = {}): NotifyParams => {
-  return { userId, memberId, type, metadata };
-};
-
-export const generateNotifyContentParams = ({
-  userId = generateId(),
-  memberId = generateId(),
-  contentKey = ExternalKey.setCallPermissions,
-  metadata = { questionnaireId: generateId() },
-}: Partial<NotifyContentParams> = {}): NotifyContentParams => {
-  return { userId, memberId, contentKey, metadata };
-};
-
-export const generateCancelNotifyParams = ({
-  memberId = generateId(),
-  type = CancelNotificationType.cancelCall,
-  metadata = { peerId: v4() },
-}: Partial<CancelNotifyParams> = {}): CancelNotifyParams => {
-  return { memberId, type, metadata };
-};
-
-const generateEmail = () => {
-  return `${new Date().getMilliseconds()}.${internet.email()}`;
-};
-
-export const generateUniqueUrl = () => {
-  return `${v4()}.${internet.url()}`;
-};
-
-export const generateUpdateRecordingParams = ({
-  id,
-  memberId = generateId(),
-  userId = generateId(),
-  start = fakerDate.soon(1),
-  end = fakerDate.soon(2),
-  answered = true,
-  phone = generatePhone(),
-  appointmentId = generateId(),
-  recordingType = RecordingType.phone,
-  consent = true,
-  identityVerification = true,
-  journeyId,
-}: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
-  const obj = id ? { id } : {};
-  return {
-    ...obj,
-    memberId,
-    userId,
-    start,
-    end,
-    answered,
-    phone,
-    appointmentId,
-    recordingType,
-    consent,
-    identityVerification,
-    journeyId,
-  };
-};
+/**************************************************************************************************
+ ****************************************** Recordings ********************************************
+ *************************************************************************************************/
 
 export const mockGenerateRecording = ({
   id = v4(),
@@ -909,6 +910,37 @@ export const mockGenerateRecording = ({
   };
 };
 
+export const generateUpdateRecordingParams = ({
+  id,
+  memberId = generateId(),
+  userId = generateId(),
+  start = fakerDate.soon(1),
+  end = fakerDate.soon(2),
+  answered = true,
+  phone = generatePhone(),
+  appointmentId = generateId(),
+  recordingType = RecordingType.phone,
+  consent = true,
+  identityVerification = true,
+  journeyId,
+}: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
+  const obj = id ? { id } : {};
+  return {
+    ...obj,
+    memberId,
+    userId,
+    start,
+    end,
+    answered,
+    phone,
+    appointmentId,
+    recordingType,
+    consent,
+    identityVerification,
+    journeyId,
+  };
+};
+
 export const generateUpdateRecordingReviewParams = ({
   recordingId = generateId(),
   content = random.words(5),
@@ -941,6 +973,10 @@ export const generateCompleteMultipartUploadParams = ({
   return { id, memberId, uploadId };
 };
 
+/**************************************************************************************************
+ ***************************************** DailyReport ********************************************
+ *************************************************************************************************/
+
 export const generateDailyReport = ({
   memberId = generateObjectId(),
   journeyId = generateObjectId(),
@@ -952,64 +988,9 @@ export const generateDailyReport = ({
   return { memberId, journeyId, date, categories, statsOverThreshold, notificationSent };
 };
 
-export const generateUpdateClientSettings = ({
-  member,
-  memberConfig,
-  journey,
-}: {
-  member?: Member;
-  memberConfig?: MemberConfig;
-  journey?: Journey;
-}): IUpdateClientSettings => {
-  return {
-    type: InnerQueueTypes.updateClientSettings,
-    id: memberConfig?.memberId?.toString() || member.id.toString(),
-    clientCategory: ClientCategory.member,
-    phone: member?.phone,
-    firstName: member?.firstName,
-    lastName: member?.lastName,
-    orgName: member?.org?.name,
-    zipCode: member?.zipCode || member?.org?.zipCode,
-    language: memberConfig?.language,
-    platform: memberConfig?.platform,
-    isPushNotificationsEnabled: memberConfig?.isPushNotificationsEnabled,
-    isAppointmentsReminderEnabled: memberConfig?.isAppointmentsReminderEnabled,
-    isRecommendationsEnabled: memberConfig?.isRecommendationsEnabled,
-    isTodoNotificationsEnabled: memberConfig?.isTodoNotificationsEnabled,
-    externalUserId: memberConfig?.externalUserId,
-    firstLoggedInAt: journey?.firstLoggedInAt,
-  };
-};
-
-export const generateContextUserId = (
-  userId: string = generateId(),
-  roles: RoleTypes[] = [MemberRole.member],
-) => {
-  return { req: { user: { _id: userId, roles } } };
-};
-
-export const generateAddCaregiverParams = ({
-  firstName = name.firstName(),
-  lastName = name.lastName(),
-  email = internet.email(),
-  relationship = Relationship.neighbour,
-  phone = '+12133734253',
-  memberId,
-}: Partial<AddCaregiverParams> = {}): AddCaregiverParams => {
-  return { firstName, lastName, email, relationship, phone, memberId };
-};
-
-export const generateUpdateCaregiverParams = ({
-  id = generateId(),
-  firstName = name.firstName(),
-  lastName = name.lastName(),
-  email = internet.email(),
-  relationship = Relationship.neighbour,
-  phone = '+12133734253',
-  memberId,
-}: Partial<UpdateCaregiverParams> = {}): UpdateCaregiverParams => {
-  return { id, firstName, lastName, email, relationship, phone, memberId };
-};
+/**************************************************************************************************
+ ********************************************* Todo ***********************************************
+ *************************************************************************************************/
 
 export const mockGenerateTodo = ({
   id = generateId(),
@@ -1168,6 +1149,455 @@ export const generateCreateTodoDoneParams = ({
     journeyId,
   };
 };
+
+/**************************************************************************************************
+ ************************************ MobileVersion ***********************************************
+ *************************************************************************************************/
+
+export const generateCreateMobileVersionParams = ({
+  version = generateMobileVersion(),
+  platform = Platform.android,
+  minVersion,
+}: Partial<CreateMobileVersionParams> = {}): CreateMobileVersionParams => {
+  return { version, platform, minVersion };
+};
+
+export const generateUpdateMinMobileVersionParams = ({
+  version = generateMobileVersion(),
+  platform = Platform.android,
+}: Partial<UpdateMinMobileVersionParams> = {}): UpdateMinMobileVersionParams => {
+  return { version, platform };
+};
+
+export const generateUpdateFaultyMobileVersionsParams = ({
+  versions = [generateMobileVersion(), generateMobileVersion(), generateMobileVersion()],
+  platform = Platform.android,
+}: Partial<UpdateFaultyMobileVersionsParams> = {}): UpdateFaultyMobileVersionsParams => {
+  return { versions, platform };
+};
+
+export const generateCheckMobileVersionParams = ({
+  version = generateMobileVersion(),
+  platform = Platform.android,
+  build = generateMobileVersion(),
+} = {}) => {
+  return { version, platform, build };
+};
+export const mockGenerateCheckMobileVersionResponse = ({
+  latestVersion = generateMobileVersion(),
+  forceUpdate = false,
+  updateAvailable = false,
+}: Partial<CheckMobileVersionResponse> = {}): CheckMobileVersionResponse => {
+  return { latestVersion, forceUpdate, updateAvailable };
+};
+
+export const mockGenerateMobileVersion = ({
+  version = generateMobileVersion(),
+  platform = Platform.android,
+  minVersion = false,
+  faultyVersion = false,
+}: Partial<MobileVersion> = {}): MobileVersion => {
+  return { version, platform, minVersion, faultyVersion };
+};
+
+export const generateMobileVersion = () =>
+  `${datatype.number(99)}.${datatype.number(99)}.${datatype.number(99)}`;
+
+/**************************************************************************************************
+ **************************************** Questionnaire *******************************************
+ *************************************************************************************************/
+
+export const mockGenerateQuestionnaireItem = ({
+  code = datatype.uuid(),
+  label = lorem.words(5),
+  type = ItemType[randomEnum(ItemType)],
+  order = 1,
+  required = true,
+  options = type === ItemType.choice
+    ? [
+        { label: lorem.words(3), value: 0 },
+        { label: lorem.words(3), value: 1 },
+      ]
+    : null,
+  items = type === ItemType.group
+    ? [1, 2].map((order) => mockGenerateQuestionnaireItem({ order }))
+    : null,
+  range = type === ItemType.range
+    ? {
+        min: { value: 0, label: lorem.words(3) },
+        max: {
+          value: datatype.number({ min: 1, max: 10 }),
+          label: lorem.words(3),
+        },
+      }
+    : null,
+  alertCondition,
+}: Partial<Item> = {}): Item => ({
+  code,
+  label,
+  type,
+  order,
+  required,
+  options,
+  range,
+  items,
+  alertCondition,
+});
+
+export const mockGenerateQuestionnaireAnswer = ({
+  code = lorem.word(),
+  value = datatype.number({ min: 0, max: 3 }).toString(),
+}: Partial<Answer> = {}): Answer => {
+  return {
+    code,
+    value,
+  };
+};
+
+export const mockGenerateQuestionnaire = ({
+  id = generateId(),
+  name = lorem.words(3),
+  shortName = lorem.word(3),
+  type = QuestionnaireType[randomEnum(QuestionnaireType)],
+  active = true,
+  items = [1, 2].map((order) => mockGenerateQuestionnaireItem({ order })),
+  severityLevels = [
+    { min: 0, max: 4, label: 'severity 1' },
+    { min: 5, max: 6, label: 'severity 2' },
+  ],
+  createdBy = generateObjectId(),
+}: Partial<Questionnaire> = {}): Questionnaire => {
+  const isAssignableToMember = getIsAssignableToMember(type);
+  return {
+    id,
+    name,
+    shortName,
+    type,
+    active,
+    items,
+    isAssignableToMember,
+    severityLevels,
+    createdBy,
+  };
+};
+
+export const generateCreateQuestionnaireParams = ({
+  name = lorem.words(3),
+  shortName = lorem.word(3),
+  type = QuestionnaireType[randomEnum(QuestionnaireType)],
+  items = [1, 2].map((order) => mockGenerateQuestionnaireItem({ order })),
+  severityLevels = [
+    { min: 0, max: 4, label: 'severity 1' },
+    { min: 5, max: 6, label: 'severity 2' },
+  ],
+  notificationScoreThreshold,
+}: Partial<CreateQuestionnaireParams> = {}): CreateQuestionnaireParams => {
+  const isAssignableToMember = getIsAssignableToMember(type);
+  return {
+    name,
+    shortName,
+    type,
+    items,
+    isAssignableToMember,
+    severityLevels,
+    notificationScoreThreshold,
+  };
+};
+
+export const generateSubmitQuestionnaireResponseParams = ({
+  questionnaireId = generateId(),
+  memberId = generateId(),
+  answers = [mockGenerateQuestionnaireAnswer(), mockGenerateQuestionnaireAnswer()],
+}: Partial<SubmitQuestionnaireResponseParams> = {}): SubmitQuestionnaireResponseParams => {
+  return {
+    questionnaireId,
+    memberId,
+    answers,
+  };
+};
+
+export const mockGenerateQuestionnaireResponse = ({
+  id = generateId(),
+  questionnaireId = generateObjectId(),
+  memberId = generateObjectId(),
+  journeyId = generateObjectId(),
+  answers = [mockGenerateQuestionnaireAnswer(), mockGenerateQuestionnaireAnswer()],
+  createdAt = new Date(),
+  createdBy = generateObjectId(),
+}: Partial<QuestionnaireResponse> = {}): QuestionnaireResponse => {
+  return {
+    id,
+    questionnaireId,
+    memberId,
+    journeyId,
+    answers,
+    createdAt,
+    createdBy,
+  };
+};
+export const generateRequestHeaders = (authId: string) => {
+  return { Authorization: sign({ sub: authId }, 'secret') };
+};
+
+export function getIsAssignableToMember(questionnaireType: QuestionnaireType): boolean {
+  return (
+    questionnaireType === QuestionnaireType.phq9 ||
+    questionnaireType === QuestionnaireType.gad7 ||
+    questionnaireType === QuestionnaireType.who5
+  );
+}
+
+/**************************************************************************************************
+ ***************************************** ActionItem *********************************************
+ *************************************************************************************************/
+
+export const generateCreateOrSetActionItemParams = ({
+  id,
+  memberId,
+  title = lorem.words(2),
+  description = lorem.words(2),
+  category = randomEnum(ActionItemCategory) as ActionItemCategory,
+  status = randomEnum(ActionItemStatus) as ActionItemStatus,
+  priority = randomEnum(ActionItemPriority) as ActionItemPriority,
+  rejectNote = lorem.words(2),
+  deadline = fakerDate.soon(3),
+  relatedEntities = [],
+}: Partial<CreateOrSetActionItemParams> = {}): CreateOrSetActionItemParams => {
+  return {
+    id,
+    title,
+    memberId,
+    deadline,
+    description,
+    category,
+    status,
+    priority,
+    rejectNote,
+    relatedEntities,
+  };
+};
+
+/**************************************************************************************************
+ ******************************************* Alert ************************************************
+ *************************************************************************************************/
+
+export const mockGenerateAlert = ({
+  memberId = generateId(),
+  type = randomEnum(AlertType) as AlertType,
+  date = fakerDate.past(),
+  isNew = false,
+  dismissed = false,
+  text = lorem.sentence(),
+}: Partial<Alert> = {}): Alert => {
+  return {
+    id: `${generateId()}_${type}`,
+    date,
+    type,
+    text,
+    memberId,
+    isNew,
+    dismissed,
+  };
+};
+
+/**************************************************************************************************
+ ****************************************** Admission *********************************************
+ *************************************************************************************************/
+export const generateAdmissionDiagnosisParams = ({
+  changeType,
+  id,
+  code,
+  description,
+  primaryType,
+  secondaryType,
+  clinicalStatus,
+  severity,
+  onsetStart,
+  onsetEnd,
+}: {
+  changeType: ChangeType;
+  id?: string;
+  code?: string;
+  description?: string;
+  primaryType?: PrimaryDiagnosisType;
+  secondaryType?: SecondaryDiagnosisType;
+  clinicalStatus?: ClinicalStatus;
+  severity?: DiagnosisSeverity;
+  onsetStart?: string;
+  onsetEnd?: string;
+}): ChangeAdmissionDiagnosisParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    code: code || datatype.uuid(),
+    description: description || lorem.sentence(),
+    primaryType: primaryType || PrimaryDiagnosisType.self,
+    secondaryType: secondaryType || SecondaryDiagnosisType.radiology,
+    clinicalStatus: clinicalStatus || ClinicalStatus.inactive,
+    severity: severity || DiagnosisSeverity.mild,
+    onsetStart: onsetStart || generateDateOnly(subDays(new Date(), 2)),
+    onsetEnd: onsetEnd || generateDateOnly(subDays(new Date(), 1)),
+  };
+};
+
+export const generateAdmissionTreatmentRenderedParams = ({
+  changeType,
+  id,
+  startDate,
+  endDate,
+}: {
+  changeType: ChangeType;
+  id?: string;
+  startDate?: string;
+  endDate?: string;
+}): ChangeAdmissionTreatmentRenderedParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    code: v4(),
+    startDate: startDate || generateDateOnly(subDays(new Date(), 2)),
+    endDate: endDate || generateDateOnly(subDays(new Date(), 1)),
+  };
+};
+
+export const generateAdmissionMedicationParams = ({
+  changeType,
+  id,
+}: {
+  changeType: ChangeType;
+  id?: string;
+}): ChangeAdmissionMedicationParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    status: MedicationStatus.start,
+    name: lorem.word(),
+    route: lorem.word(),
+    dosage: lorem.word(),
+    frequency: lorem.word(),
+    startDate: generateDateOnly(subDays(new Date(), 2)),
+    endDate: generateDateOnly(subDays(new Date(), 1)),
+    specialInstructions: lorem.sentences(),
+  };
+};
+
+export const generateAdmissionExternalAppointmentParams = ({
+  changeType,
+  id,
+}: {
+  changeType: ChangeType;
+  id?: string;
+}): ChangeAdmissionExternalAppointmentParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    status: ExternalAppointmentStatus.scheduled,
+    drName: `dr ${name.lastName()}`,
+    clinic: lorem.word(),
+    date: new Date(),
+    type: ExternalAppointmentType.cardiac,
+    specialInstructions: lorem.sentences(),
+    fullAddress: lorem.sentence(),
+    phone: generatePhone(),
+    fax: generatePhone(),
+  };
+};
+
+export const generateAdmissionActivityParams = (): Activity => ({
+  general: [lorem.word(), lorem.word()],
+  lifting: [lorem.word(), lorem.word()],
+  showerOrBathing: [lorem.word()],
+  stairs: [lorem.word(), lorem.word()],
+  driving: [lorem.word()],
+  sexualActivity: [lorem.word()],
+  work: [lorem.word()],
+});
+
+export const generateAdmissionWoundCareParams = (): WoundCare => ({
+  general: [lorem.word(), lorem.word()],
+});
+
+export const generateAdmissionDietaryParams = ({
+  changeType,
+  id,
+}: {
+  changeType: ChangeType;
+  id?: string;
+}): ChangeAdmissionDietaryParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    category: DietaryCategory.other,
+    name: DietaryName.fasting,
+    date: generateDateOnly(fakerDate.future(1)),
+    notes: lorem.sentence(),
+  };
+};
+
+export const generateChangeMemberDnaParams = ({
+  changeType,
+  memberId,
+  id,
+}: {
+  changeType: ChangeType;
+  memberId: string;
+  id?: string;
+}): ChangeMemberDnaParams => {
+  const createDiagnosis = generateAdmissionDiagnosisParams({ changeType });
+  const createTreatmentRendered = generateAdmissionTreatmentRenderedParams({ changeType });
+  const createMedication = generateAdmissionMedicationParams({ changeType });
+  const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
+  const createDietary = generateAdmissionDietaryParams({ changeType });
+  const idObject = id ? { id } : {};
+  return {
+    memberId,
+    ...idObject,
+    diagnosis: createDiagnosis,
+    treatmentRendered: createTreatmentRendered,
+    medication: createMedication,
+    externalAppointment: createExternalAppointment,
+    dietary: createDietary,
+    admitDate: generateDateOnly(subDays(new Date(), 5)),
+    admitType: AdmitType.emergency,
+    admitSource: AdmitSource.clinicReferral,
+    dischargeDate: generateDateOnly(subDays(new Date(), 2)),
+    dischargeTo: DischargeTo.snf,
+    facility: lorem.sentence(),
+    specialInstructions: lorem.sentences(),
+    reasonForAdmission: lorem.sentences(),
+    hospitalCourse: lorem.sentences(),
+    admissionSummary: lorem.sentences(),
+    drg: lorem.word(),
+    drgDesc: lorem.sentence(),
+    nurseNotes: lorem.sentence(),
+    warningSigns: [WarningSigns.confusion],
+    activity: generateAdmissionActivityParams(),
+    woundCare: generateAdmissionWoundCareParams(),
+  };
+};
+
+/**************************************************************************************************
+ ****************************************** Insurance *********************************************
+ *************************************************************************************************/
+
+export const generateAddInsuranceParams = ({
+  name = lorem.sentence(),
+  type = 'medicare',
+  memberId = generateId(),
+  startDate = generateDateOnly(fakerDate.past()),
+  endDate = generateDateOnly(fakerDate.future()),
+}: Partial<AddInsuranceParams> = {}): AddInsuranceParams => {
+  return { name, type, memberId, startDate, endDate };
+};
+
+/**************************************************************************************************
+ ********************************************* Care ***********************************************
+ *************************************************************************************************/
 
 export const generateCreateRedFlagParams = ({
   memberId = generateId(),
@@ -1367,148 +1797,6 @@ export const mockDbCarePlan = () => {
   };
 };
 
-export const mockGenerateQuestionnaireItem = ({
-  code = datatype.uuid(),
-  label = lorem.words(5),
-  type = ItemType[randomEnum(ItemType)],
-  order = 1,
-  required = true,
-  options = type === ItemType.choice
-    ? [
-        { label: lorem.words(3), value: 0 },
-        { label: lorem.words(3), value: 1 },
-      ]
-    : null,
-  items = type === ItemType.group
-    ? [1, 2].map((order) => mockGenerateQuestionnaireItem({ order }))
-    : null,
-  range = type === ItemType.range
-    ? {
-        min: { value: 0, label: lorem.words(3) },
-        max: {
-          value: datatype.number({ min: 1, max: 10 }),
-          label: lorem.words(3),
-        },
-      }
-    : null,
-  alertCondition,
-}: Partial<Item> = {}): Item => ({
-  code,
-  label,
-  type,
-  order,
-  required,
-  options,
-  range,
-  items,
-  alertCondition,
-});
-
-export const mockGenerateQuestionnaireAnswer = ({
-  code = lorem.word(),
-  value = datatype.number({ min: 0, max: 3 }).toString(),
-}: Partial<Answer> = {}): Answer => {
-  return {
-    code,
-    value,
-  };
-};
-
-export const mockGenerateQuestionnaire = ({
-  id = generateId(),
-  name = lorem.words(3),
-  shortName = lorem.word(3),
-  type = QuestionnaireType[randomEnum(QuestionnaireType)],
-  active = true,
-  items = [1, 2].map((order) => mockGenerateQuestionnaireItem({ order })),
-  severityLevels = [
-    { min: 0, max: 4, label: 'severity 1' },
-    { min: 5, max: 6, label: 'severity 2' },
-  ],
-  createdBy = generateObjectId(),
-}: Partial<Questionnaire> = {}): Questionnaire => {
-  const isAssignableToMember = getIsAssignableToMember(type);
-  return {
-    id,
-    name,
-    shortName,
-    type,
-    active,
-    items,
-    isAssignableToMember,
-    severityLevels,
-    createdBy,
-  };
-};
-
-export const generateCreateQuestionnaireParams = ({
-  name = lorem.words(3),
-  shortName = lorem.word(3),
-  type = QuestionnaireType[randomEnum(QuestionnaireType)],
-  items = [1, 2].map((order) => mockGenerateQuestionnaireItem({ order })),
-  severityLevels = [
-    { min: 0, max: 4, label: 'severity 1' },
-    { min: 5, max: 6, label: 'severity 2' },
-  ],
-  notificationScoreThreshold,
-}: Partial<CreateQuestionnaireParams> = {}): CreateQuestionnaireParams => {
-  const isAssignableToMember = getIsAssignableToMember(type);
-  return {
-    name,
-    shortName,
-    type,
-    items,
-    isAssignableToMember,
-    severityLevels,
-    notificationScoreThreshold,
-  };
-};
-
-export const generateDeleteMemberParams = ({
-  id = generateId(),
-  hard = false,
-}: Partial<DeleteMemberParams> = {}) => {
-  return {
-    id,
-    hard,
-  };
-};
-
-export const generateSubmitQuestionnaireResponseParams = ({
-  questionnaireId = generateId(),
-  memberId = generateId(),
-  answers = [mockGenerateQuestionnaireAnswer(), mockGenerateQuestionnaireAnswer()],
-}: Partial<SubmitQuestionnaireResponseParams> = {}): SubmitQuestionnaireResponseParams => {
-  return {
-    questionnaireId,
-    memberId,
-    answers,
-  };
-};
-
-export const mockGenerateQuestionnaireResponse = ({
-  id = generateId(),
-  questionnaireId = generateObjectId(),
-  memberId = generateObjectId(),
-  journeyId = generateObjectId(),
-  answers = [mockGenerateQuestionnaireAnswer(), mockGenerateQuestionnaireAnswer()],
-  createdAt = new Date(),
-  createdBy = generateObjectId(),
-}: Partial<QuestionnaireResponse> = {}): QuestionnaireResponse => {
-  return {
-    id,
-    questionnaireId,
-    memberId,
-    journeyId,
-    answers,
-    createdAt,
-    createdBy,
-  };
-};
-export const generateRequestHeaders = (authId: string) => {
-  return { Authorization: sign({ sub: authId }, 'secret') };
-};
-
 export const mockDbRedFlagType = () => ({
   _id: generateObjectId(),
   description: lorem.sentence(),
@@ -1528,278 +1816,43 @@ export const mockDbRedFlag = () => {
   };
 };
 
-/*************************************************************************************************
- ******************************************** Journey ********************************************
- ************************************************************************************************/
-export const generateCreateJourneyParams = ({
-  memberId = generateId(),
-}: Partial<CreateJourneyParams> = {}): CreateJourneyParams => ({
-  memberId,
-});
+/**************************************************************************************************
+ ******************************************* Journal **********************************************
+ *************************************************************************************************/
 
-export const generateUpdateJourneyParams = ({
-  memberId = generateId(),
-  fellowName = generateFellowName(),
-  readmissionRisk = ReadmissionRisk.low,
-}: Partial<UpdateJourneyParams> = {}): UpdateJourneyParams => ({
-  memberId,
-  fellowName,
-  readmissionRisk,
-});
-
-/*************************************************************************************************
- ***************************** ChangeMemberDnaParams related methods *****************************
- ************************************************************************************************/
-export const generateAdmissionDiagnosisParams = ({
-  changeType,
-  id,
-  code,
-  description,
-  primaryType,
-  secondaryType,
-  clinicalStatus,
-  severity,
-  onsetStart,
-  onsetEnd,
-}: {
-  changeType: ChangeType;
-  id?: string;
-  code?: string;
-  description?: string;
-  primaryType?: PrimaryDiagnosisType;
-  secondaryType?: SecondaryDiagnosisType;
-  clinicalStatus?: ClinicalStatus;
-  severity?: DiagnosisSeverity;
-  onsetStart?: string;
-  onsetEnd?: string;
-}): ChangeAdmissionDiagnosisParams => {
-  const attachIdParam = id ? { id } : {};
-  return {
-    changeType,
-    ...attachIdParam,
-    code: code || datatype.uuid(),
-    description: description || lorem.sentence(),
-    primaryType: primaryType || PrimaryDiagnosisType.self,
-    secondaryType: secondaryType || SecondaryDiagnosisType.radiology,
-    clinicalStatus: clinicalStatus || ClinicalStatus.inactive,
-    severity: severity || DiagnosisSeverity.mild,
-    onsetStart: onsetStart || generateDateOnly(subDays(new Date(), 2)),
-    onsetEnd: onsetEnd || generateDateOnly(subDays(new Date(), 1)),
-  };
+export const generateUpdateJournalTextParams = ({
+  id = generateId(),
+  text = lorem.sentence(),
+}: Partial<UpdateJournalTextParams> = {}): UpdateJournalTextParams => {
+  return { id, text };
 };
 
-export const generateAdmissionTreatmentRenderedParams = ({
-  changeType,
-  id,
-  startDate,
-  endDate,
-}: {
-  changeType: ChangeType;
-  id?: string;
-  startDate?: string;
-  endDate?: string;
-}): ChangeAdmissionTreatmentRenderedParams => {
-  const attachIdParam = id ? { id } : {};
-  return {
-    changeType,
-    ...attachIdParam,
-    code: v4(),
-    startDate: startDate || generateDateOnly(subDays(new Date(), 2)),
-    endDate: endDate || generateDateOnly(subDays(new Date(), 1)),
-  };
+export const generateGetMemberUploadJournalImageLinkParams = ({
+  id = generateId(),
+  imageFormat = ImageFormat.png,
+}: Partial<GetMemberUploadJournalImageLinkParams> = {}): GetMemberUploadJournalImageLinkParams => {
+  return { id, imageFormat };
 };
 
-export const generateAdmissionMedicationParams = ({
-  changeType,
-  id,
-}: {
-  changeType: ChangeType;
-  id?: string;
-}): ChangeAdmissionMedicationParams => {
-  const attachIdParam = id ? { id } : {};
-  return {
-    changeType,
-    ...attachIdParam,
-    status: MedicationStatus.start,
-    name: lorem.word(),
-    route: lorem.word(),
-    dosage: lorem.word(),
-    frequency: lorem.word(),
-    startDate: generateDateOnly(subDays(new Date(), 2)),
-    endDate: generateDateOnly(subDays(new Date(), 1)),
-    specialInstructions: lorem.sentences(),
-  };
+export const generateGetMemberUploadJournalAudioLinkParams = ({
+  id = generateId(),
+  audioFormat = AudioFormat.mp3,
+}: Partial<GetMemberUploadJournalAudioLinkParams> = {}): GetMemberUploadJournalAudioLinkParams => {
+  return { id, audioFormat };
 };
 
-export const generateAdmissionExternalAppointmentParams = ({
-  changeType,
-  id,
-}: {
-  changeType: ChangeType;
-  id?: string;
-}): ChangeAdmissionExternalAppointmentParams => {
-  const attachIdParam = id ? { id } : {};
-  return {
-    changeType,
-    ...attachIdParam,
-    status: ExternalAppointmentStatus.scheduled,
-    drName: `dr ${name.lastName()}`,
-    clinic: lorem.word(),
-    date: new Date(),
-    type: ExternalAppointmentType.cardiac,
-    specialInstructions: lorem.sentences(),
-    fullAddress: lorem.sentence(),
-    phone: generatePhone(),
-    fax: generatePhone(),
-  };
-};
+/**************************************************************************************************
+ ******************************************* Helpers **********************************************
+ *************************************************************************************************/
 
-export const generateAdmissionActivityParams = (): Activity => ({
-  general: [lorem.word(), lorem.word()],
-  lifting: [lorem.word(), lorem.word()],
-  showerOrBathing: [lorem.word()],
-  stairs: [lorem.word(), lorem.word()],
-  driving: [lorem.word()],
-  sexualActivity: [lorem.word()],
-  work: [lorem.word()],
-});
-
-export const generateAdmissionWoundCareParams = (): WoundCare => ({
-  general: [lorem.word(), lorem.word()],
-});
-
-export const generateAdmissionDietaryParams = ({
-  changeType,
-  id,
-}: {
-  changeType: ChangeType;
-  id?: string;
-}): ChangeAdmissionDietaryParams => {
-  const attachIdParam = id ? { id } : {};
-  return {
-    changeType,
-    ...attachIdParam,
-    category: DietaryCategory.other,
-    name: DietaryName.fasting,
-    date: generateDateOnly(fakerDate.future(1)),
-    notes: lorem.sentence(),
-  };
-};
-
-export const generateChangeMemberDnaParams = ({
-  changeType,
-  memberId,
-  id,
-}: {
-  changeType: ChangeType;
-  memberId: string;
-  id?: string;
-}): ChangeMemberDnaParams => {
-  const createDiagnosis = generateAdmissionDiagnosisParams({ changeType });
-  const createTreatmentRendered = generateAdmissionTreatmentRenderedParams({ changeType });
-  const createMedication = generateAdmissionMedicationParams({ changeType });
-  const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
-  const createDietary = generateAdmissionDietaryParams({ changeType });
-  const idObject = id ? { id } : {};
-  return {
-    memberId,
-    ...idObject,
-    diagnosis: createDiagnosis,
-    treatmentRendered: createTreatmentRendered,
-    medication: createMedication,
-    externalAppointment: createExternalAppointment,
-    dietary: createDietary,
-    admitDate: generateDateOnly(subDays(new Date(), 5)),
-    admitType: AdmitType.emergency,
-    admitSource: AdmitSource.clinicReferral,
-    dischargeDate: generateDateOnly(subDays(new Date(), 2)),
-    dischargeTo: DischargeTo.snf,
-    facility: lorem.sentence(),
-    specialInstructions: lorem.sentences(),
-    reasonForAdmission: lorem.sentences(),
-    hospitalCourse: lorem.sentences(),
-    admissionSummary: lorem.sentences(),
-    drg: lorem.word(),
-    drgDesc: lorem.sentence(),
-    nurseNotes: lorem.sentence(),
-    warningSigns: [WarningSigns.confusion],
-    activity: generateAdmissionActivityParams(),
-    woundCare: generateAdmissionWoundCareParams(),
-  };
-};
-
+export const generateDateOnly = (date: Date): string => format(date, momentFormats.date);
 export const generateRandomHeight = () =>
   datatype.number({ min: graphql.validators.height.min, max: graphql.validators.height.max });
-
 export const generateRandomWeight = () =>
   datatype.number({ min: graphql.validators.weight.min, max: graphql.validators.weight.max });
+export const generateUniqueUrl = () => `${v4()}.${internet.url()}`;
+export const generateRandomName = (length: number): string => lorem.words(length).substr(0, length);
 
-export const generateAddInsuranceParams = ({
-  name = lorem.sentence(),
-  type = 'medicare',
-  memberId = generateId(),
-  startDate = generateDateOnly(fakerDate.past()),
-  endDate = generateDateOnly(fakerDate.future()),
-}: Partial<AddInsuranceParams> = {}): AddInsuranceParams => {
-  return { name, type, memberId, startDate, endDate };
-};
-
-export const generateCreateMobileVersionParams = ({
-  version = generateMobileVersion(),
-  platform = Platform.android,
-  minVersion,
-}: Partial<CreateMobileVersionParams> = {}): CreateMobileVersionParams => {
-  return { version, platform, minVersion };
-};
-
-export const generateUpdateMinMobileVersionParams = ({
-  version = generateMobileVersion(),
-  platform = Platform.android,
-}: Partial<UpdateMinMobileVersionParams> = {}): UpdateMinMobileVersionParams => {
-  return { version, platform };
-};
-
-export const generateUpdateFaultyMobileVersionsParams = ({
-  versions = [generateMobileVersion(), generateMobileVersion(), generateMobileVersion()],
-  platform = Platform.android,
-}: Partial<UpdateFaultyMobileVersionsParams> = {}): UpdateFaultyMobileVersionsParams => {
-  return { versions, platform };
-};
-
-export const generateCheckMobileVersionParams = ({
-  version = generateMobileVersion(),
-  platform = Platform.android,
-  build = generateMobileVersion(),
-} = {}) => {
-  return { version, platform, build };
-};
-export const mockGenerateCheckMobileVersionResponse = ({
-  latestVersion = generateMobileVersion(),
-  forceUpdate = false,
-  updateAvailable = false,
-}: Partial<CheckMobileVersionResponse> = {}): CheckMobileVersionResponse => {
-  return { latestVersion, forceUpdate, updateAvailable };
-};
-
-export const mockGenerateMobileVersion = ({
-  version = generateMobileVersion(),
-  platform = Platform.android,
-  minVersion = false,
-  faultyVersion = false,
-}: Partial<MobileVersion> = {}): MobileVersion => {
-  return { version, platform, minVersion, faultyVersion };
-};
-
-export const generateMobileVersion = () =>
-  `${datatype.number(99)}.${datatype.number(99)}.${datatype.number(99)}`;
-
-export function getIsAssignableToMember(questionnaireType: QuestionnaireType): boolean {
-  return (
-    questionnaireType === QuestionnaireType.phq9 ||
-    questionnaireType === QuestionnaireType.gad7 ||
-    questionnaireType === QuestionnaireType.who5
-  );
-}
-
+const generateEmail = () => `${new Date().getMilliseconds()}.${internet.email()}`;
 const generateFellowName = () => `${name.firstName()} ${name.lastName()}`;
 const generateHealthPlan = () => datatype.string(10);
