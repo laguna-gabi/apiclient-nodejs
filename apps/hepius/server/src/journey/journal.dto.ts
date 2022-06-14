@@ -1,7 +1,6 @@
 import { Identifier, IsObjectId } from '@argus/hepiusClient';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsNotEmpty } from 'class-validator';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 import { ErrorType, Errors } from '../common';
@@ -46,7 +45,6 @@ export class UpdateJournalTextParams {
   id: string;
 
   @Field(() => String)
-  @IsNotEmpty()
   text: string;
 }
 

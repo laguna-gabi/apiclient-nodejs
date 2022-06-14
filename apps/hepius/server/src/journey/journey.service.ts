@@ -319,7 +319,11 @@ export class JourneyService extends AlertService {
   async getJournals(journeyId: string): Promise<Journal[]> {
     return this.journalModel.find({
       journeyId: new Types.ObjectId(journeyId),
-      text: { $exists: true },
+      $or: [
+        { text: { $exists: true } },
+        { imageFormat: { $exists: true } },
+        { audioFormat: { $exists: true } },
+      ],
     });
   }
 

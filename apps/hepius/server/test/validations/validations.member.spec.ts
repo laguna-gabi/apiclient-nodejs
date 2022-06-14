@@ -693,14 +693,6 @@ describe('Validations - member', () => {
       });
     });
 
-    it(`should fail update journal text since string is empty)`, async () => {
-      await handler.mutations.updateJournalText({
-        updateJournalTextParams: generateUpdateJournalTextParams({ text: '' }),
-        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
-        missingFieldError: 'text should not be empty',
-      });
-    });
-
     test.each`
       input            | error
       ${{ id: 123 }}   | ${stringError}

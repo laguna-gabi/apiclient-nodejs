@@ -4,6 +4,7 @@ import { ErrorType, Errors, LoggerService } from '../../src/common';
 import {
   ActionItemPriority,
   ActionItemStatus,
+  AudioFormat,
   ImageFormat,
   Journal,
   JournalDocument,
@@ -620,13 +621,15 @@ describe(JourneyService.name, () => {
       );
     });
 
-    it(`should not get journals by memberId if text doesn't exists`, async () => {
+    // eslint-disable-next-line max-len
+    it(`should not get journals by journeyId if text or image or audio doesn't exists`, async () => {
       const memberId = generateId();
       const journeyId = generateId();
       const { id } = await service.createJournal(memberId, journeyId);
 
       const journals = await service.getJournals(journeyId);
 
+      expect(journals.length).toBe(0);
       expect(journals).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -634,6 +637,33 @@ describe(JourneyService.name, () => {
             memberId: new Types.ObjectId(memberId),
             published: false,
             text: expect.any(String),
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+          }),
+        ]),
+      );
+    });
+
+    test.each([
+      { text: lorem.sentence() },
+      { imageFormat: ImageFormat.png },
+      { audioFormat: AudioFormat.mp3 },
+    ])(`should get journals by journeyId if text or image or audio exists`, async (param) => {
+      const memberId = generateId();
+      const journeyId = generateId();
+      const { id } = await service.createJournal(memberId, journeyId);
+      await service.updateJournal({ ...param, id, memberId, journeyId });
+
+      const journals = await service.getJournals(journeyId);
+
+      expect(journals.length).toBe(1);
+      expect(journals).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...param,
+            _id: new Types.ObjectId(id),
+            memberId: new Types.ObjectId(memberId),
+            published: false,
             updatedAt: expect.any(Date),
             createdAt: expect.any(Date),
           }),
