@@ -115,7 +115,7 @@ describe(TranscriptService.name, () => {
       const memberId = generateId();
       const recordingId = generateId();
       const transcriptionId = generateId();
-      const recordingDownloadLink = `http://${lorem.word}.com`;
+      const recordingDownloadLink = `http://${lorem.word()}.com`;
 
       spyOnStorageServiceGetDownloadUrl.mockImplementationOnce(async () => recordingDownloadLink);
       spyOnRevAICreateTranscript.mockImplementationOnce(async () => transcriptionId);
@@ -143,7 +143,7 @@ describe(TranscriptService.name, () => {
     it('should create document with status error and failure reason if an error has encountered', async () => {
       const memberId = generateId();
       const recordingId = generateId();
-      const recordingDownloadLink = `http://${lorem.word}.com`;
+      const recordingDownloadLink = `http://${lorem.word()}.com`;
       const errorMessage = { message: 'error' };
 
       spyOnStorageServiceGetDownloadUrl.mockImplementationOnce(async () => recordingDownloadLink);
