@@ -4,6 +4,7 @@ import { UpdatedAppointmentAction } from '.';
 import { AppointmentDocument } from '../appointment';
 import { Member } from '../member';
 import { Appointment, AppointmentStatus, Scores, User } from '@argus/hepiusClient';
+import { RelatedEntity } from '../journey';
 
 export enum EventType {
   //member
@@ -36,6 +37,9 @@ export enum EventType {
   // questionnaire
   onAlertForQRSubmit = 'onAlertForQRSubmit',
   onUpdateHealthPersona = 'onUpdateHealthPersona',
+
+  // general
+  onUpdateRelatedEntity = 'onUpdateRelatedEntity',
 }
 
 /*************************************************************************************************
@@ -158,4 +162,9 @@ export interface IEventNotifyQueue {
 export interface IEventUpdateHealthPersona {
   memberId: string;
   healthPersona: HealthPersona;
+}
+
+export interface IEventUpdateRelatedEntity {
+  destEntity: RelatedEntity;
+  sourceEntity: RelatedEntity;
 }

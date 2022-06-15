@@ -19,6 +19,7 @@ import {
   SeverityLevelInterface,
 } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
+import { RelatedEntity } from '../journey';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -145,6 +146,9 @@ export class SubmitQuestionnaireResponseParams {
   })
   @Field(() => [Answer])
   answers: Answer[];
+
+  @Field(() => RelatedEntity, { nullable: true })
+  relatedEntity?: RelatedEntity;
 }
 
 /**************************************************************************************************

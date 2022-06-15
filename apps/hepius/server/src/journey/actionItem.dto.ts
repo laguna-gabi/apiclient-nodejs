@@ -36,6 +36,8 @@ registerEnumType(ActionItemPriority, { name: 'ActionItemPriority' });
 
 export enum RelatedEntityType {
   questionnaire = 'questionnaire',
+  questionnaireResponse = 'questionnaireResponse',
+  actionItem = 'actionItem',
 }
 
 registerEnumType(RelatedEntityType, { name: 'RelatedEntityType' });

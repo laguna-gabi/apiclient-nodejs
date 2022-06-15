@@ -1308,11 +1308,13 @@ export const generateSubmitQuestionnaireResponseParams = ({
   questionnaireId = generateId(),
   memberId = generateId(),
   answers = [mockGenerateQuestionnaireAnswer(), mockGenerateQuestionnaireAnswer()],
+  relatedEntity,
 }: Partial<SubmitQuestionnaireResponseParams> = {}): SubmitQuestionnaireResponseParams => {
   return {
     questionnaireId,
     memberId,
     answers,
+    relatedEntity,
   };
 };
 

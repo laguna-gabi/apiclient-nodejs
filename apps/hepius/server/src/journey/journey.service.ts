@@ -13,6 +13,7 @@ import {
   EventType,
   IEventDeleteMember,
   IEventOnUpdatedAppointmentScores,
+  IEventUpdateRelatedEntity,
   LoggerService,
   deleteMemberObjects,
 } from '../common';
@@ -25,6 +26,7 @@ import {
   GraduateMemberParams,
   Journey,
   JourneyDocument,
+  RelatedEntityType,
   SetGeneralNotesParams,
   UpdateJourneyParams,
   nullableActionItemKeys,
@@ -268,6 +270,36 @@ export class JourneyService extends AlertService {
       );
   }
 
+  @OnEvent(EventType.onUpdateRelatedEntity, { async: true })
+  async handleUpdateRelatedEntityActionItem(params: IEventUpdateRelatedEntity) {
+    this.logger.info(params, JourneyService.name, this.handleUpdateRelatedEntityActionItem.name);
+    try {
+      const { destEntity, sourceEntity } = params;
+      switch (destEntity.type) {
+        // only handle action items events (this eventType can be used for other entities)
+        case RelatedEntityType.actionItem:
+          const actionItem = await this.actionItemModel.findById(new Types.ObjectId(destEntity.id));
+          const updateParams: Partial<CreateOrSetActionItemParams> = {
+            relatedEntities: actionItem.relatedEntities.concat(sourceEntity),
+          };
+
+          if (sourceEntity.type === RelatedEntityType.questionnaireResponse) {
+            updateParams.status = ActionItemStatus.completed;
+          }
+          await this.actionItemModel.findOneAndUpdate(
+            { _id: new Types.ObjectId(destEntity.id) },
+            { $set: updateParams },
+          );
+      }
+    } catch (ex) {
+      this.logger.error(
+        params,
+        JourneyService.name,
+        this.handleUpdateRelatedEntityActionItem.name,
+        formatEx(ex),
+      );
+    }
+  }
   /*************************************************************************************************
    ******************************************** Journal ********************************************
    ************************************************************************************************/

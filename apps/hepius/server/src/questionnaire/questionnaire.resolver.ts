@@ -20,6 +20,7 @@ import {
   Errors,
   EventType,
   IEventUpdateHealthPersona,
+  IEventUpdateRelatedEntity,
   IsValidObjectId,
   LoggingInterceptor,
   MemberIdParam,
@@ -27,7 +28,7 @@ import {
   MemberUserRouteInterceptor,
   Roles,
 } from '../common';
-import { JourneyService } from '../journey';
+import { JourneyService, RelatedEntityType } from '../journey';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
@@ -119,20 +120,29 @@ export class QuestionnaireResolver {
     })
     submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams,
   ): Promise<QuestionnaireResponse> {
+    const { relatedEntity, ...submitParams } = submitQuestionnaireResponseParams;
     const questionnaire = await this.questionnaireService.getQuestionnaireById(
-      submitQuestionnaireResponseParams.questionnaireId,
+      submitParams.questionnaireId,
     );
 
     if (roles.includes(MemberRole.member) && !questionnaire.isAssignableToMember) {
       throw new Error(Errors.get(ErrorType.questionnaireNotAssignableToMember));
     }
 
-    const { memberId } = submitQuestionnaireResponseParams;
+    const { memberId } = submitParams;
     const { id: journeyId } = await this.journeyService.getRecent(memberId);
     const result = await this.questionnaireService.submitQuestionnaireResponse({
-      ...submitQuestionnaireResponseParams,
+      ...submitParams,
       journeyId,
     });
+
+    if (relatedEntity) {
+      const eventParams: IEventUpdateRelatedEntity = {
+        destEntity: relatedEntity,
+        sourceEntity: { type: RelatedEntityType.questionnaireResponse, id: result.id },
+      };
+      this.eventEmitter.emit(EventType.onUpdateRelatedEntity, eventParams);
+    }
 
     if (result.type === QuestionnaireType.lhp) {
       const healthPersona = await this.questionnaireService.getHealthPersona({

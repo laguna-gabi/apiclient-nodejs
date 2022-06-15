@@ -1,6 +1,6 @@
 import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ErrorType, Errors, LoggerService } from '../../src/common';
+import { ErrorType, Errors, IEventUpdateRelatedEntity, LoggerService } from '../../src/common';
 import {
   ActionItemPriority,
   ActionItemStatus,
@@ -398,11 +398,13 @@ describe(JourneyService.name, () => {
   });
 
   describe('getActionItems', () => {
-    it('should create and get action items', async () => {
+    it(`should create and get member's action items`, async () => {
       const memberId = generateId();
       await service.create(generateCreateJourneyParams({ memberId }));
       const createActionItemParams1 = generateCreateOrSetActionItemParams({ memberId });
-      const questionnaire = generateRelatedEntity({ type: RelatedEntityType.questionnaire });
+      const questionnaire = generateRelatedEntity({
+        type: RelatedEntityType.questionnaire,
+      });
       const createActionItemParams2 = generateCreateOrSetActionItemParams({
         memberId,
         priority: ActionItemPriority.urgent,
@@ -436,6 +438,52 @@ describe(JourneyService.name, () => {
             relatedEntities: [],
             status: ActionItemStatus.active,
             priority: ActionItemPriority.normal,
+          }),
+        ]),
+      );
+    });
+
+    it('should return empty array on non existing action items per member', async () => {
+      const memberId = generateId();
+      await service.create(generateCreateJourneyParams({ memberId }));
+      const results = await service.getActionItems(memberId);
+      expect(results.length).toEqual(0);
+    });
+  });
+
+  describe('handleUpdateRelatedEntityActionItem', () => {
+    it('should update related entity in action items', async () => {
+      const memberId = generateId();
+      await service.create(generateCreateJourneyParams({ memberId }));
+      const questionnaire = generateRelatedEntity({
+        type: RelatedEntityType.questionnaire,
+      });
+      const createActionItemParams1 = generateCreateOrSetActionItemParams({
+        memberId,
+        relatedEntities: [questionnaire],
+      });
+      const { id } = await service.createOrSetActionItem(createActionItemParams1);
+
+      const questionnaireResponse = {
+        type: RelatedEntityType.questionnaireResponse,
+        id: generateId(),
+      };
+      const eventParams: IEventUpdateRelatedEntity = {
+        destEntity: { type: RelatedEntityType.actionItem, id },
+        sourceEntity: questionnaireResponse,
+      };
+
+      await service.handleUpdateRelatedEntityActionItem(eventParams);
+
+      const results = await service.getActionItems(memberId);
+      expect(results).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createActionItemParams1,
+            memberId: new Types.ObjectId(memberId),
+            relatedEntities: [questionnaire, questionnaireResponse],
+            status: ActionItemStatus.completed,
+            id,
           }),
         ]),
       );

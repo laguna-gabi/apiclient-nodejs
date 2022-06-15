@@ -97,6 +97,7 @@ import {
   ChangeMemberDnaParams,
   CreateOrSetActionItemParams,
   DischargeTo,
+  RelatedEntityType,
   UpdateJournalTextParams,
 } from '../../src/journey';
 import { Internationalization } from '../../src/providers';
@@ -2675,6 +2676,65 @@ describe('Integration tests: all', () => {
       const qrs = await handler.queries.getMemberQuestionnaireResponses({ memberId: member.id });
       const res = qrs.find((qr) => qr.type === QuestionnaireType.lhp);
       expect(res.result.severity).toEqual(HealthPersona.highEffort);
+    });
+
+    it('should update action item relatedEntities on submit questionnaire', async () => {
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
+
+      const createQuestionnaireParams: CreateQuestionnaireParams =
+        generateCreateQuestionnaireParams({
+          type: QuestionnaireType.phq9, // type of form to calculate a score
+          shortName: 'PHQ-9',
+          items: [
+            mockGenerateQuestionnaireItem({
+              type: ItemType.choice,
+              code: 'q1',
+              options: [
+                { label: lorem.words(3), value: 0 },
+                { label: lorem.words(3), value: 1 },
+                { label: lorem.words(3), value: 2 },
+              ],
+            }),
+          ],
+          notificationScoreThreshold: 2,
+        });
+
+      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams,
+      });
+
+      const qrRelatedEntity = { type: RelatedEntityType.questionnaire, id: questionnaireId };
+
+      // create action item
+      const { id: actionItemId } = await handler.mutations.createOrSetActionItem({
+        createOrSetActionItemParams: generateCreateOrSetActionItemParams({
+          memberId: member.id,
+          relatedEntities: [qrRelatedEntity],
+        }),
+      });
+      const aiRelatedEntity = { type: RelatedEntityType.actionItem, id: actionItemId };
+
+      // Submit a questionnaire response with action item as related entity
+      const { id: questionnaireResponseId } = await handler.mutations.submitQuestionnaireResponse({
+        requestHeaders: generateRequestHeaders(user.authId),
+        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+          questionnaireId,
+          memberId: member.id,
+          answers: [{ code: 'q1', value: '2' }],
+          relatedEntity: aiRelatedEntity,
+        }),
+      });
+      const qrResponseRelatedEntity = {
+        type: RelatedEntityType.questionnaireResponse,
+        id: questionnaireResponseId,
+      };
+      await delay(500); // wait for the last emit to complete (sending alert to slack channel)
+
+      // verify action item has the related entity, and the status is completed
+      const actionItems = await handler.queries.getActionItems({ memberId: member.id });
+      expect(actionItems.length).toEqual(1);
+      expect(actionItems[0].relatedEntities).toEqual([qrRelatedEntity, qrResponseRelatedEntity]);
+      expect(actionItems[0].status).toEqual(ActionItemStatus.completed);
     });
   });
 

@@ -2,7 +2,13 @@ import { MemberRole, UserRole } from '@argus/hepiusClient';
 import { generateId, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ErrorType, Errors, EventType, IEventUpdateHealthPersona } from '../../src/common';
+import {
+  ErrorType,
+  Errors,
+  EventType,
+  IEventUpdateHealthPersona,
+  IEventUpdateRelatedEntity,
+} from '../../src/common';
 import {
   CreateQuestionnaireParams,
   HealthPersona,
@@ -15,11 +21,12 @@ import {
   dbDisconnect,
   defaultModules,
   generateCreateQuestionnaireParams,
+  generateRelatedEntity,
   generateSubmitQuestionnaireResponseParams,
   mockGenerateJourney,
   mockGenerateQuestionnaire,
 } from '../../test';
-import { JourneyService } from '../../src/journey';
+import { JourneyService, RelatedEntityType } from '../../src/journey';
 
 describe('QuestionnaireResolver', () => {
   let module: TestingModule;
@@ -191,6 +198,25 @@ describe('QuestionnaireResolver', () => {
       await resolver.submitQuestionnaireResponse(UserRole.lagunaCoach, qrSubmitParams);
 
       expect(spyOnServiceSubmitQR).toHaveBeenCalledWith({ ...qrSubmitParams, journeyId: mock.id });
+    });
+
+    it('should emit onUpdateRelatedEntity when there is relatedEntity', async () => {
+      const actionItemRelatedEntity = generateRelatedEntity({ type: RelatedEntityType.actionItem });
+      const qrSubmitParams = generateSubmitQuestionnaireResponseParams({
+        relatedEntity: actionItemRelatedEntity,
+      });
+      const qrId = generateId();
+      spyOnServiceSubmitQR.mockResolvedValueOnce({ type: QuestionnaireType.phq9, id: qrId });
+      const mock = mockGenerateJourney({ memberId: qrSubmitParams.memberId });
+      spyOnServiceGetRecentJourney.mockResolvedValueOnce(mock);
+      const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+      await resolver.submitQuestionnaireResponse(UserRole.lagunaCoach, qrSubmitParams);
+
+      const event: IEventUpdateRelatedEntity = {
+        destEntity: actionItemRelatedEntity,
+        sourceEntity: { type: RelatedEntityType.questionnaireResponse, id: qrId },
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdateRelatedEntity, event);
     });
 
     it(`should submit an ${QuestionnaireType.lhp} response and update health persona`, async () => {
