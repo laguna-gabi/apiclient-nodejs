@@ -19,20 +19,23 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
-  generateCreateJourneyParams,
   generateCreateOrSetActionItemParams,
   generateGetMemberUploadJournalImageLinkParams,
+  generateOrgParams,
   generateRelatedEntity,
+  generateReplaceMemberOrgParams,
   generateSetGeneralNotesParams,
   generateUpdateJournalTextParams,
   generateUpdateJourneyParams,
 } from '../index';
 import { Model, Types, model } from 'mongoose';
 import { lorem } from 'faker';
+import { OrgService } from '../../src/org';
 
 describe(JourneyService.name, () => {
   let module: TestingModule;
   let service: JourneyService;
+  let orgService: OrgService;
   let modelJournal: Model<JournalDocument>;
 
   beforeAll(async () => {
@@ -42,6 +45,7 @@ describe(JourneyService.name, () => {
     }).compile();
 
     service = module.get<JourneyService>(JourneyService);
+    orgService = module.get<OrgService>(OrgService);
     modelJournal = model<JournalDocument>(Journal.name, JournalDto);
     mockLogger(module.get<LoggerService>(LoggerService));
 
@@ -55,9 +59,10 @@ describe(JourneyService.name, () => {
 
   it('should create multiple journeys and return them', async () => {
     const memberId = generateId();
+    const orgId = generateId();
 
-    const { id: id1 } = await service.create(generateCreateJourneyParams({ memberId }));
-    const { id: id2 } = await service.create(generateCreateJourneyParams({ memberId }));
+    const { id: id1 } = await service.create({ memberId, orgId });
+    const { id: id2 } = await service.create({ memberId, orgId });
 
     expect(id1).not.toEqual(id2);
 
@@ -90,11 +95,33 @@ describe(JourneyService.name, () => {
     );
   });
 
+  describe('replaceMemberOrg', () => {
+    it('should update member org', async () => {
+      const memberId = generateId();
+
+      const { id: oldOrgId } = await orgService.insert(generateOrgParams());
+      const { id: newOrgId } = await orgService.insert(generateOrgParams());
+
+      await service.create({ memberId, orgId: oldOrgId });
+      await service.replaceMemberOrg({ memberId, orgId: newOrgId });
+
+      const { org } = await service.getRecent(memberId, true);
+      expect(org.id.toString()).toEqual(newOrgId);
+    });
+
+    it('should fail to replace member org if member does not exist', async () => {
+      await expect(service.replaceMemberOrg(generateReplaceMemberOrgParams())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+  });
+
   describe('ControlJourney', () => {
     it('should create and get recent control journey', async () => {
       const memberId = generateId();
+      const orgId = generateId();
 
-      const { id } = await service.createControl(generateCreateJourneyParams({ memberId }));
+      const { id } = await service.createControl({ memberId, orgId });
 
       const matchObject = { memberId: new Types.ObjectId(memberId), admissions: [] };
       const recentJourney = await service.getRecentControl(memberId);
@@ -105,7 +132,8 @@ describe(JourneyService.name, () => {
   describe('updateMemberConfigLoggedInAt', () => {
     it('should update member config login time and not update firstLogin on 2nd time', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
 
       const currentTime1 = new Date().getTime();
       await service.updateLoggedInAt(new Types.ObjectId(memberId));
@@ -125,11 +153,13 @@ describe(JourneyService.name, () => {
 
   test.each([true, false])('should delete member journeys (hard=%p)', async (hard) => {
     const memberId = generateId();
+    const orgId = generateId();
     const memberIdTestGroup = generateId();
-    const { id: journeyId1 } = await service.create(generateCreateJourneyParams({ memberId }));
-    const { id: journeyId2 } = await service.create(generateCreateJourneyParams({ memberId }));
+    const { id: journeyId1 } = await service.create({ memberId, orgId });
+    const { id: journeyId2 } = await service.create({ memberId, orgId });
     const { id: journeyIdMemberTestGroup } = await service.create({
       memberId: memberIdTestGroup,
+      orgId,
     });
 
     const journeysBefore = await service.getAll({ memberId });
@@ -157,7 +187,8 @@ describe(JourneyService.name, () => {
 
     it('should return existing journey when no update params provided(without id)', async () => {
       const memberId = generateId();
-      const { id } = await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      const { id } = await service.create({ memberId, orgId });
 
       const { id: updateResultId } = await service.update(
         generateUpdateJourneyParams({ memberId }),
@@ -167,13 +198,15 @@ describe(JourneyService.name, () => {
 
     it('should return existing journey when no update params provided(with id)', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
       await checkUpdate({ memberId });
     });
 
     it('should multiple update item', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
 
       await checkUpdate(generateUpdateJourneyParams({ memberId }));
       await checkUpdate(generateUpdateJourneyParams({ memberId }));
@@ -181,7 +214,8 @@ describe(JourneyService.name, () => {
 
     it('should be able to update partial fields', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
 
       const updateParams1 = generateUpdateJourneyParams({ memberId });
       await checkUpdate(updateParams1);
@@ -202,7 +236,8 @@ describe(JourneyService.name, () => {
 
     it('should not add to readmissionRiskHistory if the readmissionRisk is the same', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
 
       const updateJourney = generateUpdateJourneyParams({
         memberId,
@@ -221,7 +256,8 @@ describe(JourneyService.name, () => {
 
     it('should add to readmissionRiskHistory if the readmissionRisk is not the same', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
 
       const updateJourney1 = generateUpdateJourneyParams({
         memberId,
@@ -260,7 +296,8 @@ describe(JourneyService.name, () => {
       it('should set graduate on existing member', async () => {
         const currentTime = new Date();
         const memberId = generateId();
-        const { id } = await service.create(generateCreateJourneyParams({ memberId }));
+        const orgId = generateId();
+        const { id } = await service.create({ memberId, orgId });
         await service.graduate({ id: memberId, isGraduated: true });
 
         const result1 = await service.get(id);
@@ -279,7 +316,8 @@ describe(JourneyService.name, () => {
   describe('setGeneralNotes', () => {
     it('should set general notes and nurse notes for a member', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
 
       const generalNotes = generateSetGeneralNotesParams({ memberId });
       await service.setGeneralNotes(generalNotes);
@@ -297,7 +335,8 @@ describe(JourneyService.name, () => {
 
     it('should set general notes', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
 
       const notes = generateSetGeneralNotesParams({ memberId });
       await service.setGeneralNotes(notes);
@@ -308,7 +347,8 @@ describe(JourneyService.name, () => {
 
     it('should override general notes when provided', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
 
       const notes1 = generateSetGeneralNotesParams({ memberId });
       await service.setGeneralNotes(notes1);
@@ -323,7 +363,8 @@ describe(JourneyService.name, () => {
 
     it('should be able to set empty notes similar to harmony calls', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
 
       const params1 = generateSetGeneralNotesParams({ memberId });
       await service.setGeneralNotes(params1);
@@ -340,7 +381,8 @@ describe(JourneyService.name, () => {
   describe('createOrSetActionItem', () => {
     it('should create an action item', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
       const createActionItemParams = generateCreateOrSetActionItemParams({ memberId });
       const { id } = await service.createOrSetActionItem(createActionItemParams);
 
@@ -349,7 +391,8 @@ describe(JourneyService.name, () => {
 
     it('should update an existing action item', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
       const createActionItemParams = generateCreateOrSetActionItemParams({ memberId });
       const { id } = await service.createOrSetActionItem(createActionItemParams);
 
@@ -365,7 +408,8 @@ describe(JourneyService.name, () => {
 
     it('should override current params, even when undefined', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
       const createActionItemParams = generateCreateOrSetActionItemParams({ memberId });
       const { id } = await service.createOrSetActionItem(createActionItemParams);
 
@@ -400,7 +444,8 @@ describe(JourneyService.name, () => {
   describe('getActionItems', () => {
     it(`should create and get member's action items`, async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
       const createActionItemParams1 = generateCreateOrSetActionItemParams({ memberId });
       const questionnaire = generateRelatedEntity({
         type: RelatedEntityType.questionnaire,
@@ -445,7 +490,8 @@ describe(JourneyService.name, () => {
 
     it('should return empty array on non existing action items per member', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
       const results = await service.getActionItems(memberId);
       expect(results.length).toEqual(0);
     });
@@ -454,7 +500,8 @@ describe(JourneyService.name, () => {
   describe('handleUpdateRelatedEntityActionItem', () => {
     it('should update related entity in action items', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
       const questionnaire = generateRelatedEntity({
         type: RelatedEntityType.questionnaire,
       });
@@ -491,7 +538,8 @@ describe(JourneyService.name, () => {
 
     it('should return empty array on non existing action items per member', async () => {
       const memberId = generateId();
-      await service.create(generateCreateJourneyParams({ memberId }));
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
       const results = await service.getActionItems(memberId);
       expect(results.length).toEqual(0);
     });

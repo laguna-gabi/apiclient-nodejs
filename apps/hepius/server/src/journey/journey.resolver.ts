@@ -7,6 +7,7 @@ import {
   Errors,
   EventType,
   IEventOnPublishedJournal,
+  IEventOnReplaceMemberOrg,
   IsValidObjectId,
   LoggerService,
   LoggingInterceptor,
@@ -30,6 +31,7 @@ import {
   JournalUploadImageLink,
   Journey,
   JourneyService,
+  ReplaceMemberOrgParams,
   SetGeneralNotesParams,
   UpdateJournalTextParams,
   UpdateJourneyParams,
@@ -39,6 +41,7 @@ import { camelCase } from 'lodash';
 import { EntityName, StorageType } from '@argus/pandora';
 import { StorageService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { OrgService } from '../org';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Journey)
@@ -46,6 +49,7 @@ export class JourneyResolver {
   constructor(
     readonly journeyService: JourneyService,
     readonly admissionService: AdmissionService,
+    readonly orgService: OrgService,
     readonly dietaryMatcher: DietaryHelper,
     readonly storageService: StorageService,
     readonly eventEmitter: EventEmitter2,
@@ -103,7 +107,34 @@ export class JourneyResolver {
     )
     memberId: string,
   ): Promise<Journey> {
-    return this.journeyService.getRecent(memberId);
+    return this.journeyService.getRecent(memberId, true);
+  }
+
+  /*************************************************************************************************
+   *********************************************** Org *********************************************
+   ************************************************************************************************/
+
+  @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.lagunaAdmin)
+  @Ace({ strategy: AceStrategy.rbac })
+  async replaceMemberOrg(
+    @Args(camelCase(ReplaceMemberOrgParams.name))
+    replaceMemberOrgParams: ReplaceMemberOrgParams,
+  ) {
+    const { memberId, orgId } = replaceMemberOrgParams;
+    const org = await this.orgService.get(orgId);
+
+    if (!org) {
+      throw new Error(Errors.get(ErrorType.orgIdNotFound));
+    }
+
+    const { id: journeyId } = await this.journeyService.getRecent(memberId);
+    await this.journeyService.replaceMemberOrg({ ...replaceMemberOrgParams, journeyId });
+
+    const eventParams: IEventOnReplaceMemberOrg = { memberId, org };
+    this.eventEmitter.emit(EventType.onReplaceMemberOrg, eventParams);
+
+    return true;
   }
 
   /*************************************************************************************************

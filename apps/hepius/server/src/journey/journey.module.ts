@@ -36,11 +36,13 @@ import { Caregiver } from '@argus/hepiusClient';
 import { ChangeEventFactoryProvider } from '../db';
 import { EntityName } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { OrgModule } from '../org';
 
 @Module({
   imports: [
     CommonModule,
     ProvidersModule,
+    OrgModule,
     MongooseModule.forFeature([
       { name: Journey.name, schema: JourneyDto },
       { name: ControlJourney.name, schema: ControlJourneyDto },

@@ -1,6 +1,6 @@
 import { User } from '@argus/hepiusClient';
 import { Platform } from '@argus/pandora';
-import { BEFORE_ALL_TIMEOUT, generateCreateJourneyParams, generateRequestHeaders } from '..';
+import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '..';
 import { RegisterForNotificationParams } from '../../src/common';
 import { Member, MemberConfig, MemberSummary } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
@@ -122,9 +122,10 @@ describe('Integration tests : getMembers', () => {
 
   it('should display recent journey results having multiple journeys per member', async () => {
     const { member, org } = await creators.createMemberUserAndOptionalOrg();
-    const recentJourney = await handler.journeyService.create(
-      generateCreateJourneyParams({ memberId: member.id }),
-    );
+    const recentJourney = await handler.journeyService.create({
+      memberId: member.id,
+      orgId: org.id,
+    });
 
     await handler.mutations.registerMemberForNotifications({
       registerForNotificationParams: {

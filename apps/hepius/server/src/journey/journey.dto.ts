@@ -7,6 +7,7 @@ import { Identifier, IsObjectId, Scores } from '@argus/hepiusClient';
 import { IsOptional } from 'class-validator';
 import { ErrorType, Errors } from '../common';
 import { DefaultSchemaOptions } from '@argus/pandora';
+import { Org } from '../org';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -32,13 +33,10 @@ export class ReadmissionRiskHistory {
 }
 
 @InputType()
-export class CreateJourneyParams {
+export class UpdateJourneyParams {
   @Field(() => String)
   memberId: string;
-}
 
-@InputType()
-export class UpdateJourneyParams extends CreateJourneyParams {
   @Field(() => String, { nullable: true })
   @IsOptional()
   fellowName?: string;
@@ -66,6 +64,19 @@ export class SetGeneralNotesParams {
   @Field(() => String)
   note: string;
 }
+
+@InputType()
+export class ReplaceMemberOrgParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  journeyId?: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.journeyOrgIdInvalid) })
+  orgId: string;
+}
 /***************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
@@ -76,6 +87,15 @@ export class Journey extends Identifier {
   @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String)
   memberId: Types.ObjectId;
+
+  /**
+   * Org prop is moved to journey collection, but the field is still exposed via the member api
+   * (since its in use by the app)
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
+  @Prop({ type: Types.ObjectId, ref: Org.name, index: true })
+  @Field(() => Org)
+  org: Org;
 
   @Prop({ type: [{ type: Types.ObjectId }], default: [] })
   @Field(() => [String])

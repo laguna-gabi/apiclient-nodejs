@@ -267,7 +267,7 @@ export class CreateMemberParams extends ExtraMemberParams {
   @Field(() => String)
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
-  @IsObjectId({ message: Errors.get(ErrorType.memberOrgIdInvalid) })
+  @IsObjectId({ message: Errors.get(ErrorType.journeyOrgIdInvalid) })
   orgId: string;
 
   // language is not a part of the member object, but only used here for the first registration
@@ -381,17 +381,6 @@ export class ReplaceUserForMemberParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId: string;
-}
-
-@InputType()
-export class ReplaceMemberOrgParams {
-  @Field(() => String)
-  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
-  memberId: string;
-
-  @Field(() => String)
-  @IsObjectId({ message: Errors.get(ErrorType.orgIdInvalid) })
-  orgId: string;
 }
 
 @InputType()
@@ -557,7 +546,11 @@ export class Member extends Identifier {
   @Field(() => String)
   dateOfBirth: string;
 
-  @Prop({ type: Types.ObjectId, ref: Org.name, index: true })
+  /**
+   * Org prop is moved to journey collection, but the field is still exposed via the member api
+   * (since its in use by the app)
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
   @Field(() => Org)
   org: Org;
 

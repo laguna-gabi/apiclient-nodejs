@@ -163,7 +163,7 @@ describe('Validations - member', () => {
       ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
       ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
       ${{ orgId: 123 }}                 | ${{ missingFieldError: stringError }}
-      ${{ orgId: '123' }}               | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberOrgIdInvalid)] }}
+      ${{ orgId: '123' }}               | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyOrgIdInvalid)] }}
       ${{ email: 'not-valid' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
       ${{ sex: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
       ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
@@ -948,7 +948,7 @@ describe('Validations - member', () => {
     test.each`
       input                  | invalid
       ${{ memberId: '123' }} | ${[Errors.get(ErrorType.memberIdInvalid)]}
-      ${{ orgId: '123' }}    | ${[Errors.get(ErrorType.orgIdInvalid)]}
+      ${{ orgId: '123' }}    | ${[Errors.get(ErrorType.journeyOrgIdInvalid)]}
     `(`should fail to replace member org since $input is not a valid`, async (params) => {
       const replaceMemberOrgParams = generateReplaceMemberOrgParams({ ...params.input });
       await handler.mutations.replaceMemberOrg({

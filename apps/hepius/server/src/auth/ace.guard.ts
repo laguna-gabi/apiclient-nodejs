@@ -7,6 +7,7 @@ import { BaseGuard, EntityResolver } from '.';
 import { AceOptions, AceStrategy, DecoratorType, defaultEntityMemberIdLocator } from '../common';
 import { Member } from '../member';
 import { difference, isEqual, sortBy } from 'lodash';
+import { Journey } from '../journey';
 @Injectable()
 export class AceGuard extends BaseGuard implements CanActivate {
   constructor(reflector: Reflector, readonly entityResolver: EntityResolver) {
@@ -72,7 +73,16 @@ export class AceGuard extends BaseGuard implements CanActivate {
           // #3: if client is a user we allow/deny access based on org provisioning
           if (Types.ObjectId.isValid(memberId)) {
             const member = await this.entityResolver.getEntityById(Member.name, memberId);
-            return !!client.orgs?.find((org) => org.toString() === member?.org.toString());
+            const journeys = await this.entityResolver.getEntities<Journey>(Journey.name, {
+              filter: { memberId: new Types.ObjectId(member._id) },
+              sort: { _id: -1 },
+              limit: 1,
+            });
+            if (!journeys || journeys.length === 0) {
+              return false;
+            }
+
+            return !!client.orgs?.find((org) => org.toString() === journeys[0].org.toString());
           }
         }
     }

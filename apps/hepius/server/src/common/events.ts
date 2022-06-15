@@ -5,6 +5,7 @@ import { AppointmentDocument } from '../appointment';
 import { Member } from '../member';
 import { Appointment, AppointmentStatus, Scores, User } from '@argus/hepiusClient';
 import { RelatedEntity } from '../journey';
+import { Org } from '../org';
 
 export enum EventType {
   //member
@@ -14,6 +15,7 @@ export enum EventType {
   onReplacedUserForMember = 'onReplacedUserForMember',
   onDeletedMember = 'onDeletedMember',
   onPublishedJournal = 'onPublishedJournal',
+  onReplaceMemberOrg = 'onReplaceMemberOrg',
 
   //user
   onNewUser = 'onNewUser',
@@ -81,6 +83,11 @@ export interface IEventOnPublishedJournal {
   text: string;
   journalImageDownloadLink?: string;
   journalAudioDownloadLink?: string;
+}
+
+export interface IEventOnReplaceMemberOrg {
+  memberId: string;
+  org: Org;
 }
 
 /*************************************************************************************************

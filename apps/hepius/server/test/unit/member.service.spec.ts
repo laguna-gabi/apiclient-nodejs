@@ -15,11 +15,10 @@ import {
 } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { articlesByDrg, queryDaysLimit } from 'config';
+import { articlesByDrg } from 'config';
 import { sub } from 'date-fns';
 import { address, datatype, date, internet, name } from 'faker';
 import { Model, Types, model } from 'mongoose';
-import { performance } from 'perf_hooks';
 import {
   checkDelete,
   compareMembers,
@@ -34,13 +33,11 @@ import {
   generateDeleteMemberParams,
   generateInternalCreateMemberParams,
   generateOrgParams,
-  generateReplaceMemberOrgParams,
   generateScheduleAppointmentParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   loadSessionClient,
   mockGenerateDispatch,
-  mockGenerateJourney,
 } from '..';
 import { AppointmentDocument, AppointmentDto, AppointmentModule } from '../../src/appointment';
 import {
@@ -54,7 +51,7 @@ import {
   PhoneType,
   defaultTimestampsDbValues,
 } from '../../src/common';
-import { Journey, JourneyDocument, JourneyDto } from '../../src/journey';
+import { JourneyService } from '../../src/journey';
 import {
   ControlMember,
   ControlMemberDocument,
@@ -63,7 +60,6 @@ import {
   Insurance,
   InsuranceDocument,
   InsuranceDto,
-  InternalCreateMemberParams,
   Member,
   MemberConfig,
   MemberConfigDocument,
@@ -85,6 +81,7 @@ import { confirmEmittedChangeEvent } from '../common';
 describe('MemberService', () => {
   let module: TestingModule;
   let service: MemberService;
+  let journeyService: JourneyService;
   let memberModel: Model<MemberDocument & defaultTimestampsDbValues>;
   let memberConfigModel: Model<MemberConfigDocument>;
   let controlMemberModel: Model<ControlMemberDocument & defaultTimestampsDbValues>;
@@ -92,7 +89,6 @@ describe('MemberService', () => {
   let modelOrg: Model<OrgDocument>;
   let modelAppointment: Model<AppointmentDocument>;
   let modelDismissedAlert: Model<DismissedAlertDocument>;
-  let modelJourney: Model<JourneyDocument & defaultTimestampsDbValues>;
   let modelInsurance: Model<InsuranceDocument>;
   let i18nService: Internationalization;
 
@@ -109,6 +105,7 @@ describe('MemberService', () => {
     await i18nService.onModuleInit();
 
     memberModel = model<MemberDocument & defaultTimestampsDbValues>(Member.name, MemberDto);
+    journeyService = module.get<JourneyService>(JourneyService);
 
     memberConfigModel = model<MemberConfigDocument>(MemberConfig.name, MemberConfigDto);
     controlMemberModel = model<ControlMemberDocument & defaultTimestampsDbValues>(
@@ -119,7 +116,6 @@ describe('MemberService', () => {
     modelOrg = model<OrgDocument>(Org.name, OrgDto);
     modelAppointment = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     modelDismissedAlert = model<DismissedAlertDocument>(DismissedAlert.name, DismissedAlertDto);
-    modelJourney = model<JourneyDocument & defaultTimestampsDbValues>(Journey.name, JourneyDto);
     modelInsurance = model<InsuranceDocument>(Insurance.name, InsuranceDto);
 
     await dbConnect();
@@ -130,21 +126,14 @@ describe('MemberService', () => {
     await dbDisconnect();
   });
 
-  describe('getByDeviceId + get', () => {
-    it('should throw error on a non existing deviceId of a member', async () => {
-      await expect(service.getByDeviceId(datatype.uuid())).rejects.toThrow(
-        Errors.get(ErrorType.memberNotFound),
-      );
-    });
-
+  describe('get', () => {
     it('should throw error on a non existing id of a member', async () => {
       await expect(service.get(generateId())).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
 
     test.each`
-      field        | method
-      ${'context'} | ${(deviceId) => service.getByDeviceId(deviceId)}
-      ${'id'}      | ${(id) => service.get(id)}
+      field   | method
+      ${'id'} | ${(id) => service.get(id)}
     `(
       `should return member and his/her users for an existing member using $field`,
       async (params) => {
@@ -161,14 +150,14 @@ describe('MemberService', () => {
           deviceId,
           firstName: member.firstName,
           lastName: member.lastName,
-          org: generateObjectId(org.id),
           primaryUserId: primaryUser.id,
           users: [primaryUser.id],
         });
+        await journeyService.create({ memberId: _id, orgId: org.id });
 
         const result = await params.method(params.field === 'context' ? deviceId : _id);
 
-        expect(result.id).toEqual(_id.toString());
+        expect(result.id).toEqual(_id);
         expect(result.phone).toEqual(member.phone);
         expect(result.deviceId).toEqual(deviceId);
         expect(result.firstName).toEqual(member.firstName);
@@ -194,14 +183,14 @@ describe('MemberService', () => {
         deviceId,
         firstName: member.firstName,
         lastName: member.lastName,
-        org: generateObjectId(org.id),
         primaryUserId: primaryUser.id,
         users: [primaryUser.id],
       });
+      await journeyService.create({ memberId: _id, orgId: org.id });
 
       const result = await service.getByPhone(member.phone);
 
-      expect(result.id).toEqual(_id.toString());
+      expect(result.id).toEqual(_id);
       expect(result.phone).toEqual(member.phone);
       expect(result.deviceId).toEqual(deviceId);
       expect(result.firstName).toEqual(member.firstName);
@@ -231,10 +220,11 @@ describe('MemberService', () => {
         primaryUserId: primaryUser.id,
         users: [primaryUser.id],
       });
+      await journeyService.create({ memberId: _id, orgId: org.id });
 
       const result = await service.getByPhone(member.phone);
 
-      expect(result.id).toEqual(_id.toString());
+      expect(result.id).toEqual(_id);
       expect(result.phoneSecondary).toEqual(member.phone);
       expect(result.deviceId).toEqual(deviceId);
       expect(result.firstName).toEqual(member.firstName);
@@ -335,12 +325,11 @@ describe('MemberService', () => {
       const phoneType: PhoneType = 'landline';
 
       const dischargeDate = generateDateOnly(date.future(1));
-      const { member: createdMember } = await service.insert(
-        { ...generateCreateMemberParams({ orgId, dischargeDate }), phoneType },
+      const { id: memberId } = await service.insert(
+        { ...generateCreateMemberParams({ dischargeDate, orgId }), phoneType },
         new Types.ObjectId(primaryUserId),
       );
-      const memberId = createdMember.id;
-      await modelJourney.create(mockGenerateJourney({ memberId }));
+      await journeyService.create({ memberId, orgId });
 
       const result = await service.getByOrgs([orgId]);
       const member = await service.get(memberId);
@@ -499,236 +488,26 @@ describe('MemberService', () => {
         }),
       );
     });
-
-    /* eslint-disable-next-line max-len */
-    it('should not take longer than 1 second to process 10 members with 3 appointments each', async () => {
-      const userId = await generateUser();
-      const orgId = await generateOrg();
-
-      for (let i = 0; i < 10; i++) {
-        const { memberId, journeyId } = await generateMember(orgId);
-        await generateAppointment({ memberId, userId, journeyId });
-        await generateAppointment({ memberId, userId, journeyId });
-        await generateAppointment({ memberId, userId, journeyId });
-      }
-
-      const startTime = performance.now();
-      const result = await service.getByOrgs([orgId]);
-      const endTime = performance.now();
-      expect(result.length).toEqual(10);
-      expect(endTime - startTime).toBeLessThan(1000);
-    }, 15000);
-  });
-
-  describe('getMembersAppointments', () => {
-    it('should return empty array on members with orgId and no appointments', async () => {
-      const orgId = await generateOrg();
-      await generateMember(orgId);
-      await generateMember(orgId);
-      await generateMember(orgId);
-
-      const result = await service.getMembersAppointments([orgId]);
-      expect(result).toEqual([]);
-    });
-
-    it('should return members with by orgId and appointments for each', async () => {
-      const primaryUserParams = {
-        firstName: name.firstName(),
-        lastName: name.lastName(),
-      };
-      const { _id: primaryUserId } = await modelUser.create(
-        generateCreateUserParams({ ...primaryUserParams }),
-      );
-      const orgId = await generateOrg();
-
-      const member1AppointmentsCount = 3;
-      const member1 = await generateMemberAndAppointment({
-        primaryUserId,
-        orgId,
-        numberOfAppointments: member1AppointmentsCount,
-      });
-      const member2AppointmentsCount = 4;
-      const member2 = await generateMemberAndAppointment({
-        primaryUserId,
-        orgId,
-        numberOfAppointments: member2AppointmentsCount,
-      });
-
-      const result = await service.getMembersAppointments([orgId]);
-      expect(result.length).toEqual(member1AppointmentsCount + member2AppointmentsCount);
-      expect(result).toEqual(
-        expect.arrayContaining([
-          {
-            memberId: new Types.ObjectId(member1.id),
-            userId: primaryUserId,
-            memberName: `${member1.firstName} ${member1.lastName}`,
-            userName: `${primaryUserParams.firstName} ${primaryUserParams.lastName}`,
-            start: expect.any(Date),
-            end: expect.any(Date),
-            status: AppointmentStatus.scheduled,
-          },
-          {
-            memberId: new Types.ObjectId(member2.id),
-            userId: primaryUserId,
-            memberName: `${member2.firstName} ${member2.lastName}`,
-            userName: `${primaryUserParams.firstName} ${primaryUserParams.lastName}`,
-            start: expect.any(Date),
-            end: expect.any(Date),
-            status: AppointmentStatus.scheduled,
-          },
-        ]),
-      );
-    });
-
-    it('should exclude non org members from results', async () => {
-      const primaryUserParams = {
-        firstName: name.firstName(),
-        lastName: name.lastName(),
-      };
-      const { _id: primaryUserId } = await modelUser.create(
-        generateCreateUserParams({ ...primaryUserParams }),
-      );
-      const { _id: orgId1 } = await modelOrg.create(generateOrgParams());
-      const { _id: orgId2 } = await modelOrg.create(generateOrgParams());
-
-      const memberAppointmentsCount = 2;
-      const member = await generateMemberAndAppointment({
-        primaryUserId,
-        orgId: orgId1,
-        numberOfAppointments: memberAppointmentsCount,
-      });
-      await generateMemberAndAppointment({
-        primaryUserId,
-        orgId: orgId2,
-        numberOfAppointments: 1,
-      });
-
-      const result = await service.getMembersAppointments([orgId1.toString()]);
-      expect(result.length).toEqual(memberAppointmentsCount);
-      expect(result).toEqual(
-        expect.arrayContaining([
-          {
-            memberId: new Types.ObjectId(member.id),
-            userId: primaryUserId,
-            memberName: `${member.firstName} ${member.lastName}`,
-            userName: `${primaryUserParams.firstName} ${primaryUserParams.lastName}`,
-            start: expect.any(Date),
-            end: expect.any(Date),
-            status: AppointmentStatus.scheduled,
-          },
-        ]),
-      );
-    });
-
-    it('should sort results by start timestamp desc', async () => {
-      const { _id: primaryUserId } = await modelUser.create(
-        generateCreateUserParams({
-          firstName: name.firstName(),
-          lastName: name.lastName(),
-        }),
-      );
-      const orgId = await generateOrg();
-
-      const member1AppointmentsCount = 3;
-      await generateMemberAndAppointment({
-        primaryUserId,
-        orgId,
-        numberOfAppointments: member1AppointmentsCount,
-      });
-      const member2AppointmentsCount = 4;
-      await generateMemberAndAppointment({
-        primaryUserId,
-        orgId,
-        numberOfAppointments: member2AppointmentsCount,
-      });
-
-      const result = await service.getMembersAppointments([orgId]);
-      const isSorted = result
-        .map((item) => item.start)
-        .every((v, i, a) => !i || a[i - 1].getTime() >= v.getTime());
-
-      expect(result.length).toEqual(member1AppointmentsCount + member2AppointmentsCount);
-      expect(isSorted).toBeTruthy();
-    });
-
-    // eslint-disable-next-line max-len
-    it(`should not include appointments older that ${queryDaysLimit.getMembersAppointments} days ago`, async () => {
-      const orgId = await generateOrg();
-      const { memberId, journeyId } = await generateMember(orgId);
-      const member = await service.get(memberId);
-
-      const startDate1 = new Date();
-      startDate1.setDate(startDate1.getDate() - (queryDaysLimit.getMembersAppointments + 1));
-      // create a `scheduled` appointment for the member (and primary user)
-      await generateAppointment({
-        memberId,
-        journeyId,
-        userId: member.primaryUserId.toString(),
-        status: AppointmentStatus.scheduled,
-        start: startDate1,
-      });
-
-      const startDate2 = new Date();
-      startDate2.setDate(startDate2.getDate() - (queryDaysLimit.getMembersAppointments - 1));
-      await generateAppointment({
-        memberId,
-        journeyId,
-        userId: member.primaryUserId.toString(),
-        status: AppointmentStatus.scheduled,
-        start: startDate2,
-      });
-
-      const result = await service.getMembersAppointments([orgId]);
-      expect(result.length).toEqual(1);
-      expect(result[0]).toEqual(
-        expect.objectContaining({
-          memberId: new Types.ObjectId(memberId),
-          userId: member.primaryUserId,
-          start: startDate2,
-        }),
-      );
-    });
-
-    const generateMemberAndAppointment = async ({ primaryUserId, orgId, numberOfAppointments }) => {
-      const params = { firstName: name.firstName(), lastName: name.lastName() };
-      const { member } = await service.insert(
-        generateInternalCreateMemberParams({ orgId, ...params }),
-        primaryUserId,
-      );
-      const memberId = member.id;
-      const { id: journeyId } = await modelJourney.create(mockGenerateJourney({ memberId }));
-
-      await Promise.all(
-        Array.from(Array(numberOfAppointments)).map(async () =>
-          generateAppointment({ memberId, userId: primaryUserId, journeyId }),
-        ),
-      );
-
-      return { id: member.id, ...params };
-    };
   });
 
   describe('insert', () => {
     it('should insert a member without optional params + validate all fields', async () => {
       const primaryUser = await modelUser.create(generateCreateUserParams());
-      const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id.toString() });
+      const createMemberParams = generateInternalCreateMemberParams();
       createMemberParams.zipCode = undefined;
-      const { member } = await service.insert(createMemberParams, primaryUser._id);
+      const { id } = await service.insert(createMemberParams, primaryUser._id);
 
-      expect(member?.id).not.toBeUndefined();
+      expect(id).not.toBeUndefined();
 
-      const createdMember = await memberModel.findById(member.id);
+      const createdMember = await memberModel.findById(id);
       compareMembers(createdMember, createMemberParams);
     });
 
     it('should insert a member with all params + validate all insert fields', async () => {
       const primaryUser = await modelUser.create(generateCreateUserParams());
-      const org = await modelOrg.create(generateOrgParams());
 
       const createMemberParams = generateInternalCreateMemberParams({
-        orgId: org._id.toString(),
         sex: Sex.female,
         email: internet.email(),
         language: Language.es,
@@ -736,11 +515,11 @@ describe('MemberService', () => {
         dischargeDate: generateDateOnly(date.future(1)),
         honorific: Honorific.dr,
       });
-      const { member } = await service.insert(createMemberParams, primaryUser._id);
+      const { id } = await service.insert(createMemberParams, primaryUser._id);
 
-      expect(member?.id).not.toBeUndefined();
+      expect(id).not.toBeUndefined();
 
-      const createdMember = await memberModel.findById(member.id);
+      const createdMember = await memberModel.findById(id);
       compareMembers(createdMember, createMemberParams);
     });
 
@@ -754,9 +533,8 @@ describe('MemberService', () => {
 
     it('should remove not nullable optional params if null is passed', async () => {
       const primaryUser = await modelUser.create(generateCreateUserParams());
-      const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id.toString() });
+      const createMemberParams = generateInternalCreateMemberParams();
 
       NotNullableMemberKeys.forEach((key) => {
         createMemberParams[key] = null;
@@ -766,8 +544,8 @@ describe('MemberService', () => {
       createMemberParams.lastName = name.lastName();
       createMemberParams.dateOfBirth = generateDateOnly(date.past());
 
-      const { member } = await service.insert(createMemberParams, primaryUser._id);
-      const createdObject = await memberModel.findById(member.id);
+      const { id } = await service.insert(createMemberParams, primaryUser._id);
+      const createdObject = await memberModel.findById(id);
 
       NotNullableMemberKeys.forEach((key) => {
         expect(createdObject).not.toHaveProperty(key, null);
@@ -775,17 +553,15 @@ describe('MemberService', () => {
     });
 
     it('should insert a member even with primaryUser not exists', async () => {
-      const params: InternalCreateMemberParams = generateInternalCreateMemberParams({
-        orgId: generateId(),
-      });
-      const { member } = await service.insert(params, new Types.ObjectId(generateId()));
+      const params = generateInternalCreateMemberParams();
+      const { id } = await service.insert(params, new Types.ObjectId(generateId()));
 
-      expect(member?.id).not.toBeUndefined();
+      expect(id).not.toBeUndefined();
     });
 
     it('should fail to insert an already existing member', async () => {
       const primaryUserId = generateId();
-      const createMemberParams = generateInternalCreateMemberParams({ orgId: generateId() });
+      const createMemberParams = generateInternalCreateMemberParams();
       await service.insert(createMemberParams, new Types.ObjectId(primaryUserId));
 
       await expect(
@@ -796,18 +572,14 @@ describe('MemberService', () => {
 
   describe('control member', () => {
     it('should insert control member with mandatory params+validate all fields', async () => {
-      const orgParams = generateOrgParams();
-      const org = await modelOrg.create(orgParams);
-
-      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id.toString() });
+      const createMemberParams = generateInternalCreateMemberParams();
       const member = await service.insertControl(createMemberParams);
       const createdMember = await controlMemberModel.findById(member.id);
       compareMembers(createdMember, createMemberParams);
-      expect(member.org).toEqual(expect.objectContaining(orgParams));
     });
 
     it('should fail to insert an already existing member', async () => {
-      const params = generateInternalCreateMemberParams({ orgId: generateId() });
+      const params = generateInternalCreateMemberParams();
       await service.insertControl(params);
 
       await expect(service.insertControl(params)).rejects.toThrow(
@@ -816,9 +588,7 @@ describe('MemberService', () => {
     });
 
     it('should remove not nullable optional params if null is passed', async () => {
-      const org = await modelOrg.create(generateOrgParams());
-
-      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id.toString() });
+      const createMemberParams = generateInternalCreateMemberParams();
 
       NotNullableMemberKeys.forEach((key) => {
         createMemberParams[key] = null;
@@ -837,8 +607,7 @@ describe('MemberService', () => {
     });
 
     it('should return true on isControlByPhone by phone when control member exists', async () => {
-      const org = await modelOrg.create(generateOrgParams());
-      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id.toString() });
+      const createMemberParams = generateInternalCreateMemberParams();
       await service.insertControl(createMemberParams);
 
       const result = await service.isControlByPhone(createMemberParams.phone);
@@ -859,8 +628,7 @@ describe('MemberService', () => {
     });
 
     it('should return member and member config when deleting a member', async () => {
-      const { memberId } = await generateMember();
-      const userId = generateId();
+      const { memberId, userId } = await generateMember();
       const member = await service.get(memberId);
       const memberConfig = await service.getMemberConfig(memberId);
 
@@ -868,7 +636,6 @@ describe('MemberService', () => {
       const result = await service.deleteMember(deleteMemberParams, userId);
       expect(result.member).toEqual(
         expect.objectContaining({
-          id: member.id,
           authId: member.authId,
           firstName: member.firstName,
           primaryUserId: member.primaryUserId,
@@ -1363,9 +1130,9 @@ describe('MemberService', () => {
   describe('getMemberConfig', () => {
     it('should create memberConfig on memberCreate', async () => {
       const { memberId: id } = await generateMember();
-      const CreatedConfigMember = await service.getMemberConfig(id);
+      const createdConfigMember = await service.getMemberConfig(id);
 
-      expect(id).toEqual(CreatedConfigMember.memberId.toString());
+      expect(id).toEqual(createdConfigMember.memberId);
     });
 
     it('should fail to fetch member config on non existing member', async () => {
@@ -1436,31 +1203,6 @@ describe('MemberService', () => {
       expect(updatedMember.primaryUserId).toEqual(newUser._id);
       expect(result.primaryUserId).toEqual(oldMember.primaryUserId);
       compareUsers(updatedMember.users[updatedMember.users.length - 1], newUser);
-    });
-  });
-
-  describe('replaceMemberOrg', () => {
-    it('should update member org', async () => {
-      const orgId = await generateOrg();
-      const { memberId } = await generateMember(orgId);
-      const member = await service.get(memberId);
-
-      /* eslint-disable @typescript-eslint/ban-ts-comment */
-      // @ts-ignore
-      expect(member.org._id.toString()).toEqual(orgId);
-
-      const NewOrgId = await generateOrg();
-      const updatedMember = await service.replaceMemberOrg({ memberId, orgId: NewOrgId });
-
-      /* eslint-disable @typescript-eslint/ban-ts-comment */
-      // @ts-ignore
-      expect(updatedMember.org._id.toString()).toEqual(NewOrgId);
-    });
-
-    it('should fail to replace member org if member does not exist', async () => {
-      await expect(service.replaceMemberOrg(generateReplaceMemberOrgParams())).rejects.toThrow(
-        Errors.get(ErrorType.memberNotFound),
-      );
     });
   });
 
@@ -1551,18 +1293,18 @@ describe('MemberService', () => {
   const generateMember = async (
     orgId?: string,
     userId?: string,
-  ): Promise<{ memberId: string; journeyId: string }> => {
+  ): Promise<{ memberId: string; journeyId: string; userId: string }> => {
     orgId = orgId ? orgId : await generateOrg();
     userId = userId ? userId : await generateUser();
     const createMemberParams = generateCreateMemberParams({ orgId });
-    const { member } = await service.insert(
+    delete createMemberParams.orgId;
+    const { id: memberId } = await service.insert(
       { ...createMemberParams, phoneType: 'mobile' },
       new Types.ObjectId(userId),
     );
-    const memberId = member.id;
-    const { id: journeyId } = await modelJourney.create(mockGenerateJourney({ memberId }));
+    const { id: journeyId } = await journeyService.create({ memberId, orgId });
 
-    return { memberId, journeyId };
+    return { memberId, journeyId, userId };
   };
 
   const generateOrg = async (): Promise<string> => {

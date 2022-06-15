@@ -23,6 +23,7 @@ import {
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
   ObjectRegisterMemberWithTriggeredClass,
+  ObjectUpdateMemberOrgClass,
   ObjectUpdateMemberSettingsClass,
   ObjectUpdateSenderClientIdClass,
   RegisterInternalKey,
@@ -57,6 +58,7 @@ import {
   generateObjectRegisterMemberWithTriggeredMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
+  generateUpdateMemberOrgMock,
   generateUpdateMemberSettingsMock,
   generateUpdateSenderClientIdMock,
   generateUpdateTodoAppointmentMock,
@@ -237,21 +239,22 @@ describe('Integration tests: notifications', () => {
      *      1. update member settings : send event to queue on update member settings
      */
     it(`updateMember: should updateClientSettings for member`, async () => {
-      const { member, org } = await creators.createMemberUserAndOptionalOrg();
+      const { member } = await creators.createMemberUserAndOptionalOrg();
 
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset();
       const updateMemberParams = generateUpdateMemberParams({ id: member.id });
       await handler.mutations.updateMember({ updateMemberParams });
+      await delay(200);
 
       //send event to queue on update member
       const mockMember = generateUpdateMemberSettingsMock({
         ...updateMemberParams,
         phone: member.phone,
-        orgName: org.name,
       });
       const objectMember = new ObjectUpdateMemberSettingsClass(mockMember);
       Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
         if (key !== 'firstLoggedInAt') {
-          expectStringContaining(5, key, mockMember[key]);
+          expectStringContaining(1, key, mockMember[key]);
         }
       });
     });
@@ -265,9 +268,11 @@ describe('Integration tests: notifications', () => {
       const { member } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(member.authId);
 
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset();
       const updateMemberConfigParams = generateUpdateMemberConfigParams();
       delete updateMemberConfigParams.memberId;
       await handler.mutations.updateMemberConfig({ updateMemberConfigParams, requestHeaders });
+      await delay(200);
 
       //send event to queue on update member config
       const mockMember = generateUpdateMemberSettingsMock({
@@ -276,7 +281,7 @@ describe('Integration tests: notifications', () => {
       const objectMember = new ObjectUpdateMemberSettingsClass(mockMember);
       Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
         if (key !== 'firstLoggedInAt') {
-          expectStringContaining(5, key, mockMember[key]);
+          expectStringContaining(1, key, mockMember[key]);
         }
       });
     });
@@ -444,7 +449,9 @@ describe('Integration tests: notifications', () => {
      */
     // eslint-disable-next-line max-len
     it(`createControlMember: should updateClientSettings for member and send dispatch of type ${RegisterInternalKey.newControlMember}`, async () => {
-      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockResolvedValueOnce(true);
+      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockImplementationOnce(
+        async () => true,
+      );
       const org = await creators.createAndValidateOrg();
 
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -461,6 +468,7 @@ describe('Integration tests: notifications', () => {
         firstName: memberParams.firstName,
         lastName: memberParams.lastName,
         zipCode: memberParams.zipCode,
+        orgName: org.name,
       };
       const objectMember = new ObjectUpdateMemberSettingsClass(updateControlMemberSettingsMock);
       Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
@@ -817,7 +825,6 @@ describe('Integration tests: notifications', () => {
       });
     });
 
-    // eslint-disable-next-line max-len
     it('replaceMemberOrg: should update client settings', async () => {
       const orgParams1 = generateOrgParams();
       const { id: orgId1 } = await handler.mutations.createOrg({ orgParams: orgParams1 });
@@ -832,16 +839,16 @@ describe('Integration tests: notifications', () => {
       await handler.mutations.replaceMemberOrg({
         replaceMemberOrgParams: { memberId: member.id, orgId: orgId2 },
       });
+      await delay(200);
 
-      const updatedMember = await handler.queries.getMember({ id: member.id });
-      const mockMember = generateUpdateMemberSettingsMock({
-        ...updatedMember,
+      const updatedOrgMemberMock = generateUpdateMemberOrgMock({
+        id: member.id,
+        orgName: orgParams2.name,
+        zipCode: member.zipCode,
       });
-      const objectMember = new ObjectUpdateMemberSettingsClass(mockMember);
-      Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
-        if (key !== 'firstLoggedInAt') {
-          expectStringContaining(1, key, mockMember[key]);
-        }
+      const objectMember = new ObjectUpdateMemberOrgClass(updatedOrgMemberMock);
+      Object.keys(objectMember.objectUpdateMemberOrgType).forEach((key) => {
+        expectStringContaining(1, key, updatedOrgMemberMock[key]);
       });
     });
   });

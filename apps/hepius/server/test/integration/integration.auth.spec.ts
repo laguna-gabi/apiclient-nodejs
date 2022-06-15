@@ -4,6 +4,7 @@ import {
   BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
   generateAvailabilityInput,
+  generateCreateTodoParams,
   generateOrgParams,
   generateRequestHeaders,
   generateScheduleAppointmentParams,
@@ -102,12 +103,12 @@ describe('Integration tests : RBAC / ACE', () => {
     // eslint-disable-next-line max-len
     'expecting non-Laguna (customer) coach to be %p to modify a member by member id based on org provisioning',
     async (access) => {
-      const { member, user } = await creators.createMemberUserAndOptionalOrg();
+      const { member, user, org } = await creators.createMemberUserAndOptionalOrg();
 
       await handler.mutations.updateUser({
         updateUserParams: generateUpdateUserParams({
           id: user.id,
-          orgs: access === Access.allowed ? [member.org.toString()] : [generateId()],
+          orgs: access === Access.allowed ? [org.id] : [generateId()],
           roles: [UserRole.coach],
         }),
         requestHeaders: handler.defaultAdminRequestHeaders,
@@ -373,16 +374,16 @@ describe('Integration tests : RBAC / ACE', () => {
   });
 
   it('expecting non-Laguna (customer) coach to see only users in own organization', async () => {
-    const org1 = generateId();
+    const org1 = await creators.createAndValidateOrg();
 
     const user1 = await creators.createAndValidateUser({
       roles: [UserRole.coach],
-      orgs: [org1],
+      orgs: [org1.id],
     });
 
     const user2 = await creators.createAndValidateUser({
       roles: [UserRole.coach],
-      orgs: [org1, generateId()],
+      orgs: [org1.id, generateId()],
     });
 
     const user3 = await creators.createAndValidateUser({
@@ -506,4 +507,44 @@ describe('Integration tests : RBAC / ACE', () => {
       }
     },
   );
+
+  it('expecting non-Laguna (customer) coach to only get member in recent journey org', async () => {
+    const { member, user: oldUser } = await creators.createMemberUserAndOptionalOrg();
+    const newOrg = await creators.createAndValidateOrg();
+    const user = await creators.createAndValidateUser({ orgs: [newOrg.id] });
+
+    await handler.mutations.createTodo({
+      createTodoParams: generateCreateTodoParams({ memberId: member.id }),
+      requestHeaders: generateRequestHeaders(member.authId),
+    });
+
+    //creating a new journey
+    await handler.journeyService.create({
+      memberId: member.id,
+      orgId: newOrg.id,
+    });
+    //create a new todo in recent journey
+    const { id: todoId } = await handler.mutations.createTodo({
+      createTodoParams: generateCreateTodoParams({ memberId: member.id }),
+      requestHeaders: generateRequestHeaders(member.authId),
+    });
+
+    //validating new user can request data for the recent journey
+    expect(
+      await handler.queries.getMember({
+        id: member.id,
+        requestHeaders: generateRequestHeaders(user.authId),
+      }),
+    ).toBeTruthy();
+
+    //validating that the not recent journey user can't access the member
+    await handler.queries.getMember({
+      id: member.id,
+      requestHeaders: generateRequestHeaders(oldUser.authId),
+      invalidFieldsError: HttpErrorMessage.get(HttpErrorCodes.forbidden),
+    });
+
+    const todoResults = await handler.queries.getTodos({ memberId: member.id });
+    expect(todoResults).toEqual(expect.arrayContaining([expect.objectContaining({ id: todoId })]));
+  });
 });

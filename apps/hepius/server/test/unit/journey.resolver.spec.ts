@@ -2,11 +2,13 @@ import {
   generateCreateOrSetActionItemParams,
   generateGetMemberUploadJournalAudioLinkParams,
   generateGetMemberUploadJournalImageLinkParams,
+  generateReplaceMemberOrgParams,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
   generateUpdateJournalTextParams,
   generateUpdateJourneyParams,
   mockGenerateMember,
+  mockGenerateOrg,
 } from '../generators';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -27,6 +29,7 @@ import {
   Errors,
   EventType,
   IEventOnPublishedJournal,
+  IEventOnReplaceMemberOrg,
   LoggerService,
 } from '../../src/common';
 import { Types } from 'mongoose';
@@ -34,12 +37,14 @@ import { lorem } from 'faker';
 import { MemberRole, UserRole } from '@argus/hepiusClient';
 import { StorageService } from '../../src/providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { OrgService } from '../../src/org';
 
 describe(JourneyResolver.name, () => {
   let module: TestingModule;
   let resolver: JourneyResolver;
   let service: JourneyService;
   let admissionService: AdmissionService;
+  let orgService: OrgService;
   let storage: StorageService;
   let eventEmitter: EventEmitter2;
 
@@ -52,6 +57,7 @@ describe(JourneyResolver.name, () => {
     resolver = module.get<JourneyResolver>(JourneyResolver);
     service = module.get<JourneyService>(JourneyService);
     admissionService = module.get<AdmissionService>(AdmissionService);
+    orgService = module.get<OrgService>(OrgService);
     storage = module.get<StorageService>(StorageService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     mockLogger(module.get<LoggerService>(LoggerService));
@@ -155,6 +161,45 @@ describe(JourneyResolver.name, () => {
     it('should return dietary matcher', async () => {
       const result = await resolver.getAdmissionsDietaryMatcher();
       expect(result.map.length).toEqual(17);
+    });
+  });
+
+  describe('replaceMemberOrg', () => {
+    let spyOnServiceReplaceMemberOrg;
+    let spyOnServiceGetRecent;
+    let spyOnServiceGetOrg;
+    let spyOnEventEmitter;
+
+    beforeEach(() => {
+      spyOnServiceReplaceMemberOrg = jest.spyOn(service, 'replaceMemberOrg');
+      spyOnServiceGetRecent = jest.spyOn(service, 'getRecent');
+      spyOnServiceGetOrg = jest.spyOn(orgService, 'get');
+      spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+    });
+
+    afterEach(() => {
+      spyOnServiceReplaceMemberOrg.mockReset();
+      spyOnServiceGetRecent.mockReset();
+      spyOnServiceGetOrg.mockReset();
+      spyOnEventEmitter.mockReset();
+    });
+
+    it('should replace member org', async () => {
+      const memberId = generateId();
+      const journeyId = generateId();
+      const org = mockGenerateOrg();
+      spyOnServiceReplaceMemberOrg.mockResolvedValue({ id: journeyId });
+      spyOnServiceGetRecent.mockResolvedValue({ id: journeyId });
+      spyOnServiceGetOrg.mockResolvedValueOnce(org);
+      spyOnEventEmitter.mockResolvedValueOnce();
+
+      const replaceMemberOrgParams = generateReplaceMemberOrgParams({ memberId, orgId: org.id });
+
+      await resolver.replaceMemberOrg(replaceMemberOrgParams);
+
+      expect(spyOnServiceReplaceMemberOrg).toBeCalledWith({ ...replaceMemberOrgParams, journeyId });
+      const eventParams: IEventOnReplaceMemberOrg = { memberId, org };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onReplaceMemberOrg, eventParams);
     });
   });
 

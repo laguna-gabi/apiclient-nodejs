@@ -37,7 +37,7 @@ export class AvailabilityResolver {
     @Args(
       'orgIds',
       { type: () => [String], nullable: true },
-      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid), { nullable: true }),
+      new IsValidObjectId(Errors.get(ErrorType.journeyOrgIdInvalid), { nullable: true }),
     )
     orgIds?: string[],
   ): Promise<AvailabilitySlot[]> {

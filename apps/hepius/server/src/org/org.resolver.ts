@@ -37,7 +37,7 @@ export class OrgResolver {
     @Args(
       'id',
       { type: () => String },
-      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid)),
+      new IsValidObjectId(Errors.get(ErrorType.journeyOrgIdInvalid)),
     )
     id: string,
   ): Promise<Org | null> {

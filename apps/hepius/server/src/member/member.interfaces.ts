@@ -36,6 +36,7 @@ import {
 import { FeatureFlagService, TwilioService } from '../providers';
 import { UserService } from '../user';
 import { JourneyService } from '../journey';
+import { Org, OrgService } from '../org';
 
 export class MemberBase {
   constructor(
@@ -44,6 +45,7 @@ export class MemberBase {
     readonly userService: UserService,
     readonly featureFlagService: FeatureFlagService,
     readonly journeyService: JourneyService,
+    readonly orgService: OrgService,
     readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {}
@@ -62,6 +64,11 @@ export class MemberBase {
   async createRealMember(params: InternalCreateMemberParams): Promise<Member> {
     this.logger.info(params, MemberBase.name, this.createRealMember.name);
 
+    const org = await this.orgService.get(params.orgId);
+    if (!org) {
+      throw new Error(Errors.get(ErrorType.orgIdNotFound));
+    }
+
     const primaryUserId = params.userId
       ? new Types.ObjectId(params.userId)
       : await this.userService.getAvailableUser(params.orgId);
@@ -72,14 +79,20 @@ export class MemberBase {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    const { member, memberConfig } = await this.memberService.insert(params, primaryUserId);
-    const { platform } = await this.memberService.getMemberConfig(member.id);
-    this.notifyUpdatedMemberConfig({ member, memberConfig });
+    const { orgId, ...otherParams } = params;
+    const { id } = await this.memberService.insert(otherParams, primaryUserId);
+    await this.journeyService.create({ memberId: id, orgId });
 
-    const eventNewMemberParams: IEventOnNewMember = { member, user, platform };
+    const memberConfig = await this.memberService.getMemberConfig(id);
+    const member = await this.memberService.get(id);
+    this.notifyUpdatedMemberConfig({ member, memberConfig, org });
+
+    const eventNewMemberParams: IEventOnNewMember = {
+      member,
+      user,
+      platform: memberConfig.platform,
+    };
     this.eventEmitter.emit(EventType.onNewMember, eventNewMemberParams);
-
-    await this.journeyService.create({ memberId: member.id });
 
     const eventSlackMessageParams: IEventNotifySlack = {
       header: `*New _real_ member*`,
@@ -95,9 +108,15 @@ export class MemberBase {
 
   async createControlMember(params: InternalCreateMemberParams): Promise<Member> {
     this.logger.info(params, MemberBase.name, this.createControlMember.name);
-    const controlMember = await this.memberService.insertControl(params);
-    this.notifyUpdatedMemberConfig({ member: controlMember });
-    await this.journeyService.createControl({ memberId: controlMember.id });
+    const org = await this.orgService.get(params.orgId);
+    if (!org) {
+      throw new Error(Errors.get(ErrorType.orgIdNotFound));
+    }
+
+    const { orgId, ...otherParams } = params;
+    const controlMember = await this.memberService.insertControl(otherParams);
+    this.notifyUpdatedMemberConfig({ member: controlMember, org });
+    await this.journeyService.createControl({ memberId: controlMember.id, orgId });
 
     const contentKey = RegisterInternalKey.newControlMember;
     const newControlMemberEvent: IInternalDispatch = {
@@ -114,7 +133,7 @@ export class MemberBase {
       message: `${controlMember.firstName} [${controlMember.id}]`,
       icon: SlackIcon.info,
       channel: SlackChannel.support,
-      orgName: controlMember.org.name,
+      orgName: org.name,
     };
     this.eventEmitter.emit(GlobalEventType.notifySlack, eventSlackMessageParams);
 
@@ -124,10 +143,12 @@ export class MemberBase {
   protected notifyUpdatedMemberConfig({
     member,
     memberConfig,
+    org,
     firstLoggedInAt,
   }: {
     member?: Member;
     memberConfig?: MemberConfig;
+    org?: Org;
     firstLoggedInAt?: Date;
   }) {
     const settings: Partial<IUpdateClientSettings> = omitBy(
@@ -138,8 +159,8 @@ export class MemberBase {
         phone: member?.phone,
         firstName: member?.firstName,
         lastName: member?.lastName,
-        orgName: member?.org?.name,
-        zipCode: member?.zipCode || member?.org?.zipCode,
+        orgName: org?.name,
+        zipCode: member?.zipCode || org?.zipCode,
         language: memberConfig?.language,
         platform: memberConfig?.platform,
         isPushNotificationsEnabled: memberConfig?.isPushNotificationsEnabled,

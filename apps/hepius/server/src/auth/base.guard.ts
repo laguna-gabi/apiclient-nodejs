@@ -2,6 +2,7 @@ import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { Connection, Types } from 'mongoose';
+import { Filter, Sort } from 'mongodb';
 
 @Injectable()
 export class BaseGuard {
@@ -24,6 +25,27 @@ export class EntityResolver {
     return this.connection.db
       .collection(this.getCollectionName(entityName))
       .findOne({ _id: new Types.ObjectId(id) });
+  }
+
+  async getEntities<T>(
+    entityName: string,
+    {
+      filter,
+      sort,
+      limit,
+    }: {
+      filter: Filter<T>;
+      sort?: Sort;
+      limit?: number;
+    },
+  ) {
+    const sortObject = sort ? { sort } : {};
+    const limitObject = limit ? { limit } : {};
+    const result = await this.connection.db
+      .collection(this.getCollectionName(entityName))
+      .find({ ...filter }, { ...sortObject, ...limitObject });
+
+    return result.toArray();
   }
 
   private getCollectionName(name: string): string {

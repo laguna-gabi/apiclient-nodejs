@@ -61,3 +61,4 @@ export * as m20220608084032 from './20220608084032-care-providers-module-append-
 export * as m20220608182454 from './20220608182454-create-control-journey';
 export * as m20220609150136 from './20220609150136-appointment-append-journeyId';
 export * as m20220613111045 from './20220613111045-move-nurseNotes-from-journey-to-admission';
+export * as m20220609135141 from './20220609135141-move-org-from-member-to-journey';

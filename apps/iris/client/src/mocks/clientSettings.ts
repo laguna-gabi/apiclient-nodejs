@@ -5,6 +5,10 @@ import { v4 } from 'uuid';
 import { IUpdateClientSettings, InnerQueueTypes } from '..';
 
 export type UpdateMemberSettingsType = Omit<IUpdateClientSettings, 'avatar'>;
+export type UpdateMemberOrgType = Pick<
+  IUpdateClientSettings,
+  'id' | 'clientCategory' | 'type' | 'orgName' | 'zipCode'
+>;
 export type UpdateUserSettingsType = Pick<
   IUpdateClientSettings,
   'id' | 'clientCategory' | 'type' | 'phone' | 'firstName' | 'lastName' | 'avatar'
@@ -16,6 +20,10 @@ export class ObjectUpdateMemberSettingsClass {
 
 export class ObjectUpdateUserSettingsClass {
   constructor(readonly objectUpdateMemberSettings: UpdateMemberSettingsType) {}
+}
+
+export class ObjectUpdateMemberOrgClass {
+  constructor(readonly objectUpdateMemberOrgType: UpdateMemberOrgType) {}
 }
 
 export const generateUpdateMemberSettingsMock = ({
@@ -71,6 +79,22 @@ export const generateUpdateMemberSettingsMock = ({
     isUndefined,
   );
 };
+
+export const generateUpdateMemberOrgMock = ({
+  id,
+  orgName,
+  zipCode,
+}: {
+  id: string;
+  orgName: string;
+  zipCode: string;
+}): UpdateMemberOrgType => ({
+  type: InnerQueueTypes.updateClientSettings,
+  id,
+  clientCategory: ClientCategory.member,
+  orgName,
+  zipCode,
+});
 
 export const generateUpdateUserSettingsMock = ({
   id = v4(),

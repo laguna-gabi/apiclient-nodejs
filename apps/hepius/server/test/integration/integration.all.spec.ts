@@ -1,7 +1,6 @@
 import {
   Appointment,
   AppointmentMethod,
-  AppointmentStatus,
   Barrier,
   BarrierStatus,
   CarePlan,
@@ -22,7 +21,7 @@ import {
   translation,
 } from '@argus/pandora';
 import { articlesByDrg, general, hosts } from 'config';
-import { add, addDays, startOfToday, startOfTomorrow, sub, subDays } from 'date-fns';
+import { add, startOfToday, startOfTomorrow, sub, subDays } from 'date-fns';
 import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
 import {
@@ -41,7 +40,6 @@ import {
   generateCreateBarrierParamsWizard,
   generateCreateCarePlanParams,
   generateCreateCarePlanParamsWizard,
-  generateCreateJourneyParams,
   generateCreateMemberParams,
   generateCreateOrSetActionItemParams,
   generateCreateQuestionnaireParams,
@@ -63,6 +61,7 @@ import {
   generateUpdateCarePlanParams,
   generateUpdateCaregiverParams,
   generateUpdateJournalTextParams,
+  generateUpdateJourneyParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateNotesParams,
@@ -254,98 +253,6 @@ describe('Integration tests: all', () => {
 
     const updatedMember = await handler.queries.getMember({ id: member.id });
     expect(updatedMember.org.id).toEqual(orgId2);
-  });
-
-  it('should return members appointment filtered by orgId', async () => {
-    const { member: member1, org } = await creators.createMemberUserAndOptionalOrg();
-    const primaryUser1 = member1.users[0];
-    const { member: member2 } = await creators.createMemberUserAndOptionalOrg({ orgId: org.id });
-    const primaryUser2 = member1.users[0];
-
-    const params1a = generateScheduleAppointmentParams({
-      memberId: member1.id,
-      userId: primaryUser1.id,
-    });
-    const params1b = generateScheduleAppointmentParams({
-      memberId: member1.id,
-      userId: primaryUser1.id,
-      start: addDays(params1a.start, 1),
-    });
-    const params2a = generateScheduleAppointmentParams({
-      memberId: member2.id,
-      userId: primaryUser2.id,
-      start: addDays(params1a.start, 2),
-    });
-    // Request appointment should not be on results, only showing status scheduled
-    const params2b = generateRequestAppointmentParams({
-      memberId: member2.id,
-      userId: primaryUser2.id,
-    });
-
-    await creators.handler.mutations.scheduleAppointment({ appointmentParams: params1a });
-    await creators.handler.mutations.scheduleAppointment({ appointmentParams: params1b });
-    await creators.handler.mutations.scheduleAppointment({ appointmentParams: params2a });
-    await creators.handler.mutations.requestAppointment({ appointmentParams: params2b });
-
-    const result = await creators.handler.queries.getMembersAppointments({ orgIds: [org.id] });
-    const resultMember1 = await creators.handler.queries.getMember({
-      id: member1.id,
-      requestHeaders: generateRequestHeaders(member1.authId),
-    });
-    const resultMember2 = await creators.handler.queries.getMember({
-      id: member2.id,
-      requestHeaders: generateRequestHeaders(member2.authId),
-    });
-
-    expect(result.length).toEqual(3);
-
-    expect(result).toEqual(
-      expect.arrayContaining([
-        {
-          memberId: member1.id,
-          memberName: `${resultMember1.firstName} ${resultMember1.lastName}`,
-          userId: primaryUser1.id,
-          userName: `${primaryUser1.firstName} ${primaryUser1.lastName}`,
-          start: expect.any(String),
-          end: expect.any(String),
-          status: AppointmentStatus.scheduled,
-        },
-        {
-          memberId: member1.id,
-          memberName: `${resultMember1.firstName} ${resultMember1.lastName}`,
-          userId: primaryUser1.id,
-          userName: `${primaryUser1.firstName} ${primaryUser1.lastName}`,
-          start: expect.any(String),
-          end: expect.any(String),
-          status: AppointmentStatus.scheduled,
-        },
-        {
-          memberId: member2.id,
-          memberName: `${resultMember2.firstName} ${resultMember2.lastName}`,
-          userId: primaryUser2.id,
-          userName: `${primaryUser2.firstName} ${primaryUser2.lastName}`,
-          start: expect.any(String),
-          end: expect.any(String),
-          status: AppointmentStatus.scheduled,
-        },
-      ]),
-    );
-  });
-
-  it('should return members appointment without supplying optional orgId', async () => {
-    const { member } = await creators.createMemberUserAndOptionalOrg();
-    const primaryUser = member.users[0];
-
-    await creators.handler.mutations.scheduleAppointment({
-      appointmentParams: generateScheduleAppointmentParams({
-        memberId: member.id,
-        userId: primaryUser.id,
-      }),
-    });
-
-    const result = await creators.handler.queries.getMembersAppointments();
-
-    expect(result.length).toBeGreaterThan(0);
   });
 
   it('should validate that getMember attach chat app link to each appointment', async () => {
@@ -914,9 +821,9 @@ describe('Integration tests: all', () => {
       );
     }, 10000);
 
-    it('should exclude graduated members from summing members count on getUsers', async () => {
-      const { member: member1, user } = await creators.createMemberUserAndOptionalOrg();
-      const { member: member2 } = await creators.createMemberUserAndOptionalOrg();
+    it('should not exclude graduated members from summing members count on getUsers', async () => {
+      const { member: member1, user, org: org1 } = await creators.createMemberUserAndOptionalOrg();
+      const { member: member2, org: org2 } = await creators.createMemberUserAndOptionalOrg();
       const { member: member3 } = await creators.createMemberUserAndOptionalOrg();
       await handler.mutations.replaceUserForMember({
         replaceUserForMemberParams: { memberId: member2.id, userId: user.id },
@@ -926,10 +833,10 @@ describe('Integration tests: all', () => {
       });
 
       //generating multiple journeys to check that currentMembersCount is calculated right
-      await handler.journeyService.create(generateCreateJourneyParams({ memberId: member1.id }));
-      await handler.journeyService.create(generateCreateJourneyParams({ memberId: member1.id }));
-      await handler.journeyService.create(generateCreateJourneyParams({ memberId: member2.id }));
-      await handler.journeyService.create(generateCreateJourneyParams({ memberId: member2.id }));
+      await handler.journeyService.create({ memberId: member1.id, orgId: org1.id });
+      await handler.journeyService.create({ memberId: member1.id, orgId: org1.id });
+      await handler.journeyService.create({ memberId: member2.id, orgId: org2.id });
+      await handler.journeyService.create({ memberId: member2.id, orgId: org2.id });
 
       //filtering member3 out as he is graduated
       await handler.mutations.graduateMember({
@@ -3148,15 +3055,16 @@ describe('Integration tests: all', () => {
   });
 
   it('should create a member journey, update and get it', async () => {
-    const { member } = await creators.createMemberUserAndOptionalOrg();
+    const { member, org } = await creators.createMemberUserAndOptionalOrg();
 
     const recentJourney = await handler.queries.getRecentJourney({ memberId: member.id });
     expect(recentJourney).not.toBeUndefined();
 
     //creating another journey, to see that the filter works for the latest
-    const newActiveJourney = await handler.journeyService.create(
-      generateCreateJourneyParams({ memberId: member.id }),
-    );
+    const newActiveJourney = await handler.journeyService.create({
+      memberId: member.id,
+      orgId: org.id,
+    });
 
     await handler.mutations.graduateMember({
       graduateMemberParams: { id: member.id, isGraduated: true },
@@ -3170,6 +3078,24 @@ describe('Integration tests: all', () => {
     const journey = await handler.queries.getRecentJourney({ memberId: member.id });
     expect(journey.id).toEqual(newActiveJourney.id.toString());
     expect(journey.isGraduated).toBeTruthy();
+  });
+
+  it('should populate org on all journey api', async () => {
+    const { member, org } = await creators.createMemberUserAndOptionalOrg();
+
+    const recentJourney = await handler.queries.getRecentJourney({ memberId: member.id });
+    expect(recentJourney.org).toEqual(org);
+
+    const getJourneyResult = await handler.queries.getJourney({ id: recentJourney.id });
+    expect(getJourneyResult.org).toEqual(org);
+
+    const getJourneysResult = await handler.queries.getJourneys({ memberId: member.id });
+    expect(getJourneysResult[0].org).toEqual(org);
+
+    const updateJourneyResult = await handler.mutations.updateJourney({
+      updateJourneyParams: generateUpdateJourneyParams({ memberId: member.id }),
+    });
+    expect(updateJourneyResult.org).toEqual(org);
   });
 
   /************************************************************************************************

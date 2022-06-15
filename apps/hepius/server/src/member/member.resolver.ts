@@ -6,7 +6,9 @@ import {
   ExternalKey,
   IDeleteClientSettings,
   IDeleteDispatch,
+  IUpdateClientSettings,
   IUpdateSenderClientId,
+  InnerQueueTypes,
   InnerQueueTypes as IrisInnerQueueTypes,
   JournalCustomKey,
   LogInternalKey,
@@ -15,6 +17,7 @@ import {
   generateDispatchId,
 } from '@argus/irisClient';
 import {
+  ClientCategory,
   EntityName,
   GlobalEventType,
   IEventNotifySlack,
@@ -52,6 +55,7 @@ import {
   IEventOnPublishedJournal,
   IEventOnReceivedChatMessage,
   IEventOnReceivedTextMessage,
+  IEventOnReplaceMemberOrg,
   IEventOnReplacedUserForMember,
   IEventOnUpdatedMemberPlatform,
   IInternalDispatch,
@@ -97,11 +101,11 @@ import {
   NotifyContentMetadata,
   NotifyContentParams,
   NotifyParams,
-  ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
 } from './index';
+import { OrgService } from '../org';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -120,6 +124,7 @@ export class MemberResolver extends MemberBase {
     readonly todoService: TodoService,
     readonly appointmentService: AppointmentService,
     readonly questionnaireService: QuestionnaireService,
+    readonly orgService: OrgService,
     readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {
@@ -129,6 +134,7 @@ export class MemberResolver extends MemberBase {
       userService,
       featureFlagService,
       journeyService,
+      orgService,
       twilio,
       logger,
     );
@@ -173,7 +179,8 @@ export class MemberResolver extends MemberBase {
       ? { phoneSecondaryType: await this.twilio.getPhoneType(params.phoneSecondary) }
       : {};
     const member = await this.memberService.update({ ...params, ...objMobile });
-    member.zipCode = member.zipCode || member.org.zipCode;
+    const { org } = await this.journeyService.getRecent(member.id, true);
+    member.zipCode = member.zipCode || org.zipCode;
     member.utcDelta = MemberResolver.getTimezoneDeltaFromZipcode(member.zipCode);
     this.notifyUpdatedMemberConfig({ member });
     return member;
@@ -186,7 +193,7 @@ export class MemberResolver extends MemberBase {
     @Args(
       'orgIds',
       { type: () => [String], nullable: true },
-      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid), { nullable: true }),
+      new IsValidObjectId(Errors.get(ErrorType.journeyOrgIdInvalid), { nullable: true }),
     )
     orgIds?: string[],
   ): Promise<MemberSummary[]> {
@@ -200,7 +207,7 @@ export class MemberResolver extends MemberBase {
     @Args(
       'orgIds',
       { type: () => [String], nullable: true },
-      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid), { nullable: true }),
+      new IsValidObjectId(Errors.get(ErrorType.journeyOrgIdInvalid), { nullable: true }),
     )
     orgIds?: string[],
   ): Promise<AppointmentCompose[]> {
@@ -287,16 +294,22 @@ export class MemberResolver extends MemberBase {
     return true;
   }
 
-  @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.lagunaAdmin)
-  @Ace({ strategy: AceStrategy.rbac })
-  async replaceMemberOrg(
-    @Args(camelCase(ReplaceMemberOrgParams.name))
-    replaceMemberOrgParams: ReplaceMemberOrgParams,
-  ) {
-    const member = await this.memberService.replaceMemberOrg(replaceMemberOrgParams);
-    this.notifyUpdatedMemberConfig({ member });
-    return true;
+  @OnEvent(EventType.onReplaceMemberOrg, { async: true })
+  protected async notifyUpdatedMemberOrg(params: IEventOnReplaceMemberOrg) {
+    const member = await this.memberService.get(params.memberId);
+    const settings: Partial<IUpdateClientSettings> = {
+      type: InnerQueueTypes.updateClientSettings,
+      clientCategory: ClientCategory.member,
+      id: params.memberId,
+      orgName: params.org.name,
+      zipCode: member.zipCode || params.org.zipCode,
+    };
+    this.logger.info(settings, MemberBase.name, this.notifyUpdatedMemberOrg.name);
+    const eventParams: IEventNotifyQueue = {
+      type: QueueType.notifications,
+      message: JSON.stringify(settings),
+    };
+    this.eventEmitter.emit(GlobalEventType.notifyQueue, eventParams);
   }
 
   /*************************************************************************************************

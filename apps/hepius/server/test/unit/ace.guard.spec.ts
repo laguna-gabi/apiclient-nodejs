@@ -10,6 +10,7 @@ import { Types } from 'mongoose';
 import { Member } from '../../src/member';
 import { Journey } from '../../src/journey';
 import { AceStrategy } from '../../src/common';
+import { mockGenerateJourney } from '../generators';
 
 describe(AceGuard.name, () => {
   const mockReflector = createMock<Reflector>();
@@ -22,6 +23,7 @@ describe(AceGuard.name, () => {
   const spyOnMockExecutionContextGetArgByIndex = jest.spyOn(mockExecutionContext, 'getArgByIndex');
   const spyOnMockHttpArgumentsHostGetRequest = jest.spyOn(mockHttpArgumentsHost, 'getRequest');
   const spyOnMockEntityResolver = jest.spyOn(mockEntityResolver, 'getEntityById');
+  const spyOnMockEntitiesResolver = jest.spyOn(mockEntityResolver, 'getEntities');
 
   describe(`canActivate`, () => {
     beforeEach(() => {
@@ -30,6 +32,7 @@ describe(AceGuard.name, () => {
       spyOnMockExecutionContextGetArgByIndex.mockReset();
       spyOnMockHttpArgumentsHostGetRequest.mockReset();
       spyOnMockEntityResolver.mockReset();
+      spyOnMockEntitiesResolver.mockReset();
     });
 
     test.each([
@@ -130,10 +133,14 @@ describe(AceGuard.name, () => {
         params: { memberId },
       });
 
-      spyOnMockEntityResolver.mockResolvedValue({
-        _id: generateObjectId(),
-        org: new Types.ObjectId(orgId), // <- same orgId as the client provisioned org id
-      });
+      spyOnMockEntityResolver.mockResolvedValue({ _id: generateObjectId() });
+      spyOnMockEntitiesResolver.mockResolvedValue([
+        {
+          _id: generateObjectId(),
+          // same orgId as the client provisioned org id
+          ...mockGenerateJourney({ memberId, orgId }),
+        },
+      ]);
       const guard = new AceGuard(mockReflector, mockEntityResolver);
 
       expect(await guard.canActivate(mockExecutionContext)).toBeTruthy();
@@ -172,10 +179,14 @@ describe(AceGuard.name, () => {
       });
 
       // the second call to the entity resolver will get us the member with the org association (`orgId`)
-      spyOnMockEntityResolver.mockResolvedValueOnce({
-        _id: generateObjectId(),
-        org: new Types.ObjectId(orgId), // <- same orgId as the client provisioned org id
-      });
+      spyOnMockEntityResolver.mockResolvedValueOnce({ _id: generateObjectId() });
+      spyOnMockEntitiesResolver.mockResolvedValueOnce([
+        {
+          _id: generateObjectId(),
+          // same orgId as the client provisioned org id
+          ...mockGenerateJourney({ memberId, orgId }),
+        },
+      ]);
 
       const guard = new AceGuard(mockReflector, mockEntityResolver);
 

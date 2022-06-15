@@ -5,6 +5,7 @@ import { CreateMemberParams, Member, MemberBase, MemberService } from '.';
 import { UserService } from '../user';
 import { JourneyService } from '../journey';
 import { FeatureFlagService, TwilioService } from '../providers';
+import { OrgService } from '../org';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/members`)
@@ -15,6 +16,7 @@ export class MemberController extends MemberBase {
     readonly userService: UserService,
     readonly featureFlagService: FeatureFlagService,
     readonly journeyService: JourneyService,
+    readonly orgService: OrgService,
     readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {
@@ -24,6 +26,7 @@ export class MemberController extends MemberBase {
       userService,
       featureFlagService,
       journeyService,
+      orgService,
       twilio,
       logger,
     );

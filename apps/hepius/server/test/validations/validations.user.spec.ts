@@ -97,7 +97,7 @@ describe('Validations - user', () => {
     ${'title'}       | ${{ title: 222 }}               | ${{ missingFieldError: stringError }}
     ${'maxMembers'}  | ${{ maxMembers: lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
     ${'languages'}   | ${{ languages: lorem.word() }}  | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
-    ${'orgs'}        | ${{ orgs: ['not-valid'] }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.orgIdInvalid)] }}
+    ${'orgs'}        | ${{ orgs: ['not-valid'] }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyOrgIdInvalid)] }}
   `(
     /* eslint-enable max-len */
     `should fail to create a user since $field is not valid`,
@@ -121,7 +121,7 @@ describe('Validations - user', () => {
     ${'title'}       | ${{ title: 222 }}               | ${{ missingFieldError: stringError }}
     ${'maxMembers'}  | ${{ maxMembers: lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
     ${'languages'}   | ${{ languages: lorem.word() }}  | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
-    ${'orgs'}        | ${{ orgs: ['not-valid'] }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.orgIdInvalid)] }}
+    ${'orgs'}        | ${{ orgs: ['not-valid'] }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyOrgIdInvalid)] }}
   `(
     /* eslint-enable max-len */
     `should fail to update a user since $field is not valid`,

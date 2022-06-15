@@ -217,5 +217,13 @@ export const FRAGMENT_JOURNEY = gql`
       wellbeing
       wellbeingText
     }
+    org {
+      id
+      name
+      type
+      trialDuration
+      zipCode
+      code
+    }
   }
 `;

@@ -1,4 +1,4 @@
-import { Appointment, AppointmentStatus } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, Identifier } from '@argus/hepiusClient';
 import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -6,7 +6,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { articlesByDrg, queryDaysLimit } from 'config';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
-import { v4 } from 'uuid';
 import { Alert, AlertType, DismissedAlert, DismissedAlertDocument } from '../../src/common';
 import {
   AlertService,
@@ -41,11 +40,11 @@ import {
   MemberDocument,
   MemberSummary,
   NotNullableMemberKeys,
-  ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
 } from './index';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class MemberService extends AlertService {
@@ -69,34 +68,27 @@ export class MemberService extends AlertService {
   }
 
   async insert(
-    params: InternalCreateMemberParams,
+    params: Omit<InternalCreateMemberParams, 'orgId'>,
     primaryUserId: Types.ObjectId,
-  ): Promise<{ member: Member; memberConfig: MemberConfig }> {
+  ): Promise<Identifier> {
     try {
       const { language, ...memberParams } = this.removeNotNullable(params, NotNullableMemberKeys);
       const primitiveValues = cloneDeep(memberParams);
-      delete primitiveValues.orgId;
       delete primitiveValues.userId;
 
       const object = await this.memberModel.create({
         ...primitiveValues,
-        org: new Types.ObjectId(memberParams.orgId),
         primaryUserId,
         users: [primaryUserId],
       });
 
-      const memberConfig = await this.memberConfigModel.create({
+      await this.memberConfigModel.create({
         memberId: new Types.ObjectId(object._id),
         externalUserId: v4(),
         language,
       });
 
-      const member = await this.getById(object._id);
-
-      return {
-        member: member.toObject(),
-        memberConfig: memberConfig.toObject(),
-      };
+      return { id: object._id };
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,
@@ -144,15 +136,6 @@ export class MemberService extends AlertService {
     return this.getById(id);
   }
 
-  async getByDeviceId(deviceId: string): Promise<Member> {
-    const member = await this.memberModel.findOne({ deviceId }, { _id: 1 });
-    if (!member) {
-      throw new Error(Errors.get(ErrorType.memberNotFound));
-    }
-
-    return this.getById(member._id);
-  }
-
   async getByPhone(phone: string): Promise<Member> {
     const member = await this.memberModel.findOne(
       { $or: [{ phone }, { phoneSecondary: phone }] },
@@ -164,12 +147,13 @@ export class MemberService extends AlertService {
     return this.getById(member._id);
   }
 
+  /**
+   * This query in time will become slow, as the filter is applied in the end of the process,
+   * and not in the beginning. consider moving this to org, in this way:
+   * await this.orgModel.aggregate([{$match: ...}, {all the rest of the lookups and params}]
+   */
   async getByOrgs(orgIds?: string[]): Promise<MemberSummary[]> {
-    const filter = orgIds?.length
-      ? { org: { $in: orgIds.map((orgId) => new Types.ObjectId(orgId)) } }
-      : {};
     let result = await this.memberModel.aggregate([
-      { $match: filter },
       {
         $lookup: {
           from: 'memberconfigs',
@@ -205,6 +189,22 @@ export class MemberService extends AlertService {
         },
       },
       {
+        $lookup: {
+          from: 'orgs',
+          localField: 'recentJourney.org',
+          foreignField: '_id',
+          as: 'org',
+        },
+      },
+      { $unwind: { path: '$org' } },
+      { $set: { 'org.id': '$org._id' } },
+      { $unset: 'org._id' },
+      {
+        $match: orgIds?.length
+          ? { 'org.id': { $in: orgIds.map((orgId) => new Types.ObjectId(orgId)) } }
+          : {},
+      },
+      {
         $project: {
           id: '$_id',
           name: { $concat: ['$firstName', ' ', '$lastName'] },
@@ -234,11 +234,7 @@ export class MemberService extends AlertService {
     ]);
 
     result = await this.memberModel.populate(result, [
-      {
-        path: 'users',
-        options: { populate: 'appointments' },
-      },
-      { path: 'org' },
+      { path: 'users', options: { populate: 'appointments' } },
     ]);
     return result.map((item) => {
       const { appointmentsCount, nextAppointment } = this.calculateAppointments(item.appointments);
@@ -252,14 +248,16 @@ export class MemberService extends AlertService {
     });
   }
 
+  /**
+   * This query in time will become slow, as the filter is applied in the end of the process,
+   * and not in the beginning. consider moving this to org, in this way:
+   * await this.orgModel.aggregate([{$match: ...}, {all the rest of the lookups and params}]
+   */
   async getMembersAppointments(orgIds?: string[]): Promise<AppointmentCompose[]> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - queryDaysLimit.getMembersAppointments);
 
     return this.memberModel.aggregate([
-      {
-        $match: orgIds ? { org: { $in: orgIds.map((org) => new Types.ObjectId(org)) } } : {},
-      },
       {
         $lookup: {
           from: 'journeys',
@@ -269,6 +267,20 @@ export class MemberService extends AlertService {
         },
       },
       { $addFields: { recentJourney: { $last: '$journeys' } } },
+      {
+        $lookup: {
+          from: 'orgs',
+          localField: 'recentJourney.org',
+          foreignField: '_id',
+          as: 'org',
+        },
+      },
+      { $unwind: { path: '$org' } },
+      {
+        $match: orgIds
+          ? { 'org._id': { $in: orgIds.map((orgId) => new Types.ObjectId(orgId)) } }
+          : {},
+      },
       {
         $lookup: {
           localField: '_id',
@@ -403,17 +415,12 @@ export class MemberService extends AlertService {
    ******************************************** Control *******************************************
    ************************************************************************************************/
 
-  async insertControl(params: InternalCreateMemberParams): Promise<Member> {
+  async insertControl(params: Omit<InternalCreateMemberParams, 'orgId'>): Promise<Member> {
     try {
       const primitiveValues = cloneDeep(this.removeNotNullable(params, NotNullableMemberKeys));
-      delete primitiveValues.orgId;
 
-      const member = await this.controlMemberModel.create({
-        ...primitiveValues,
-        org: new Types.ObjectId(params.orgId),
-      });
-
-      return this.controlMemberModel.findOne({ _id: member.id }).populate({ path: 'org' });
+      const member = await this.controlMemberModel.create(primitiveValues);
+      return this.controlMemberModel.findOne({ _id: member.id });
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,
@@ -518,22 +525,6 @@ export class MemberService extends AlertService {
     return member;
   }
 
-  async replaceMemberOrg(replaceMemberOrgParams: ReplaceMemberOrgParams): Promise<Member> {
-    const { memberId, orgId } = replaceMemberOrgParams;
-
-    await this.memberModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(memberId) },
-      { org: new Types.ObjectId(orgId) },
-    );
-
-    const member = await this.getById(memberId);
-    if (!member) {
-      throw new Error(Errors.get(ErrorType.memberNotFound));
-    }
-
-    return member;
-  }
-
   /*************************************************************************************************
    **************************************** Insurance Plans ****************************************
    ************************************************************************************************/
@@ -629,16 +620,41 @@ export class MemberService extends AlertService {
   };
 
   private async getById(id: string) {
+    let result = await this.memberModel.aggregate([
+      { $match: { _id: new Types.ObjectId(id) } },
+      {
+        $lookup: {
+          from: 'journeys',
+          localField: '_id',
+          foreignField: 'memberId',
+          as: 'journeysRes',
+        },
+      },
+      { $addFields: { recentJourney: { $last: '$journeysRes' } } },
+      {
+        $lookup: {
+          from: 'orgs',
+          localField: 'recentJourney.org',
+          foreignField: '_id',
+          as: 'org',
+        },
+      },
+      { $unset: 'recentJourney' },
+      { $unset: 'journeysRes' },
+      { $unwind: { path: '$org' } },
+      { $set: { 'org.id': '$org._id', id: '$_id' } },
+      { $unset: 'org._id' },
+      { $unset: '_id' },
+    ]);
+
     const subPopulate = {
       path: 'appointments',
       match: { memberId: new Types.ObjectId(id) },
       populate: 'notes',
     };
 
-    return this.memberModel
-      .findOne({ _id: id })
-      .populate({ path: 'org' })
-      .populate({ path: 'users', populate: subPopulate });
+    result = await this.memberModel.populate(result, [{ path: 'users', populate: subPopulate }]);
+    return result[0];
   }
 
   private async getArticlesPath(id: string) {

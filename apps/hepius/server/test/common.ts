@@ -83,12 +83,6 @@ export const compareMembers = (member: Member, memberBase, primaryUserId?) => {
     member.honorific ? member.honorific : defaultMemberParams.honorific,
   );
   expect(member.phone).toEqual(memberBase.phone);
-  // could be one of the two
-  try {
-    expect(member.org.id.toString()).toEqual(memberBase.orgId.toString());
-  } catch {
-    expect(member.org.toString()).toEqual(memberBase.orgId.toString());
-  }
 
   if (primaryUserId) {
     expect(member.primaryUserId).toEqual(primaryUserId);

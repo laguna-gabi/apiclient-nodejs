@@ -22,11 +22,11 @@ import {
   ActionItemPriority,
   ControlJourney,
   ControlJourneyDocument,
-  CreateJourneyParams,
   GraduateMemberParams,
   Journey,
   JourneyDocument,
   RelatedEntityType,
+  ReplaceMemberOrgParams,
   SetGeneralNotesParams,
   UpdateJourneyParams,
   nullableActionItemKeys,
@@ -65,16 +65,22 @@ export class JourneyService extends AlertService {
     super(dismissAlertModel);
   }
 
-  async create(params: CreateJourneyParams): Promise<Identifier> {
-    return this.createSub(params, this.journeyModel);
+  async create({ memberId, orgId }: { memberId: string; orgId: string }): Promise<Identifier> {
+    return this.createSub({ memberId, orgId, model: this.journeyModel });
   }
 
-  async createControl(params: CreateJourneyParams): Promise<Identifier> {
-    return this.createSub(params, this.controlJourneyModel);
+  async createControl({
+    memberId,
+    orgId,
+  }: {
+    memberId: string;
+    orgId: string;
+  }): Promise<Identifier> {
+    return this.createSub({ memberId, orgId, model: this.controlJourneyModel });
   }
 
   async get(journeyId: string): Promise<Journey> {
-    const result = await this.journeyModel.findById(new Types.ObjectId(journeyId));
+    const result = await this.journeyModel.findById(new Types.ObjectId(journeyId)).populate('org');
     if (!result) {
       throw new Error(Errors.get(ErrorType.journeyNotFound));
     }
@@ -82,23 +88,26 @@ export class JourneyService extends AlertService {
     return result.toObject();
   }
 
-  async getRecent(memberId: string): Promise<Journey> {
-    return this.getRecentSub(memberId, this.journeyModel);
+  async getRecent(memberId: string, populate = false): Promise<Journey> {
+    return this.getRecentSub(memberId, this.journeyModel, populate);
   }
 
   async getRecentControl(memberId: string): Promise<Journey> {
-    return this.getRecentSub(memberId, this.controlJourneyModel);
+    return this.getRecentSub(memberId, this.controlJourneyModel, false);
   }
 
   async getAll({ memberId }: { memberId: string }): Promise<Journey[]> {
-    return this.journeyModel.find({ memberId: new Types.ObjectId(memberId) }).sort({ _id: -1 });
+    return this.journeyModel
+      .find({ memberId: new Types.ObjectId(memberId) })
+      .sort({ _id: -1 })
+      .populate('org');
   }
 
   async update(updateJourneyParams: UpdateJourneyParams): Promise<Journey> {
     const setParams = omitBy(updateJourneyParams, isNil);
     delete setParams.memberId;
 
-    const exisingRecord = await this.getRecent(updateJourneyParams.memberId);
+    const exisingRecord = await this.getRecent(updateJourneyParams.memberId, true);
     if (!exisingRecord) {
       throw new Error(Errors.get(ErrorType.journeyNotFound));
     }
@@ -120,8 +129,23 @@ export class JourneyService extends AlertService {
           setParams,
         );
       }
-      return result.toObject();
+      return result.populate('org');
     }
+  }
+
+  async replaceMemberOrg(replaceMemberOrgParams: ReplaceMemberOrgParams): Promise<Journey> {
+    const { memberId, journeyId, orgId } = replaceMemberOrgParams;
+
+    const result = await this.journeyModel.findOneAndUpdate(
+      { memberId: new Types.ObjectId(memberId), journeyId: new Types.ObjectId(journeyId) },
+      { org: new Types.ObjectId(orgId) },
+    );
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+
+    return result;
   }
 
   async updateLoggedInAt(memberId: Types.ObjectId): Promise<Journey> {
@@ -397,17 +421,26 @@ export class JourneyService extends AlertService {
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
-  private async createSub(
-    params: CreateJourneyParams,
-    model: Model<JourneyDocument | ControlJourneyDocument>,
-  ): Promise<Identifier> {
-    const { _id: id } = await model.create({ memberId: new Types.ObjectId(params.memberId) });
+  private async createSub({
+    memberId,
+    orgId,
+    model,
+  }: {
+    memberId: string;
+    orgId: string;
+    model: Model<JourneyDocument | ControlJourneyDocument>;
+  }): Promise<Identifier> {
+    const { _id: id } = await model.create({
+      memberId: new Types.ObjectId(memberId),
+      org: new Types.ObjectId(orgId),
+    });
     return { id };
   }
 
   async getRecentSub(
     memberId: string,
     model: Model<JourneyDocument | ControlJourneyDocument>,
+    populate: boolean,
   ): Promise<Journey> {
     const [result] = await model
       .find({ memberId: new Types.ObjectId(memberId) })
@@ -416,7 +449,7 @@ export class JourneyService extends AlertService {
     if (!result) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
-    return result;
+    return populate ? this.journeyModel.populate(result, [{ path: 'org' }]) : result;
   }
 
   private async updateReadmissionRiskHistory(id: Types.ObjectId, setParams) {

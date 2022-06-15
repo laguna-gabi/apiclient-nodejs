@@ -33,7 +33,6 @@ export enum ErrorType {
   memberInvalidZipCode = 9216,
   memberAllowedOnly = 9218,
   memberReplaceUserAlreadyExists = 9219,
-  memberOrgIdInvalid = 9223,
   memberIdInvalid = 9224,
   memberIdInconsistent = 9225,
   memberIdMetadataMissing = 9229,
@@ -146,7 +145,7 @@ export enum ErrorType {
   alertIdInvalid = 10301,
 
   // Module Org
-  orgIdInvalid = 10401,
+  orgIdNotFound = 10401,
 
   // member journey
   journeyNotFound = 10501,
@@ -158,6 +157,7 @@ export enum ErrorType {
   journeyJournalImageNotFound = 10507,
   journeyJournalAudioNotFound = 10508,
   journeyJournalIdInvalid = 10509,
+  journeyOrgIdInvalid = 10510,
 
   //member admission
   admissionDiagnosisIdNotFound = 10601,
@@ -241,7 +241,6 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.memberAllowedOnly.valueOf(), `this resource is only allowed to members`],
   [ErrorType.memberReplaceUserAlreadyExists.valueOf(), `user is already assigned to member`],
-  [ErrorType.memberOrgIdInvalid.valueOf(), `orgId ${objectIdFormat}`],
   [ErrorType.memberIdInvalid.valueOf(), `memberId ${objectIdFormat}`],
   [ErrorType.memberIdMetadataMissing.valueOf(), `@MemberIdParam is missing on route`],
   [
@@ -424,7 +423,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.barrierTypeInvalid.valueOf(), 'invalid barrier type'],
   [ErrorType.barrierTypeNotFound.valueOf(), 'barrier type was not found'],
   [ErrorType.alertIdInvalid.valueOf(), `alertId ${objectIdFormat}`],
-  [ErrorType.orgIdInvalid.valueOf(), `orgId ${objectIdFormat}`],
+  [ErrorType.orgIdNotFound.valueOf(), `orgId was not found`],
   [ErrorType.redFlagTypeInvalid.valueOf(), 'invalid red flag type'],
   [ErrorType.redFlagTypeNotFound.valueOf(), 'red flag type was not found'],
   [ErrorType.journeyNotFound.valueOf(), `journey ${notFoundPrefix}`],
@@ -436,6 +435,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.journeyJournalImageNotFound.valueOf(), `journal image was not found`],
   [ErrorType.journeyJournalAudioNotFound.valueOf(), `journal audio was not found`],
   [ErrorType.journeyJournalIdInvalid.valueOf(), `id ${objectIdFormat}`],
+  [ErrorType.journeyOrgIdInvalid.valueOf(), `orgId ${objectIdFormat}`],
   [ErrorType.admissionDiagnosisIdNotFound.valueOf(), `diagnosis ${notFoundPrefix}`],
   [
     ErrorType.admissionTreatmentRenderedIdNotFound.valueOf(),

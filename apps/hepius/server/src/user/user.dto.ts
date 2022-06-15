@@ -60,8 +60,8 @@ export class CreateUserParams extends ExtraUserParams {
   @IsPhoneNumber(undefined, { message: Errors.get(ErrorType.userPhone) })
   phone: string;
 
-  @IsObjectIds({ message: Errors.get(ErrorType.orgIdInvalid) })
   @Field(() => [String])
+  @IsObjectIds({ message: Errors.get(ErrorType.journeyOrgIdInvalid) })
   orgs: string[];
 }
 
@@ -82,7 +82,7 @@ export class UpdateUserParams extends ExtraUserParams {
 
   @Field(() => [String], { nullable: true })
   @IsOptional()
-  @IsObjectIds({ message: Errors.get(ErrorType.orgIdInvalid) })
+  @IsObjectIds({ message: Errors.get(ErrorType.journeyOrgIdInvalid) })
   orgs?: string[];
 }
 

@@ -28,6 +28,7 @@ import { QuestionnaireModule } from '../questionnaire';
 import { ServiceModule } from '../services';
 import { Todo, TodoDto, TodoModule } from '../todo';
 import { UserModule } from '../user';
+import { OrgModule } from '../org';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { UserModule } from '../user';
     JourneyModule,
     TodoModule,
     AppointmentModule,
+    OrgModule,
     MongooseModule.forFeature([
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },

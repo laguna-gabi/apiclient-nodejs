@@ -107,7 +107,6 @@ import {
   ChangeAdmissionTreatmentRenderedParams,
   ChangeMemberDnaParams,
   ClinicalStatus,
-  CreateJourneyParams,
   CreateOrSetActionItemParams,
   DiagnosisSeverity,
   DietaryCategory,
@@ -124,6 +123,7 @@ import {
   ReadmissionRisk,
   RelatedEntity,
   RelatedEntityType,
+  ReplaceMemberOrgParams,
   SecondaryDiagnosisType,
   SetGeneralNotesParams,
   UpdateCaregiverParams,
@@ -147,7 +147,6 @@ import {
   MemberConfig,
   NotifyContentParams,
   NotifyParams,
-  ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   Sex,
   UpdateMemberConfigParams,
@@ -279,7 +278,6 @@ export const generateInternalCreateMemberParams = ({
   firstName = name.firstName(),
   lastName = name.lastName(),
   dateOfBirth = generateDateOnly(fakerDate.past()),
-  orgId,
   sex,
   email,
   language,
@@ -287,9 +285,7 @@ export const generateInternalCreateMemberParams = ({
   dischargeDate,
   honorific = defaultMemberParams.honorific,
   userId,
-}: Partial<InternalCreateMemberParams> & { orgId: string }): InternalCreateMemberParams & {
-  orgId: string;
-} => {
+}: Partial<InternalCreateMemberParams> = {}): Omit<InternalCreateMemberParams, 'orgId'> => {
   return {
     authId,
     phone,
@@ -297,7 +293,6 @@ export const generateInternalCreateMemberParams = ({
     firstName,
     lastName,
     dateOfBirth,
-    orgId,
     sex,
     email,
     language,
@@ -391,10 +386,12 @@ export const generateUpdateClientSettings = ({
   member,
   memberConfig,
   journey,
+  org,
 }: {
   member?: Member;
   memberConfig?: MemberConfig;
   journey?: Journey;
+  org?: Org;
 }): IUpdateClientSettings => {
   return {
     type: InnerQueueTypes.updateClientSettings,
@@ -403,8 +400,8 @@ export const generateUpdateClientSettings = ({
     phone: member?.phone,
     firstName: member?.firstName,
     lastName: member?.lastName,
-    orgName: member?.org?.name,
-    zipCode: member?.zipCode || member?.org?.zipCode,
+    orgName: org?.name,
+    zipCode: member?.zipCode || org?.zipCode,
     language: memberConfig?.language,
     platform: memberConfig?.platform,
     isPushNotificationsEnabled: memberConfig?.isPushNotificationsEnabled,
@@ -525,9 +522,18 @@ export const generateUpdateMemberConfigParams = ({
  ********************************************* Journey ********************************************
  *************************************************************************************************/
 
-export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey => ({
+export const mockGenerateJourney = ({
+  memberId,
+  orgId,
+}: {
+  memberId: string;
+  orgId?: string;
+}): Journey => ({
   id: generateId(),
   memberId: new Types.ObjectId(memberId),
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  org: orgId || generateId(),
   firstLoggedInAt: fakerDate.past(2),
   lastLoggedInAt: fakerDate.past(1),
   fellowName: generateFellowName(),
@@ -535,12 +541,6 @@ export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey
   readmissionRisk: ReadmissionRisk.low,
   isGraduated: false,
   generalNotes: lorem.sentence(),
-});
-
-export const generateCreateJourneyParams = ({
-  memberId = generateId(),
-}: Partial<CreateJourneyParams> = {}): CreateJourneyParams => ({
-  memberId,
 });
 
 export const generateUpdateJourneyParams = ({

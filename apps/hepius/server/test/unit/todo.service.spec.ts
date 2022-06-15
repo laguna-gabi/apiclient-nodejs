@@ -18,7 +18,6 @@ import {
   generateOrgParams,
   generateUpdateTodoParams,
   loadSessionClient,
-  mockGenerateJourney,
   mockGenerateTodo,
 } from '..';
 import {
@@ -28,7 +27,7 @@ import {
   LoggerService,
   defaultTimestampsDbValues,
 } from '../../src/common';
-import { Journey, JourneyDocument, JourneyDto } from '../../src/journey';
+import { JourneyService } from '../../src/journey';
 import { MemberModule, MemberService } from '../../src/member';
 import { Org, OrgDocument, OrgDto, OrgModule } from '../../src/org';
 import { NotificationService } from '../../src/services';
@@ -54,9 +53,9 @@ describe('TodoService', () => {
   let module: TestingModule;
   let service: TodoService;
   let memberService: MemberService;
+  let journeyService: JourneyService;
   let todoModel: Model<TodoDocument & defaultTimestampsDbValues>;
   let todoDoneModel: Model<TodoDoneDocument>;
-  let modelJourney: Model<JourneyDocument & defaultTimestampsDbValues>;
   let modelUser: Model<UserDocument>;
   let modelOrg: Model<OrgDocument>;
 
@@ -68,11 +67,11 @@ describe('TodoService', () => {
 
     service = module.get<TodoService>(TodoService);
     memberService = module.get<MemberService>(MemberService);
+    journeyService = module.get<JourneyService>(JourneyService);
     mockLogger(module.get<LoggerService>(LoggerService));
 
     todoModel = model<TodoDocument & defaultTimestampsDbValues>(Todo.name, TodoDto);
     todoDoneModel = model<TodoDoneDocument>(TodoDone.name, TodoDoneDto);
-    modelJourney = model<JourneyDocument & defaultTimestampsDbValues>(Journey.name, JourneyDto);
     modelUser = model<UserDocument>(User.name, UserDto);
     modelOrg = model<OrgDocument>(Org.name, OrgDto);
 
@@ -1070,14 +1069,14 @@ describe('TodoService', () => {
     orgId = orgId ? orgId : await generateOrg();
     userId = userId ? userId : await generateUser();
     const createMemberParams = generateCreateMemberParams({ orgId });
-    const { member } = await memberService.insert(
+    delete createMemberParams.orgId;
+    const { id: memberId } = await memberService.insert(
       { ...createMemberParams, phoneType: 'mobile' },
       new Types.ObjectId(userId),
     );
-    const { id: journeyId } = await modelJourney.create(
-      mockGenerateJourney({ memberId: member.id }),
-    );
-    return { memberId: member.id, journeyId };
+    const { id: journeyId } = await journeyService.create({ memberId, orgId });
+
+    return { memberId, journeyId, userId };
   };
 
   const generateOrg = async (): Promise<string> => {

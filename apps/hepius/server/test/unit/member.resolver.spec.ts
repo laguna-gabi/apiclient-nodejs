@@ -25,7 +25,6 @@ import { v4 } from 'uuid';
 import {
   dbDisconnect,
   defaultModules,
-  generateAppointmentComposeParams,
   generateCommunication,
   generateCreateMemberParams,
   generateDeleteMemberParams,
@@ -33,7 +32,7 @@ import {
   generateMemberConfig,
   generateNotifyContentParams,
   generateNotifyParams,
-  generateReplaceMemberOrgParams,
+  generateOrgParams,
   generateScheduleAppointmentParams,
   generateUniqueUrl,
   generateUpdateClientSettings,
@@ -43,7 +42,6 @@ import {
   mockGenerateJourney,
   mockGenerateMember,
   mockGenerateMemberConfig,
-  mockGenerateOrg,
   mockGenerateQuestionnaireResponse,
   mockGenerateUser,
 } from '..';
@@ -91,6 +89,7 @@ import {
 import { UserService } from '../../src/user';
 import { TodoService } from '../../src/todo';
 import { AppointmentService } from '../../src/appointment';
+import { OrgService } from '../../src/org';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -109,6 +108,7 @@ describe('MemberResolver', () => {
   let featureFlagService: FeatureFlagService;
   let twilioService: TwilioService;
   let journeyService: JourneyService;
+  let orgService: OrgService;
   let spyOnEventEmitter;
 
   beforeAll(async () => {
@@ -133,6 +133,7 @@ describe('MemberResolver', () => {
     featureFlagService = module.get<FeatureFlagService>(FeatureFlagService);
     twilioService = module.get<TwilioService>(TwilioService);
     journeyService = module.get<JourneyService>(JourneyService);
+    orgService = module.get<OrgService>(OrgService);
     mockLogger(module.get<LoggerService>(LoggerService));
   });
 
@@ -147,6 +148,7 @@ describe('MemberResolver', () => {
 
   describe('createMember', () => {
     let spyOnServiceInsert;
+    let spyOnServiceGet;
     let spyOnServiceInsertControl;
     let spyOnServiceGetAvailableUser;
     let spyOnUserServiceGetUser;
@@ -154,9 +156,11 @@ describe('MemberResolver', () => {
     let spyOnFeatureFlagControlGroup;
     let spyOnTwilioGetPhoneType;
     let spyOnJourneyCreate;
+    let spyOnOrgServiceGet;
 
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
+      spyOnServiceGet = jest.spyOn(service, 'get');
       spyOnServiceInsertControl = jest.spyOn(service, 'insertControl');
       spyOnServiceGetAvailableUser = jest.spyOn(userService, 'getAvailableUser');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
@@ -164,10 +168,12 @@ describe('MemberResolver', () => {
       spyOnFeatureFlagControlGroup = jest.spyOn(featureFlagService, 'isControlGroup');
       spyOnTwilioGetPhoneType = jest.spyOn(twilioService, 'getPhoneType');
       spyOnJourneyCreate = jest.spyOn(journeyService, 'create');
+      spyOnOrgServiceGet = jest.spyOn(orgService, 'get');
     });
 
     afterEach(() => {
       spyOnServiceInsert.mockReset();
+      spyOnServiceGet.mockReset();
       spyOnServiceInsertControl.mockReset();
       spyOnServiceGetAvailableUser.mockReset();
       spyOnUserServiceGetUser.mockReset();
@@ -176,6 +182,21 @@ describe('MemberResolver', () => {
       spyOnFeatureFlagControlGroup.mockReset();
       spyOnTwilioGetPhoneType.mockReset();
       spyOnJourneyCreate.mockReset();
+      spyOnOrgServiceGet.mockReset();
+    });
+
+    it('should fail to create a member since org not found', async () => {
+      spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => false);
+      await expect(
+        resolver.createMember(generateCreateMemberParams({ orgId: generateId() })),
+      ).rejects.toThrow(Errors.get(ErrorType.orgIdNotFound));
+    });
+
+    it('should fail to create a control member since org not found', async () => {
+      spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
+      await expect(
+        resolver.createMember(generateCreateMemberParams({ orgId: generateId() })),
+      ).rejects.toThrow(Errors.get(ErrorType.orgIdNotFound));
     });
 
     it('should create a member', async () => {
@@ -186,24 +207,32 @@ describe('MemberResolver', () => {
         platform: Platform.android,
       });
       const phoneType: PhoneType = 'mobile';
-      spyOnServiceInsert.mockImplementationOnce(async () => ({ member, memberConfig }));
+      spyOnServiceInsert.mockImplementationOnce(async () => ({ id: member.id }));
+      spyOnServiceGet.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => false);
       spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneType);
       spyOnJourneyCreate.mockResolvedValueOnce(generateId());
+      const org = { id: generateId(), ...generateOrgParams() };
+      spyOnOrgServiceGet.mockResolvedValueOnce(org);
 
-      const params = generateCreateMemberParams({ orgId: generateId() });
+      const params = generateCreateMemberParams({ orgId: org.id });
+      const { orgId, ...noOrgParams } = params;
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith({ ...params, phoneType }, member.primaryUserId);
+      expect(spyOnServiceInsert).toBeCalledWith(
+        { ...noOrgParams, phoneType },
+        member.primaryUserId,
+      );
       expect(spyOnServiceGetAvailableUser).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
       expect(spyOnTwilioGetPhoneType).toBeCalledWith(params.phone);
-      expect(spyOnJourneyCreate).toBeCalledWith({ memberId: member.id });
+      expect(spyOnJourneyCreate).toBeCalledWith({ memberId: member.id, orgId });
+      expect(spyOnOrgServiceGet).toBeCalledWith(orgId);
       const eventNewMemberParams: IEventOnNewMember = {
         member,
         user,
@@ -213,7 +242,7 @@ describe('MemberResolver', () => {
       expect(spyOnEventEmitter).toBeCalledTimes(3);
       const eventNotifyQueue: IEventNotifyQueue = {
         type: QueueType.notifications,
-        message: JSON.stringify(generateUpdateClientSettings({ member, memberConfig })),
+        message: JSON.stringify(generateUpdateClientSettings({ member, memberConfig, org })),
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         1,
@@ -249,7 +278,8 @@ describe('MemberResolver', () => {
         platform: Platform.android,
       };
       const phoneType: PhoneType = 'landline';
-      spyOnServiceInsert.mockImplementationOnce(async () => ({ member, memberConfig }));
+      spyOnServiceInsert.mockImplementationOnce(async () => ({ id: member.id }));
+      spyOnServiceGet.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
@@ -257,13 +287,15 @@ describe('MemberResolver', () => {
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
       spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneType);
       spyOnJourneyCreate.mockResolvedValueOnce(generateId());
+      spyOnOrgServiceGet.mockResolvedValueOnce({ id: generateId(), ...generateOrgParams() });
 
       const params = generateCreateMemberParams({ orgId: generateId(), userId: user.id });
+      const { orgId, ...noOrgParams } = params;
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(
-        { ...params, phoneType },
+        { ...noOrgParams, phoneType },
         new Types.ObjectId(user.id),
       );
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
@@ -273,7 +305,8 @@ describe('MemberResolver', () => {
         user,
         platform: memberConfig.platform,
       };
-      expect(spyOnJourneyCreate).toBeCalledWith({ memberId: member.id });
+      expect(spyOnJourneyCreate).toBeCalledWith({ memberId: member.id, orgId });
+      expect(spyOnOrgServiceGet).toBeCalledWith(orgId);
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
       const eventSlackMessageParams: IEventNotifySlack = {
         /* eslint-disable-next-line max-len */
@@ -292,18 +325,23 @@ describe('MemberResolver', () => {
     it('should create a control member', async () => {
       const member = mockGenerateMember();
       const phoneType: PhoneType = 'mobile';
+
       spyOnServiceInsertControl.mockImplementationOnce(async () => member);
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
       spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneType);
+      const org = { id: generateId(), ...generateOrgParams() };
+      spyOnOrgServiceGet.mockResolvedValueOnce(org);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
+      const noOrgParams = { ...params };
+      delete noOrgParams.orgId;
       await resolver.createMember(params);
 
       expect(spyOnServiceInsertControl).toBeCalledTimes(1);
-      expect(spyOnServiceInsertControl).toBeCalledWith({ ...params, phoneType });
+      expect(spyOnServiceInsertControl).toBeCalledWith({ ...noOrgParams, phoneType });
       const eventNotifyQueue: IEventNotifyQueue = {
         type: QueueType.notifications,
-        message: JSON.stringify(generateUpdateClientSettings({ member })),
+        message: JSON.stringify(generateUpdateClientSettings({ member, org })),
       };
       expect(spyOnEventEmitter).toHaveBeenCalledWith(GlobalEventType.notifyQueue, eventNotifyQueue);
       expect(spyOnJourneyCreate).not.toBeCalled();
@@ -314,7 +352,7 @@ describe('MemberResolver', () => {
         message: `${member.firstName} [${member.id}]`,
         icon: SlackIcon.info,
         channel: SlackChannel.support,
-        orgName: member.org.name,
+        orgName: org.name,
       };
       expect(spyOnEventEmitter).toHaveBeenCalledWith(
         GlobalEventType.notifySlack,
@@ -325,15 +363,18 @@ describe('MemberResolver', () => {
 
   describe('updateMember', () => {
     let spyOnServiceUpdate;
+    let spyOnServiceGetRecent;
     let spyOnTwilioGetPhoneType;
 
     beforeEach(() => {
       spyOnServiceUpdate = jest.spyOn(service, 'update');
+      spyOnServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
       spyOnTwilioGetPhoneType = jest.spyOn(twilioService, 'getPhoneType');
     });
 
     afterEach(() => {
       spyOnServiceUpdate.mockReset();
+      spyOnServiceGetRecent.mockReset();
       spyOnTwilioGetPhoneType.mockReset();
     });
 
@@ -342,6 +383,9 @@ describe('MemberResolver', () => {
       async (phoneSecondaryType) => {
         const updateMemberParams = generateUpdateMemberParams();
         spyOnServiceUpdate.mockImplementationOnce(async () => ({ ...updateMemberParams }));
+        spyOnServiceGetRecent.mockResolvedValueOnce({
+          org: { id: generateId(), ...generateOrgParams() },
+        });
         spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneSecondaryType);
 
         const member = await resolver.updateMember(updateMemberParams);
@@ -364,6 +408,9 @@ describe('MemberResolver', () => {
       const updateMemberParams = generateUpdateMemberParams();
       updateMemberParams.phoneSecondary = undefined;
       spyOnServiceUpdate.mockImplementationOnce(async () => ({ ...updateMemberParams }));
+      spyOnServiceGetRecent.mockResolvedValueOnce({
+        org: { id: generateId(), ...generateOrgParams() },
+      });
 
       await resolver.updateMember(updateMemberParams);
 
@@ -461,43 +508,6 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGetByOrgs).toBeCalledTimes(1);
       expect(spyOnServiceGetByOrgs).toBeCalledWith(undefined);
       expect(result).toEqual(getByOrgResult);
-    });
-  });
-
-  describe('getMembersAppointments', () => {
-    let spyOnServiceGet;
-    beforeEach(() => {
-      spyOnServiceGet = jest.spyOn(service, 'getMembersAppointments');
-    });
-
-    afterEach(() => {
-      spyOnServiceGet.mockReset();
-    });
-
-    it('should get appointments by a given orgId', async () => {
-      const appointmentComposes = [generateAppointmentComposeParams()];
-      spyOnServiceGet.mockImplementationOnce(async () => appointmentComposes);
-
-      const orgId = generateId();
-      const result = await resolver.getMembersAppointments([orgId]);
-
-      expect(spyOnServiceGet).toBeCalledTimes(1);
-      expect(spyOnServiceGet).toBeCalledWith([orgId]);
-      expect(result).toEqual(appointmentComposes);
-    });
-
-    it('should fetch all appointments without filtering orgId', async () => {
-      const appointmentComposes = [
-        generateAppointmentComposeParams(),
-        generateAppointmentComposeParams(),
-      ];
-      spyOnServiceGet.mockImplementationOnce(async () => appointmentComposes);
-
-      const result = await resolver.getMembersAppointments();
-
-      expect(spyOnServiceGet).toBeCalledTimes(1);
-      expect(spyOnServiceGet).toBeCalledWith(undefined);
-      expect(result).toEqual(appointmentComposes);
     });
   });
 
@@ -1112,38 +1122,6 @@ describe('MemberResolver', () => {
         expect(spyOnEventEmitter).not.toHaveBeenCalled();
       },
     );
-  });
-
-  describe('replaceMemberOrg', () => {
-    let spyOnServiceReplaceMemberOrg;
-
-    beforeEach(() => {
-      spyOnServiceReplaceMemberOrg = jest.spyOn(service, 'replaceMemberOrg');
-    });
-
-    afterEach(() => {
-      spyOnServiceReplaceMemberOrg.mockReset();
-      spyOnEventEmitter.mockReset();
-    });
-
-    it('should replace member org', async () => {
-      const member = mockGenerateMember();
-      const org = mockGenerateOrg();
-      spyOnServiceReplaceMemberOrg.mockImplementationOnce(async () => member);
-      const replaceMemberOrgParams = generateReplaceMemberOrgParams({
-        memberId: member.id,
-        orgId: org.id,
-      });
-
-      await resolver.replaceMemberOrg(replaceMemberOrgParams);
-
-      expect(spyOnServiceReplaceMemberOrg).toBeCalledWith(replaceMemberOrgParams);
-      const eventParams: IEventNotifyQueue = {
-        type: QueueType.notifications,
-        message: JSON.stringify(generateUpdateClientSettings({ member })),
-      };
-      expect(spyOnEventEmitter).toBeCalledWith(GlobalEventType.notifyQueue, eventParams);
-    });
   });
 
   describe('graduateMember', () => {
