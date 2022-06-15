@@ -13,7 +13,7 @@ export class BaseGuard {
       const ctx = GqlExecutionContext.create(context);
       return ctx.getContext().req;
     } else {
-      return context.switchToHttp().getRequest();
+      return context.switchToHttp()?.getRequest();
     }
   }
 }

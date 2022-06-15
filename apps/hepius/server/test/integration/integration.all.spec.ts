@@ -2670,6 +2670,24 @@ describe('Integration tests: all', () => {
     });
   });
 
+  describe('Client', () => {
+    it('should get client - member', async () => {
+      const { member } = await creators.createMemberUserAndOptionalOrg();
+      const result = await handler.queries.getClient({ id: member.id });
+      expect(result.id).toEqual(member.id);
+      expect(result.firstName).toEqual(member.firstName);
+      expect(result.lastName).toEqual(member.lastName);
+    });
+
+    it('should get client - user', async () => {
+      const { user } = await creators.createMemberUserAndOptionalOrg();
+      const result = await handler.queries.getClient({ id: user.id });
+      expect(result.id).toEqual(user.id);
+      expect(result.firstName).toEqual(user.firstName);
+      expect(result.lastName).toEqual(user.lastName);
+    });
+  });
+
   it('should update user related channels on updated user', async () => {
     const { user, org } = await creators.createMemberUserAndOptionalOrg();
     await handler.createMemberWithRetries({

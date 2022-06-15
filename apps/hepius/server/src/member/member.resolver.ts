@@ -1,4 +1,14 @@
-import { AppointmentStatus, Identifier, MemberRole, User, UserRole } from '@argus/hepiusClient';
+import {
+  AppointmentStatus,
+  ClientInfo,
+  Identifier,
+  MemberRole,
+  RoleSummary,
+  RoleTypes,
+  User,
+  UserRole,
+  isLagunaUser,
+} from '@argus/hepiusClient';
 import {
   AlertInternalKey,
   ChatInternalKey,
@@ -1014,6 +1024,28 @@ export class MemberResolver extends MemberBase {
     return memberConfig !== null;
   }
 
+  @Query(() => ClientInfo)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: [AceStrategy.byUser, AceStrategy.byMember], idLocator: 'id' })
+  async getClient(
+    @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.clientIdInvalid)))
+    id: string,
+  ) {
+    try {
+      const client = (await this.userService.get(id)) || (await this.memberService.get(id));
+      return {
+        firstName: client.firstName,
+        lastName: client.lastName,
+        id: client.id,
+        role: this.getRoleSummary(client.roles),
+      } as ClientInfo;
+    } catch (ex) {
+      if (ex.message === Errors.get(ErrorType.memberNotFound)) {
+        throw new Error(Errors.get(ErrorType.clientNotFound));
+      }
+    }
+  }
+
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
@@ -1027,6 +1059,12 @@ export class MemberResolver extends MemberBase {
 
   private getMemberInitials(member: Member): string {
     return member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase();
+  }
+
+  private getRoleSummary(roles: RoleTypes[]): string {
+    if (isLagunaUser(roles as UserRole[])) return RoleSummary.laguna;
+    if (roles.includes(MemberRole.member)) return RoleSummary.member;
+    if (roles.includes(UserRole.coach)) return RoleSummary.coach;
   }
 
   private async extractDataOfMemberAndUser(

@@ -1,4 +1,11 @@
-import { Barrier, BarrierType, CarePlan, CarePlanType, Caregiver } from '@argus/hepiusClient';
+import {
+  Barrier,
+  BarrierType,
+  CarePlan,
+  CarePlanType,
+  Caregiver,
+  ClientInfo,
+} from '@argus/hepiusClient';
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { generateGetSlotsParams, isResultValid } from '..';
@@ -1494,5 +1501,31 @@ export class Queries {
       .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
 
     return result?.getActionItems;
+  };
+
+  getClient = async ({
+    id,
+    invalidFieldsError,
+  }: {
+    id: string;
+    invalidFieldsError?: string;
+  }): Promise<ClientInfo> => {
+    const { getClient } = await this.client
+      .request(
+        gql`
+          query getClient($id: String!) {
+            getClient(id: $id) {
+              id
+              firstName
+              lastName
+            }
+          }
+        `,
+        { id },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => expect(ex.response.errors[0].message).toContain(invalidFieldsError));
+
+    return getClient;
   };
 }

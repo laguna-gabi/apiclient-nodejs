@@ -2,16 +2,34 @@ import { MemberRole, RoleTypes, User, isLagunaUser } from '@argus/hepiusClient';
 import { EntityName } from '@argus/pandora';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Types } from 'mongoose';
 import { BaseGuard, EntityResolver } from '.';
-import { AceOptions, AceStrategy, DecoratorType, defaultEntityMemberIdLocator } from '../common';
+import { AceContext, AceOptions, DecoratorType, defaultEntityMemberIdLocator } from '../common';
 import { Member } from '../member';
-import { difference, isEqual, sortBy } from 'lodash';
-import { Journey } from '../journey';
+import { ByOrgStrategy } from './strategies/byOrg.strategy';
+import { IStrategy } from './strategies/IStrategy';
+import { ByMemberStrategy } from './strategies/byMember.strategy';
+import { ByTokenStrategy, CustomAceStrategy, RbacStrategy } from './strategies/skip.strategy';
+import { ByUserStrategy } from './strategies/byUser.strategy';
+
 @Injectable()
 export class AceGuard extends BaseGuard implements CanActivate {
+  private readonly defaultStrategy: IStrategy;
+  private byMemberStrategy: ByMemberStrategy;
+  private byOrgStrategy: ByOrgStrategy;
+  private byUserStrategy: ByUserStrategy;
+  private byTokenStrategy: ByTokenStrategy;
+  private rbacStrategy: RbacStrategy;
+  private customAceStrategy: CustomAceStrategy;
+
   constructor(reflector: Reflector, readonly entityResolver: EntityResolver) {
     super(reflector);
+    this.byMemberStrategy = new ByMemberStrategy(this);
+    this.byOrgStrategy = new ByOrgStrategy(this);
+    this.byUserStrategy = new ByUserStrategy(this);
+    this.byTokenStrategy = new ByTokenStrategy();
+    this.rbacStrategy = new RbacStrategy();
+    this.customAceStrategy = new CustomAceStrategy();
+    this.defaultStrategy = this.byMemberStrategy;
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -27,100 +45,66 @@ export class AceGuard extends BaseGuard implements CanActivate {
     );
     const args = context.getArgByIndex(1); // request args
     // #0: ACE is skipped if handler is marked as public
-    if (
-      isPublic ||
-      aceOptions?.strategy === AceStrategy.token ||
-      aceOptions?.strategy === AceStrategy.rbac ||
-      aceOptions?.strategy === AceStrategy.custom
-    ) {
-      return true;
-    }
+    if (isPublic) return true;
 
     const request = await this.getRequest(context);
-
     const client = request?.user;
 
     // #1: if user is a Laguna user {(lagunaCoach, lagunaNurse or lagunaAdmin) we can(Activate) - no ACE required
-    if (isLagunaUser(client?.roles)) {
-      return true;
+    if (isLagunaUser(client?.roles)) return true;
+
+    // allow both single and multiple strategies
+    const strategies =
+      typeof aceOptions?.strategy === 'string' ? [aceOptions?.strategy] : aceOptions?.strategy;
+
+    if (!strategies) return this.defaultStrategy.validate({ args, aceOptions }, client);
+
+    // try all strategies - if at least one passed - return true
+    for (const strategy of strategies) {
+      const validator = this[strategy];
+      if ((await validator.validate({ args, aceOptions }, client)) === true) return true;
     }
 
-    switch (aceOptions?.strategy) {
-      case AceStrategy.byOrg:
-        const orgIds = this.getRequestOrgIds(args, aceOptions);
-        const provisionedOrgIds = this.getClientProvisionedOrgIds(client);
-        // if org id(s) are not set we populate request args with member/user provisioned org ids (support ALL orgs)
-        if (!orgIds?.length) {
-          this.setRequestOrgIds(args, aceOptions, provisionedOrgIds);
-          return true;
-        } else {
-          if (this.isMember(client)) {
-            return isEqual(sortBy(orgIds), sortBy(provisionedOrgIds));
-          } else {
-            return difference(orgIds, provisionedOrgIds).length === 0;
-          }
-        }
-
-      default:
-        // obtain the member id affected by the resolver
-        const memberId = await this.getAffectedMemberId(args, aceOptions);
-
-        // #2: if client is a Member we should allow access only to self
-        // Note: if member id is empty we rely on an interceptor to set the `memberId`,
-        if (this.isMember(client)) {
-          return (memberId && client.id === memberId) || !memberId;
-        } else {
-          // #3: if client is a user we allow/deny access based on org provisioning
-          if (Types.ObjectId.isValid(memberId)) {
-            const member = await this.entityResolver.getEntityById(Member.name, memberId);
-            const journeys = await this.entityResolver.getEntities<Journey>(Journey.name, {
-              filter: { memberId: new Types.ObjectId(member._id) },
-              sort: { _id: -1 },
-              limit: 1,
-            });
-            if (!journeys || journeys.length === 0) {
-              return false;
-            }
-
-            return !!client.orgs?.find((org) => org.toString() === journeys[0].org.toString());
-          }
-        }
-    }
+    return false;
   }
 
-  // Description: get the request affected member id
-  // The method will fetch the member id from request args or from an entity associated
-  // with a member - for example: in a request to change an appointment by id we will
-  // fetch the appointment using the entity resolver and obtain the member id fro within the
-  // the appointment document
-  private async getAffectedMemberId(args, aceOptions: AceOptions): Promise<string | undefined> {
-    let entityId: string;
+  async getAffectedMemberId(aceContext: AceContext): Promise<string | undefined> {
+    if (aceContext.aceOptions) {
+      const { idLocator, entityName, entityMemberIdLocator } = aceContext.aceOptions;
+      if (idLocator) {
+        const entityId = this.getEntityId(aceContext);
 
-    if (aceOptions) {
-      if (aceOptions.idLocator) {
-        const params = Object.values(args)[0];
-        if (typeof params === 'string' || Array.isArray(params) || Object.keys(args).length === 0) {
-          entityId = args[aceOptions.idLocator];
-        } else {
-          const paramsName = Object.keys(args)[0];
-          entityId = args[paramsName][aceOptions.idLocator];
-        }
-
-        if (aceOptions.entityName === EntityName.member) {
+        if (entityName === EntityName.member || !entityName) {
           return entityId;
         } else {
           // if the args only carry a non-member entity id we can resolve the member id by fetching the entity
-          const entity = await this.entityResolver.getEntityById(aceOptions.entityName, entityId);
+          const entity = await this.entityResolver.getEntityById(entityName, entityId);
           return entity
-            ? entity[aceOptions.entityMemberIdLocator || defaultEntityMemberIdLocator]?.toString()
+            ? entity[entityMemberIdLocator || defaultEntityMemberIdLocator]?.toString()
             : undefined;
         }
       }
     }
   }
 
+  getEntityId(aceContext: AceContext): string {
+    const {
+      args,
+      aceOptions: { idLocator },
+    } = aceContext;
+
+    const params = Object.values(args)[0];
+    if (typeof params === 'string' || Array.isArray(params) || Object.keys(args).length === 0) {
+      return args[idLocator];
+    } else {
+      const paramsName = Object.keys(args)[0];
+      return args[paramsName][idLocator];
+    }
+  }
+
   // Description: set the org ids in the request args object
-  private setRequestOrgIds(args, aceOptions: AceOptions, orgIds: string[]) {
+  setRequestOrgIds(aceContext: AceContext, orgIds: string[]) {
+    const { args, aceOptions } = aceContext;
     if (aceOptions && aceOptions.idLocator) {
       const params = Object.values(args)[0];
       if (typeof params === 'string' || Array.isArray(params) || Object.keys(args).length === 0) {
@@ -133,7 +117,8 @@ export class AceGuard extends BaseGuard implements CanActivate {
   }
 
   // Description: get the org ids from the request
-  private getRequestOrgIds(args, aceOptions: AceOptions): string[] {
+  getRequestOrgIds(aceContext: AceContext): string[] {
+    const { args, aceOptions } = aceContext;
     let extractedParamsValue;
     if (aceOptions && aceOptions.idLocator) {
       const params = Object.values(args)[0];
@@ -149,11 +134,11 @@ export class AceGuard extends BaseGuard implements CanActivate {
     return typeof extractedParamsValue === 'string' ? [extractedParamsValue] : extractedParamsValue;
   }
 
-  private isMember(client: { roles?: RoleTypes[] }): boolean {
+  isMember(client: { roles?: RoleTypes[] }): boolean {
     return client?.roles?.includes(MemberRole.member);
   }
 
-  private getClientProvisionedOrgIds(client): string[] {
+  getClientProvisionedOrgIds(client): string[] {
     if (this.isMember(client)) {
       return [(client as Member).org.toString()];
     } else {

@@ -190,6 +190,10 @@ export enum ErrorType {
   recordingNotFound = 10902,
   recordingSameUser = 10903,
   recordingSameUserEdit = 10904,
+
+  // client
+  clientIdInvalid = 11001,
+  clientNotFound = 11002,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -219,6 +223,8 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.userPhone.valueOf(), phoneFormat],
   [ErrorType.userCanNotBeAssignedToMembers.valueOf(), 'user can not be assigned to member'],
   [ErrorType.userIdInvalid.valueOf(), `userId ${objectIdFormat}`],
+  [ErrorType.clientIdInvalid.valueOf(), `clientId ${objectIdFormat}`],
+  [ErrorType.clientNotFound.valueOf(), `clientId was not found`],
   [
     ErrorType.userFailedToCreateOnExternalProvider.valueOf(),
     `Failed to create a user in external provider`,

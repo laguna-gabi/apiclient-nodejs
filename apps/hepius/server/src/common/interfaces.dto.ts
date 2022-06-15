@@ -214,15 +214,17 @@ export interface SeverityLevelInterface {
 
 export const defaultEntityMemberIdLocator = 'memberId';
 
+// enum values match the strategy properties in the ace guard
 export enum AceStrategy {
-  custom = 'custom', // ACE us handled downstream from guard
-  token = 'token', // value are populated from token (user id, member id, orgs, etc)
-  rbac = 'rbac', // RBAC guard is sufficient (ACE skipped)
-  byOrg = 'byOrg', // request carries org id(s) which can be validated against the client provisioned orgs
-  byMember = 'byMember', // request carries an entity id which is either a member id or can be traced back to a member
+  custom = 'customAceStrategy', // ACE us handled downstream from guard
+  token = 'byTokenStrategy', // value are populated from token (user id, member id, orgs, etc)
+  rbac = 'rbacStrategy', // RBAC guard is sufficient (ACE skipped)
+  byOrg = 'byOrgStrategy', // request carries org id(s) which can be validated against the client provisioned orgs
+  byMember = 'byMemberStrategy', // request carries an entity id which is either a member id or can be traced back to a member
+  byUser = 'byUserStrategy', // request carries an entity id which is the userId
 }
 export class AceOptions {
-  strategy?: AceStrategy;
+  strategy?: AceStrategy | AceStrategy[];
   /**
    * affected entity name in request
    */
@@ -235,4 +237,10 @@ export class AceOptions {
    * member id locator name in a non-member entity model. default is `memberId`
    */
   entityMemberIdLocator?: string;
+}
+
+export class AceContext {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: any;
+  aceOptions: AceOptions;
 }

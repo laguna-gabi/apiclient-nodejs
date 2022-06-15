@@ -1783,6 +1783,42 @@ describe('MemberResolver', () => {
     });
   });
 
+  describe('getClient', () => {
+    let spyOnServiceGet;
+    let spyOnUserServiceGet;
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnUserServiceGet = jest.spyOn(userService, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+      spyOnUserServiceGet.mockReset();
+    });
+
+    it('should get user', async () => {
+      const user = mockGenerateUser();
+      spyOnUserServiceGet.mockResolvedValueOnce(user);
+      const result = await resolver.getClient(generateId());
+      expect(spyOnUserServiceGet).toBeCalled();
+      expect(spyOnServiceGet).not.toBeCalled();
+      expect(result.id).toEqual(user.id);
+      expect(result.firstName).toEqual(user.firstName);
+      expect(result.lastName).toEqual(user.lastName);
+    });
+
+    it('should get member', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceGet.mockResolvedValueOnce(member);
+      const result = await resolver.getClient(generateId());
+      expect(spyOnUserServiceGet).toBeCalled();
+      expect(spyOnServiceGet).toBeCalled();
+      expect(result.id).toEqual(member.id);
+      expect(result.firstName).toEqual(member.firstName);
+      expect(result.lastName).toEqual(member.lastName);
+    });
+  });
+
   /**************************************************************************************************
    ******************************************** Helpers *********************************************
    *************************************************************************************************/

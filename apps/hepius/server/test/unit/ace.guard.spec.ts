@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { MemberRole, UserRole, isLagunaUser } from '@argus/hepiusClient';
-import { EntityName, generateId, generateObjectId, mockProcessWarnings } from '@argus/pandora';
+import { MemberRole, User, UserRole, isLagunaUser } from '@argus/hepiusClient';
+import { EntityName, generateId, generateObjectId } from '@argus/pandora';
 import { createMock } from '@golevelup/ts-jest';
 import { ExecutionContext } from '@nestjs/common';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
@@ -242,6 +242,67 @@ describe(AceGuard.name, () => {
     });
 
     // eslint-disable-next-line max-len
+    it(`to allow access for a non-Laguna coach user based on user strategy (userId in args)`, async () => {
+      const orgId = generateId();
+      const userId = generateId();
+      spyOnMockExecutionContextSwitchToHttp.mockReturnValueOnce(mockHttpArgumentsHost);
+      spyOnMockHttpArgumentsHostGetRequest.mockReturnValueOnce({
+        user: { roles: [UserRole.coach], orgs: [new Types.ObjectId(orgId)] },
+      });
+
+      spyOnMockReflectorGet
+        .mockReturnValueOnce(false) // `isPublic`
+        .mockReturnValueOnce({
+          entityName: User.name,
+          strategy: AceStrategy.byUser,
+          idLocator: 'id',
+        }); // `aceOptions`
+
+      spyOnMockExecutionContextGetArgByIndex.mockReturnValueOnce({
+        params: { id: userId },
+      });
+
+      spyOnMockEntityResolver.mockResolvedValue({
+        _id: generateObjectId(),
+        orgs: [new Types.ObjectId(orgId)], // <- same orgId as the client provisioned org id
+      });
+      const guard = new AceGuard(mockReflector, mockEntityResolver);
+
+      expect(await guard.canActivate(mockExecutionContext)).toBeTruthy();
+
+      expect(spyOnMockEntityResolver).toHaveBeenNthCalledWith(1, User.name, userId);
+    });
+
+    // eslint-disable-next-line max-len
+    it(`to deny access for a non-Laguna coach user based on user strategy (userId id in args)`, async () => {
+      const userId = generateId();
+      spyOnMockExecutionContextSwitchToHttp.mockReturnValueOnce(mockHttpArgumentsHost);
+      spyOnMockHttpArgumentsHostGetRequest.mockReturnValueOnce({
+        user: { roles: [UserRole.coach], orgs: [generateObjectId()] },
+      });
+
+      spyOnMockReflectorGet
+        .mockReturnValueOnce(false) // `isPublic`
+        .mockReturnValueOnce({
+          entityName: User.name,
+          strategy: AceStrategy.byUser,
+          idLocator: 'id',
+        }); // `aceOptions`
+
+      spyOnMockExecutionContextGetArgByIndex.mockReturnValueOnce({
+        params: { id: userId },
+      });
+
+      spyOnMockEntityResolver.mockResolvedValue({
+        _id: generateObjectId(),
+        orgs: [generateObjectId()], // <- same orgId as the client provisioned org id
+      });
+      const guard = new AceGuard(mockReflector, mockEntityResolver);
+      expect(await guard.canActivate(mockExecutionContext)).toBeFalsy();
+      expect(spyOnMockEntityResolver).toHaveBeenNthCalledWith(1, User.name, userId);
+    });
+
+    // eslint-disable-next-line max-len
     it(`to deny access for a non-Laguna coach user where affected member is not available`, async () => {
       spyOnMockExecutionContextSwitchToHttp.mockReturnValueOnce(mockHttpArgumentsHost);
       spyOnMockHttpArgumentsHostGetRequest.mockReturnValueOnce({
@@ -255,6 +316,22 @@ describe(AceGuard.name, () => {
       const guard = new AceGuard(mockReflector, mockEntityResolver);
 
       expect(await guard.canActivate(mockExecutionContext)).toBeFalsy();
+    });
+
+    // eslint-disable-next-line max-len
+    it(`to allow access for a non-Laguna coach user when there are multiple strategies and one matched`, async () => {
+      spyOnMockExecutionContextSwitchToHttp.mockReturnValueOnce(mockHttpArgumentsHost);
+      spyOnMockHttpArgumentsHostGetRequest.mockReturnValueOnce({
+        user: { roles: [UserRole.coach], orgs: [generateObjectId()] },
+      });
+
+      spyOnMockReflectorGet
+        .mockReturnValueOnce(false) // `isPublic`
+        .mockReturnValueOnce({ strategy: [AceStrategy.rbac, AceStrategy.byUser], idLocator: 'id' }); // `aceOptions`
+
+      const guard = new AceGuard(mockReflector, mockEntityResolver);
+
+      expect(await guard.canActivate(mockExecutionContext)).toBeTruthy();
     });
 
     // eslint-disable-next-line max-len
@@ -370,8 +447,7 @@ describe(AceGuard.name, () => {
 
       expect(await guard.canActivate(mockExecutionContext)).toBeTruthy();
       expect(mockGuardSetRequestOrgIds).toHaveBeenCalledWith(
-        expect.anything(),
-        aceOptions,
+        { args: expect.anything(), aceOptions },
         provisionedOrgIds,
       );
     });
