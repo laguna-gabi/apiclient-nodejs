@@ -1,6 +1,11 @@
 import { Platform, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { defaultModules, generateMobileVersion, mockGenerateCheckMobileVersionResponse } from '..';
+import {
+  defaultModules,
+  generateCheckMobileVersionParams,
+  generateMobileVersion,
+  mockGenerateCheckMobileVersionResponse,
+} from '..';
 import { LoggerService } from '../../src/common';
 import {
   ConfigurationController,
@@ -29,7 +34,7 @@ describe('ConfigurationController', () => {
   });
 
   describe('mobile version', () => {
-    describe('check', () => {
+    describe('check old', () => {
       let spyOnMobileVersionServiceCheck;
       beforeEach(() => {
         spyOnMobileVersionServiceCheck = jest.spyOn(mobileVersionService, 'checkMobileVersion');
@@ -44,9 +49,29 @@ describe('ConfigurationController', () => {
         const build = generateMobileVersion();
         const CheckMobileVersionResponse = mockGenerateCheckMobileVersionResponse();
         spyOnMobileVersionServiceCheck.mockImplementationOnce(() => CheckMobileVersionResponse);
-        const result = await controller.checkMobileVersion(version, platform, build);
+        const result = await controller.checkMobileVersionOld(version, platform, build);
         expect(spyOnMobileVersionServiceCheck).toBeCalledTimes(1);
         expect(spyOnMobileVersionServiceCheck).toBeCalledWith({ version, platform, build });
+        expect(result).toEqual(CheckMobileVersionResponse);
+      });
+    });
+
+    describe('check', () => {
+      let spyOnMobileVersionServiceCheck;
+      beforeEach(() => {
+        spyOnMobileVersionServiceCheck = jest.spyOn(mobileVersionService, 'checkMobileVersion');
+      });
+      afterEach(() => {
+        spyOnMobileVersionServiceCheck.mockReset();
+      });
+
+      it('should check mobile version', async () => {
+        const checkMobileVersionParams = generateCheckMobileVersionParams();
+        const CheckMobileVersionResponse = mockGenerateCheckMobileVersionResponse();
+        spyOnMobileVersionServiceCheck.mockImplementationOnce(() => CheckMobileVersionResponse);
+        const result = await controller.checkMobileVersion(checkMobileVersionParams);
+        expect(spyOnMobileVersionServiceCheck).toBeCalledTimes(1);
+        expect(spyOnMobileVersionServiceCheck).toBeCalledWith(checkMobileVersionParams);
         expect(result).toEqual(CheckMobileVersionResponse);
       });
     });

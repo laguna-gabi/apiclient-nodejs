@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import compareVersions, { compare, validate } from 'compare-versions';
 import { Model } from 'mongoose';
 import {
+  CheckMobileVersionParams,
   CheckMobileVersionResponse,
   CreateMobileVersionParams,
   MobileVersion,
@@ -52,12 +53,10 @@ export class MobileVersionService {
     );
   }
 
-  async checkMobileVersion(params: {
-    version: string;
-    platform: Platform;
-    build: string;
-  }): Promise<CheckMobileVersionResponse> {
-    const { version, platform } = params;
+  async checkMobileVersion(
+    checkMobileVersionParams: CheckMobileVersionParams,
+  ): Promise<CheckMobileVersionResponse> {
+    const { version, platform } = checkMobileVersionParams;
 
     if (!validate(version)) {
       throw new BadRequestException(Errors.get(ErrorType.configurationMobileVersionInvalidVersion));

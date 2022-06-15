@@ -83,6 +83,7 @@ import {
 } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
+  CheckMobileVersionParams,
   CheckMobileVersionResponse,
   CreateMobileVersionParams,
   MobileVersion,
@@ -1180,7 +1181,7 @@ export const generateCheckMobileVersionParams = ({
   version = generateMobileVersion(),
   platform = Platform.android,
   build = generateMobileVersion(),
-} = {}) => {
+}: Partial<CheckMobileVersionParams> = {}): CheckMobileVersionParams => {
   return { version, platform, build };
 };
 export const mockGenerateCheckMobileVersionResponse = ({

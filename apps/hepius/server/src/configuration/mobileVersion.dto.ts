@@ -1,7 +1,7 @@
 import { Platform } from '@argus/pandora';
 import { Field, InputType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsSemVer } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsSemVer, IsString } from 'class-validator';
 
 /**************************************************************************************************
  ***************************************** Input params *******************************************
@@ -36,6 +36,22 @@ export class UpdateFaultyMobileVersionsParams {
   versions: string[];
 
   @Field(() => Platform)
+  platform: Platform;
+}
+
+export class CheckMobileVersionParams {
+  @IsNotEmpty()
+  @IsString()
+  @IsSemVer()
+  version: string;
+
+  @IsNotEmpty()
+  @IsString()
+  build: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @IsEnum(Platform)
   platform: Platform;
 }
 
