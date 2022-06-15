@@ -19,6 +19,7 @@ import {
   SeverityLevelInterface,
 } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
+import { DefaultSchemaOptions } from '@argus/pandora';
 import { RelatedEntity } from '../journey';
 
 /**************************************************************************************************
@@ -208,7 +209,7 @@ export class SeverityLevel implements SeverityLevelInterface {
 }
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Questionnaire extends Identifier {
   @Prop()
   @Field(() => String)
@@ -262,7 +263,7 @@ export class QuestionnaireResponseResult {
 }
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class QuestionnaireResponse extends Identifier {
   @Prop()
   @Field(() => String)

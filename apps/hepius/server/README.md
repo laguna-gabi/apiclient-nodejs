@@ -106,9 +106,6 @@ To send GraphQL resolvers / mutation requests you need to use the GQL Playgroud 
 
 more details can be found [here](https://app.shortcut.com/laguna-health/story/1852/define-role-base-access-to-all-secure-apis).
 
-When adding a new route or
-Current implementation
-
 ## 🔑 Token Generating
 
 Because of the RBAC and the use of the token sub instead of member/user id, we are forced to provide an access token for most of the api requests. To work locally fast we can generate access tokens for all our users and members and then just add them to the headers.

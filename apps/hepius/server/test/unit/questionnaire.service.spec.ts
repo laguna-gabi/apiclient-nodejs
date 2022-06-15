@@ -191,14 +191,16 @@ describe('QuestionnaireService', () => {
       const { id } = await service.createQuestionnaire({ ...params });
       expect(id).not.toBeUndefined();
 
-      const createdQuestionnaire = await questionnaireModel.findById(id).lean();
-      expect(createdQuestionnaire).toEqual({
-        ...params,
-        _id: new Types.ObjectId(id),
-        active: true,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
+      const createdQuestionnaire = await questionnaireModel.findById(id);
+      expect(createdQuestionnaire).toEqual(
+        expect.objectContaining({
+          ...params,
+          id,
+          active: true,
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        }),
+      );
     });
   });
 
@@ -220,14 +222,16 @@ describe('QuestionnaireService', () => {
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      expect(allQuestionnaires.find((item) => item.id === id).toObject()).toEqual({
-        ...params,
-        name: updatedQuestionnaireName,
-        _id: new Types.ObjectId(id),
-        active: true,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
+      expect(allQuestionnaires.find((item) => item.id === id)).toEqual(
+        expect.objectContaining({
+          ...params,
+          name: updatedQuestionnaireName,
+          id,
+          active: true,
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        }),
+      );
     });
   });
 
@@ -239,17 +243,13 @@ describe('QuestionnaireService', () => {
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      expect((await service.getQuestionnaireById(questionnaire.id)).toObject()).toEqual({
-        ...params,
-        _id: new Types.ObjectId(questionnaire.id),
-        active: true,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        createdAt: questionnaire.createdAt,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        updatedAt: questionnaire.updatedAt,
-      });
+      expect(await service.getQuestionnaireById(questionnaire.id)).toEqual(
+        expect.objectContaining({
+          ...params,
+          id: questionnaire.id,
+          active: true,
+        }),
+      );
     });
 
     it('should fail to get non existing questionnaire', async () => {
