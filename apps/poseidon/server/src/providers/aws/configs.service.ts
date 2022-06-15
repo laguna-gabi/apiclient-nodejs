@@ -14,6 +14,7 @@ export const ExternalConfigs = {
   },
   revAI: {
     accessToken: 'revAI.accessToken',
+    webhookToken: 'revAI.webhookToken',
   },
 };
 
