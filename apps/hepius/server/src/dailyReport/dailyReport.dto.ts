@@ -6,6 +6,7 @@ import * as mongooseDelete from 'mongoose-delete';
 import { ErrorType, Errors, onlyDateRegex } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import { IsObjectId } from '@argus/hepiusClient';
+import { DefaultSchemaOptions } from '@argus/pandora';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -67,7 +68,7 @@ export class DailyReportCategories {
  *************************************************************************************************/
 
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class DailyReport {
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)
