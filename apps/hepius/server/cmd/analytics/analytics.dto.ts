@@ -12,7 +12,7 @@ import {
 } from 'typeorm';
 import { RecordingType } from '../../src/common';
 import { Honorific, MaritalStatus, Member, MemberConfig, Race, Sex } from '../../src/member';
-import { Journey, ReadmissionRisk } from '../../src/journey';
+import { Admission, Journey, ReadmissionRisk } from '../../src/journey';
 import {
   Appointment,
   AppointmentStatus,
@@ -455,7 +455,7 @@ export type PopulatedMember = Member & {
 export type MemberDataAggregate = BaseMember & {
   memberDetails: PopulatedMember;
   memberConfig?: MemberConfig;
-  recentJourney?: Journey;
+  recentJourney?: Journey & { admissions: Admission[] };
   appointments?: PopulatedAppointment[];
   primaryUser?: User;
   isControlMember?: boolean;

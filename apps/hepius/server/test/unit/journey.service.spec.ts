@@ -66,7 +66,7 @@ describe(JourneyService.name, () => {
 
     expect(id1).not.toEqual(id2);
 
-    const matchObject = { memberId: new Types.ObjectId(memberId), admissions: [] };
+    const matchObject = { memberId: new Types.ObjectId(memberId) };
     const result = await service.get(id2);
     expect(result).toMatchObject({ id: id2, ...matchObject });
 
@@ -127,7 +127,7 @@ describe(JourneyService.name, () => {
 
       const { id } = await service.createControl({ memberId, orgId });
 
-      const matchObject = { memberId: new Types.ObjectId(memberId), admissions: [] };
+      const matchObject = { memberId: new Types.ObjectId(memberId) };
       const recentJourney = await service.getRecentControl(memberId);
       expect(recentJourney).toMatchObject({ id, ...matchObject });
     });

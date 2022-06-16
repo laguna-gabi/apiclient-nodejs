@@ -238,6 +238,14 @@ export class AnalyticsService {
       { $unset: 'journeysRes' },
       {
         $lookup: {
+          from: 'admissions',
+          localField: 'recentJourney._id',
+          foreignField: 'journeyId',
+          as: 'recentJourney.admissions',
+        },
+      },
+      {
+        $lookup: {
           from: 'users',
           localField: 'memberDetails.primaryUserId',
           foreignField: '_id',
