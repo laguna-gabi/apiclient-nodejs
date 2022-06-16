@@ -572,7 +572,6 @@ describe('Validations - member', () => {
       ${{ id: 123 }}                    | ${{ missingFieldError: stringError }}
       ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
       ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
-      ${{ fellowName: 123 }}            | ${{ missingFieldError: stringError }}
       ${{ drgDesc: 123 }}               | ${{ missingFieldError: stringError }}
       ${{ drg: 123 }}                   | ${{ missingFieldError: stringError }}
       ${{ phoneSecondary: 123 }}        | ${{ missingFieldError: stringError }}

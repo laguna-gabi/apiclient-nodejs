@@ -222,7 +222,6 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     race: defaultMemberParams.race,
     maritalStatus: MaritalStatus.single,
     zipCode: generateZipCode(),
-    fellowName: generateFellowName(),
     address: {
       street: fakerAddress.streetName(),
       city: fakerAddress.city(),
@@ -312,7 +311,6 @@ export const generateUpdateMemberParams = ({
   email = generateEmail(),
   zipCode = generateZipCode(),
   dischargeDate = generateDateOnly(fakerDate.soon(10)),
-  fellowName = generateFellowName(),
   drgDesc = name.firstName(),
   drg = datatype.number({ min: 1, max: 1000 }).toString(),
   phoneSecondary = generatePhone(),
@@ -338,7 +336,6 @@ export const generateUpdateMemberParams = ({
     authId,
     firstName,
     lastName,
-    fellowName,
     sex,
     email,
     zipCode,
@@ -536,7 +533,6 @@ export const mockGenerateJourney = ({
   org: orgId || generateId(),
   firstLoggedInAt: fakerDate.past(2),
   lastLoggedInAt: fakerDate.past(1),
-  fellowName: generateFellowName(),
   admissions: [],
   readmissionRisk: ReadmissionRisk.low,
   isGraduated: false,
@@ -545,11 +541,9 @@ export const mockGenerateJourney = ({
 
 export const generateUpdateJourneyParams = ({
   memberId = generateId(),
-  fellowName = generateFellowName(),
   readmissionRisk = ReadmissionRisk.low,
 }: Partial<UpdateJourneyParams> = {}): UpdateJourneyParams => ({
   memberId,
-  fellowName,
   readmissionRisk,
 });
 
@@ -1857,5 +1851,4 @@ export const generateUniqueUrl = () => `${v4()}.${internet.url()}`;
 export const generateRandomName = (length: number): string => lorem.words(length).substr(0, length);
 
 const generateEmail = () => `${new Date().getMilliseconds()}.${internet.email()}`;
-const generateFellowName = () => `${name.firstName()} ${name.lastName()}`;
 const generateHealthPlan = () => datatype.string(10);

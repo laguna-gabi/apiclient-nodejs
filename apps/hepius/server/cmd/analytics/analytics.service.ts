@@ -540,7 +540,6 @@ export class AnalyticsService {
       last_activation_score: lastActivationScore,
       first_wellbeing_score: firstWellbeingScore,
       last_wellbeing_score: lastWellbeingScore,
-      fellow: member.memberDetails.fellowName,
       harmony_link: !member.isControlMember
         ? `${HarmonyLink}/details/${member._id.toString()}`
         : undefined,

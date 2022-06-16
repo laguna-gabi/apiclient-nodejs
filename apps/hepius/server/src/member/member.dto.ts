@@ -308,16 +308,6 @@ export class UpdateMemberParams extends ExtraMemberParams {
    */
   @Field(() => String, { nullable: true, deprecationReason })
   @IsOptional()
-  fellowName?: string;
-
-  /**
-   * will be @deprecated soon
-   * use journey.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Field(() => String, { nullable: true, deprecationReason })
-  @IsOptional()
   drg?: string;
 
   /**
@@ -577,17 +567,6 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   dischargeDate?: string;
-
-  /**
-   * will be @deprecated soon
-   * use journey.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true, deprecationReason })
-  @IsOptional()
-  fellowName?: string;
 
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })

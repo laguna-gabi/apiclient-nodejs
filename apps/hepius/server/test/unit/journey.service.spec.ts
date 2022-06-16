@@ -221,14 +221,12 @@ describe(JourneyService.name, () => {
       await checkUpdate(updateParams1);
 
       const updateParams2 = generateUpdateJourneyParams({ memberId });
-      delete updateParams2.fellowName;
       await checkUpdate(updateParams2);
 
       const current = await service.getRecent(memberId);
       expect(current).toEqual(
         expect.objectContaining({
           ...updateParams2,
-          fellowName: updateParams1.fellowName,
           memberId: new Types.ObjectId(memberId),
         }),
       );

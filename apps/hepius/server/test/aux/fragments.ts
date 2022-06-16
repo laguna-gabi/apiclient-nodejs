@@ -66,7 +66,6 @@ export const FRAGMENT_MEMBER = gql`
     zipCode
     utcDelta
     dischargeDate
-    fellowName
     drg
     authId
     healthPlan
@@ -201,7 +200,6 @@ export const FRAGMENT_JOURNEY = gql`
   fragment journeyFragment on Journey {
     id
     memberId
-    fellowName
     readmissionRisk
     readmissionRiskHistory {
       readmissionRisk

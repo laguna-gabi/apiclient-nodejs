@@ -37,10 +37,6 @@ export class UpdateJourneyParams {
   @Field(() => String)
   memberId: string;
 
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  fellowName?: string;
-
   @Field(() => ReadmissionRisk, { nullable: true })
   @IsOptional()
   readmissionRisk?: ReadmissionRisk;
@@ -108,10 +104,6 @@ export class Journey extends Identifier {
   @Prop({ type: Date })
   @Field(() => Date, { nullable: true })
   lastLoggedInAt?: Date;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  fellowName?: string;
 
   @Prop({ type: String, enum: ReadmissionRisk, isNaN: true })
   @Field(() => ReadmissionRisk, { nullable: true })

@@ -148,8 +148,6 @@ export class MemberData {
   @Column('float', { nullable: true })
   last_wellbeing_score?: number;
   @Column('varchar', { length: 100, nullable: true })
-  fellow?: string;
-  @Column('varchar', { length: 100, nullable: true })
   coach_name?: string;
   @Column('varchar', { length: 50, nullable: true })
   coach_id?: string;
