@@ -539,10 +539,11 @@ export class Member extends Identifier {
   /**
    * Org prop is moved to journey collection, but the field is still exposed via the member api
    * (since its in use by the app)
+   * org will only be exposed on getMember api, so in all the rest of the places, org is null.
    * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
    */
   @Field(() => Org)
-  org: Org;
+  org?: Org;
 
   @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String, { description: 'primary user id' })

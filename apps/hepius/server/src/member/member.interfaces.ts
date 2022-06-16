@@ -99,7 +99,7 @@ export class MemberBase {
       message: `${member.firstName} [${member.id}]\nAssigned to ${user.firstName}`,
       icon: SlackIcon.info,
       channel: SlackChannel.support,
-      orgName: member.org.name,
+      orgName: org.name,
     };
     this.eventEmitter.emit(GlobalEventType.notifySlack, eventSlackMessageParams);
 

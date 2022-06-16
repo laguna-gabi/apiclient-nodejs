@@ -210,9 +210,6 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     firstName,
     lastName,
     dateOfBirth: generateDateOnly(fakerDate.past()),
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    org: { _id: generateId(), ...generateOrgParams() },
     users: [user],
     sex: defaultMemberParams.sex,
     createdAt: fakerDate.past(1),
@@ -227,7 +224,6 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
       city: fakerAddress.city(),
       state: fakerAddress.state(),
     },
-    general_notes: lorem.sentence(),
     deceased: { cause: lorem.sentence(), date: generateDateOnly(deceasedDate) },
   };
 };

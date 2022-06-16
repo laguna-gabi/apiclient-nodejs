@@ -42,6 +42,7 @@ import {
   mockGenerateJourney,
   mockGenerateMember,
   mockGenerateMemberConfig,
+  mockGenerateOrg,
   mockGenerateQuestionnaireResponse,
   mockGenerateUser,
 } from '..';
@@ -156,7 +157,7 @@ describe('MemberResolver', () => {
     let spyOnFeatureFlagControlGroup;
     let spyOnTwilioGetPhoneType;
     let spyOnJourneyCreate;
-    let spyOnOrgServiceGet;
+    let spyOnOrgServiceGetOrg;
 
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
@@ -168,7 +169,7 @@ describe('MemberResolver', () => {
       spyOnFeatureFlagControlGroup = jest.spyOn(featureFlagService, 'isControlGroup');
       spyOnTwilioGetPhoneType = jest.spyOn(twilioService, 'getPhoneType');
       spyOnJourneyCreate = jest.spyOn(journeyService, 'create');
-      spyOnOrgServiceGet = jest.spyOn(orgService, 'get');
+      spyOnOrgServiceGetOrg = jest.spyOn(orgService, 'get');
     });
 
     afterEach(() => {
@@ -182,7 +183,7 @@ describe('MemberResolver', () => {
       spyOnFeatureFlagControlGroup.mockReset();
       spyOnTwilioGetPhoneType.mockReset();
       spyOnJourneyCreate.mockReset();
-      spyOnOrgServiceGet.mockReset();
+      spyOnOrgServiceGetOrg.mockReset();
     });
 
     it('should fail to create a member since org not found', async () => {
@@ -215,11 +216,12 @@ describe('MemberResolver', () => {
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => false);
       spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneType);
       spyOnJourneyCreate.mockResolvedValueOnce(generateId());
-      const org = { id: generateId(), ...generateOrgParams() };
-      spyOnOrgServiceGet.mockResolvedValueOnce(org);
 
+      const org = mockGenerateOrg();
+      spyOnOrgServiceGetOrg.mockResolvedValueOnce(org);
       const params = generateCreateMemberParams({ orgId: org.id });
       const { orgId, ...noOrgParams } = params;
+
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
@@ -232,7 +234,7 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
       expect(spyOnTwilioGetPhoneType).toBeCalledWith(params.phone);
       expect(spyOnJourneyCreate).toBeCalledWith({ memberId: member.id, orgId });
-      expect(spyOnOrgServiceGet).toBeCalledWith(orgId);
+      expect(spyOnOrgServiceGetOrg).toBeCalledWith(orgId);
       const eventNewMemberParams: IEventOnNewMember = {
         member,
         user,
@@ -260,7 +262,7 @@ describe('MemberResolver', () => {
         message: `${member.firstName} [${member.id}]\nAssigned to ${user.firstName}`,
         icon: SlackIcon.info,
         channel: SlackChannel.support,
-        orgName: member.org.name,
+        orgName: org.name,
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         3,
@@ -287,7 +289,8 @@ describe('MemberResolver', () => {
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
       spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneType);
       spyOnJourneyCreate.mockResolvedValueOnce(generateId());
-      spyOnOrgServiceGet.mockResolvedValueOnce({ id: generateId(), ...generateOrgParams() });
+      const org = mockGenerateOrg();
+      spyOnOrgServiceGetOrg.mockResolvedValueOnce(org);
 
       const params = generateCreateMemberParams({ orgId: generateId(), userId: user.id });
       const { orgId, ...noOrgParams } = params;
@@ -306,7 +309,7 @@ describe('MemberResolver', () => {
         platform: memberConfig.platform,
       };
       expect(spyOnJourneyCreate).toBeCalledWith({ memberId: member.id, orgId });
-      expect(spyOnOrgServiceGet).toBeCalledWith(orgId);
+      expect(spyOnOrgServiceGetOrg).toBeCalledWith(orgId);
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
       const eventSlackMessageParams: IEventNotifySlack = {
         /* eslint-disable-next-line max-len */
@@ -314,7 +317,7 @@ describe('MemberResolver', () => {
         message: `${member.firstName} [${member.id}]\nAssigned to ${user.firstName}`,
         icon: SlackIcon.info,
         channel: SlackChannel.support,
-        orgName: member.org.name,
+        orgName: org.name,
       };
       expect(spyOnEventEmitter).toBeCalledWith(
         GlobalEventType.notifySlack,
@@ -329,8 +332,8 @@ describe('MemberResolver', () => {
       spyOnServiceInsertControl.mockImplementationOnce(async () => member);
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
       spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneType);
-      const org = { id: generateId(), ...generateOrgParams() };
-      spyOnOrgServiceGet.mockResolvedValueOnce(org);
+      const org = mockGenerateOrg();
+      spyOnOrgServiceGetOrg.mockResolvedValueOnce(org);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
       const noOrgParams = { ...params };
@@ -422,20 +425,23 @@ describe('MemberResolver', () => {
 
   describe('getMember', () => {
     let spyOnServiceGet;
-    let spyOnServiceGetByOrg;
+    let spyOnServiceGetRecentJourney;
     beforeEach(() => {
       spyOnServiceGet = jest.spyOn(service, 'get');
-      spyOnServiceGetByOrg = jest.spyOn(service, 'getByOrgs');
+      spyOnServiceGetRecentJourney = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceGet.mockReset();
-      spyOnServiceGetByOrg.mockReset();
+      spyOnServiceGetRecentJourney.mockReset();
     });
 
     it('should get a member for a given id', async () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockImplementationOnce(async () => member);
+      spyOnServiceGetRecentJourney.mockResolvedValueOnce(
+        mockGenerateJourney({ memberId: member.id }),
+      );
       const result = await resolver.getMember(member.id);
       expect(result).toEqual(member);
     });
@@ -462,52 +468,21 @@ describe('MemberResolver', () => {
       const member = mockGenerateMember();
       delete member.zipCode;
       spyOnServiceGet.mockResolvedValue(member);
+      const org = generateOrgParams();
+      spyOnServiceGetRecentJourney.mockResolvedValueOnce({ id: generateId(), org });
       const result = await resolver.getMember(member.id);
-      expect(result.zipCode).toEqual(member.org.zipCode);
+      expect(result.zipCode).toEqual(org.zipCode);
     });
 
     it('should calculate utcDelta if zipCode exists', async () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockResolvedValue(member);
+      spyOnServiceGetRecentJourney.mockResolvedValueOnce({
+        id: generateId(),
+        org: generateOrgParams(),
+      });
       const result = await resolver.getMember(member.id);
       expect(result.utcDelta).toBeLessThan(0);
-    });
-  });
-
-  describe('getMembers', () => {
-    let spyOnServiceGetByOrgs;
-    beforeEach(() => {
-      spyOnServiceGetByOrgs = jest.spyOn(service, 'getByOrgs');
-    });
-
-    afterEach(() => {
-      spyOnServiceGetByOrgs.mockReset();
-    });
-
-    it('should get members for a given orgId', async () => {
-      const member = mockGenerateMember();
-      const getByOrgResult = [{ ...member, platform: Platform.android }];
-      spyOnServiceGetByOrgs.mockImplementationOnce(async () => getByOrgResult);
-      const result = await resolver.getMembers([member.org.id]);
-
-      expect(spyOnServiceGetByOrgs).toBeCalledTimes(1);
-      expect(spyOnServiceGetByOrgs).toBeCalledWith([member.org.id]);
-      expect(result).toEqual(getByOrgResult);
-    });
-
-    it('should fetch all members without filtering orgId', async () => {
-      const members = [mockGenerateMember(), mockGenerateMember()];
-      const getByOrgResult = [
-        { ...members[0], platform: Platform.android },
-        { ...members[1], platform: Platform.ios },
-      ];
-      spyOnServiceGetByOrgs.mockImplementationOnce(async () => getByOrgResult);
-
-      const result = await resolver.getMembers();
-
-      expect(spyOnServiceGetByOrgs).toBeCalledTimes(1);
-      expect(spyOnServiceGetByOrgs).toBeCalledWith(undefined);
-      expect(result).toEqual(getByOrgResult);
     });
   });
 
@@ -1228,6 +1203,7 @@ describe('MemberResolver', () => {
     let spyOnCommunicationResolverGetCommunication;
     let spyOnCommunicationServiceGet;
     let spyOnCreateDispatch;
+    let spyOnJourneyServiceGetRecentJourney;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
@@ -1239,6 +1215,7 @@ describe('MemberResolver', () => {
       );
       spyOnCommunicationServiceGet = jest.spyOn(communicationService, 'get');
       spyOnCreateDispatch = jest.spyOn(resolver, 'notifyCreateDispatch');
+      spyOnJourneyServiceGetRecentJourney = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
@@ -1248,6 +1225,7 @@ describe('MemberResolver', () => {
       spyOnCommunicationResolverGetCommunication.mockReset();
       spyOnCommunicationServiceGet.mockReset();
       spyOnCreateDispatch.mockReset();
+      spyOnJourneyServiceGetRecentJourney.mockReset();
     });
 
     it('should catch notify exception on non existing user', async () => {
@@ -1256,6 +1234,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => undefined);
+      spyOnJourneyServiceGetRecentJourney.mockResolvedValueOnce(mockGenerateOrg());
 
       await expect(resolver.notify(generateNotifyParams())).rejects.toThrow(
         Errors.get(ErrorType.userNotFound),
@@ -1268,6 +1247,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementationOnce(async () => undefined);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnJourneyServiceGetRecentJourney.mockResolvedValueOnce(mockGenerateOrg());
 
       await expect(resolver.notify(generateNotifyParams())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
@@ -1284,6 +1264,7 @@ describe('MemberResolver', () => {
         spyOnServiceGetMember.mockImplementationOnce(async () => member);
         spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
         spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+        spyOnJourneyServiceGetRecentJourney.mockResolvedValueOnce(mockGenerateOrg());
 
         const notifyParams = generateNotifyParams({ type: params });
 
@@ -1304,6 +1285,7 @@ describe('MemberResolver', () => {
         spyOnServiceGetMember.mockImplementationOnce(async () => member);
         spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
         spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+        spyOnJourneyServiceGetRecentJourney.mockResolvedValueOnce(mockGenerateOrg());
 
         const notifyParams = generateNotifyParams({ type: params });
 
@@ -1323,6 +1305,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
       spyOnCreateDispatch.mockImplementationOnce(async () => undefined);
+      spyOnJourneyServiceGetRecentJourney.mockResolvedValueOnce(mockGenerateOrg());
 
       const notifyParams = generateNotifyParams({
         type: NotificationType.textSms,
@@ -1342,6 +1325,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
+      spyOnJourneyServiceGetRecentJourney.mockResolvedValueOnce(mockGenerateOrg());
 
       const notifyParams = generateNotifyParams({
         type: NotificationType.textSms,
@@ -1358,17 +1342,20 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnUserServiceGetUser;
+    let spyOnJourneyServiceGetRecentJourney;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
+      spyOnJourneyServiceGetRecentJourney = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnUserServiceGetUser.mockReset();
+      spyOnJourneyServiceGetRecentJourney.mockReset();
     });
 
     it('should catch notify exception on non existing user', async () => {
@@ -1377,6 +1364,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => undefined);
+      spyOnJourneyServiceGetRecentJourney.mockResolvedValueOnce(mockGenerateOrg());
 
       await expect(
         resolver.notifyContent(generateNotifyContentParams({ memberId: member.id })),
@@ -1389,6 +1377,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementationOnce(async () => undefined);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnJourneyServiceGetRecentJourney.mockResolvedValueOnce(mockGenerateOrg());
 
       await expect(
         resolver.notifyContent(
@@ -1449,6 +1438,7 @@ describe('MemberResolver', () => {
         spyOnServiceGetMember.mockImplementationOnce(async () => member);
         spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
         spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+        spyOnJourneyServiceGetRecentJourney.mockResolvedValueOnce(mockGenerateOrg());
 
         await expect(
           resolver.notifyContent(
@@ -1480,6 +1470,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementationOnce(async () => ({ ...member, users: [user] }));
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnJourneyServiceGetRecentJourney.mockResolvedValueOnce(mockGenerateOrg());
 
       await expect(
         resolver.notifyContent(
@@ -1661,22 +1652,27 @@ describe('MemberResolver', () => {
   describe('handleAlertForQRSubmit', () => {
     let spyOnServiceGetMember: jest.SpyInstance;
     let spyOnUserServiceGetEscalationGroupUsers: jest.SpyInstance;
+    let spyOnJourneyServiceGetRecent: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnUserServiceGetEscalationGroupUsers = jest.spyOn(userService, 'getEscalationGroupUsers');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
     });
 
     afterEach(() => {
       spyOnServiceGetMember.mockReset();
       spyOnUserServiceGetEscalationGroupUsers.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should handle alert for QR submit - escalation not required', async () => {
       const user = mockGenerateUser();
       const member = mockGenerateMember(user);
+      const org = mockGenerateOrg();
 
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnJourneyServiceGetRecent.mockResolvedValueOnce({ id: generateId(), org });
 
       const params: IEventOnAlertForQRSubmit = {
         memberId: member.id,
@@ -1689,7 +1685,7 @@ describe('MemberResolver', () => {
       await resolver.handleAlertForQRSubmit(params);
       expect(spyOnEventEmitter).toHaveBeenCalledWith(GlobalEventType.notifySlack, {
         channel: 'slack.escalation',
-        header: `*High Assessment Score [${member.org.name}]*`,
+        header: `*High Assessment Score [${org.name}]*`,
         icon: ':warning:',
         message:
           `Alerting results on ${params.questionnaireName} for ` +
@@ -1704,9 +1700,11 @@ describe('MemberResolver', () => {
     it('should handle alert for QR submit - escalation required', async () => {
       const user = mockGenerateUser();
       const member = mockGenerateMember(user);
+      const org = mockGenerateOrg();
 
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnUserServiceGetEscalationGroupUsers.mockResolvedValue([user]);
+      spyOnJourneyServiceGetRecent.mockResolvedValueOnce({ id: generateId(), org });
 
       const params: IEventOnAlertForQRSubmit = {
         memberId: member.id,
@@ -1719,7 +1717,7 @@ describe('MemberResolver', () => {
       await resolver.handleAlertForQRSubmit(params);
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, GlobalEventType.notifySlack, {
         channel: 'slack.escalation',
-        header: `*High Assessment Score [${member.org.name}]*`,
+        header: `*High Assessment Score [${org.name}]*`,
         icon: ':warning:',
         message:
           `Alerting results on ${params.questionnaireName} for ` +

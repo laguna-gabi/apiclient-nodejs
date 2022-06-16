@@ -437,7 +437,7 @@ export class JourneyService extends AlertService {
     return { id };
   }
 
-  async getRecentSub(
+  private async getRecentSub(
     memberId: string,
     model: Model<JourneyDocument | ControlJourneyDocument>,
     populate: boolean,

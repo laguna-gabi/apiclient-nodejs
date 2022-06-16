@@ -174,7 +174,8 @@ export class MemberResolver extends MemberBase {
     id?: string,
   ): Promise<Member> {
     const member = await this.memberService.get(id);
-    member.zipCode = member.zipCode || member.org.zipCode;
+    const { org } = await this.journeyService.getRecent(member.id, true);
+    member.zipCode = member.zipCode || org.zipCode;
     member.utcDelta = MemberResolver.getTimezoneDeltaFromZipcode(member.zipCode);
     return member;
   }
@@ -914,10 +915,11 @@ export class MemberResolver extends MemberBase {
     this.logger.info(params, MemberResolver.name, this.handleAlertForQRSubmit.name);
     try {
       const member = await this.memberService.get(params.memberId);
+      const { org } = await this.journeyService.getRecent(params.memberId, true);
       const primaryUser = member.users.find((user) => user.id === member.primaryUserId.toString());
 
       const notificationParams: IEventNotifySlack = {
-        header: `*High Assessment Score [${member.org.name}]*`,
+        header: `*High Assessment Score [${org.name}]*`,
         message:
           `Alerting results on ` +
           `${params.questionnaireName} for ` +
@@ -1075,7 +1077,8 @@ export class MemberResolver extends MemberBase {
     if (!member) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
-    member.zipCode = member.zipCode || member.org.zipCode;
+    const { org } = await this.journeyService.getRecent(memberId, true);
+    member.zipCode = member.zipCode || org.zipCode;
     const memberConfig = await this.memberService.getMemberConfig(memberId);
     const user = await this.userService.get(userId);
     if (!user) {
