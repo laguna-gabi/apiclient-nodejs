@@ -6,6 +6,7 @@ import { Prop, Schema } from '@nestjs/mongoose';
 import { Identifier } from './common';
 import { Types } from 'mongoose';
 import { Notes } from './notes.dto';
+import { DefaultSchemaOptions } from '@argus/pandora';
 
 export enum AppointmentStatus {
   requested = 'requested',
@@ -26,7 +27,7 @@ registerEnumType(AppointmentMethod, { name: 'AppointmentMethod' });
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
 @ObjectType()
-@Schema({ versionKey: false, timestamps: true })
+@Schema(DefaultSchemaOptions)
 export class Appointment extends Identifier {
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)

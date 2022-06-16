@@ -66,38 +66,35 @@ export class AppointmentService extends AlertService {
           status: AppointmentStatus.requested,
         };
 
-    const result = await this.appointmentModel
-      .findOneAndUpdate(
-        filter,
-        {
-          $set: {
-            userId: new Types.ObjectId(params.userId),
-            memberId: new Types.ObjectId(params.memberId),
-            journeyId: new Types.ObjectId(params.journeyId),
-            notBefore: params.notBefore,
-            status: AppointmentStatus.requested,
-            deleted: false,
-          },
+    const result = await this.appointmentModel.findOneAndUpdate(
+      filter,
+      {
+        $set: {
+          userId: new Types.ObjectId(params.userId),
+          memberId: new Types.ObjectId(params.memberId),
+          journeyId: new Types.ObjectId(params.journeyId),
+          notBefore: params.notBefore,
+          status: AppointmentStatus.requested,
+          deleted: false,
         },
-        { upsert: true, new: true, rawResult: true },
-      )
-      .lean();
+      },
+      { upsert: true, new: true, rawResult: true },
+    );
 
     if (result.lastErrorObject.upserted) {
-      const { _id, userId } = result.value;
+      const { id, userId } = result.value;
       return this.postNewAppointmentAction({
         userId: userId.toString(),
         memberId: params.memberId,
-        appointmentId: _id,
+        appointmentId: id,
       });
     }
 
-    return this.replaceId(result.value);
+    return result.value;
   }
 
   async get(id: string): Promise<Appointment> {
-    const result = await this.appointmentModel.findById(new Types.ObjectId(id)).populate('notes');
-    return this.replaceId(result);
+    return this.appointmentModel.findById(new Types.ObjectId(id)).populate('notes');
   }
 
   async getFutureAppointments({
@@ -109,16 +106,13 @@ export class AppointmentService extends AlertService {
     memberId: string;
     journeyId: string;
   }): Promise<Appointment[]> {
-    const result = await this.appointmentModel
-      .find({
-        userId: new Types.ObjectId(userId),
-        memberId: new Types.ObjectId(memberId),
-        journeyId: new Types.ObjectId(journeyId),
-        status: { $ne: AppointmentStatus.done },
-        start: { $gte: new Date() },
-      })
-      .lean();
-    return result.map((appointment) => this.replaceId(appointment));
+    return this.appointmentModel.find({
+      userId: new Types.ObjectId(userId),
+      memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
+      status: { $ne: AppointmentStatus.done },
+      start: { $gte: new Date() },
+    });
   }
 
   async schedule(params: ScheduleAppointmentParams): Promise<Appointment> {
@@ -133,24 +127,22 @@ export class AppointmentService extends AlertService {
 
     await this.validateOverlap(params);
 
-    const object = await this.appointmentModel
-      .findOneAndUpdate(
-        filter,
-        {
-          $set: {
-            userId: new Types.ObjectId(params.userId),
-            memberId: new Types.ObjectId(params.memberId),
-            journeyId: new Types.ObjectId(params.journeyId),
-            method: params.method,
-            start: params.start,
-            end: params.end,
-            status: AppointmentStatus.scheduled,
-            deleted: false,
-          },
+    const object = await this.appointmentModel.findOneAndUpdate(
+      filter,
+      {
+        $set: {
+          userId: new Types.ObjectId(params.userId),
+          memberId: new Types.ObjectId(params.memberId),
+          journeyId: new Types.ObjectId(params.journeyId),
+          method: params.method,
+          start: params.start,
+          end: params.end,
+          status: AppointmentStatus.scheduled,
+          deleted: false,
         },
-        { upsert: params.id === undefined, new: true, rawResult: true },
-      )
-      .lean();
+      },
+      { upsert: params.id === undefined, new: true, rawResult: true },
+    );
 
     if (params.id && object.lastErrorObject.n === 0) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
@@ -160,11 +152,11 @@ export class AppointmentService extends AlertService {
       return this.postNewAppointmentAction({
         userId: object.value.userId.toString(),
         memberId: params.memberId,
-        appointmentId: object.value._id,
+        appointmentId: object.value.id,
       });
     }
 
-    return this.replaceId(object.value);
+    return object.value;
   }
 
   async validateOverlap(params: ScheduleAppointmentParams) {
@@ -310,15 +302,13 @@ export class AppointmentService extends AlertService {
 
     const link = `${hosts.app}/${appointmentId.toString()}`;
 
-    const result = await this.appointmentModel
-      .findOneAndUpdate(
-        { _id: appointmentId },
-        { $set: { link } },
-        { upsert: true, new: true, rawResult: true },
-      )
-      .lean();
+    const result = await this.appointmentModel.findOneAndUpdate(
+      { _id: appointmentId },
+      { $set: { link } },
+      { upsert: true, new: true, rawResult: true },
+    );
 
-    return this.replaceId(result.value);
+    return result.value;
   }
 
   async updateNotes(params: UpdateNotesParams): Promise<Notes | null> {

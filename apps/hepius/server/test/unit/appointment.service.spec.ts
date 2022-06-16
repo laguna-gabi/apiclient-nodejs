@@ -113,7 +113,7 @@ describe('AppointmentService', () => {
 
       expect(result).toEqual(
         expect.objectContaining({
-          _id: generateObjectId(id),
+          id,
           userId: generateObjectId(appointment.userId),
           memberId: generateObjectId(appointment.memberId),
           notBefore: appointment.notBefore,
@@ -156,7 +156,7 @@ describe('AppointmentService', () => {
 
       expect(resultGet).toEqual(
         expect.objectContaining({
-          _id: generateObjectId(result.id),
+          id: result.id,
           userId: generateObjectId(appointmentParams.userId),
           memberId: generateObjectId(appointmentParams.memberId),
           notBefore: appointmentParams.notBefore,
@@ -756,9 +756,9 @@ describe('AppointmentService', () => {
           expect(deletedResult).toEqual([]);
           expect(deletedNotesResult).toEqual([]);
         } else {
-          checkDelete(deletedResult, { _id: id }, params.userId);
+          checkDelete(deletedResult, { id }, params.userId);
           // @ts-ignore
-          checkDelete(deletedNotesResult, { _id: appointment.notes._id }, params.userId);
+          checkDelete(deletedNotesResult, { id: appointment.notes.id }, params.userId);
         }
         /* eslint-enable @typescript-eslint/ban-ts-comment */
       },
@@ -777,13 +777,13 @@ describe('AppointmentService', () => {
 
       /* eslint-disable @typescript-eslint/ban-ts-comment */
       // @ts-ignore
-      const deletedResult = await appointmentModel.findWithDeleted(id);
+      const deletedResult = await appointmentModel.findWithDeleted(new Types.ObjectId(id));
       // @ts-ignore
       const deletedNotesResult = await notesModel.findWithDeleted(appointment.notes._id);
 
-      checkDelete(deletedResult, { _id: id }, params.userId);
+      checkDelete(deletedResult, { id }, params.userId);
       // @ts-ignore
-      checkDelete(deletedNotesResult, { _id: appointment.notes._id }, params.userId);
+      checkDelete(deletedNotesResult, { id: appointment.notes.id }, params.userId);
 
       await service.delete({ id, deletedBy: params.userId, hard: true });
 
@@ -838,10 +838,10 @@ describe('AppointmentService', () => {
           expect(deletedNotesResult).toEqual([]);
         } else {
           expect(deletedResult.length).toEqual(2);
-          checkDelete(deletedResult, { _id: id }, params.userId);
+          checkDelete(deletedResult, { id }, params.userId);
           expect(deletedNotesResult.length).toEqual(1);
           // @ts-ignore
-          checkDelete(deletedNotesResult, { _id: appointment.notes._id }, params.userId);
+          checkDelete(deletedNotesResult, { id: appointment.notes.id }, params.userId);
         }
       },
       /* eslint-enable @typescript-eslint/ban-ts-comment */
