@@ -78,7 +78,7 @@ export class DailyReport {
   @Field(() => String)
   journeyId: Types.ObjectId;
 
-  @Prop()
+  @Prop({ index: true })
   @Field()
   date: string;
 

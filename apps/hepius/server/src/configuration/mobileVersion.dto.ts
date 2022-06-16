@@ -68,13 +68,13 @@ export class CheckMobileVersionResponse {
 
 @Schema({ versionKey: false, timestamps: true })
 export class MobileVersion {
-  @Prop()
+  @Prop({ index: true })
   version: string;
 
-  @Prop({ type: String, enum: Platform })
+  @Prop({ index: true, type: String, enum: Platform })
   platform: Platform;
 
-  @Prop({ type: Boolean, default: false })
+  @Prop({ index: true, type: Boolean, default: false })
   minVersion: boolean;
 
   @Prop({ type: Boolean, default: false })

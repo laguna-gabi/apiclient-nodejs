@@ -63,7 +63,7 @@ export class Org extends Identifier {
   @Field(() => String)
   zipCode: string;
 
-  @Prop({ unique: true })
+  @Prop({ index: true, unique: true })
   @Field(() => String)
   code?: string;
 

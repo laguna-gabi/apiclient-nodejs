@@ -41,7 +41,7 @@ export class Transcript {
   @Prop()
   memberId: string;
 
-  @Prop()
+  @Prop({ index: true })
   transcriptionId: string;
 
   @Prop({ isNan: true })

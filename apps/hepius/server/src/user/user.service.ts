@@ -43,11 +43,11 @@ import { User, UserRole } from '@argus/hepiusClient';
 @Injectable()
 export class UserService extends BaseService {
   constructor(
-    @InjectModel(User.name)
-    private readonly userModel: Model<UserDocument>,
     private eventEmitter: EventEmitter2,
     readonly logger: LoggerService,
     private slotService: SlotService,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
     @InjectModel(UserConfig.name)
     private readonly userConfigModel: Model<UserConfigDocument>,
   ) {

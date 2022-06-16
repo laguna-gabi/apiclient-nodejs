@@ -102,8 +102,12 @@ describe(JourneyService.name, () => {
       const { id: oldOrgId } = await orgService.insert(generateOrgParams());
       const { id: newOrgId } = await orgService.insert(generateOrgParams());
 
-      await service.create({ memberId, orgId: oldOrgId });
-      await service.replaceMemberOrg({ memberId, orgId: newOrgId });
+      const { id: journeyId } = await service.create({ memberId, orgId: oldOrgId });
+      await service.replaceMemberOrg({
+        memberId,
+        journeyId,
+        orgId: newOrgId,
+      });
 
       const { org } = await service.getRecent(memberId, true);
       expect(org.id.toString()).toEqual(newOrgId);

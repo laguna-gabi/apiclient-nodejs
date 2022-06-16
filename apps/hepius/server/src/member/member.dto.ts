@@ -578,7 +578,7 @@ export class Member extends Identifier {
   @IsOptional()
   drgDesc?: string;
 
-  @Prop({ isNaN: true })
+  @Prop({ index: true, isNaN: true })
   @Field({ description: validPhoneExamples, nullable: true })
   @IsPhoneNumber(undefined, {
     message: Errors.get(ErrorType.memberPhone),

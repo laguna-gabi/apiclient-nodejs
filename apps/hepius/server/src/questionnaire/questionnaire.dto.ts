@@ -223,7 +223,7 @@ export class Questionnaire extends Identifier {
   @Field(() => QuestionnaireType)
   type: QuestionnaireType;
 
-  @Prop()
+  @Prop({ index: true })
   @Field(() => Boolean)
   active: boolean;
 
@@ -269,11 +269,11 @@ export class QuestionnaireResponse extends Identifier {
   @Field(() => String)
   questionnaireId: Types.ObjectId;
 
-  @Prop()
+  @Prop({ index: true })
   @Field(() => String)
   memberId: Types.ObjectId;
 
-  @Prop()
+  @Prop({ index: true })
   journeyId: Types.ObjectId;
 
   @Prop()

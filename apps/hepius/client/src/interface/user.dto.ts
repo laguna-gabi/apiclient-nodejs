@@ -50,7 +50,7 @@ export class User extends Identifier {
   @Field(() => String, { nullable: true })
   avatar?: string;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: Appointment.name }] })
+  @Prop({ index: true, type: [{ type: Types.ObjectId, ref: Appointment.name }] })
   @Field(() => [AppointmentData], { nullable: true })
   appointments?: AppointmentData[];
 
@@ -69,7 +69,7 @@ export class User extends Identifier {
   @Field({ nullable: true })
   title?: string;
 
-  @Prop({ default: defaultUserParams.maxMembers })
+  @Prop({ index: true, default: defaultUserParams.maxMembers })
   @Field(() => Number)
   maxMembers?: number;
 
@@ -81,11 +81,11 @@ export class User extends Identifier {
   @Field(() => Date, { nullable: true })
   lastQueryAlert: Date;
 
-  @Prop({ isNaN: true })
+  @Prop({ index: true, isNaN: true })
   @Field(() => Boolean, { nullable: true })
   inEscalationGroup?: boolean;
 
-  @Prop({ type: [{ type: Types.ObjectId }] })
+  @Prop({ index: true, type: [{ type: Types.ObjectId }] })
   @Field(() => [String])
   orgs: string[];
 

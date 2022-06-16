@@ -214,7 +214,7 @@ export class Todo extends Identifier {
   @Field(() => Date, { nullable: true })
   end?: Date;
 
-  @Prop({ type: String, enum: TodoStatus, default: TodoStatus.active })
+  @Prop({ index: true, type: String, enum: TodoStatus, default: TodoStatus.active })
   @Field(() => TodoStatus)
   status: TodoStatus;
 
@@ -249,7 +249,7 @@ export class TodoDone extends Identifier {
   @Field(() => String)
   todoId: Types.ObjectId;
 
-  @Prop({ type: Date })
+  @Prop({ index: true, type: Date })
   @Field(() => Date)
   done: Date;
 }

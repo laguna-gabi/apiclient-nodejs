@@ -137,7 +137,7 @@ export class JourneyService extends AlertService {
     const { memberId, journeyId, orgId } = replaceMemberOrgParams;
 
     const result = await this.journeyModel.findOneAndUpdate(
-      { memberId: new Types.ObjectId(memberId), journeyId: new Types.ObjectId(journeyId) },
+      { _id: new Types.ObjectId(journeyId), memberId: new Types.ObjectId(memberId) },
       { org: new Types.ObjectId(orgId) },
     );
 
