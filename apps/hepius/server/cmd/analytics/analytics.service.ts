@@ -246,6 +246,25 @@ export class AnalyticsService {
       },
       {
         $lookup: {
+          from: 'orgs',
+          localField: 'recentJourney.org',
+          foreignField: '_id',
+          as: 'recentJourney.org',
+        },
+      },
+      {
+        $unwind: {
+          path: '$recentJourney.org',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $set: {
+          'recentJourney.org.id': '$recentJourney.org._id',
+        },
+      },
+      {
+        $lookup: {
           from: 'users',
           localField: 'memberDetails.primaryUserId',
           foreignField: '_id',
@@ -558,10 +577,10 @@ export class AnalyticsService {
       app_last_login:
         member.recentJourney?.lastLoggedInAt &&
         reformatDate(member.recentJourney.lastLoggedInAt.toString(), momentFormats.mysqlDateTime),
-      org_name: member.memberDetails.org?.name,
+      org_name: member.recentJourney?.org?.name,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
-      org_id: member.memberDetails.org?._id.toString(),
+      org_id: member.recentJourney?.org?.id.toString(),
       // eslint-disable-next-line max-len
       coach_name: member.memberDetails.primaryUser
         ? // eslint-disable-next-line max-len
