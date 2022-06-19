@@ -7,6 +7,7 @@ import { Model, Types } from 'mongoose';
 import {
   dbDisconnect,
   defaultModules,
+  generateDateOnly,
   generateNotesParams,
   mockDbBarrier,
   mockDbBarrierType,
@@ -48,7 +49,7 @@ import {
   User,
   mockGenerateCaregiver,
 } from '@argus/hepiusClient';
-import { JourneyModule } from '../../src/journey';
+import { Admission, Journey, JourneyModule } from '../../src/journey';
 
 describe('Commands: AnalyticsService', () => {
   let module: TestingModule;
@@ -71,7 +72,7 @@ describe('Commands: AnalyticsService', () => {
   const mockFellowUser = mockGenerateUser();
   const mockMember = mockGenerateMember();
   const mockMemberConfig = mockGenerateMemberConfig();
-  const mockActiveJourney = mockGenerateJourney({ memberId: mockMember.id });
+  let mockActiveJourney: Journey & { admissions: Partial<Admission>[] };
   mockMember.primaryUserId = new Types.ObjectId(mockPrimaryUser.id);
   mockMember.dateOfBirth = reformatDate(
     sub(now, { years: 40 }).toString(),
@@ -120,6 +121,9 @@ describe('Commands: AnalyticsService', () => {
     await analyticsService.init();
 
     jest.spyOn(analyticsService, 'getDateTime').mockImplementation(() => now.getTime());
+
+    const journey = mockGenerateJourney({ memberId: mockMember.id });
+    mockActiveJourney = { ...journey, admissions: [{ admitDate: generateDateOnly(new Date()) }] };
   });
 
   afterAll(async () => {
@@ -520,11 +524,14 @@ describe('Commands: AnalyticsService', () => {
         city: mockMember.address.city,
         state: mockMember.address.state,
         zip_code: mockMember.zipCode,
-        admit_date: reformatDate(mockMember.admitDate, momentFormats.mysqlDate),
+        admit_date: reformatDate(
+          mockActiveJourney.admissions[0].admitDate,
+          momentFormats.mysqlDate,
+        ),
         discharge_date: reformatDate(mockMember.dischargeDate, momentFormats.mysqlDate),
         los: differenceInDays(
           Date.parse(mockMember.dischargeDate),
-          Date.parse(mockMember.admitDate),
+          Date.parse(mockActiveJourney.admissions[0].admitDate),
         ),
         days_since_discharge: differenceInDays(new Date(), Date.parse(mockMember.dischargeDate)),
         graduated: true,
@@ -620,11 +627,14 @@ describe('Commands: AnalyticsService', () => {
         city: mockMember.address.city,
         state: mockMember.address.state,
         zip_code: mockMember.zipCode,
-        admit_date: reformatDate(mockMember.admitDate, momentFormats.mysqlDate),
+        admit_date: reformatDate(
+          mockActiveJourney.admissions[0].admitDate,
+          momentFormats.mysqlDate,
+        ),
         discharge_date: reformatDate(mockMember.dischargeDate, momentFormats.mysqlDate),
         los: differenceInDays(
           Date.parse(mockMember.dischargeDate),
-          Date.parse(mockMember.admitDate),
+          Date.parse(mockActiveJourney.admissions[0].admitDate),
         ),
         days_since_discharge: differenceInDays(new Date(), Date.parse(mockMember.dischargeDate)),
         graduated: false,

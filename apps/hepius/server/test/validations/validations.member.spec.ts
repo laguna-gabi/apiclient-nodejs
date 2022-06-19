@@ -603,9 +603,6 @@ describe('Validations - member', () => {
       field               | input                                                  | errors
       ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}                          | ${[Errors.get(ErrorType.memberPhone)]}
       ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }}                     | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'admitDate'}      | ${{ admitDate: lorem.word() }}                         | ${[Errors.get(ErrorType.memberAdmitDate)]}
-      ${'admitDate'}      | ${{ admitDate: '2021-13-1' }}                          | ${[Errors.get(ErrorType.memberAdmitDate)]}
-      ${'admitDate'}      | ${{ admitDate: new Date() }}                           | ${[Errors.get(ErrorType.memberAdmitDate)]}
       ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }}                     | ${[Errors.get(ErrorType.memberDischargeDate)]}
       ${'dischargeDate'}  | ${{ dischargeDate: '2021-13-1' }}                      | ${[Errors.get(ErrorType.memberDischargeDate)]}
       ${'dischargeDate'}  | ${{ dischargeDate: new Date() }}                       | ${[Errors.get(ErrorType.memberDischargeDate)]}

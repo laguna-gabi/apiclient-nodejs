@@ -27,7 +27,6 @@ export enum ErrorType {
   memberEmailFormat = 9206,
   memberNotFound = 9210,
   memberPrimaryUserIdNotInUsers = 9211,
-  memberAdmitDate = 9212,
   memberRegisterForNotificationToken = 9213,
   memberRegisterWebPlatform = 9215,
   memberInvalidZipCode = 9216,
@@ -175,6 +174,7 @@ export enum ErrorType {
   admissionDietaryDate = 10615,
   admissionMedicationStartDate = 10616,
   admissionMedicationEndDate = 10617,
+  admissionAdmitDate = 10618,
 
   // Member Insurance
   insuranceStartDate = 10701,
@@ -238,7 +238,6 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberEmailFormat.valueOf(), emailFormat],
   [ErrorType.memberNotFound.valueOf(), `member ${notFoundPrefix}`],
   [ErrorType.memberPrimaryUserIdNotInUsers.valueOf(), 'primaryUserId must exists in usersIds list'],
-  [ErrorType.memberAdmitDate.valueOf(), `admitDate ${dateInstanceFormat}`],
   [ErrorType.memberRegisterWebPlatform.valueOf(), `cant register member with platform web`],
   [ErrorType.memberInvalidZipCode.valueOf(), `invalid ZIP code`],
   [
@@ -480,6 +479,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.admissionDietaryDate.valueOf(), `dietary date ${dateInstanceFormat}`],
   [ErrorType.admissionMedicationStartDate.valueOf(), `medication startDate ${dateInstanceFormat}`],
   [ErrorType.admissionMedicationEndDate.valueOf(), `medication endDate ${dateInstanceFormat}`],
+  [ErrorType.admissionAdmitDate.valueOf(), `admitDate ${dateInstanceFormat}`],
   [ErrorType.insuranceStartDate.valueOf(), `start ${dateTimeInstanceFormat}`],
   [ErrorType.insuranceEndDate.valueOf(), `end ${dateTimeInstanceFormat}`],
   [ErrorType.insuranceEndAfterStart.valueOf(), 'insurance end date must be after start date'],

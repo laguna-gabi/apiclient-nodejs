@@ -547,7 +547,7 @@ export class ChangeMemberDnaParams {
    * Single fields on change admission
    */
   @Field(() => String, { nullable: true })
-  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberAdmitDate) })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.admissionAdmitDate) })
   @IsOptional()
   admitDate?: string;
 
