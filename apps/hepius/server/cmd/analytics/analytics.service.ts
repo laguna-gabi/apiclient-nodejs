@@ -540,13 +540,17 @@ export class AnalyticsService {
       city: member.memberDetails.address?.city,
       state: member.memberDetails.address?.state,
       zip_code: member.memberDetails.zipCode,
-      admit_date: member.memberDetails.admitDate
-        ? reformatDate(member.memberDetails.admitDate, momentFormats.mysqlDate)
-        : undefined,
+      admit_date:
+        member.recentJourney?.admissions && member.recentJourney?.admissions[0]?.admitDate
+          ? reformatDate(member.recentJourney.admissions[0].admitDate, momentFormats.mysqlDate)
+          : undefined,
       discharge_date: member.memberDetails.dischargeDate
         ? reformatDate(member.memberDetails.dischargeDate, momentFormats.mysqlDate)
         : undefined,
-      los: this.calculateLos(member.memberDetails.admitDate, member.memberDetails.dischargeDate),
+      los: this.calculateLos(
+        member.recentJourney?.admissions && member.recentJourney?.admissions[0]?.admitDate,
+        member.memberDetails.dischargeDate,
+      ),
       days_since_discharge: member.memberDetails.dischargeDate
         ? differenceInDays(new Date(), Date.parse(member.memberDetails.dischargeDate))
         : undefined,

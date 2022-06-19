@@ -25,8 +25,6 @@ export * as m20220313123619 from './20220313123619-create-red-flag-type';
 export * as m20220324120022 from './20220324120022-updateTodoLabels';
 export * as m20220328135141 from './20220328135141-update-who5-questionnaire-text';
 export * as m20220411124750 from './20220411124750-rename-maxCustomers-to-maxMembers';
-export * as m20220411171322 from './20220411171322-replace-datetime-to-only-date';
-export * as m20220413113830 from './20220413113830-update-date-format';
 export * as m20220414144809 from './20220414144809-set-isGraduated';
 export * as m20220418094757 from './20220418094757-moveIsGraduatedToMember';
 export * as m20220502090824 from './20220502090824-create-journeys';
@@ -63,3 +61,4 @@ export * as m20220609150136 from './20220609150136-appointment-append-journeyId'
 export * as m20220613111045 from './20220613111045-move-nurseNotes-from-journey-to-admission';
 export * as m20220609135141 from './20220609135141-move-org-from-member-to-journey';
 export * as m20220616122934 from './20220616122934-remove-admissions-from-journey-collection';
+export * as m20220616135238 from './20220616135238-move-admitDate-from-member-to-1st-admission';

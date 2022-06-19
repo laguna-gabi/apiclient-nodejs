@@ -335,17 +335,6 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsOptional()
   address?: Address;
 
-  /**
-   * will be @deprecated soon
-   * use admission.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Field(() => String, { nullable: true, deprecationReason })
-  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberAdmitDate) })
-  @IsOptional()
-  admitDate?: string;
-
   @Field(() => String, { nullable: true })
   @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberDateOfBirth) })
   @IsOptional()
@@ -603,10 +592,6 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => Address, { nullable: true })
   address?: Address;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  admitDate?: string;
 
   @Prop({ type: String, enum: Honorific, default: defaultMemberParams.honorific })
   @Field(() => Honorific)

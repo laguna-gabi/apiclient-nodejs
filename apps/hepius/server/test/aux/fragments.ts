@@ -73,7 +73,6 @@ export const FRAGMENT_MEMBER = gql`
     drgDesc
     phoneSecondary
     phoneSecondaryType
-    admitDate
     createdAt
     honorific
     healthPersona

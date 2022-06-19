@@ -205,7 +205,6 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     phone: generatePhone(),
     phoneType: 'mobile',
     deviceId: datatype.uuid(),
-    admitDate: generateDateOnly(admitDate),
     dischargeDate: generateDateOnly(dischargeDate),
     firstName,
     lastName,
@@ -310,7 +309,6 @@ export const generateUpdateMemberParams = ({
   drgDesc = name.firstName(),
   drg = datatype.number({ min: 1, max: 1000 }).toString(),
   phoneSecondary = generatePhone(),
-  admitDate = generateDateOnly(fakerDate.soon(1)),
   dateOfBirth = generateDateOnly(fakerDate.past()),
   address = {
     street: fakerAddress.streetName(),
@@ -339,7 +337,6 @@ export const generateUpdateMemberParams = ({
     drgDesc,
     drg,
     phoneSecondary,
-    admitDate,
     dateOfBirth,
     address,
     honorific,

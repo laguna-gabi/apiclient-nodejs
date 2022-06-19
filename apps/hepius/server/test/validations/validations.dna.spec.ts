@@ -133,9 +133,9 @@ describe('Validations - DNA', () => {
   /* eslint-disable max-len */
   test.each`
     input                               | errors
-    ${{ admitDate: lorem.word() }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
-    ${{ admitDate: '2021-13-1' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
-    ${{ admitDate: new Date() }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
+    ${{ admitDate: lorem.word() }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionAdmitDate)] }}
+    ${{ admitDate: '2021-13-1' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionAdmitDate)] }}
+    ${{ admitDate: new Date() }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionAdmitDate)] }}
     ${{ admitType: lorem.word() }}      | ${{ missingFieldError: 'does not exist in "AdmitType" enum' }}
     ${{ admitSource: lorem.word() }}    | ${{ missingFieldError: 'does not exist in "AdmitSource" enum' }}
     ${{ dischargeDate: lorem.word() }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
