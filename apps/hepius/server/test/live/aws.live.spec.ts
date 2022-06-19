@@ -281,7 +281,7 @@ describe('live: aws', () => {
 
       const memberId = generateId();
       const storageType = StorageType.general;
-      const files = [lorem.word(), lorem.word(), lorem.word()];
+      const files = [`${generateId()}`, `${generateId()}`, `${generateId()}`];
 
       // simulate `handleNewMember` create member folder object
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
