@@ -26,6 +26,7 @@ export class ByMemberStrategy implements IStrategy {
       // #3: if client is a user we allow/deny access based on org provisioning
       if (Types.ObjectId.isValid(memberId)) {
         const member = await this.aceGuard.entityResolver.getEntityById(Member.name, memberId);
+        if (!member) return false;
         const journeys = await this.aceGuard.entityResolver.getEntities<Journey>(Journey.name, {
           filter: { memberId: new Types.ObjectId(member._id) },
           sort: { _id: -1 },

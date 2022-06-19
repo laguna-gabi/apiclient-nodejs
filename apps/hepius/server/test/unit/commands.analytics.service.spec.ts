@@ -68,7 +68,6 @@ describe('Commands: AnalyticsService', () => {
 
   // Mock actors
   const mockPrimaryUser = mockGenerateUser();
-  const mockOrg = mockGenerateOrg();
   const mockFellowUser = mockGenerateUser();
   const mockMember = mockGenerateMember();
   const mockMemberConfig = mockGenerateMemberConfig();
@@ -122,8 +121,11 @@ describe('Commands: AnalyticsService', () => {
 
     jest.spyOn(analyticsService, 'getDateTime').mockImplementation(() => now.getTime());
 
-    const journey = mockGenerateJourney({ memberId: mockMember.id });
-    mockActiveJourney = { ...journey, admissions: [{ admitDate: generateDateOnly(new Date()) }] };
+    mockActiveJourney = {
+      ...mockGenerateJourney({ memberId: mockMember.id }),
+      org: mockGenerateOrg(),
+      admissions: [{ admitDate: generateDateOnly(new Date()) }],
+    };
   });
 
   afterAll(async () => {
@@ -489,7 +491,6 @@ describe('Commands: AnalyticsService', () => {
           ...mockMember,
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
-          org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
         appointments: [
           {
@@ -562,8 +563,8 @@ describe('Commands: AnalyticsService', () => {
           momentFormats.mysqlDateTime,
         ),
         coach_id: mockPrimaryUser.id,
-        org_id: mockOrg.id,
-        org_name: mockOrg.name,
+        org_id: mockActiveJourney.org.id,
+        org_name: mockActiveJourney.org.name,
         general_notes: mockActiveJourney.generalNotes,
         marital_status: mockMember.maritalStatus,
         height: mockMember.height,
@@ -597,7 +598,6 @@ describe('Commands: AnalyticsService', () => {
           ...mockMember,
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
-          org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
         appointments: [
           {
@@ -656,8 +656,8 @@ describe('Commands: AnalyticsService', () => {
         platform: mockMemberConfig.platform,
         updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.mysqlDateTime),
         coach_id: mockPrimaryUser.id,
-        org_id: mockOrg.id,
-        org_name: mockOrg.name,
+        org_id: mockActiveJourney.org.id,
+        org_name: mockActiveJourney.org.name,
         general_notes: mockActiveJourney.generalNotes,
         marital_status: mockMember.maritalStatus,
         height: mockMember.height,
@@ -688,9 +688,9 @@ describe('Commands: AnalyticsService', () => {
           ...mockMember,
           deceased: null,
           primaryUserId: undefined,
-          org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
         isControlMember: true,
+        recentJourney: mockActiveJourney,
       } as MemberDataAggregate);
 
       expect(data).toMatchObject({
@@ -714,8 +714,8 @@ describe('Commands: AnalyticsService', () => {
         updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.mysqlDateTime),
         dc_instructions_received: false,
         dc_summary_received: false,
-        org_id: mockOrg.id,
-        org_name: mockOrg.name,
+        org_id: mockActiveJourney.org.id,
+        org_name: mockActiveJourney.org.name,
         marital_status: mockMember.maritalStatus,
         height: mockMember.height,
         weight: mockMember.weight,
