@@ -370,7 +370,7 @@ export class BaseCareData {
   created: string;
   @Column('datetime')
   updated: string;
-  @Column('varchar', { length: 300, nullable: true })
+  @Column('blob', { nullable: true })
   notes: string;
   @Column('datetime', { nullable: true })
   completed: string;
@@ -416,7 +416,7 @@ export class RedFlagData {
   updated: string;
   @Column('varchar')
   type: string;
-  @Column('varchar', { length: 300, nullable: true })
+  @Column('blob', { nullable: true })
   notes?: string;
 }
 
