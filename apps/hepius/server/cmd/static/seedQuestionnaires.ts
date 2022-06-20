@@ -176,6 +176,13 @@ export const buildWHO5Questionnaire = (): CreateQuestionnaireParams => {
       },
     ],
     isAssignableToMember: true,
+    severityLevels: [
+      { min: 0, max: 49, label: 'poor well-being' },
+      { min: 50, max: 100, label: 'good well-being' },
+    ],
+    notificationScoreThreshold: 50,
+    notificationScoreThresholdReverse: true,
+    scoreFactor: 4,
   };
 };
 

@@ -128,6 +128,15 @@ export class CreateQuestionnaireParams {
 
   @Field(() => Number, { nullable: true })
   notificationScoreThreshold?: number;
+
+  @Field(() => Boolean, { nullable: true })
+  notificationScoreThresholdReverse?: boolean;
+
+  @Field(() => Number, {
+    nullable: true,
+    description: 'total score is multiplied by this factor for display',
+  })
+  scoreFactor?: number;
 }
 
 @InputType()
@@ -242,6 +251,14 @@ export class Questionnaire extends Identifier {
   @Prop(() => Number)
   @Field(() => Number, { nullable: true })
   notificationScoreThreshold?: number;
+
+  @Prop(() => Boolean)
+  @Field(() => Boolean, { nullable: true })
+  notificationScoreThresholdReverse?: boolean;
+
+  @Prop(() => Number)
+  @Field(() => Number, { nullable: true })
+  scoreFactor?: number;
 
   @Field(() => String, { nullable: true })
   createdBy?: Types.ObjectId;

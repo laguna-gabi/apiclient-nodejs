@@ -1512,7 +1512,8 @@ describe('Integration tests: all', () => {
       );
     });
 
-    it('should get alert questionnaire: score over threshold assessment alerts', async () => {
+    // eslint-disable-next-line max-len
+    it('should get alert questionnaire (PHQ9): score over threshold assessment alerts', async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
         createQuestionnaireParams: buildPHQ9Questionnaire(),
@@ -1546,7 +1547,7 @@ describe('Integration tests: all', () => {
       });
     });
 
-    it('should not get alert questionnaire: score is not over threshold', async () => {
+    it('should not get alert questionnaire (PHQ9): score is not over threshold', async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
         createQuestionnaireParams: buildPHQ9Questionnaire(),

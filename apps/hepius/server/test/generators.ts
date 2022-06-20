@@ -1279,6 +1279,7 @@ export const generateCreateQuestionnaireParams = ({
     { min: 5, max: 6, label: 'severity 2' },
   ],
   notificationScoreThreshold,
+  scoreFactor,
 }: Partial<CreateQuestionnaireParams> = {}): CreateQuestionnaireParams => {
   const isAssignableToMember = getIsAssignableToMember(type);
   return {
@@ -1289,6 +1290,7 @@ export const generateCreateQuestionnaireParams = ({
     isAssignableToMember,
     severityLevels,
     notificationScoreThreshold,
+    scoreFactor,
   };
 };
 

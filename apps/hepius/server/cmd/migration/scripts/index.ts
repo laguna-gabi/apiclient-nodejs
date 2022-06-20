@@ -59,6 +59,7 @@ export * as m20220608084032 from './20220608084032-care-providers-module-append-
 export * as m20220608182454 from './20220608182454-create-control-journey';
 export * as m20220609150136 from './20220609150136-appointment-append-journeyId';
 export * as m20220613111045 from './20220613111045-move-nurseNotes-from-journey-to-admission';
+export * as m20220614152143 from './20220614152143-add-who5-score-and-alerting';
 export * as m20220609135141 from './20220609135141-move-org-from-member-to-journey';
 export * as m20220616122934 from './20220616122934-remove-admissions-from-journey-collection';
 export * as m20220616135238 from './20220616135238-move-admitDate-from-member-to-1st-admission';

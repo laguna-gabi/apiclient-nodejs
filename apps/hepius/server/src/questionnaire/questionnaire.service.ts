@@ -116,11 +116,7 @@ export class QuestionnaireService extends AlertService {
     };
 
     // 4. notify #escalation-support (if needed)
-    if (
-      out.result.alert ||
-      (questionnaire.notificationScoreThreshold &&
-        out.result.score >= questionnaire.notificationScoreThreshold)
-    ) {
+    if (out.result.alert || this.isOverThreshold(questionnaire, out.result.score)) {
       const params: IEventOnAlertForQRSubmit = {
         memberId: submitQuestionnaireResponseParams.memberId,
         score:
@@ -308,14 +304,15 @@ export class QuestionnaireService extends AlertService {
     if (
       questionnaire.type === QuestionnaireType.gad7 ||
       questionnaire.type === QuestionnaireType.phq9 ||
-      questionnaire.type === QuestionnaireType.nps
+      questionnaire.type === QuestionnaireType.nps ||
+      questionnaire.type === QuestionnaireType.who5
     ) {
       score = answers.length
         ? answers
             .map((answer) => parseInt(answer.value))
             .reduce((valueA, valueB) => {
               return valueA + valueB;
-            })
+            }) * (questionnaire.scoreFactor || 1)
         : 0;
 
       severity = questionnaire?.severityLevels.find(
@@ -417,5 +414,20 @@ export class QuestionnaireService extends AlertService {
     return [...this.personasOptions.get()].find(
       ([key, value]) => key && value.q1.includes(skills) && value.q2.includes(motivation),
     )?.[0];
+  }
+
+  // Description: return true if score crosses a threshold
+  // Note: if we have a `reverse` flag set to true we want to check if score is
+  // lower than threshold
+  private isOverThreshold(questionnaire: Questionnaire, score: number): boolean {
+    if (questionnaire.notificationScoreThreshold) {
+      if (questionnaire.notificationScoreThresholdReverse) {
+        return score < questionnaire.notificationScoreThreshold;
+      } else {
+        return score >= questionnaire.notificationScoreThreshold;
+      }
+    }
+
+    return false;
   }
 }

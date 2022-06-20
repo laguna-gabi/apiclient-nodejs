@@ -3,7 +3,11 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { lorem } from 'faker';
 import { Model, Types, model } from 'mongoose';
-import { buildGAD7Questionnaire, buildLHPQuestionnaire } from '../../cmd/static';
+import {
+  buildGAD7Questionnaire,
+  buildLHPQuestionnaire,
+  buildWHO5Questionnaire,
+} from '../../cmd/static';
 import { ErrorType, Errors, EventType, ItemType, LoggerService } from '../../src/common';
 import {
   AlertConditionType,
@@ -137,6 +141,7 @@ describe('QuestionnaireService', () => {
             ],
           },
         ],
+        scoreFactor: 2,
         notificationScoreThreshold: 4,
       }),
     );
@@ -454,7 +459,7 @@ describe('QuestionnaireService', () => {
             { code: 'q1', value: '2' },
             { code: 'q2', value: '1' },
           ],
-          result: { alert: false, score: undefined, severity: undefined },
+          result: { alert: false, score: 6, severity: 'severity 2' },
         },
         {
           id: id3,
@@ -513,7 +518,7 @@ describe('QuestionnaireService', () => {
             { code: 'q1', value: '2' },
             { code: 'q2', value: '1' },
           ],
-          result: { alert: false, score: undefined, severity: undefined },
+          result: { alert: false, score: 6, severity: 'severity 2' },
         },
       ]);
     });
@@ -910,5 +915,40 @@ describe('QuestionnaireService', () => {
         expect(result).toEqual(healthPersona);
       },
     );
+  });
+
+  describe(QuestionnaireType.who5, () => {
+    let who5: Questionnaire;
+    beforeAll(async () => {
+      who5 = await service.createQuestionnaire(buildWHO5Questionnaire());
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      result                                                      | answers                                                                                                                                         | alert
+      ${{ score: 92, severity: 'good well-being', alert: false }} | ${[{ code: 'q1', value: '5' }, { code: 'q2', value: '4' }, { code: 'q3', value: '5' }, { code: 'q4', value: '4' }, { code: 'q5', value: '5' }]} | ${false}
+      ${{ score: 48, severity: 'poor well-being', alert: false }} | ${[{ code: 'q1', value: '2' }, { code: 'q2', value: '3' }, { code: 'q3', value: '2' }, { code: 'q4', value: '3' }, { code: 'q5', value: '2' }]} | ${true}
+    `('should calculate result to be $result', async (params) => {
+      const submitResponse = {
+        questionnaireId: who5.id.toString(),
+        memberId: generateId(),
+        journeyId: generateId(),
+        answers: params.answers,
+      };
+
+      const qr = await service.submitQuestionnaireResponse(submitResponse);
+      expect(qr.result).toEqual(params.result);
+
+      if (params.alert) {
+        expect(spyOnEventEmitter).toHaveBeenLastCalledWith(EventType.onAlertForQRSubmit, {
+          memberId: submitResponse.memberId,
+          questionnaireName: who5.shortName,
+          questionnaireResponseId: qr.id.toString(),
+          questionnaireType: QuestionnaireType.who5,
+          score: params.result.score.toString(),
+        });
+      }
+    });
+    /* eslint-enable max-len */
   });
 });
