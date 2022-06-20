@@ -196,6 +196,22 @@ export class MemberService extends AlertService {
           as: 'org',
         },
       },
+      {
+        $lookup: {
+          from: 'admissions',
+          localField: 'recentJourney._id',
+          foreignField: 'journeyId',
+          as: 'recentJourney.admissions',
+        },
+      },
+      {
+        $addFields: {
+          latestAdmission: {
+            $last: '$recentJourney.admissions',
+          },
+        },
+      },
+      { $unset: 'recentJourney.admissions' },
       { $unwind: { path: '$org' } },
       { $set: { 'org.id': '$org._id' } },
       { $unset: 'org._id' },
@@ -210,7 +226,7 @@ export class MemberService extends AlertService {
           name: { $concat: ['$firstName', ' ', '$lastName'] },
           phone: '$phone',
           phoneType: '$phoneType',
-          dischargeDate: { $ifNull: ['$dischargeDate', undefined] },
+          dischargeDate: { $ifNull: ['$latestAdmission.dischargeDate', undefined] },
           adherence: { $ifNull: ['$recentJourney.scores.adherence', 0] },
           wellbeing: { $ifNull: ['$recentJourney.scores.wellbeing', 0] },
           createdAt: '$createdAt',

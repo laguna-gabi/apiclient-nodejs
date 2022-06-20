@@ -105,7 +105,6 @@ export class Creators {
     expect(member.sex).toEqual(defaultMemberParams.sex);
     expect(member.email).toBeNull();
     expect(member.zipCode).toEqual(memberParams.zipCode);
-    expect(member.dischargeDate).toBeNull();
     expect(member.maritalStatus).toEqual(memberParams.maritalStatus);
     expect(new Date(member.createdAt)).toEqual(expect.any(Date));
     expect(member.height).toEqual(memberParams.height);

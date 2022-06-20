@@ -175,18 +175,6 @@ export class ExtraMemberParams {
   @IsOptional()
   zipCode?: string;
 
-  /**
-   * will be @deprecated soon
-   * use admission.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Field(() => String, { nullable: true, deprecationReason })
-  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberDischargeDate) })
-  @IsString() /* for rest api */
-  @IsOptional()
-  dischargeDate?: string;
-
   @Field(() => Honorific, { nullable: true })
   @IsEnum(Honorific) /* for rest api */
   @IsOptional()
@@ -553,10 +541,6 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   zipCode?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  dischargeDate?: string;
 
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })

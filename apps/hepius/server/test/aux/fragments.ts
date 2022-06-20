@@ -65,7 +65,6 @@ export const FRAGMENT_MEMBER = gql`
     email
     zipCode
     utcDelta
-    dischargeDate
     drg
     authId
     healthPlan

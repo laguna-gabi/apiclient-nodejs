@@ -23,7 +23,6 @@ export enum ErrorType {
   memberPhoneAlreadyExists = 9202,
   memberPhone = 9203,
   memberDateOfBirth = 9204,
-  memberDischargeDate = 9205,
   memberEmailFormat = 9206,
   memberNotFound = 9210,
   memberPrimaryUserIdNotInUsers = 9211,
@@ -175,6 +174,7 @@ export enum ErrorType {
   admissionMedicationStartDate = 10616,
   admissionMedicationEndDate = 10617,
   admissionAdmitDate = 10618,
+  admissionDischargeDate = 10619,
 
   // Member Insurance
   insuranceStartDate = 10701,
@@ -234,7 +234,6 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberPhoneAlreadyExists.valueOf(), 'An error has occurred'],
   [ErrorType.memberPhone.valueOf(), phoneFormat],
   [ErrorType.memberDateOfBirth.valueOf(), `dateOfBirth ${dateInstanceFormat}`],
-  [ErrorType.memberDischargeDate.valueOf(), `dischargeDate ${dateInstanceFormat}`],
   [ErrorType.memberEmailFormat.valueOf(), emailFormat],
   [ErrorType.memberNotFound.valueOf(), `member ${notFoundPrefix}`],
   [ErrorType.memberPrimaryUserIdNotInUsers.valueOf(), 'primaryUserId must exists in usersIds list'],
@@ -480,6 +479,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.admissionMedicationStartDate.valueOf(), `medication startDate ${dateInstanceFormat}`],
   [ErrorType.admissionMedicationEndDate.valueOf(), `medication endDate ${dateInstanceFormat}`],
   [ErrorType.admissionAdmitDate.valueOf(), `admitDate ${dateInstanceFormat}`],
+  [ErrorType.admissionDischargeDate.valueOf(), `dischargeDate ${dateInstanceFormat}`],
   [ErrorType.insuranceStartDate.valueOf(), `start ${dateTimeInstanceFormat}`],
   [ErrorType.insuranceEndDate.valueOf(), `end ${dateTimeInstanceFormat}`],
   [ErrorType.insuranceEndAfterStart.valueOf(), 'insurance end date must be after start date'],

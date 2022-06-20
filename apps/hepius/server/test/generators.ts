@@ -196,7 +196,6 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
   const lastName = name.lastName();
   const user = primaryUser || mockGenerateUser();
   const admitDate = subDays(new Date(), 7);
-  const dischargeDate = addDays(admitDate, 2);
   const deceasedDate = addDays(admitDate, 3);
   return {
     id: generateId(),
@@ -205,7 +204,6 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     phone: generatePhone(),
     phoneType: 'mobile',
     deviceId: datatype.uuid(),
-    dischargeDate: generateDateOnly(dischargeDate),
     firstName,
     lastName,
     dateOfBirth: generateDateOnly(fakerDate.past()),
@@ -238,7 +236,6 @@ export const generateCreateMemberParams = ({
   email,
   language,
   zipCode = generateZipCode(),
-  dischargeDate,
   honorific = defaultMemberParams.honorific,
   userId,
   maritalStatus = MaritalStatus.single,
@@ -256,7 +253,6 @@ export const generateCreateMemberParams = ({
     email,
     language,
     zipCode,
-    dischargeDate,
     honorific,
     userId,
     maritalStatus,
@@ -276,7 +272,6 @@ export const generateInternalCreateMemberParams = ({
   email,
   language,
   zipCode = generateZipCode(),
-  dischargeDate,
   honorific = defaultMemberParams.honorific,
   userId,
 }: Partial<InternalCreateMemberParams> = {}): Omit<InternalCreateMemberParams, 'orgId'> => {
@@ -291,7 +286,6 @@ export const generateInternalCreateMemberParams = ({
     email,
     language,
     zipCode,
-    dischargeDate,
     honorific,
     userId,
   };
@@ -305,7 +299,6 @@ export const generateUpdateMemberParams = ({
   sex = Sex.female,
   email = generateEmail(),
   zipCode = generateZipCode(),
-  dischargeDate = generateDateOnly(fakerDate.soon(10)),
   drgDesc = name.firstName(),
   drg = datatype.number({ min: 1, max: 1000 }).toString(),
   phoneSecondary = generatePhone(),
@@ -333,7 +326,6 @@ export const generateUpdateMemberParams = ({
     sex,
     email,
     zipCode,
-    dischargeDate,
     drgDesc,
     drg,
     phoneSecondary,

@@ -31,7 +31,10 @@ import { QuestionnaireResponseDocument } from '../questionnaire';
 import { RecordingDocument } from '../recording';
 import { TodoDocument, TodoDoneDocument } from '../todo';
 
-export function reformatDate(date: string, stringFormat: string): string {
+export function reformatDate(date: string, stringFormat: string): string | undefined {
+  if (!date) {
+    return undefined;
+  }
   const dateObject = Date.parse(date);
 
   if (dateObject) {

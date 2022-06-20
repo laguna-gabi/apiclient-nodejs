@@ -462,6 +462,7 @@ export type MemberDataAggregate = BaseMember & {
 };
 export type BaseMember = Member & {
   _id: Types.ObjectId;
+  recentJourney?: Journey & { admissions: Admission[] };
 };
 export type CoachDataAggregate = {
   _id: Types.ObjectId;

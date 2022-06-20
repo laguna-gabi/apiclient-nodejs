@@ -460,6 +460,24 @@ export class AnalyticsService {
         },
       },
       {
+        $lookup: {
+          from: 'journeys',
+          localField: 'members._id',
+          foreignField: 'memberId',
+          as: 'journeysRes',
+        },
+      },
+      { $addFields: { 'members.recentJourney': { $last: '$journeysRes' } } },
+      { $unset: 'journeysRes' },
+      {
+        $lookup: {
+          from: 'admissions',
+          localField: 'members.recentJourney._id',
+          foreignField: 'journeyId',
+          as: 'members.recentJourney.admissions',
+        },
+      },
+      {
         // group by id again and re-construct appointments per member
         $group: {
           _id: '$_id',
@@ -502,7 +520,11 @@ export class AnalyticsService {
       SummaryFileSuffix,
     );
 
-    const daysSinceDischarge = this.calculateDaysSinceDischarge(member.memberDetails.dischargeDate);
+    const admitDate =
+      member.recentJourney?.admissions && member.recentJourney?.admissions[0]?.admitDate;
+    const dischargeDate =
+      member.recentJourney?.admissions && member.recentJourney?.admissions[0]?.dischargeDate;
+    const daysSinceDischarge = this.calculateDaysSinceDischarge(dischargeDate);
 
     const { firstActivationScore, lastActivationScore, firstWellbeingScore, lastWellbeingScore } =
       this.getActivationAndWellbeingStats(member.appointments);
@@ -540,19 +562,11 @@ export class AnalyticsService {
       city: member.memberDetails.address?.city,
       state: member.memberDetails.address?.state,
       zip_code: member.memberDetails.zipCode,
-      admit_date:
-        member.recentJourney?.admissions && member.recentJourney?.admissions[0]?.admitDate
-          ? reformatDate(member.recentJourney.admissions[0].admitDate, momentFormats.mysqlDate)
-          : undefined,
-      discharge_date: member.memberDetails.dischargeDate
-        ? reformatDate(member.memberDetails.dischargeDate, momentFormats.mysqlDate)
-        : undefined,
-      los: this.calculateLos(
-        member.recentJourney?.admissions && member.recentJourney?.admissions[0]?.admitDate,
-        member.memberDetails.dischargeDate,
-      ),
-      days_since_discharge: member.memberDetails.dischargeDate
-        ? differenceInDays(new Date(), Date.parse(member.memberDetails.dischargeDate))
+      admit_date: admitDate ? reformatDate(admitDate, momentFormats.mysqlDate) : undefined,
+      discharge_date: reformatDate(dischargeDate, momentFormats.mysqlDate),
+      los: this.calculateLos(admitDate, dischargeDate),
+      days_since_discharge: dischargeDate
+        ? differenceInDays(new Date(), Date.parse(dischargeDate))
         : undefined,
       active: daysSinceDischarge < GraduationPeriod,
       graduated: !!member.recentJourney?.isGraduated,
@@ -600,11 +614,8 @@ export class AnalyticsService {
         ? reformatDate(deceased.date.toString(), momentFormats.mysqlDateTime)
         : undefined,
       deceased_days_from_dc:
-        deceased && member.memberDetails?.dischargeDate
-          ? differenceInDays(
-              Date.parse(deceased.date),
-              Date.parse(member.memberDetails.dischargeDate),
-            )
+        deceased && dischargeDate
+          ? differenceInDays(Date.parse(deceased.date), Date.parse(dischargeDate))
           : undefined,
       deceased_flag: !!deceased,
     };
@@ -630,9 +641,14 @@ export class AnalyticsService {
   }
 
   getNonGraduatedMembers(members: BaseMember[]): string[] {
-    // TODO: filter out graduated members
     return members
-      .filter((member) => !this.isGraduated(member.dischargeDate))
+      .filter((member) => {
+        const dischargeDate =
+          member.recentJourney?.admissions && member.recentJourney?.admissions[0]?.dischargeDate;
+        return dischargeDate
+          ? !this.isGraduated(member.recentJourney.admissions[0].dischargeDate)
+          : false;
+      })
       .map((member) => member._id.toString());
   }
 
@@ -648,7 +664,9 @@ export class AnalyticsService {
       firstName: member.memberDetails.firstName,
       lastName: member.memberDetails.lastName,
     } as Member);
-    const daysSinceDischarge = this.calculateDaysSinceDischarge(member.memberDetails.dischargeDate);
+    const daysSinceDischarge = this.calculateDaysSinceDischarge(
+      member.recentJourney?.admissions && member.recentJourney?.admissions[0]?.dischargeDate,
+    );
     const harmony_link = !member.isControlMember
       ? `${HarmonyLink}/details/${member._id.toString()}`
       : undefined;

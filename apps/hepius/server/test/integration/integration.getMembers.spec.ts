@@ -1,7 +1,7 @@
 import { User } from '@argus/hepiusClient';
 import { Platform } from '@argus/pandora';
-import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '..';
-import { RegisterForNotificationParams } from '../../src/common';
+import { BEFORE_ALL_TIMEOUT, generateChangeMemberDnaParams, generateRequestHeaders } from '..';
+import { ChangeType, RegisterForNotificationParams } from '../../src/common';
 import { Member, MemberConfig, MemberSummary } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 
@@ -47,7 +47,6 @@ describe('Integration tests : getMembers', () => {
           name: `${member.firstName} ${member.lastName}`,
           phone: member.phone,
           phoneType: member.phoneType,
-          dischargeDate: member.dischargeDate,
           adherence: 0,
           wellbeing: 0,
           createdAt: member.createdAt,
@@ -104,7 +103,6 @@ describe('Integration tests : getMembers', () => {
         name: `${memberResult.firstName} ${memberResult.lastName}`,
         phone: memberResult.phone,
         phoneType: member.phoneType,
-        dischargeDate: memberResult.dischargeDate,
         createdAt: memberResult.createdAt,
         actionItemsCount: 2,
         primaryUser: expect.objectContaining({
@@ -153,6 +151,26 @@ describe('Integration tests : getMembers', () => {
         graduationDate: journey.graduationDate,
         adherence: journey.scores.adherence,
         wellbeing: journey.scores.wellbeing,
+      }),
+    );
+  });
+
+  it('should display recent journey results with admissions data', async () => {
+    const { member, org } = await creators.createMemberUserAndOptionalOrg();
+    const changeMemberDnaParams = generateChangeMemberDnaParams({
+      changeType: ChangeType.create,
+      memberId: member.id,
+    });
+    delete changeMemberDnaParams.admitSource;
+    await handler.mutations.changeMemberDna({ changeMemberDnaParams });
+
+    const membersResult = await handler.queries.getMembers({ orgIds: [org.id] });
+
+    expect(membersResult.members.length).toEqual(1);
+    expect(membersResult.members[0]).toEqual(
+      expect.objectContaining({
+        id: member.id,
+        dischargeDate: changeMemberDnaParams.dischargeDate,
       }),
     );
   });

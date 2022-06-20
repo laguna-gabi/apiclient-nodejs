@@ -1,5 +1,5 @@
 import { generateZipCode } from '@argus/pandora';
-import { date, internet, lorem } from 'faker';
+import { internet, lorem } from 'faker';
 import { sign } from 'jsonwebtoken';
 import { model } from 'mongoose';
 import {
@@ -21,20 +21,20 @@ import {
   RedFlagTypeDocument,
   RedFlagTypeDto,
 } from '../src/care';
-import { delay } from '../src/common';
+import { ChangeType, delay } from '../src/common';
 import { UpdateJournalTextParams } from '../src/journey';
 import { UserService } from '../src/user';
 import {
   dbConnect,
   dbDisconnect,
   generateAvailabilityInput,
+  generateChangeMemberDnaParams,
   generateCreateBarrierParamsWizard,
   generateCreateCarePlanParamsWizard,
   generateCreateMemberParams,
   generateCreateOrSetActionItemParams,
   generateCreateRedFlagParamsWizard,
   generateCreateUserParams,
-  generateDateOnly,
   generateNotesParams,
   generateOrgParams,
   generateRequestAppointmentParams,
@@ -99,7 +99,6 @@ export async function seed() {
     orgId: org.id,
     email: internet.email(),
     zipCode: generateZipCode(),
-    dischargeDate: generateDateOnly(date.future(1)),
     userId: userId.toString(),
   });
 
@@ -256,6 +255,18 @@ export async function seed() {
   await base.mutations.submitCareWizard({
     submitCareWizardParams: wizardParams,
   });
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
+      '--------------------------- create dna -------------------------\n' +
+      '----------------------------------------------------------------',
+  );
+  const changeMemberDnaParams = generateChangeMemberDnaParams({
+    changeType: ChangeType.create,
+    memberId,
+  });
+  delete changeMemberDnaParams.admitSource;
+  await base.mutations.changeMemberDna({ changeMemberDnaParams });
 
   await base.cleanUp();
   await dbDisconnect();

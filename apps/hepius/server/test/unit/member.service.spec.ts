@@ -324,9 +324,8 @@ describe('MemberService', () => {
       const orgId = await generateOrg();
       const phoneType: PhoneType = 'landline';
 
-      const dischargeDate = generateDateOnly(date.future(1));
       const { id: memberId } = await service.insert(
-        { ...generateCreateMemberParams({ dischargeDate, orgId }), phoneType },
+        { ...generateCreateMemberParams({ orgId }), phoneType },
         new Types.ObjectId(primaryUserId),
       );
       await journeyService.create({ memberId, orgId });
@@ -343,7 +342,6 @@ describe('MemberService', () => {
           name: `${member.firstName} ${member.lastName}`,
           phone: member.phone,
           phoneType,
-          dischargeDate: member.dischargeDate,
           adherence: 0,
           wellbeing: 0,
           createdAt: member.createdAt,
@@ -512,7 +510,6 @@ describe('MemberService', () => {
         email: internet.email(),
         language: Language.es,
         zipCode: generateZipCode(),
-        dischargeDate: generateDateOnly(date.future(1)),
         honorific: Honorific.dr,
       });
       const { id } = await service.insert(createMemberParams, primaryUser._id);

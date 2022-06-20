@@ -2,7 +2,7 @@ import { Language, generateId, generateObjectId, mockProcessWarnings } from '@ar
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { hosts } from 'config';
-import { add, differenceInDays, sub } from 'date-fns';
+import { add, differenceInDays, sub, subDays } from 'date-fns';
 import { Model, Types } from 'mongoose';
 import {
   dbDisconnect,
@@ -124,7 +124,12 @@ describe('Commands: AnalyticsService', () => {
     mockActiveJourney = {
       ...mockGenerateJourney({ memberId: mockMember.id }),
       org: mockGenerateOrg(),
-      admissions: [{ admitDate: generateDateOnly(new Date()) }],
+      admissions: [
+        {
+          admitDate: generateDateOnly(subDays(new Date(), 5)),
+          dischargeDate: generateDateOnly(subDays(new Date(), 10)),
+        },
+      ],
     };
   });
 
@@ -529,12 +534,18 @@ describe('Commands: AnalyticsService', () => {
           mockActiveJourney.admissions[0].admitDate,
           momentFormats.mysqlDate,
         ),
-        discharge_date: reformatDate(mockMember.dischargeDate, momentFormats.mysqlDate),
+        discharge_date: reformatDate(
+          mockActiveJourney.admissions[0].dischargeDate,
+          momentFormats.mysqlDate,
+        ),
         los: differenceInDays(
-          Date.parse(mockMember.dischargeDate),
+          Date.parse(mockActiveJourney.admissions[0].dischargeDate),
           Date.parse(mockActiveJourney.admissions[0].admitDate),
         ),
-        days_since_discharge: differenceInDays(new Date(), Date.parse(mockMember.dischargeDate)),
+        days_since_discharge: differenceInDays(
+          new Date(),
+          Date.parse(mockActiveJourney.admissions[0].dischargeDate),
+        ),
         graduated: true,
         graduation_date: reformatDate(sub(now, { days: 20 }).toString(), momentFormats.mysqlDate),
         dc_summary_load_date: '2021-01-18',
@@ -574,12 +585,13 @@ describe('Commands: AnalyticsService', () => {
           mockMember.deceased.date.toString(),
           momentFormats.mysqlDateTime,
         ),
-        deceased_days_from_dc: mockMember.dischargeDate
-          ? differenceInDays(
-              Date.parse(mockMember.deceased.date),
-              Date.parse(mockMember.dischargeDate),
-            )
-          : undefined,
+        deceased_days_from_dc:
+          mockActiveJourney.admissions && mockActiveJourney.admissions[0]?.dischargeDate
+            ? differenceInDays(
+                Date.parse(mockMember.deceased.date),
+                Date.parse(mockActiveJourney.admissions[0].dischargeDate),
+              )
+            : undefined,
         deceased_flag: true,
       });
     });
@@ -631,12 +643,20 @@ describe('Commands: AnalyticsService', () => {
           mockActiveJourney.admissions[0].admitDate,
           momentFormats.mysqlDate,
         ),
-        discharge_date: reformatDate(mockMember.dischargeDate, momentFormats.mysqlDate),
+        discharge_date: reformatDate(
+          mockActiveJourney.admissions[0].dischargeDate,
+          momentFormats.mysqlDate,
+        ),
         los: differenceInDays(
-          Date.parse(mockMember.dischargeDate),
+          Date.parse(mockActiveJourney.admissions[0].dischargeDate),
           Date.parse(mockActiveJourney.admissions[0].admitDate),
         ),
-        days_since_discharge: differenceInDays(new Date(), Date.parse(mockMember.dischargeDate)),
+        days_since_discharge: differenceInDays(
+          new Date(),
+          Date.parse(
+            mockActiveJourney.admissions && mockActiveJourney.admissions[0]?.dischargeDate,
+          ),
+        ),
         graduated: false,
         dc_summary_load_date: '2021-01-18',
         dc_summary_received: true,
@@ -667,12 +687,13 @@ describe('Commands: AnalyticsService', () => {
           mockMember.deceased.date.toString(),
           momentFormats.mysqlDateTime,
         ),
-        deceased_days_from_dc: mockMember.dischargeDate
-          ? differenceInDays(
-              Date.parse(mockMember.deceased.date),
-              Date.parse(mockMember.dischargeDate),
-            )
-          : undefined,
+        deceased_days_from_dc:
+          mockActiveJourney.admissions && mockActiveJourney.admissions[0].dischargeDate
+            ? differenceInDays(
+                Date.parse(mockMember.deceased.date),
+                Date.parse(mockActiveJourney.admissions[0].dischargeDate),
+              )
+            : undefined,
         deceased_flag: true,
       });
     });
@@ -732,23 +753,46 @@ describe('Commands: AnalyticsService', () => {
   };
 
   describe('buildCoachData', () => {
-    const graduatedMember = mockGenerateMember();
-    graduatedMember.dischargeDate = reformatDate(
-      sub(now, { days: GraduationPeriod + 2 }).toString(),
-      momentFormats.mysqlDate,
-    );
+    const memberId = generateId();
+    const graduatedMember = {
+      ...mockGenerateMember(),
+      recentJourney: {
+        ...mockGenerateJourney({ memberId }),
+        admissions: [
+          {
+            dischargeDate: reformatDate(
+              sub(now, { days: GraduationPeriod + 2 }).toString(),
+              momentFormats.mysqlDate,
+            ),
+          },
+        ],
+      },
+    };
 
-    const activeMember = mockGenerateMember();
-    activeMember.dischargeDate = reformatDate(
-      sub(now, { days: GraduationPeriod - 2 }).toString(),
-      momentFormats.mysqlDate,
-    );
+    const activeMember = {
+      ...mockGenerateMember(),
+      recentJourney: {
+        ...mockGenerateJourney({ memberId: generateId() }),
+        admissions: [
+          {
+            dischargeDate: reformatDate(
+              sub(now, { days: GraduationPeriod - 2 }).toString(),
+              momentFormats.mysqlDate,
+            ),
+          },
+        ],
+      },
+    };
 
     it('to return a calculated coach data.', async () => {
       const data = await analyticsService.buildCoachData({
         _id: new Types.ObjectId(mockPrimaryUser.id),
         members: [
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           { ...graduatedMember, _id: new Types.ObjectId(graduatedMember.id) },
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           { ...activeMember, _id: new Types.ObjectId(activeMember.id) },
         ],
         user: mockPrimaryUser,

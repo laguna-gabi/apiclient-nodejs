@@ -93,11 +93,10 @@ describe('Validations - member', () => {
     });
 
     test.each`
-      field              | defaultValue
-      ${'sex'}           | ${defaultMemberParams.sex}
-      ${'email'}         | ${null}
-      ${'dischargeDate'} | ${null}
-      ${'honorific'}     | ${defaultMemberParams.honorific}
+      field          | defaultValue
+      ${'sex'}       | ${defaultMemberParams.sex}
+      ${'email'}     | ${null}
+      ${'honorific'} | ${defaultMemberParams.honorific}
     `(`should set default value if exists for optional field $field`, async (params) => {
       /* eslint-enable max-len */
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
@@ -139,23 +138,6 @@ describe('Validations - member', () => {
       expect(member[params.field]).toEqual(params.value);
     });
 
-    it('should set value for optional field dischargeDate', async () => {
-      const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-      await creators.createAndValidateUser({ orgs: [orgId] });
-      const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
-
-      memberParams.dischargeDate = generateDateOnly(date.soon(3));
-
-      const { id } = await handler.mutations.createMember({ memberParams });
-      expect(id).not.toBeUndefined();
-
-      const member = await handler.queries.getMember({
-        id,
-        requestHeaders: generateRequestHeaders(memberParams.authId),
-      });
-      expect(generateDateOnly(new Date(member.dischargeDate))).toEqual(memberParams.dischargeDate);
-    });
-
     /* eslint-disable max-len */
     test.each`
       input                             | error
@@ -172,9 +154,6 @@ describe('Validations - member', () => {
       ${{ dateOfBirth: 'not-valid' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
       ${{ dateOfBirth: '2021-13-1' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
       ${{ dateOfBirth: new Date() }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
-      ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
-      ${{ dischargeDate: '2021-13-1' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
-      ${{ dischargeDate: new Date() }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
       ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
       ${{ userId: 'not-valid' }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
       ${{ maritalStatus: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "MaritalStatus" enum' }}
@@ -568,27 +547,26 @@ describe('Validations - member', () => {
   describe('updateMember', () => {
     /* eslint-disable max-len */
     test.each`
-      input                             | error
-      ${{ id: 123 }}                    | ${{ missingFieldError: stringError }}
-      ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
-      ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
-      ${{ drgDesc: 123 }}               | ${{ missingFieldError: stringError }}
-      ${{ drg: 123 }}                   | ${{ missingFieldError: stringError }}
-      ${{ phoneSecondary: 123 }}        | ${{ missingFieldError: stringError }}
-      ${{ email: 'not-valid' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
-      ${{ sex: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
-      ${{ zipCode: 123 }}               | ${{ missingFieldError: stringError }}
-      ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
-      ${{ address: 123 }}               | ${{ missingFieldError: 'Expected type "AddressInput" to be an object.' }}
-      ${{ address: { street: 123 } }}   | ${{ missingFieldError: stringError }}
-      ${{ address: { city: 123 } }}     | ${{ missingFieldError: stringError }}
-      ${{ address: { state: 123 } }}    | ${{ missingFieldError: stringError }}
-      ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
-      ${{ deviceId: 123 }}              | ${{ missingFieldError: stringError }}
-      ${{ deceased: 123 }}              | ${{ missingFieldError: 'Expected type "DeceasedInput" to be an object.' }}
-      ${{ deceased: { cause: 123 } }}   | ${{ missingFieldError: stringError }}
-      ${{ deceased: { date: 123 } }}    | ${{ missingFieldError: stringError }}
-      ${{ healthPlan: 123 }}            | ${{ missingFieldError: stringError }}
+      input                           | error
+      ${{ id: 123 }}                  | ${{ missingFieldError: stringError }}
+      ${{ firstName: 123 }}           | ${{ missingFieldError: stringError }}
+      ${{ lastName: 123 }}            | ${{ missingFieldError: stringError }}
+      ${{ drgDesc: 123 }}             | ${{ missingFieldError: stringError }}
+      ${{ drg: 123 }}                 | ${{ missingFieldError: stringError }}
+      ${{ phoneSecondary: 123 }}      | ${{ missingFieldError: stringError }}
+      ${{ email: 'not-valid' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
+      ${{ sex: 'not-valid' }}         | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
+      ${{ zipCode: 123 }}             | ${{ missingFieldError: stringError }}
+      ${{ address: 123 }}             | ${{ missingFieldError: 'Expected type "AddressInput" to be an object.' }}
+      ${{ address: { street: 123 } }} | ${{ missingFieldError: stringError }}
+      ${{ address: { city: 123 } }}   | ${{ missingFieldError: stringError }}
+      ${{ address: { state: 123 } }}  | ${{ missingFieldError: stringError }}
+      ${{ honorific: 'not-valid' }}   | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
+      ${{ deviceId: 123 }}            | ${{ missingFieldError: stringError }}
+      ${{ deceased: 123 }}            | ${{ missingFieldError: 'Expected type "DeceasedInput" to be an object.' }}
+      ${{ deceased: { cause: 123 } }} | ${{ missingFieldError: stringError }}
+      ${{ deceased: { date: 123 } }}  | ${{ missingFieldError: stringError }}
+      ${{ healthPlan: 123 }}          | ${{ missingFieldError: stringError }}
     `(`should fail to update a member since setting $input is not a valid`, async (params) => {
       /* eslint-enable max-len */
       const updateMemberParams = generateUpdateMemberParams({ ...params.input });
@@ -602,10 +580,6 @@ describe('Validations - member', () => {
     test.each`
       field               | input                                                  | errors
       ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}                          | ${[Errors.get(ErrorType.memberPhone)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }}                     | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }}                     | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: '2021-13-1' }}                      | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: new Date() }}                       | ${[Errors.get(ErrorType.memberDischargeDate)]}
       ${'dateOfBirth'}    | ${{ dateOfBirth: lorem.word() }}                       | ${[Errors.get(ErrorType.memberDateOfBirth)]}
       ${'dateOfBirth'}    | ${{ dateOfBirth: '2021-13-1' }}                        | ${[Errors.get(ErrorType.memberDateOfBirth)]}
       ${'deceased'}       | ${{ deceased: { date: futureDate } }}                  | ${[Errors.get(ErrorType.memberDeceasedDateInTheFuture)]}
