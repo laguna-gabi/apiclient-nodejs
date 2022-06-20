@@ -36,7 +36,7 @@ export class User extends Identifier {
   @Field(() => String)
   lastName: string;
 
-  @Prop({ unique: true })
+  @Prop({ index: true, unique: true })
   @Field(() => String)
   email: string;
 
