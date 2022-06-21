@@ -18,6 +18,7 @@ import {
   Ace,
   AceStrategy,
   Client,
+  ClientSpread,
   ErrorType,
   Errors,
   EventType,
@@ -29,7 +30,7 @@ import {
   LoggingInterceptor,
   Roles,
 } from '../common';
-import { CognitoService } from '../providers';
+import { CognitoService, ZenDesk } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => User)
@@ -37,6 +38,7 @@ export class UserResolver {
   constructor(
     private readonly userService: UserService,
     private readonly cognitoService: CognitoService,
+    private readonly zendeskProvider: ZenDesk,
     private eventEmitter: EventEmitter2,
     private readonly logger: LoggerService,
   ) {}
@@ -159,6 +161,16 @@ export class UserResolver {
   @Ace({ strategy: AceStrategy.token })
   async getUserConfig(@Client('_id') userId): Promise<UserConfig> {
     return this.userService.getUserConfig(userId);
+  }
+
+  @Query(() => String)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.token })
+  async getHelpCenterToken(
+    @ClientSpread(['firstName', 'lastName', 'email'])
+    { firstName, lastName, email },
+  ): Promise<string> {
+    return this.zendeskProvider.getAuthToken({ firstName, lastName, email });
   }
 
   @Mutation(() => Boolean)

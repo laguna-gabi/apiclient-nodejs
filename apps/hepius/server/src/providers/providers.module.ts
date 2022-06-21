@@ -13,39 +13,30 @@ import {
   StorageService,
   TwilioService,
   WebhooksController,
+  ZenDesk,
 } from '.';
 import { CommonModule } from '../common';
 import { Internationalization } from './internationalization';
 
+const exportedProviders = [
+  Bitly,
+  SendBird,
+  SlackBot,
+  OneSignal,
+  TwilioService,
+  StorageService,
+  CognitoService,
+  ConfigsService,
+  FeatureFlagService,
+  CloudMapService,
+  Internationalization,
+  ZenDesk,
+];
+
 @Module({
   imports: [HttpModule, CommonModule],
-  providers: [
-    Bitly,
-    SendBird,
-    SlackBot,
-    OneSignal,
-    TwilioService,
-    StorageService,
-    CognitoService,
-    ConfigsService,
-    QueueService,
-    FeatureFlagService,
-    CloudMapService,
-    Internationalization,
-  ],
-  exports: [
-    Bitly,
-    SendBird,
-    SlackBot,
-    OneSignal,
-    TwilioService,
-    StorageService,
-    CognitoService,
-    ConfigsService,
-    FeatureFlagService,
-    CloudMapService,
-    Internationalization,
-  ],
+  providers: [...exportedProviders, QueueService],
+  exports: exportedProviders,
   controllers: [WebhooksController],
 })
 export class ProvidersModule {}

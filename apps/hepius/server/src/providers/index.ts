@@ -1,5 +1,6 @@
 export * from './aws';
 export * from './bitly';
+export * from './zendesk';
 export * from './sendBird';
 export * from './slackBot';
 export * from './twilio.service';

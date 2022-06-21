@@ -27,6 +27,9 @@ export const ExternalConfigs = {
   split: {
     apiKey: 'split.apiKey',
   },
+  zendesk: {
+    token: 'zendesk.token',
+  },
 };
 
 @Injectable()

@@ -1,6 +1,9 @@
+import { User } from '@argus/hepiusClient';
 import { ExecutionContext, SetMetadata, createParamDecorator } from '@nestjs/common';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
+import { pick } from 'lodash';
 import { AceOptions, MemberIdParamType } from '.';
+import { Member } from '../member';
 
 export enum DecoratorType {
   isPublic = 'isPublic',
@@ -8,6 +11,10 @@ export enum DecoratorType {
   aceOptions = 'aceOptions',
   memberId = 'memberId',
 }
+
+type keyOfMember = keyof Member | '_id';
+type keyOfUser = keyof User | '_id';
+
 export const Public = () => SetMetadata(DecoratorType.isPublic, true);
 
 export const Roles = (...roles: string[]) => SetMetadata(DecoratorType.roles, roles);
@@ -17,15 +24,25 @@ export const MemberIdParam = (memberId: MemberIdParamType) =>
 
 export const Ace = (aceOptions: AceOptions) => SetMetadata(DecoratorType.aceOptions, aceOptions);
 
-export const Client = createParamDecorator((data: string, context: ExecutionContext) => {
-  let request;
-
+const getRequestFromCtx = (context: ExecutionContext): { user?: User | Member } => {
   if (context.getType<GqlContextType>() === 'graphql') {
     const ctx = GqlExecutionContext.create(context);
-    request = ctx.getContext().req;
+    return ctx.getContext().req;
   } else {
-    request = context.switchToHttp().getRequest();
+    return context.switchToHttp().getRequest();
   }
-  const user = request.user;
-  return data ? user?.[data] : user;
-});
+};
+
+export const Client = createParamDecorator(
+  (data: keyOfMember | keyOfUser, context: ExecutionContext) => {
+    const { user } = getRequestFromCtx(context);
+    return data ? user?.[data] : user;
+  },
+);
+
+export const ClientSpread = createParamDecorator(
+  (data: keyOfMember[] | keyOfUser[] = [], context: ExecutionContext): Partial<User | Member> => {
+    const { user } = getRequestFromCtx(context);
+    return data.length && user ? pick(user, data) : user;
+  },
+);
