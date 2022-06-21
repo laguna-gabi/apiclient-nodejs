@@ -75,7 +75,11 @@ import {
   removeChangeType,
   submitMockCareWizard,
 } from '..';
-import { buildLHPQuestionnaire, buildPHQ9Questionnaire } from '../../cmd/static';
+import {
+  buildLHPQuestionnaire,
+  buildPHQ9Questionnaire,
+  buildWHO5Questionnaire,
+} from '../../cmd/static';
 import { RequestAppointmentParams, ScheduleAppointmentParams } from '../../src/appointment';
 import {
   AlertType,
@@ -1557,6 +1561,65 @@ describe('Integration tests: all', () => {
       expect(alerts).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({ type: AlertType.assessmentSubmitScoreOverThreshold }),
+        ]),
+      );
+    });
+
+    it('should get alert questionnaire (WHO5): score is under (reverse) threshold', async () => {
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
+      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams: buildWHO5Questionnaire(),
+      });
+
+      const fill = Array.from({ length: 5 }, (_, i) => i + 1);
+      await handler.mutations.submitQuestionnaireResponse({
+        requestHeaders: generateRequestHeaders(user.authId),
+        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+          questionnaireId,
+          memberId: member.id,
+          answers: fill.map((num) => ({ code: `q${num}`, value: '1' })), // low value will yield an under threshold (poor results for who5)
+        }),
+      });
+
+      const alerts = await handler.queries.getAlerts({
+        requestHeaders: generateRequestHeaders(user.authId),
+      });
+
+      expect(alerts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: AlertType.assessmentSubmitScoreOverThreshold,
+            text: expect.stringContaining('WHO-5'),
+          }),
+        ]),
+      );
+    });
+
+    it('should not get alert questionnaire (WHO5): score is over (reverse) threshold', async () => {
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
+      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams: buildWHO5Questionnaire(),
+      });
+
+      const fill = Array.from({ length: 5 }, (_, i) => i + 1);
+      await handler.mutations.submitQuestionnaireResponse({
+        requestHeaders: generateRequestHeaders(user.authId),
+        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+          questionnaireId,
+          memberId: member.id,
+          answers: fill.map((num) => ({ code: `q${num}`, value: '4' })), // high (4 out of 5) value will yield an over threshold (good results for who5)
+        }),
+      });
+
+      const alerts = await handler.queries.getAlerts({
+        requestHeaders: generateRequestHeaders(user.authId),
+      });
+
+      expect(alerts).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: AlertType.assessmentSubmitScoreOverThreshold,
+          }),
         ]),
       );
     });

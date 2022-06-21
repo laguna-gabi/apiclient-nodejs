@@ -221,7 +221,7 @@ export class QuestionnaireService extends AlertService {
         const results = this.buildResult(qr.answers, template);
 
         if (
-          results.score >= template.notificationScoreThreshold ||
+          this.isOverThreshold(template, results.score) ||
           (results.alert && QuestionnaireAlerts.get(template.type))
         ) {
           return {
@@ -422,7 +422,7 @@ export class QuestionnaireService extends AlertService {
   private isOverThreshold(questionnaire: Questionnaire, score: number): boolean {
     if (questionnaire.notificationScoreThreshold) {
       if (questionnaire.notificationScoreThresholdReverse) {
-        return score < questionnaire.notificationScoreThreshold;
+        return score <= questionnaire.notificationScoreThreshold;
       } else {
         return score >= questionnaire.notificationScoreThreshold;
       }
