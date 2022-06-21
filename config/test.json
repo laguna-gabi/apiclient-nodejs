@@ -2,9 +2,5 @@
   "db": {
     "connection": "mongodb://localhost:27018",
     "name": "iris-test"
-  },
-  "articlesByDrg": {
-    "123": "articles/cardiac/cardiac",
-    "default": "articles/default/default"
   }
 }

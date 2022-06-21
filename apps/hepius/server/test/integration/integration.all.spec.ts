@@ -20,7 +20,7 @@ import {
   generateId,
   translation,
 } from '@argus/pandora';
-import { articlesByDrg, general, hosts } from 'config';
+import { articlesPath, general, hosts } from 'config';
 import { add, startOfToday, startOfTomorrow, sub, subDays } from 'date-fns';
 import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
@@ -316,7 +316,7 @@ describe('Integration tests: all', () => {
     });
     expect(memberConfigBefore).toEqual({
       memberId: member.id,
-      articlesPath: articlesByDrg.default,
+      articlesPath,
       externalUserId: expect.any(String),
       firstLoggedInAt: null,
       lastLoggedInAt: null,
@@ -950,20 +950,7 @@ describe('Integration tests: all', () => {
         id: member.id,
         requestHeaders: generateRequestHeaders(member.authId),
       });
-      expect(memberConfig.articlesPath).toEqual(articlesByDrg.default);
-    });
-
-    it('should return the configured path for a configured drg on getMemberConfig', async () => {
-      const { member } = await creators.createMemberUserAndOptionalOrg();
-
-      const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: '123' });
-      await handler.mutations.updateMember({ updateMemberParams });
-
-      const memberConfig = await handler.queries.getMemberConfig({
-        id: member.id,
-        requestHeaders: generateRequestHeaders(updateMemberParams.authId),
-      });
-      expect(memberConfig.articlesPath).toEqual(articlesByDrg['123']);
+      expect(memberConfig.articlesPath).toEqual(articlesPath);
     });
 
     it('should set phoneType and phoneSecondaryType', async () => {

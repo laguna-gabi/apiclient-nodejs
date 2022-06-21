@@ -3,7 +3,7 @@ import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { articlesByDrg, queryDaysLimit } from 'config';
+import { queryDaysLimit } from 'config';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import { Alert, AlertType, DismissedAlert, DismissedAlertDocument } from '../../src/common';
@@ -491,7 +491,6 @@ export class MemberService extends AlertService {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
 
-    memberConfig.articlesPath = await this.getArticlesPath(id);
     return memberConfig;
   }
 
@@ -671,10 +670,5 @@ export class MemberService extends AlertService {
 
     result = await this.memberModel.populate(result, [{ path: 'users', populate: subPopulate }]);
     return result[0];
-  }
-
-  private async getArticlesPath(id: string) {
-    const { drg } = await this.get(id);
-    return articlesByDrg[drg] || articlesByDrg.default;
   }
 }

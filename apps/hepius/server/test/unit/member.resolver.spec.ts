@@ -18,7 +18,7 @@ import {
 } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { hosts } from 'config';
+import { articlesPath, hosts } from 'config';
 import { datatype, date, lorem } from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
@@ -819,11 +819,13 @@ describe('MemberResolver', () => {
       spyOnServiceGetRecentJourney.mockResolvedValueOnce(
         mockGenerateJourney({ memberId: memberConfig.memberId.toString() }),
       );
-      await resolver.getMemberConfig(memberConfig.memberId.toString());
+      const result = await resolver.getMemberConfig(memberConfig.memberId.toString());
 
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(memberConfig.memberId.toString());
       expect(spyOnServiceGetRecentJourney).toBeCalledWith(memberConfig.memberId.toString());
+
+      expect(result.articlesPath).toEqual(articlesPath);
     });
   });
 

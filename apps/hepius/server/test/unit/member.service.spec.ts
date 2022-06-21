@@ -15,7 +15,6 @@ import {
 } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { articlesByDrg } from 'config';
 import { sub } from 'date-fns';
 import { address, datatype, date, internet, name } from 'faker';
 import { Model, Types, model } from 'mongoose';
@@ -1149,25 +1148,6 @@ describe('MemberService', () => {
           platform: Platform.web,
         }),
       );
-    });
-  });
-
-  describe('getArticlesPath', () => {
-    it('should return the default path for a non existing drg', async () => {
-      const { memberId: id } = await generateMember();
-      const memberConfig = await service.getMemberConfig(id);
-
-      expect(memberConfig.articlesPath).toEqual(articlesByDrg.default);
-    });
-
-    it('should return the configured path for a configured drg', async () => {
-      const { memberId: id } = await generateMember();
-      const updateMemberParams = generateUpdateMemberParams({ id, drg: '123' });
-      await service.update({ id, ...updateMemberParams });
-
-      const memberConfig = await service.getMemberConfig(id);
-
-      expect(memberConfig.articlesPath).toEqual(articlesByDrg['123']);
     });
   });
 

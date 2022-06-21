@@ -96,10 +96,7 @@
     "timezone": "UTC",
     "notificationRange": 24
   },
-  "articlesByDrg": {
-    "000": "articles/cardiac/cardiac",
-    "default": "articles/default/default"
-  },
+  "articlesPath": "articles/default/default",
   "skipBodyParseRouteList": [{ "path": "/api/webhooks/sendbird", "method": 1 }],
   "org": {
     "mayo": "6113d0fa7cb99c0858c470b5",

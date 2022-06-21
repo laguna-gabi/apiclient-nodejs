@@ -44,7 +44,7 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { isEmpty } from 'class-validator';
-import { hosts } from 'config';
+import { articlesPath, hosts } from 'config';
 import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { camelCase } from 'lodash';
@@ -1005,7 +1005,7 @@ export class MemberResolver extends MemberBase {
   ) {
     const baseMemberConfig = await this.memberService.getMemberConfig(id);
     const { firstLoggedInAt, lastLoggedInAt } = await this.journeyService.getRecent(id);
-    return { ...baseMemberConfig, firstLoggedInAt, lastLoggedInAt };
+    return { ...baseMemberConfig, firstLoggedInAt, lastLoggedInAt, articlesPath };
   }
 
   @Mutation(() => Boolean)

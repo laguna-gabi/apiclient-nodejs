@@ -812,6 +812,8 @@ describe('Integration tests: notifications', () => {
         recipientClientId: member.id,
         senderClientId: replacedUser.id,
       });
+      await delay(200);
+
       const object = new ObjectUpdateSenderClientIdClass(mock);
       Object.keys(object.updateSenderClientIdType).forEach((key) => {
         expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
