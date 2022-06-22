@@ -43,6 +43,7 @@ import {
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import { Org } from '../org';
 import { HealthPersona } from '../questionnaire';
+import { ReadmissionRisk, ReadmissionRiskHistory } from '../journey';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -125,6 +126,8 @@ export enum ChatMessageOrigin {
   fromUser = 'fromUser',
   fromMember = 'fromMember',
 }
+
+const deprecationReason = 'field was moved to journey api - please use getRecentJourney instead';
 
 @InputType('AddressInput')
 @ObjectType()
@@ -491,15 +494,6 @@ export class Member extends Identifier {
   @Field(() => String)
   dateOfBirth: string;
 
-  /**
-   * Org prop is moved to journey collection, but the field is still exposed via the member api
-   * (since its in use by the app)
-   * org will only be exposed on getMember api, so in all the rest of the places, org is null.
-   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
-   */
-  @Field(() => Org)
-  org?: Org;
-
   @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String, { description: 'primary user id' })
   primaryUserId: Types.ObjectId;
@@ -540,6 +534,79 @@ export class Member extends Identifier {
 
   @Field(() => Number, { nullable: true })
   utcDelta?: number;
+
+  /**
+   * @deprecated
+   * Org prop is moved to journey collection, but the field is still exposed via the member api
+   * (since its in use by the app)
+   * org will only be exposed on getMember api, so in all the rest of the places, org is null.
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
+  @Field(() => Org, { deprecationReason })
+  org?: Org;
+
+  /**
+   * @deprecated, use getRecentJourney instead
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
+  @Field(() => String, { nullable: true, deprecationReason })
+  fellowName?: string;
+
+  /**
+   * @deprecated, use getRecentJourney instead
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
+  @Field(() => String, { nullable: true, deprecationReason })
+  drg?: string;
+
+  /**
+   * @deprecated, use getRecentJourney instead
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
+  @Field(() => String, { nullable: true, deprecationReason })
+  drgDesc?: string;
+
+  /**
+   * @deprecated, use getRecentJourney instead
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
+  @Field(() => String, { nullable: true, deprecationReason })
+  generalNotes?: string;
+
+  /**
+   * @deprecated, use getRecentJourney instead
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
+  @Field(() => String, { nullable: true, deprecationReason })
+  nurseNotes?: string;
+
+  /**
+   * @deprecated, use getRecentJourney instead
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
+  @Field(() => String, { nullable: true, deprecationReason })
+  dischargeDate?: string;
+
+  /**
+   * @deprecated, use getRecentJourney instead
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
+  @Field(() => String, { nullable: true, deprecationReason })
+  admitDate?: string;
+
+  /**
+   * @deprecated, use getRecentJourney instead
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
+  @Field(() => ReadmissionRisk, { nullable: true, deprecationReason })
+  readmissionRisk?: ReadmissionRisk;
+
+  /**
+   * @deprecated, use getRecentJourney instead
+   * https://app.shortcut.com/laguna-health/story/5477/prepare-hepius-pre-post-app-break
+   */
+  @Field(() => [ReadmissionRiskHistory], { nullable: true, deprecationReason })
+  readmissionRiskHistory?: ReadmissionRiskHistory[];
 
   @Prop({ isNaN: true })
   @Field(() => Address, { nullable: true })
