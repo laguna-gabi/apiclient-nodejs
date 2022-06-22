@@ -461,6 +461,7 @@ describe(JourneyService.name, () => {
       delete createActionItemParams1.priority;
       delete createActionItemParams1.status;
       delete createActionItemParams1.relatedEntities;
+      delete createActionItemParams1.title;
 
       const { id: id1 } = await service.createOrSetActionItem(createActionItemParams1);
       const { id: id2 } = await service.createOrSetActionItem(createActionItemParams2);
@@ -485,6 +486,7 @@ describe(JourneyService.name, () => {
             relatedEntities: [],
             status: ActionItemStatus.active,
             priority: ActionItemPriority.normal,
+            title: '',
           }),
         ]),
       );

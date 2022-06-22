@@ -217,9 +217,11 @@ export class JourneyService extends AlertService {
 
     const setParams = {
       ...params,
+      // set default params
       status: params.status || ActionItemStatus.active,
       priority: params.priority || ActionItemPriority.normal,
       relatedEntities: params.relatedEntities || [],
+      title: params.title || '',
     };
 
     let result;

@@ -63,8 +63,8 @@ export class CreateOrSetActionItemParams {
   @Field(() => String, { nullable: true })
   memberId?: string;
 
-  @Field(() => String)
-  title: string;
+  @Field(() => String, { nullable: true })
+  title?: string;
 
   @Field(() => ActionItemStatus, { nullable: true })
   status?: ActionItemStatus;

@@ -603,23 +603,6 @@ describe('Validations - member', () => {
     describe('createOrSetActionItem', () => {
       /* eslint-disable max-len */
       test.each`
-        field      | error
-        ${'title'} | ${`Field "title" of required type "String!" was not provided.`}
-      `(
-        /* eslint-enable max-len */
-        `should fail to update actionItem since mandatory field $field is missing`,
-        async (params) => {
-          const createOrSetActionItemParams = generateCreateOrSetActionItemParams();
-          delete createOrSetActionItemParams[params.field];
-          await handler.mutations.createOrSetActionItem({
-            createOrSetActionItemParams,
-            missingFieldError: params.error,
-          });
-        },
-      );
-
-      /* eslint-disable max-len */
-      test.each`
         input                        | error
         ${{ id: 123 }}               | ${{ missingFieldError: stringError }}
         ${{ title: 123 }}            | ${{ missingFieldError: stringError }}
