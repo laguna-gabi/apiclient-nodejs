@@ -213,7 +213,7 @@ export class JourneyService extends AlertService {
   async createOrSetActionItem(
     createOrSetActionItemParams: CreateOrSetActionItemParams,
   ): Promise<Identifier> {
-    const { id, memberId, ...params } = createOrSetActionItemParams;
+    const { id, memberId, appointmentId, ...params } = createOrSetActionItemParams;
 
     const setParams = {
       ...params,
@@ -250,6 +250,7 @@ export class JourneyService extends AlertService {
         ...setParams,
         memberId: new Types.ObjectId(memberId),
         journeyId: new Types.ObjectId(journeyId),
+        appointmentId: appointmentId ? new Types.ObjectId(appointmentId) : undefined,
       };
       result = await this.actionItemModel.create(createParams);
     }

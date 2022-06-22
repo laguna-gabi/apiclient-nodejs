@@ -23,6 +23,7 @@ export enum ActionItemCategory {
   learn = 'learn',
   legWork = 'legWork',
   nextSession = 'nextSession',
+  jobAid = 'jobAid',
 }
 
 registerEnumType(ActionItemCategory, { name: 'ActionItemCategory' });
@@ -62,6 +63,9 @@ export class CreateOrSetActionItemParams {
 
   @Field(() => String, { nullable: true })
   memberId?: string;
+
+  @Field(() => String, { nullable: true })
+  appointmentId?: string;
 
   @Field(() => String, { nullable: true })
   title?: string;
@@ -115,6 +119,10 @@ export class ActionItem extends Identifier {
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)
   journeyId: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId })
+  @Field(() => String, { nullable: true })
+  appointmentId?: Types.ObjectId;
 
   @Prop()
   @Field(() => String)

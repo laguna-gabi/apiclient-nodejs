@@ -476,6 +476,22 @@ export class Mutations {
           ) {
             createOrSetActionItem(createOrSetActionItemParams: $createOrSetActionItemParams) {
               id
+              memberId
+              appointmentId
+              journeyId
+              title
+              status
+              deadline
+              rejectNote
+              description
+              category
+              priority
+              createdAt
+              createdBy
+              relatedEntities {
+                type
+                id
+              }
             }
           }
         `,

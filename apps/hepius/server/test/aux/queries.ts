@@ -1478,6 +1478,7 @@ export class Queries {
             getActionItems(memberId: $memberId) {
               id
               memberId
+              appointmentId
               journeyId
               title
               status

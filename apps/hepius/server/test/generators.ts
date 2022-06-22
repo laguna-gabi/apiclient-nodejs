@@ -92,6 +92,7 @@ import {
 } from '../src/configuration';
 import { DailyReport, DailyReportCategoriesInput } from '../src/dailyReport';
 import {
+  ActionItem,
   ActionItemCategory,
   ActionItemPriority,
   ActionItemStatus,
@@ -1339,10 +1340,46 @@ export function getIsAssignableToMember(questionnaireType: QuestionnaireType): b
 /**************************************************************************************************
  ***************************************** ActionItem *********************************************
  *************************************************************************************************/
+export const mockGenerateActionItem = ({
+  id = generateId(),
+  memberId = generateObjectId(),
+  journeyId = generateObjectId(),
+  appointmentId = generateObjectId(),
+  title = lorem.words(2),
+  description = lorem.words(2),
+  category = randomEnum(ActionItemCategory) as ActionItemCategory,
+  status = randomEnum(ActionItemStatus) as ActionItemStatus,
+  priority = randomEnum(ActionItemPriority) as ActionItemPriority,
+  rejectNote = lorem.words(2),
+  deadline = fakerDate.soon(3),
+  relatedEntities = [],
+  createdAt = new Date(),
+  createdBy = generateObjectId(),
+  updatedBy = generateObjectId(),
+}: Partial<ActionItem> = {}): ActionItem => {
+  return {
+    id,
+    title,
+    memberId,
+    journeyId,
+    appointmentId,
+    deadline,
+    description,
+    category,
+    status,
+    priority,
+    rejectNote,
+    relatedEntities,
+    createdAt,
+    createdBy,
+    updatedBy,
+  };
+};
 
 export const generateCreateOrSetActionItemParams = ({
   id,
-  memberId,
+  memberId = generateId(),
+  appointmentId = generateId(),
   title = lorem.words(2),
   description = lorem.words(2),
   category = randomEnum(ActionItemCategory) as ActionItemCategory,
@@ -1356,6 +1393,7 @@ export const generateCreateOrSetActionItemParams = ({
     id,
     title,
     memberId,
+    appointmentId,
     deadline,
     description,
     category,

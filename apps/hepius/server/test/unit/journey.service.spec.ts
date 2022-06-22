@@ -402,6 +402,7 @@ describe(JourneyService.name, () => {
       await service.createOrSetActionItem(updateParams);
       const results = await service.getActionItems(memberId);
       delete updateParams.memberId;
+      delete updateParams.appointmentId;
 
       expect(results).toEqual(
         expect.arrayContaining([expect.objectContaining({ ...updateParams })]),
@@ -419,6 +420,7 @@ describe(JourneyService.name, () => {
       delete updateParams.category;
       delete updateParams.description;
       delete updateParams.memberId;
+      delete updateParams.appointmentId;
       await service.createOrSetActionItem(updateParams);
       const results = await service.getActionItems(memberId);
       expect(results).toEqual(
@@ -436,9 +438,7 @@ describe(JourneyService.name, () => {
 
     it('should not be able to create action item for a non existing member', async () => {
       await expect(
-        service.createOrSetActionItem(
-          generateCreateOrSetActionItemParams({ memberId: generateId() }),
-        ),
+        service.createOrSetActionItem(generateCreateOrSetActionItemParams()),
       ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
   });
@@ -473,20 +473,22 @@ describe(JourneyService.name, () => {
       expect(results).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            ...createActionItemParams2,
-            id: id2,
-            relatedEntities: [questionnaire],
-            memberId: new Types.ObjectId(memberId),
-          }),
-          expect.objectContaining({
             ...createActionItemParams1,
             id: id1,
             memberId: new Types.ObjectId(memberId),
+            appointmentId: new Types.ObjectId(createActionItemParams1.appointmentId),
             // test default properties
             relatedEntities: [],
             status: ActionItemStatus.active,
             priority: ActionItemPriority.normal,
             title: '',
+          }),
+          expect.objectContaining({
+            ...createActionItemParams2,
+            id: id2,
+            memberId: new Types.ObjectId(memberId),
+            appointmentId: new Types.ObjectId(createActionItemParams2.appointmentId),
+            relatedEntities: [questionnaire],
           }),
         ]),
       );
@@ -509,11 +511,11 @@ describe(JourneyService.name, () => {
       const questionnaire = generateRelatedEntity({
         type: RelatedEntityType.questionnaire,
       });
-      const createActionItemParams1 = generateCreateOrSetActionItemParams({
+      const createActionItemParams = generateCreateOrSetActionItemParams({
         memberId,
         relatedEntities: [questionnaire],
       });
-      const { id } = await service.createOrSetActionItem(createActionItemParams1);
+      const { id } = await service.createOrSetActionItem(createActionItemParams);
 
       const questionnaireResponse = {
         type: RelatedEntityType.questionnaireResponse,
@@ -530,8 +532,9 @@ describe(JourneyService.name, () => {
       expect(results).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            ...createActionItemParams1,
+            ...createActionItemParams,
             memberId: new Types.ObjectId(memberId),
+            appointmentId: new Types.ObjectId(createActionItemParams.appointmentId),
             relatedEntities: [questionnaire, questionnaireResponse],
             status: ActionItemStatus.completed,
             id,

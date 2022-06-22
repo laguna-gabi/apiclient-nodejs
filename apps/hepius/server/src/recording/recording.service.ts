@@ -49,7 +49,7 @@ export class RecordingService {
         memberId: new Types.ObjectId(memberId),
         userId: new Types.ObjectId(userId),
         journeyId: new Types.ObjectId(journeyId),
-        appointmentId: appointmentId ? new Types.ObjectId(appointmentId) : null,
+        appointmentId: appointmentId ? new Types.ObjectId(appointmentId) : undefined,
         start,
         end,
         phone,

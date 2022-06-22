@@ -1,16 +1,17 @@
-import {
-  generateCreateOrSetActionItemParams,
-  generateGetMemberUploadJournalAudioLinkParams,
-  generateGetMemberUploadJournalImageLinkParams,
-  generateReplaceMemberOrgParams,
-  generateSetGeneralNotesParams,
-  generateUniqueUrl,
-  generateUpdateJournalTextParams,
-  generateUpdateJourneyParams,
-  mockGenerateMember,
-  mockGenerateOrg,
-} from '../generators';
+import { MemberRole, UserRole } from '@argus/hepiusClient';
+import { StorageType, generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { lorem } from 'faker';
+import { Types } from 'mongoose';
+import {
+  ErrorType,
+  Errors,
+  EventType,
+  IEventOnPublishedJournal,
+  IEventOnReplaceMemberOrg,
+  LoggerService,
+} from '../../src/common';
 import {
   AdmissionService,
   AudioFormat,
@@ -22,22 +23,21 @@ import {
   JourneyResolver,
   JourneyService,
 } from '../../src/journey';
-import { StorageType, generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { OrgService } from '../../src/org';
+import { StorageService } from '../../src/providers';
 import { dbDisconnect, defaultModules } from '../common';
 import {
-  ErrorType,
-  Errors,
-  EventType,
-  IEventOnPublishedJournal,
-  IEventOnReplaceMemberOrg,
-  LoggerService,
-} from '../../src/common';
-import { Types } from 'mongoose';
-import { lorem } from 'faker';
-import { MemberRole, UserRole } from '@argus/hepiusClient';
-import { StorageService } from '../../src/providers';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { OrgService } from '../../src/org';
+  generateCreateOrSetActionItemParams,
+  generateGetMemberUploadJournalAudioLinkParams,
+  generateGetMemberUploadJournalImageLinkParams,
+  generateReplaceMemberOrgParams,
+  generateSetGeneralNotesParams,
+  generateUniqueUrl,
+  generateUpdateJournalTextParams,
+  generateUpdateJourneyParams,
+  mockGenerateActionItem,
+  mockGenerateOrg,
+} from '../generators';
 
 describe(JourneyResolver.name, () => {
   let module: TestingModule;
@@ -235,7 +235,9 @@ describe(JourneyResolver.name, () => {
     });
 
     it('should set an action item', async () => {
-      spyOnServiceCreateOrSetActionItem.mockImplementationOnce(async () => mockGenerateMember());
+      spyOnServiceCreateOrSetActionItem.mockImplementationOnce(async () =>
+        mockGenerateActionItem(),
+      );
 
       const createOrSetActionItem = generateCreateOrSetActionItemParams();
       await resolver.createOrSetActionItem(createOrSetActionItem);
