@@ -50,6 +50,7 @@ import {
   mockGenerateCaregiver,
 } from '@argus/hepiusClient';
 import { Admission, Journey, JourneyModule } from '../../src/journey';
+import { lorem } from 'faker';
 
 describe('Commands: AnalyticsService', () => {
   let module: TestingModule;
@@ -128,6 +129,8 @@ describe('Commands: AnalyticsService', () => {
         {
           admitDate: generateDateOnly(subDays(new Date(), 5)),
           dischargeDate: generateDateOnly(subDays(new Date(), 10)),
+          drg: lorem.word(),
+          drgDesc: lorem.sentence(),
         },
       ],
     };
@@ -542,6 +545,8 @@ describe('Commands: AnalyticsService', () => {
           Date.parse(mockActiveJourney.admissions[0].dischargeDate),
           Date.parse(mockActiveJourney.admissions[0].admitDate),
         ),
+        drg: mockActiveJourney.admissions[0].drg,
+        drg_desc: mockActiveJourney.admissions[0].drgDesc,
         days_since_discharge: differenceInDays(
           new Date(),
           Date.parse(mockActiveJourney.admissions[0].dischargeDate),
@@ -651,6 +656,8 @@ describe('Commands: AnalyticsService', () => {
           Date.parse(mockActiveJourney.admissions[0].dischargeDate),
           Date.parse(mockActiveJourney.admissions[0].admitDate),
         ),
+        drg: mockActiveJourney.admissions[0].drg,
+        drg_desc: mockActiveJourney.admissions[0].drgDesc,
         days_since_discharge: differenceInDays(
           new Date(),
           Date.parse(

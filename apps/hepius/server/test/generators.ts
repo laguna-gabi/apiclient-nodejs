@@ -299,8 +299,6 @@ export const generateUpdateMemberParams = ({
   sex = Sex.female,
   email = generateEmail(),
   zipCode = generateZipCode(),
-  drgDesc = name.firstName(),
-  drg = datatype.number({ min: 1, max: 1000 }).toString(),
   phoneSecondary = generatePhone(),
   dateOfBirth = generateDateOnly(fakerDate.past()),
   address = {
@@ -326,8 +324,6 @@ export const generateUpdateMemberParams = ({
     sex,
     email,
     zipCode,
-    drgDesc,
-    drg,
     phoneSecondary,
     dateOfBirth,
     address,

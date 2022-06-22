@@ -520,8 +520,8 @@ export class AnalyticsService {
       SummaryFileSuffix,
     );
 
-    const admitDate =
-      member.recentJourney?.admissions && member.recentJourney?.admissions[0]?.admitDate;
+    const { admitDate, drg, drgDesc } =
+      member.recentJourney?.admissions && member.recentJourney?.admissions[0];
     const dischargeDate =
       member.recentJourney?.admissions && member.recentJourney?.admissions[0]?.dischargeDate;
     const daysSinceDischarge = this.calculateDaysSinceDischarge(dischargeDate);
@@ -545,8 +545,8 @@ export class AnalyticsService {
       phone_secondary: member.memberDetails.phoneSecondary,
       email: member.memberDetails.email,
       readmission_risk: member.recentJourney?.readmissionRisk,
-      drg: member.memberDetails.drg,
-      drg_desc: member.memberDetails.drgDesc,
+      drg,
+      drg_desc: drgDesc,
       created: reformatDate(member.memberDetails.createdAt.toString(), momentFormats.mysqlDateTime),
       updated: reformatDate(member.memberDetails.updatedAt.toString(), momentFormats.mysqlDateTime),
       app_user:

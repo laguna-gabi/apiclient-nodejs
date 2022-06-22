@@ -64,3 +64,4 @@ export * as m20220609135141 from './20220609135141-move-org-from-member-to-journ
 export * as m20220616122934 from './20220616122934-remove-admissions-from-journey-collection';
 export * as m20220616135238 from './20220616135238-move-admitDate-from-member-to-1st-admission';
 export * as m20220619153631 from './20220619153631-move-dischargeDate-from-member-to-1st-admission';
+export * as m20220621132118 from './20220621132118-move-drg-drgDesc-from-member-to-1st-diagnosis';

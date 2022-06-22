@@ -65,11 +65,9 @@ export const FRAGMENT_MEMBER = gql`
     email
     zipCode
     utcDelta
-    drg
     authId
     healthPlan
     preferredGenderPronoun
-    drgDesc
     phoneSecondary
     phoneSecondaryType
     createdAt

@@ -551,8 +551,6 @@ describe('Validations - member', () => {
       ${{ id: 123 }}                  | ${{ missingFieldError: stringError }}
       ${{ firstName: 123 }}           | ${{ missingFieldError: stringError }}
       ${{ lastName: 123 }}            | ${{ missingFieldError: stringError }}
-      ${{ drgDesc: 123 }}             | ${{ missingFieldError: stringError }}
-      ${{ drg: 123 }}                 | ${{ missingFieldError: stringError }}
       ${{ phoneSecondary: 123 }}      | ${{ missingFieldError: stringError }}
       ${{ email: 'not-valid' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
       ${{ sex: 'not-valid' }}         | ${{ missingFieldError: 'does not exist in "Sex" enum' }}

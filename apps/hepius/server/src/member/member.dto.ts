@@ -126,8 +126,6 @@ export enum ChatMessageOrigin {
   fromMember = 'fromMember',
 }
 
-const deprecationReason = 'this field was moved to journey api - please use it instead';
-
 @InputType('AddressInput')
 @ObjectType()
 export class Address {
@@ -287,26 +285,6 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @Length(minLength, maxLength, { message: Errors.get(ErrorType.memberMinMaxLength) })
   @IsOptional()
   lastName?: string;
-
-  /**
-   * will be @deprecated soon
-   * use journey.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Field(() => String, { nullable: true, deprecationReason })
-  @IsOptional()
-  drg?: string;
-
-  /**
-   * will be @deprecated soon
-   * use journey.dto.ts instead
-   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
-   * https://app.shortcut.com/laguna-health/story/5216/migration-analytics-of-existing-data
-   */
-  @Field(() => String, { nullable: true, deprecationReason })
-  @IsOptional()
-  drgDesc?: string;
 
   @Field(() => String, { description: validPhoneExamples, nullable: true })
   @IsOptional()
@@ -541,16 +519,6 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   zipCode?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  drg?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  drgDesc?: string;
 
   @Prop({ index: true, isNaN: true })
   @Field({ description: validPhoneExamples, nullable: true })

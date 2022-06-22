@@ -946,8 +946,8 @@ describe('Integration tests: all', () => {
     });
   });
 
-  describe('drg', () => {
-    it('should return the default path for a non existing drg on getMemberConfig', async () => {
+  describe('articlesPath', () => {
+    it('should return the default articlesPath on getMemberConfig', async () => {
       const { member } = await creators.createMemberUserAndOptionalOrg();
 
       const memberConfig = await handler.queries.getMemberConfig({
@@ -960,7 +960,7 @@ describe('Integration tests: all', () => {
     it('should set phoneType and phoneSecondaryType', async () => {
       const { member } = await creators.createMemberUserAndOptionalOrg();
 
-      const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: '123' });
+      const updateMemberParams = generateUpdateMemberParams({ id: member.id });
       await handler.mutations.updateMember({ updateMemberParams });
 
       const memberResult = await handler.queries.getMember({
