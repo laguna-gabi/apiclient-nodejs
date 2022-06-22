@@ -13,7 +13,6 @@ import {
 import {
   AppRequestContext,
   TcpAuthInterceptor,
-  generateObjectId,
   mockLogger,
   mockProcessWarnings,
   requestContextMiddleware,
@@ -88,7 +87,6 @@ import {
   ControlMember,
   ControlMemberDocument,
   ControlMemberDto,
-  CreateMemberParams,
   Member,
   MemberDocument,
   MemberDto,
@@ -125,6 +123,7 @@ import {
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
 import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
 import { intersection } from 'lodash';
+
 export class Handler extends BaseHandler {
   sendBird;
   oneSignal;
@@ -274,7 +273,7 @@ export class Handler extends BaseHandler {
     });
     const memberParams = generateCreateMemberParams({ userId: user.id, orgId });
 
-    const { id } = await this.createMemberWithRetries({ memberParams });
+    const { id } = await this.mutations.createMember({ memberParams });
     this.patientZero = await this.queries.getMember({ id });
   }
 
@@ -373,27 +372,6 @@ export class Handler extends BaseHandler {
     this.appointmentModel = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     this.notesModel = model<NotesDocument>(Notes.name, NotesDto);
   }
-
-  createMemberWithRetries = async ({ memberParams }: { memberParams: CreateMemberParams }) => {
-    let result = await this.mutations.createMember({
-      memberParams,
-    });
-
-    if (!result) {
-      console.warn('failed to create a member, this request will mock getAvailableUser');
-      const spyOnGetAvailableUsers = jest.spyOn(this.userService, 'getAvailableUser');
-      spyOnGetAvailableUsers.mockResolvedValueOnce(generateObjectId(memberParams.userId));
-
-      result = await this.mutations.createMember({
-        memberParams,
-      });
-
-      spyOnGetAvailableUsers.mockReset();
-      spyOnGetAvailableUsers.mockRestore();
-    }
-
-    return result;
-  };
 }
 
 export const initClients = async (

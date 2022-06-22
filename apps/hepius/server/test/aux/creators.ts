@@ -91,7 +91,7 @@ export class Creators {
 
     const requestHeaders = this.handler.defaultUserRequestHeaders;
     const memberParams = generateCreateMemberParams({ orgId: org.id, userId: user.id });
-    const { id } = await this.handler.createMemberWithRetries({ memberParams });
+    const { id } = await this.handler.mutations.createMember({ memberParams });
 
     const member = await this.handler.queries.getMember({ id, requestHeaders });
     expect(member.phone).toEqual(memberParams.phone);

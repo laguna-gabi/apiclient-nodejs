@@ -363,7 +363,7 @@ describe('Integration tests: all', () => {
       async () => false,
     );
 
-    const { id } = await handler.createMemberWithRetries({ memberParams });
+    const { id } = await handler.mutations.createMember({ memberParams });
 
     const { primaryUserId } = await handler.queries.getMember({ id });
     expect(primaryUserId).toEqual(userId);
@@ -1218,7 +1218,7 @@ describe('Integration tests: all', () => {
       });
       actionItem = (await handler.queries.getActionItems({ memberId: member1.id }))[0];
 
-      const { id } = await handler.createMemberWithRetries({
+      const { id } = await handler.mutations.createMember({
         memberParams: generateCreateMemberParams({ orgId: org.id, userId: user.id }),
       });
       member2 = await handler.queries.getMember({ id });
@@ -2741,7 +2741,7 @@ describe('Integration tests: all', () => {
 
   it('should update user related channels on updated user', async () => {
     const { user, org } = await creators.createMemberUserAndOptionalOrg();
-    await handler.createMemberWithRetries({
+    await handler.mutations.createMember({
       memberParams: generateCreateMemberParams({ orgId: org.id, userId: user.id }),
     }); //generating another member for the specific user above
 
