@@ -190,7 +190,7 @@ export interface ItemInterface {
 }
 
 export interface OptionInterface {
-  label: string;
+  label?: string;
   value: number;
 }
 export interface RangeInterface {

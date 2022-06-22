@@ -1,10 +1,14 @@
+import { LogInternalKey, generateDispatchId } from '@argus/irisClient';
+import { NotificationType } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
+import { format, utcToZonedTime } from 'date-fns-tz';
 import { Model, Types } from 'mongoose';
 import {
   DailyReport,
   DailyReportCategoriesInput,
+  DailyReportCategory,
   DailyReportDocument,
   DailyReportQueryInput,
   DailyReportsMetadata,
@@ -13,10 +17,18 @@ import {
   BaseService,
   EventType,
   IEventDeleteMember,
+  IEventOnQRSubmit,
+  IInternalDispatch,
   LoggerService,
   deleteMemberObjects,
+  getCorrelationId,
+  momentFormats,
 } from '../common';
 import { ISoftDelete } from '../db';
+import { JourneyService } from '../journey';
+import { MemberService } from '../member';
+import { QuestionnaireType } from '../questionnaire';
+import { lookup } from 'zipcode-to-timezone';
 
 @Injectable()
 export class DailyReportService extends BaseService {
@@ -25,6 +37,9 @@ export class DailyReportService extends BaseService {
     private readonly dailyReportModel: Model<DailyReportDocument> &
       ISoftDelete<DailyReportDocument>,
     private readonly logger: LoggerService,
+    private readonly journeyService: JourneyService,
+    readonly eventEmitter: EventEmitter2,
+    readonly memberService: MemberService,
   ) {
     super();
   }
@@ -45,13 +60,19 @@ export class DailyReportService extends BaseService {
   async setDailyReportCategories(
     dailyReportCategoryEntry: DailyReportCategoriesInput,
   ): Promise<DailyReport> {
+    const { primaryUserId } = await this.memberService.get(dailyReportCategoryEntry.memberId);
+    const { id: recentJourneyId } = await this.journeyService.getRecent(
+      dailyReportCategoryEntry.memberId,
+    );
+
     const filterParams = {
       memberId: new Types.ObjectId(dailyReportCategoryEntry.memberId),
-      journeyId: new Types.ObjectId(dailyReportCategoryEntry.journeyId),
+      journeyId: new Types.ObjectId(recentJourneyId),
       date: dailyReportCategoryEntry.date,
     };
+
     let dailyReportRecord: DailyReport = await this.dailyReportModel.findOne(filterParams);
-    dailyReportRecord = dailyReportRecord ? dailyReportRecord : { ...filterParams, categories: [] };
+    dailyReportRecord = dailyReportRecord || { ...filterParams, categories: [] };
 
     dailyReportCategoryEntry?.categories.forEach((categoryEntry) => {
       // Make sure to keep the internal `categories` array with unique single entry per category
@@ -74,7 +95,38 @@ export class DailyReportService extends BaseService {
       .filter((entry) => entry.rank <= DailyReportsMetadata.get(entry.category).threshold)
       .map((entry) => entry.category);
 
-    await this.dailyReportModel.findOneAndUpdate(
+    if (
+      primaryUserId &&
+      dailyReportRecord.statsOverThreshold?.length > 0 &&
+      !dailyReportRecord.notificationSent
+    ) {
+      const contentKey = LogInternalKey.memberNotFeelingWellMessage;
+      const memberNotFeelingWellEvent: IInternalDispatch = {
+        correlationId: getCorrelationId(this.logger),
+        dispatchId: generateDispatchId(
+          contentKey,
+          primaryUserId.toString(),
+          dailyReportCategoryEntry.memberId,
+          Date.now().toString(),
+        ),
+        notificationType: NotificationType.textSms,
+        recipientClientId: primaryUserId.toString(),
+        senderClientId: dailyReportCategoryEntry.memberId,
+        contentKey,
+      };
+      this.eventEmitter.emit(EventType.notifyDispatch, memberNotFeelingWellEvent);
+
+      this.logMemberOverThresholdIndication(dailyReportCategoryEntry.memberId);
+
+      // to indicate that a notification was sent to primary (avoid sending more than once)
+      dailyReportRecord.notificationSent = true;
+    }
+
+    this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
+      dispatchId: generateDispatchId(LogInternalKey.logReminder, dailyReportCategoryEntry.memberId),
+    });
+
+    return this.dailyReportModel.findOneAndUpdate(
       filterParams,
       { ...dailyReportRecord, deleted: false },
       {
@@ -82,8 +134,6 @@ export class DailyReportService extends BaseService {
         new: true,
       },
     );
-
-    return dailyReportRecord;
   }
 
   // Description: fetch date of oldest daily report record for member
@@ -110,18 +160,6 @@ export class DailyReportService extends BaseService {
 
     return this.get(dailyReportQueryInput);
   }
-  // Description: to indicate that a notification was sent to primary user due to
-  //              indications that the member (with memberId) is not feeling well
-  async setNotificationIndication(memberId: string, journeyId: string, date: string) {
-    return this.dailyReportModel.updateOne(
-      {
-        memberId: new Types.ObjectId(memberId),
-        journeyId: new Types.ObjectId(journeyId),
-        date,
-      },
-      { $set: { notificationSent: true } },
-    );
-  }
 
   logMemberOverThresholdIndication(memberId: string) {
     this.logger.info(
@@ -140,5 +178,24 @@ export class DailyReportService extends BaseService {
       methodName: this.deleteMemberDailyReports.name,
       serviceName: DailyReportService.name,
     });
+  }
+
+  @OnEvent(EventType.onQRSubmit, { async: true })
+  async handleMemberDailyReportQRSubmit(params: IEventOnQRSubmit) {
+    const member = await this.memberService.get(params.memberId);
+    if (params.questionnaireType === QuestionnaireType.mdl) {
+      await this.setDailyReportCategories({
+        memberId: params.memberId,
+        journeyId: params.journeyId,
+        date: format(utcToZonedTime(Date.now(), lookup(member.zipCode)), momentFormats.date),
+        categories: params.questionnaireResponse.answers.map(
+          (answer) =>
+            ({
+              category: answer.code,
+              rank: +answer.value,
+            } as DailyReportCategory),
+        ),
+      });
+    }
   }
 }

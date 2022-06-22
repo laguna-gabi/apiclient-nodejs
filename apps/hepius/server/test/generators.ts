@@ -90,7 +90,7 @@ import {
   UpdateFaultyMobileVersionsParams,
   UpdateMinMobileVersionParams,
 } from '../src/configuration';
-import { DailyReport } from '../src/dailyReport';
+import { DailyReport, DailyReportCategoriesInput } from '../src/dailyReport';
 import {
   ActionItemCategory,
   ActionItemPriority,
@@ -962,6 +962,15 @@ export const generateDailyReport = ({
   notificationSent = false,
 }: Partial<DailyReport> = {}): DailyReport => {
   return { memberId, journeyId, date, categories, statsOverThreshold, notificationSent };
+};
+
+export const generateDailyReportCategoriesInput = ({
+  memberId = generateId(),
+  journeyId = generateId(),
+  date = reformatDate(fakerDate.recent().toString(), general.dateFormatString),
+  categories = [],
+}: Partial<DailyReportCategoriesInput> = {}): DailyReportCategoriesInput => {
+  return { memberId, journeyId, date, categories };
 };
 
 /**************************************************************************************************

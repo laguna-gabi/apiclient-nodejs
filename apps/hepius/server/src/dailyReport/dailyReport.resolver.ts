@@ -1,6 +1,5 @@
 import { MemberRole, UserRole } from '@argus/hepiusClient';
-import { LogInternalKey, generateDispatchId } from '@argus/irisClient';
-import { EntityName, NotificationType } from '@argus/pandora';
+import { EntityName } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -16,15 +15,12 @@ import {
 import {
   Ace,
   Client,
-  EventType,
-  IInternalDispatch,
   LoggerService,
   LoggingInterceptor,
   MemberIdParam,
   MemberIdParamType,
   MemberUserRouteInterceptor,
   Roles,
-  getCorrelationId,
 } from '../common';
 import { JourneyService } from '../journey';
 
@@ -44,8 +40,6 @@ export class DailyReportResolver {
   @Roles(MemberRole.member)
   @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async setDailyReportCategories(
-    @Client('roles') roles,
-    @Client('primaryUserId') primaryUserId,
     @Args(
       camelCase(DailyReportCategoriesInput.name),
       { type: () => DailyReportCategoriesInput },
@@ -53,49 +47,7 @@ export class DailyReportResolver {
     )
     dailyReportCategoriesInput: DailyReportCategoriesInput,
   ): Promise<DailyReport> {
-    const recentJourney = await this.journeyService.getRecent(dailyReportCategoriesInput.memberId);
-    const dailyReportObject = await this.dailyReportService.setDailyReportCategories({
-      ...dailyReportCategoriesInput,
-      journeyId: recentJourney.id,
-    });
-
-    if (
-      primaryUserId &&
-      dailyReportObject.statsOverThreshold?.length > 0 &&
-      !dailyReportObject.notificationSent
-    ) {
-      const contentKey = LogInternalKey.memberNotFeelingWellMessage;
-      const memberNotFeelingWellEvent: IInternalDispatch = {
-        correlationId: getCorrelationId(this.logger),
-        dispatchId: generateDispatchId(
-          contentKey,
-          primaryUserId,
-          dailyReportCategoriesInput.memberId,
-          Date.now().toString(),
-        ),
-        notificationType: NotificationType.textSms,
-        recipientClientId: primaryUserId,
-        senderClientId: dailyReportCategoriesInput.memberId,
-        contentKey,
-      };
-      this.eventEmitter.emit(EventType.notifyDispatch, memberNotFeelingWellEvent);
-
-      this.dailyReportService.logMemberOverThresholdIndication(dailyReportCategoriesInput.memberId);
-
-      await this.dailyReportService.setNotificationIndication(
-        dailyReportCategoriesInput.memberId,
-        recentJourney.id,
-        dailyReportCategoriesInput.date,
-      );
-    }
-    this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
-      dispatchId: generateDispatchId(
-        LogInternalKey.logReminder,
-        dailyReportCategoriesInput.memberId,
-      ),
-    });
-
-    return dailyReportObject;
+    return this.dailyReportService.setDailyReportCategories(dailyReportCategoriesInput);
   }
 
   @Query(() => DailyReportResults)

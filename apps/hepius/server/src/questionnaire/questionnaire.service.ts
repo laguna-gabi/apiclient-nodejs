@@ -31,6 +31,7 @@ import {
   EventType,
   IEventDeleteMember,
   IEventOnAlertForQRSubmit,
+  IEventOnQRSubmit,
   ItemType,
   LoggerService,
   deleteMemberObjects,
@@ -109,20 +110,23 @@ export class QuestionnaireService extends AlertService {
     });
 
     // 3. upload on-the-fly calculated information
-    const out: QuestionnaireResponse = {
+    const questionnaireResponse: QuestionnaireResponse = {
       ...this.replaceId(qr.toObject()),
       type: questionnaire.type,
       result: this.buildResult(submitQuestionnaireResponseParams.answers, questionnaire),
     };
 
     // 4. notify #escalation-support (if needed)
-    if (out.result.alert || this.isOverThreshold(questionnaire, out.result.score)) {
+    if (
+      questionnaireResponse.result.alert ||
+      this.isOverThreshold(questionnaire, questionnaireResponse.result.score)
+    ) {
       const params: IEventOnAlertForQRSubmit = {
         memberId: submitQuestionnaireResponseParams.memberId,
         score:
-          out.result.alert && QuestionnaireAlerts.get(questionnaire.type)
+          questionnaireResponse.result.alert && QuestionnaireAlerts.get(questionnaire.type)
             ? QuestionnaireAlerts.get(questionnaire.type)
-            : out.result.score.toString(),
+            : questionnaireResponse.result.score.toString(),
         questionnaireName: questionnaire.shortName,
         questionnaireType: questionnaire.type,
         questionnaireResponseId: qr.id.toString(),
@@ -130,7 +134,17 @@ export class QuestionnaireService extends AlertService {
       this.eventEmitter.emit(EventType.onAlertForQRSubmit, params);
     }
 
-    return out;
+    // 4. emit an onSubmit event
+    const onQRSubmitParams: IEventOnQRSubmit = {
+      memberId: submitQuestionnaireResponseParams.memberId,
+      journeyId: submitQuestionnaireResponseParams.journeyId,
+      questionnaireName: questionnaire.shortName,
+      questionnaireType: questionnaire.type,
+      questionnaireResponse,
+    };
+    this.eventEmitter.emit(EventType.onQRSubmit, onQRSubmitParams);
+
+    return questionnaireResponse;
   }
 
   async getQuestionnaireResponses({
@@ -358,7 +372,8 @@ export class QuestionnaireService extends AlertService {
         return item;
       }
       if (item.type === ItemType.group) {
-        return this.findItemByCode(item.items, code);
+        const ret = this.findItemByCode(item.items, code);
+        if (ret) return ret;
       }
     }
   }

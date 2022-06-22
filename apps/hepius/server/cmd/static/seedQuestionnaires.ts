@@ -5,7 +5,8 @@ import {
   Item,
   QuestionnaireType,
 } from '../../src/questionnaire';
-import { upperCase } from 'lodash';
+import { capitalize, upperCase } from 'lodash';
+import { DailyReportCategoryTypes } from '../../src/dailyReport';
 
 export const buildGAD7Questionnaire = (): CreateQuestionnaireParams => {
   const groupTitle =
@@ -282,5 +283,80 @@ export const buildCSATQuestionnaire = (): CreateQuestionnaireParams => {
       },
     ],
     isAssignableToMember: true,
+  };
+};
+
+export const buildDailyLogQuestionnaire = (): CreateQuestionnaireParams => {
+  const questionEntries: { question: string; lowLabel: string; highLabel: string; code: string }[] =
+    [
+      {
+        question: `How is the member's mood?`,
+        lowLabel: 'bad',
+        highLabel: 'great',
+        code: DailyReportCategoryTypes.Mood,
+      },
+      {
+        question: `How was the member's sleep last night?`,
+        lowLabel: 'bad',
+        highLabel: 'great',
+        code: DailyReportCategoryTypes.Sleep,
+      },
+      {
+        question: `What is the member's mobility level?`,
+        lowLabel: 'low',
+        highLabel: 'high',
+        code: DailyReportCategoryTypes.Mobility,
+      },
+      {
+        question: `How is the member's appetite?`,
+        lowLabel: 'bad',
+        highLabel: 'great',
+        code: DailyReportCategoryTypes.Appetite,
+      },
+      {
+        question: `What is the member's energy level?`,
+        lowLabel: 'low',
+        highLabel: 'high',
+        code: DailyReportCategoryTypes.Energy,
+      },
+      {
+        question: `How was the member's pain level?`,
+        lowLabel: 'very painful',
+        highLabel: 'no pain',
+        code: DailyReportCategoryTypes.Pain,
+      },
+    ];
+
+  let count = 0;
+  const groupItems: Item[] = questionEntries.map((questionEntry) => ({
+    code: `g${capitalize(questionEntry.code)}`,
+    label: capitalize(questionEntry.code),
+    type: ItemType.group,
+    order: count++,
+    required: false,
+    items: [
+      {
+        code: questionEntry.code,
+        label: questionEntry.question,
+        type: ItemType.choice,
+        order: count++,
+        required: false,
+        options: [
+          { label: questionEntry.lowLabel, value: 1 },
+          { label: '', value: 2 },
+          { label: '', value: 3 },
+          { label: '', value: 4 },
+          { label: questionEntry.highLabel, value: 5 },
+        ],
+      },
+    ],
+  }));
+
+  return {
+    name: `Member Daily Log`,
+    shortName: upperCase(QuestionnaireType.mdl),
+    type: QuestionnaireType.mdl,
+    items: groupItems,
+    isAssignableToMember: false,
   };
 };

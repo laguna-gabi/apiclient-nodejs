@@ -1,9 +1,17 @@
-import { generateId, generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { LogInternalKey, generateDispatchId } from '@argus/irisClient';
+import {
+  NotificationType,
+  generateId,
+  generateObjectId,
+  mockLogger,
+  mockProcessWarnings,
+} from '@argus/pandora';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types } from 'mongoose';
 import { checkDelete, dbDisconnect, defaultModules } from '..';
-import { IEventDeleteMember, LoggerService } from '../../src/common';
+import { EventType, IEventDeleteMember, LoggerService } from '../../src/common';
 import {
   DailyReport,
   DailyReportCategoriesInput,
@@ -12,11 +20,23 @@ import {
   DailyReportModule,
   DailyReportService,
 } from '../../src/dailyReport';
+import { JourneyService } from '../../src/journey';
+import { MemberService } from '../../src/member';
 
 describe('DailyReportCategoryService', () => {
-  let service: DailyReportService;
-  let dailyReportModel: Model<DailyReport>;
   let module: TestingModule;
+  let service: DailyReportService;
+
+  let memberService: MemberService;
+  let journeyService: JourneyService;
+  let eventEmitter: EventEmitter2;
+
+  let spyOnMemberServiceGet: jest.SpyInstance;
+  let spyOnJourneyServiceGetRecent: jest.SpyInstance;
+  let spyOnEventEmitterEmit: jest.SpyInstance;
+  let spyOnDailyReportModelFindOneAndUpdate: jest.SpyInstance;
+
+  let dailyReportModel: Model<DailyReport>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -28,6 +48,14 @@ describe('DailyReportCategoryService', () => {
     dailyReportModel = module.get<Model<DailyReport>>(getModelToken(DailyReport.name));
 
     mockLogger(module.get<LoggerService>(LoggerService));
+    memberService = module.get<MemberService>(MemberService);
+    journeyService = module.get<JourneyService>(JourneyService);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+
+    spyOnMemberServiceGet = jest.spyOn(memberService, 'get');
+    spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
+    spyOnEventEmitterEmit = jest.spyOn(eventEmitter, 'emit');
+    spyOnDailyReportModelFindOneAndUpdate = jest.spyOn(dailyReportModel, 'findOneAndUpdate');
   });
 
   afterAll(async () => {
@@ -56,7 +84,18 @@ describe('DailyReportCategoryService', () => {
 
   describe('setDailyReportCategories', () => {
     const memberId = generateId();
-    const journeyId = generateId();
+    const primaryUserId = generateId();
+    const recentJourneyId = generateId();
+
+    beforeAll(async () => {
+      spyOnMemberServiceGet.mockResolvedValue({ primaryUserId });
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: recentJourneyId });
+    });
+
+    beforeEach(() => {
+      spyOnEventEmitterEmit.mockReset();
+      spyOnDailyReportModelFindOneAndUpdate.mockReset();
+    });
 
     it.each([
       [
@@ -65,13 +104,13 @@ describe('DailyReportCategoryService', () => {
           date: '2015/01/01',
           categories: [{ rank: 4, category: DailyReportCategoryTypes.Pain }],
           memberId,
-          journeyId,
+          journeyId: recentJourneyId,
         } as DailyReportCategoriesInput, // <= new record
         null, // <= no existing record in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
-          journeyId: new Types.ObjectId(journeyId),
+          journeyId: new Types.ObjectId(recentJourneyId),
           categories: [{ rank: 4, category: DailyReportCategoryTypes.Pain }],
           statsOverThreshold: [],
         }, // <= expected
@@ -85,18 +124,18 @@ describe('DailyReportCategoryService', () => {
             { rank: 4, category: DailyReportCategoryTypes.Pain },
           ],
           memberId,
-          journeyId,
+          journeyId: recentJourneyId,
         } as DailyReportCategoriesInput, // <= new record
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
-          journeyId: new Types.ObjectId(journeyId),
+          journeyId: new Types.ObjectId(recentJourneyId),
           categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
-          journeyId: new Types.ObjectId(journeyId),
+          journeyId: new Types.ObjectId(recentJourneyId),
           categories: [
             { rank: 2, category: DailyReportCategoryTypes.Mobility },
             { rank: 4, category: DailyReportCategoryTypes.Pain },
@@ -110,18 +149,18 @@ describe('DailyReportCategoryService', () => {
           date: '2015/01/01',
           categories: [{ rank: 1, category: DailyReportCategoryTypes.Pain }],
           memberId,
-          journeyId,
+          journeyId: recentJourneyId,
         } as DailyReportCategoriesInput, // <= new record
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
-          journeyId: new Types.ObjectId(journeyId),
+          journeyId: new Types.ObjectId(recentJourneyId),
           categories: [{ rank: 4, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
-          journeyId: new Types.ObjectId(journeyId),
+          journeyId: new Types.ObjectId(recentJourneyId),
           categories: [{ rank: 1, category: DailyReportCategoryTypes.Pain }],
           statsOverThreshold: [DailyReportCategoryTypes.Pain],
         }, // <= expected
@@ -136,18 +175,18 @@ describe('DailyReportCategoryService', () => {
             { rank: 1, category: DailyReportCategoryTypes.Mobility },
           ],
           memberId,
-          journeyId,
+          journeyId: recentJourneyId,
         } as DailyReportCategoriesInput, // <= new record
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
-          journeyId: new Types.ObjectId(journeyId),
+          journeyId: new Types.ObjectId(recentJourneyId),
           categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
-          journeyId: new Types.ObjectId(journeyId),
+          journeyId: new Types.ObjectId(recentJourneyId),
           categories: [
             { rank: 1, category: DailyReportCategoryTypes.Pain },
             { rank: 1, category: DailyReportCategoryTypes.Mobility },
@@ -167,11 +206,47 @@ describe('DailyReportCategoryService', () => {
       ) => {
         jest.spyOn(dailyReportModel, 'findOne').mockResolvedValueOnce(existingRecordInDatabase);
 
-        jest.spyOn(dailyReportModel, 'findOneAndUpdate').mockResolvedValue(null);
+        await service.setDailyReportCategories(dailyReportCategoryEntry);
 
-        const out = await service.setDailyReportCategories(dailyReportCategoryEntry);
+        expect(spyOnDailyReportModelFindOneAndUpdate).toHaveBeenCalledWith(
+          {
+            date: dailyReportCategoryEntry.date,
+            journeyId: new Types.ObjectId(recentJourneyId),
+            memberId: new Types.ObjectId(memberId),
+          },
+          {
+            ...expectedDailyReport,
+            deleted: false,
+            notificationSent: expectedDailyReport.statsOverThreshold?.length ? true : undefined,
+          },
+          { new: true, upsert: true },
+        );
 
-        expect(out).toEqual(expectedDailyReport);
+        let nthCallForNotifyDeleteDispatch = 1;
+        if (expectedDailyReport.statsOverThreshold?.length) {
+          expect(spyOnEventEmitterEmit).toHaveBeenNthCalledWith(
+            1,
+            EventType.notifyDispatch,
+            expect.objectContaining({
+              notificationType: NotificationType.textSms,
+              recipientClientId: primaryUserId.toString(),
+              senderClientId: dailyReportCategoryEntry.memberId,
+              contentKey: LogInternalKey.memberNotFeelingWellMessage,
+            }),
+          );
+          nthCallForNotifyDeleteDispatch++;
+        }
+
+        expect(spyOnEventEmitterEmit).toHaveBeenNthCalledWith(
+          nthCallForNotifyDeleteDispatch,
+          EventType.notifyDeleteDispatch,
+          {
+            dispatchId: generateDispatchId(
+              LogInternalKey.logReminder,
+              dailyReportCategoryEntry.memberId,
+            ),
+          },
+        );
       },
     );
   });
@@ -186,28 +261,6 @@ describe('DailyReportCategoryService', () => {
       const out = await service.getOldestDailyReportRecord(generateId());
 
       expect(out).toEqual(oldestRecordDate);
-    });
-  });
-
-  describe('setNotificationIndication', () => {
-    it(`model update should be called with the correct parameters`, () => {
-      const spyOnDailyReportCategoryModel = jest
-        .spyOn(dailyReportModel, 'updateOne')
-        .mockResolvedValue(undefined);
-
-      const memberId = generateId();
-      const journeyId = generateId();
-
-      service.setNotificationIndication(memberId, journeyId, '2020/01/01');
-
-      expect(spyOnDailyReportCategoryModel).toBeCalledWith(
-        {
-          memberId: new Types.ObjectId(memberId),
-          journeyId: new Types.ObjectId(journeyId),
-          date: '2020/01/01',
-        },
-        { $set: { notificationSent: true } },
-      );
     });
   });
 

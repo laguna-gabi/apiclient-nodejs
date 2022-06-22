@@ -33,6 +33,7 @@ export enum QuestionnaireType {
   nps = 'nps',
   lhp = 'lhp',
   csat = 'csat',
+  mdl = 'mdl',
 }
 
 export const QuestionnaireAlerts: Map<QuestionnaireType, string> = new Map([
@@ -49,6 +50,7 @@ registerEnumType(QuestionnaireType, {
     nps: { description: 'Net Promoter Score' },
     lhp: { description: 'Healthcare Persona' },
     csat: { description: 'Customer Satisfaction' },
+    mdl: { description: 'Member Daily Log' },
   },
 });
 
@@ -170,7 +172,7 @@ export class SubmitQuestionnaireResponseParams {
 export class Option implements OptionInterface {
   @Prop()
   @Field(() => String)
-  label: string;
+  label?: string;
 
   @Prop()
   @Field(() => Number)

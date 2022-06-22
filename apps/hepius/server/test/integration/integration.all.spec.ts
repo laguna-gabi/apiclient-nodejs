@@ -21,7 +21,7 @@ import {
   translation,
 } from '@argus/pandora';
 import { articlesPath, general, hosts } from 'config';
-import { add, startOfToday, startOfTomorrow, sub, subDays } from 'date-fns';
+import { add, format, startOfToday, startOfTomorrow, sub, subDays } from 'date-fns';
 import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
 import {
@@ -76,6 +76,7 @@ import {
   submitMockCareWizard,
 } from '..';
 import {
+  buildDailyLogQuestionnaire,
   buildLHPQuestionnaire,
   buildPHQ9Questionnaire,
   buildWHO5Questionnaire,
@@ -90,9 +91,14 @@ import {
   IEventOnUpdatedUser,
   ItemType,
   delay,
+  momentFormats,
   reformatDate,
 } from '../../src/common';
-import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
+import {
+  DailyReportCategoryTypes,
+  DailyReportQueryInput,
+  DailyReportResults,
+} from '../../src/dailyReport';
 import { Member, ReplaceUserForMemberParams } from '../../src/member';
 import {
   ActionItem,
@@ -119,6 +125,8 @@ import {
 import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import { Recording } from '../../src/recording';
+import { utcToZonedTime } from 'date-fns-tz';
+import { lookup } from 'zipcode-to-timezone';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -2693,6 +2701,50 @@ describe('Integration tests: all', () => {
       expect(actionItems.length).toEqual(1);
       expect(actionItems[0].relatedEntities).toEqual([qrRelatedEntity, qrResponseRelatedEntity]);
       expect(actionItems[0].status).toEqual(ActionItemStatus.completed);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should create a daily rlog entry for a member when a `Member Daily Log` questionnaire is submitted', async () => {
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
+
+      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams: buildDailyLogQuestionnaire(),
+      });
+
+      await handler.mutations.submitQuestionnaireResponse({
+        requestHeaders: generateRequestHeaders(user.authId),
+        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+          questionnaireId,
+          memberId: member.id,
+          answers: [{ code: DailyReportCategoryTypes.Pain, value: '5' }],
+        }),
+      });
+
+      await delay(500); // wait for the last emit to complete
+
+      // construct the user `now` string format standard date
+      const now = format(utcToZonedTime(Date.now(), lookup(member.zipCode)), momentFormats.date);
+
+      const dailyReportResults: DailyReportResults = await handler.queries.getDailyReports({
+        dailyReportQueryInput: {
+          memberId: member.id,
+          startDate: now,
+          endDate: now,
+        },
+      });
+
+      expect(dailyReportResults.data.length).toEqual(1);
+      expect(dailyReportResults.data[0]).toEqual({
+        categories: [
+          {
+            category: DailyReportCategoryTypes.Pain,
+            rank: 5,
+          },
+        ],
+        date: now,
+        memberId: member.id,
+        statsOverThreshold: [],
+      });
     });
   });
 

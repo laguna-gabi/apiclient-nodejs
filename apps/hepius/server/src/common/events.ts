@@ -1,5 +1,5 @@
 import { Platform, QueueType } from '@argus/pandora';
-import { HealthPersona, QuestionnaireType } from '../questionnaire';
+import { HealthPersona, QuestionnaireResponse, QuestionnaireType } from '../questionnaire';
 import { UpdatedAppointmentAction } from '.';
 import { AppointmentDocument } from '../appointment';
 import { Member } from '../member';
@@ -39,6 +39,7 @@ export enum EventType {
   // questionnaire
   onAlertForQRSubmit = 'onAlertForQRSubmit',
   onUpdateHealthPersona = 'onUpdateHealthPersona',
+  onQRSubmit = 'onQRSubmit',
 
   // general
   onUpdateRelatedEntity = 'onUpdateRelatedEntity',
@@ -146,6 +147,16 @@ export interface IEventUnconsentedAppointmentEnded extends IEventMember {
 
 export interface IEventOnDeletedMemberAppointments {
   appointments: AppointmentDocument[];
+}
+
+/*************************************************************************************************
+ *********************************** Questionnaire interfaces ************************************
+ *************************************************************************************************/
+export interface IEventOnQRSubmit extends IEventMember {
+  journeyId: string;
+  questionnaireName: string;
+  questionnaireType: QuestionnaireType;
+  questionnaireResponse: QuestionnaireResponse;
 }
 
 /*************************************************************************************************

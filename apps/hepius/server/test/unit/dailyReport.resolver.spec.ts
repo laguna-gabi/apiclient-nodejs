@@ -1,14 +1,10 @@
 import { MemberRole } from '@argus/hepiusClient';
-import { LogInternalKey, generateDispatchId } from '@argus/irisClient';
-import { NotificationType, generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Types } from 'mongoose';
-import { dbDisconnect, defaultModules } from '..';
-import { EventType, LoggerService } from '../../src/common';
+import { dbDisconnect, defaultModules, generateDailyReportCategoriesInput } from '..';
+import { LoggerService } from '../../src/common';
 import {
   DailyReport,
-  DailyReportCategoriesInput,
   DailyReportCategory,
   DailyReportCategoryTypes,
   DailyReportModule,
@@ -22,9 +18,7 @@ describe('DailyReportResolver', () => {
   let resolver: DailyReportResolver;
   let service: DailyReportService;
   let jounreyService: JourneyService;
-  let eventEmitter: EventEmitter2;
   let module: TestingModule;
-  let memberId: string;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -36,10 +30,7 @@ describe('DailyReportResolver', () => {
     resolver = module.get<DailyReportResolver>(DailyReportResolver);
     service = module.get<DailyReportService>(DailyReportService);
     jounreyService = module.get<JourneyService>(JourneyService);
-    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     mockLogger(module.get<LoggerService>(LoggerService));
-
-    memberId = generateId();
   });
 
   afterAll(async () => {
@@ -48,146 +39,19 @@ describe('DailyReportResolver', () => {
   });
 
   describe('setDailyReportCategories', () => {
-    let eventEmitterSpy;
-    let spyOnJourneyServiceGetRecent: jest.SpyInstance;
+    const dailyReportCategoryInputs = generateDailyReportCategoriesInput();
 
-    beforeEach(() => {
-      spyOnJourneyServiceGetRecent = jest.spyOn(jounreyService, 'getRecent');
+    it('should be called with daily report input args', async () => {
+      const spyOnDailyReportServiceSetDailyReportCategories = jest
+        .spyOn(service, 'setDailyReportCategories')
+        .mockResolvedValue(null);
+
+      await resolver.setDailyReportCategories(dailyReportCategoryInputs);
+
+      expect(spyOnDailyReportServiceSetDailyReportCategories).toHaveBeenCalledWith(
+        dailyReportCategoryInputs,
+      );
     });
-
-    afterEach(() => {
-      spyOnJourneyServiceGetRecent.mockReset();
-    });
-
-    afterEach(() => {
-      eventEmitterSpy.mockReset();
-    });
-    memberId = generateId();
-    const journeyId = generateId();
-
-    /* eslint-disable max-len */
-    it.each([
-      [
-        'expect to emit notification - no stats-over-threshold',
-        {
-          statsOverThreshold: [DailyReportCategoryTypes.Pain], // <= single stat over threshold
-          memberId: new Types.ObjectId(memberId),
-          journeyId: new Types.ObjectId(journeyId),
-          categories: [],
-          date: '2015/01/01',
-        } as DailyReport, // <= daily report returned from service (updated record),
-        {
-          honorific: 'Mr.',
-          lastName: 'Levy',
-          primaryUserId: 'U0001',
-          roles: [MemberRole.member],
-        }, // <= context
-        {
-          date: '',
-          categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
-          memberId,
-          journeyId,
-        } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
-        {
-          contentKey: LogInternalKey.memberNotFeelingWellMessage,
-          notificationType: NotificationType.textSms,
-          recipientClientId: 'U0001',
-          senderClientId: memberId,
-        },
-      ],
-      [
-        'expect not to emit notification - no stats-over-threshold',
-        {
-          statsOverThreshold: [], // <= no stats over threshold
-          memberId: new Types.ObjectId(memberId),
-          categories: [],
-          date: '2015/01/01',
-        } as DailyReport, // <= daily report returned from service (updated record),
-        {
-          honorific: 'Mr.',
-          lastName: 'Levy',
-          primaryUserId: 'U0001',
-          roles: [MemberRole.member],
-        }, // <= context
-        {
-          date: '',
-          categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
-          memberId,
-          journeyId,
-        } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
-        null,
-      ],
-      [
-        'expect to emit notification - no user info in request (context)',
-        {
-          statsOverThreshold: [DailyReportCategoryTypes.Pain], // <= single stat over threshold
-          memberId: new Types.ObjectId(memberId),
-          journeyId: new Types.ObjectId(journeyId),
-          categories: [],
-          date: '2015/01/01',
-        } as DailyReport, // <= daily report returned from service (updated record),
-        {
-          honorific: 'Mr.',
-          lastName: 'Levy',
-          roles: [MemberRole.member],
-          primaryUserId: undefined,
-        }, // <= context (missing primary user id)
-        {
-          date: '',
-          categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
-          memberId,
-          journeyId,
-        } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
-        null,
-      ],
-    ])(
-      '%s',
-      async (
-        _,
-        serviceSetDailyReportCategoryReturnedValue,
-        context,
-        dailyReportCategoryInput,
-        emittedEventParams,
-      ) => {
-        /* eslint-enable max-len */
-        jest
-          .spyOn(service, 'setDailyReportCategories')
-          .mockResolvedValue(serviceSetDailyReportCategoryReturnedValue);
-        eventEmitterSpy = jest.spyOn(eventEmitter, 'emit');
-        spyOnJourneyServiceGetRecent.mockResolvedValueOnce({
-          id: dailyReportCategoryInput.journeyId,
-        });
-        await resolver.setDailyReportCategories(
-          context.roles,
-          context.primaryUserId,
-          dailyReportCategoryInput,
-        );
-        const params = {
-          dispatchId: generateDispatchId(
-            LogInternalKey.logReminder,
-            dailyReportCategoryInput.memberId,
-          ),
-        };
-        if (emittedEventParams) {
-          expect(eventEmitterSpy).toHaveBeenNthCalledWith(
-            1,
-            EventType.notifyDispatch,
-            expect.objectContaining(emittedEventParams),
-          );
-          expect(eventEmitterSpy).toHaveBeenNthCalledWith(
-            2,
-            EventType.notifyDeleteDispatch,
-            params,
-          );
-        } else {
-          expect(eventEmitterSpy).toHaveBeenNthCalledWith(
-            1,
-            EventType.notifyDeleteDispatch,
-            params,
-          );
-        }
-      },
-    );
   });
 
   describe('getDailyReports', () => {

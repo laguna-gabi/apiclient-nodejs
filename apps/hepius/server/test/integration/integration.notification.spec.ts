@@ -72,6 +72,7 @@ import {
   NotificationType,
   Platform,
   QueueType,
+  generateId,
 } from '@argus/pandora';
 import { general, hosts, scheduler } from 'config';
 import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
@@ -86,8 +87,8 @@ import {
   reformatDate,
 } from '../../src/common';
 import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
-import { CancelNotifyParams, NotifyParams } from '../../src/member';
-import { AudioFormat, ImageFormat, UpdateJournalTextParams } from '../../src/journey';
+import { CancelNotifyParams, Member, NotifyParams } from '../../src/member';
+import { AudioFormat, ImageFormat, Journey, UpdateJournalTextParams } from '../../src/journey';
 import {
   AlertConditionType,
   CreateQuestionnaireParams,
@@ -108,7 +109,6 @@ import {
   generateCreateMemberParams,
   generateCreateQuestionnaireParams,
   generateCreateTodoParams,
-  generateDailyReport,
   generateDeleteMemberParams,
   generateNotifyContentParams,
   generateOrgParams,
@@ -1957,11 +1957,13 @@ describe('Integration tests: notifications', () => {
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
+      jest.spyOn(handler.memberService, 'get').mockResolvedValue({
+        primaryUserId: member.primaryUserId,
+      } as Member);
+
       jest
-        .spyOn(handler.dailyReportService, 'setDailyReportCategories')
-        .mockImplementation(async () =>
-          generateDailyReport({ statsOverThreshold: [DailyReportCategoryTypes.Pain] }),
-        );
+        .spyOn(handler.journeyService, 'getRecent')
+        .mockResolvedValue({ id: generateId() } as Journey);
 
       await handler.mutations // .setContextUserId(member.id, member.primaryUserId.toString())
         .setDailyReportCategories({

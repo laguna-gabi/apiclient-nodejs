@@ -177,6 +177,7 @@ describe('QuestionnaireService', () => {
     );
 
     lhpTypeTemplate = await service.createQuestionnaire(buildLHPQuestionnaire());
+
     await dbConnect();
   });
 
@@ -273,7 +274,7 @@ describe('QuestionnaireService', () => {
           { code: 'q2', value: '2' },
           { code: 'q3', value: '2' }, // does not satisfy alert condition
         ],
-        '6',
+        '6', // score threshold for alert is 5 so we expect a notification
       ],
       [
         'should submit a questionnaire response and issue an alert - with alert label',
@@ -295,26 +296,39 @@ describe('QuestionnaireService', () => {
         answers,
       });
 
-      const qr = await questionnaireResponseModel.findById(id).lean();
+      const qr = await questionnaireResponseModel.findById(id);
 
-      expect(qr).toEqual({
-        _id: id,
-        questionnaireId: new Types.ObjectId(phq9TypeTemplate.id.toString()),
-        deleted: false,
-        updatedAt: expect.any(Date),
-        createdAt: expect.any(Date),
-        memberId: new Types.ObjectId(memberId),
-        journeyId: new Types.ObjectId(journeyId),
-        answers,
-      });
+      expect(qr).toEqual(
+        expect.objectContaining({
+          id: id.toString(),
+          _id: id,
+          questionnaireId: new Types.ObjectId(phq9TypeTemplate.id.toString()),
+          deleted: false,
+          memberId: new Types.ObjectId(memberId),
+          journeyId: new Types.ObjectId(journeyId),
+          answers,
+        }),
+      );
 
-      expect(spyOnEventEmitter).toHaveBeenCalledWith(EventType.onAlertForQRSubmit, {
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.onAlertForQRSubmit, {
         memberId,
         questionnaireName: phq9TypeTemplate.shortName,
         score: expectedScore,
         questionnaireType: phq9TypeTemplate.type,
         questionnaireResponseId: id.toString(),
       });
+
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+        2,
+        EventType.onQRSubmit,
+        expect.objectContaining({
+          memberId,
+          journeyId,
+          questionnaireName: phq9TypeTemplate.shortName,
+          questionnaireType: phq9TypeTemplate.type,
+          questionnaireResponse: expect.objectContaining({ answers: qr.answers }),
+        }),
+      );
     });
 
     it('should fail to submit a questionnaire response - invalid questionnaire id', async () => {
@@ -940,7 +954,7 @@ describe('QuestionnaireService', () => {
       expect(qr.result).toEqual(params.result);
 
       if (params.alert) {
-        expect(spyOnEventEmitter).toHaveBeenLastCalledWith(EventType.onAlertForQRSubmit, {
+        expect(spyOnEventEmitter).toHaveBeenCalledWith(EventType.onAlertForQRSubmit, {
           memberId: submitResponse.memberId,
           questionnaireName: who5.shortName,
           questionnaireResponseId: qr.id.toString(),
