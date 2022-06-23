@@ -231,7 +231,10 @@ export class JourneyService extends AlertService {
       // Every nullable property that is not set in the createOrSetActionItemParams will be removed (unset).
       const unsetParams = {};
       nullableActionItemKeys.forEach((key) => {
-        if (!createOrSetActionItemParams[key]) unsetParams[key] = 1;
+        if (isNil(createOrSetActionItemParams[key])) {
+          unsetParams[key] = 1;
+          delete setParams[key];
+        }
       });
       result = await this.actionItemModel.findByIdAndUpdate(
         new Types.ObjectId(id),

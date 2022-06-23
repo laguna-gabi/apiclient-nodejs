@@ -494,6 +494,55 @@ describe(JourneyService.name, () => {
       );
     });
 
+    it(`should override action item with new params`, async () => {
+      const memberId = generateId();
+      const orgId = generateId();
+      await service.create({ memberId, orgId });
+      // create
+      const createActionItemParams1 = generateCreateOrSetActionItemParams({ memberId });
+      const { id } = await service.createOrSetActionItem(createActionItemParams1);
+
+      const resultsBefore = await service.getActionItems(memberId);
+      expect(resultsBefore).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createActionItemParams1,
+            id,
+            memberId: new Types.ObjectId(memberId),
+            appointmentId: new Types.ObjectId(createActionItemParams1.appointmentId),
+          }),
+        ]),
+      );
+
+      // set
+      const createActionItemParams2 = generateCreateOrSetActionItemParams({
+        id,
+      });
+      // test removing properties
+      delete createActionItemParams2.description;
+      delete createActionItemParams2.rejectNote;
+      createActionItemParams2.category = undefined;
+      createActionItemParams2.deadline = null;
+
+      await service.createOrSetActionItem(createActionItemParams2);
+      const resultsAfter = await service.getActionItems(memberId);
+
+      expect(resultsAfter).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createActionItemParams2,
+            id,
+            memberId: new Types.ObjectId(memberId),
+            appointmentId: new Types.ObjectId(createActionItemParams1.appointmentId),
+            description: undefined,
+            rejectNote: undefined,
+            category: undefined,
+            deadline: undefined,
+          }),
+        ]),
+      );
+    });
+
     it('should return empty array on non existing action items per member', async () => {
       const memberId = generateId();
       const orgId = generateId();
