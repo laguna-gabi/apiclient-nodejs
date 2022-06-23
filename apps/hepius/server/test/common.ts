@@ -297,11 +297,15 @@ export async function checkAuditValues<TDoc extends Document>(
     doc.updatedBy?.toString() === expectedUpdatedBy
   );
 }
-export const isResultValid = ({
+export const handleExceptionReceived = ({
   errors,
   invalidFieldsErrors,
   missingFieldError = undefined,
+  params,
 }): boolean => {
+  if (!missingFieldError && !invalidFieldsErrors) {
+    console.error(`failed to execute graphql for params ${params}`, errors);
+  }
   if (invalidFieldsErrors) {
     for (let i = 0; i < invalidFieldsErrors.length; i++) {
       expect(errors[0][i]?.message || errors[0]?.message).toContain(invalidFieldsErrors[i]);

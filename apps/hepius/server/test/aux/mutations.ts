@@ -9,7 +9,7 @@ import {
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { camelCase } from 'lodash';
-import { isResultValid } from '..';
+import { handleExceptionReceived } from '..';
 import {
   EndAppointmentParams,
   RequestAppointmentParams,
@@ -123,10 +123,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: createUserParams,
         });
       });
 
@@ -176,10 +177,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateUserParams,
         });
       });
 
@@ -210,10 +212,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: orgParams,
         });
       });
 
@@ -244,10 +247,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: memberParams,
         });
       });
 
@@ -279,10 +283,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateMemberParams,
         });
       });
 
@@ -314,10 +319,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: appointmentParams,
         });
       });
 
@@ -349,10 +355,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: appointmentParams,
         });
       });
 
@@ -384,10 +391,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: endAppointmentParams,
         });
       });
 
@@ -447,10 +455,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateNotesParams,
         });
       });
 
@@ -499,10 +508,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: createOrSetActionItemParams,
         });
       });
 
@@ -533,10 +543,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: availabilities,
         });
       });
 
@@ -596,10 +607,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: setGeneralNotesParams,
         });
       });
 
@@ -651,10 +663,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateJournalTextParams,
         });
       });
 
@@ -683,10 +696,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: id,
         });
       });
 
@@ -715,10 +729,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: id,
         });
       });
 
@@ -747,10 +762,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: id,
         });
       });
 
@@ -779,10 +795,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: id,
         });
       });
 
@@ -811,10 +828,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateMemberConfigParams,
         });
       });
 
@@ -847,10 +865,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: registerForNotificationParams,
         });
       });
 
@@ -877,10 +896,11 @@ export class Mutations {
         this.defaultAdminRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: deleteMemberParams,
         });
       });
 
@@ -907,10 +927,11 @@ export class Mutations {
         this.defaultUserRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: notifyParams,
         });
       });
 
@@ -937,10 +958,11 @@ export class Mutations {
         this.defaultUserRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: notifyContentParams,
         });
       });
 
@@ -967,10 +989,11 @@ export class Mutations {
         this.defaultUserRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: cancelNotifyParams,
         });
       });
 
@@ -1016,10 +1039,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateRecordingParams,
         });
       });
 
@@ -1078,10 +1102,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: replaceUserForMemberParams,
         });
       });
 
@@ -1110,10 +1135,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: replaceMemberOrgParams,
         });
       });
 
@@ -1145,10 +1171,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: deleteDischargeDocumentParams,
         });
       });
 
@@ -1185,10 +1212,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: addCaregiverParams,
         });
       });
 
@@ -1217,10 +1245,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: alertId,
         });
       });
 
@@ -1247,10 +1276,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: {},
         });
       });
 
@@ -1287,10 +1317,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateCaregiverParams,
         });
       });
 
@@ -1319,10 +1350,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: id,
         });
       });
 
@@ -1353,10 +1385,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           invalidFieldsErrors,
           missingFieldError,
+          params: completeMultipartUploadParams,
         });
       });
 
@@ -1387,10 +1420,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: createTodoParams,
         });
       });
 
@@ -1421,10 +1455,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: createActionTodoParams,
         });
       });
 
@@ -1465,10 +1500,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateTodoParams,
         });
       });
 
@@ -1497,10 +1533,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: id,
         });
       });
 
@@ -1529,10 +1566,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: id,
         });
       });
 
@@ -1563,10 +1601,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: createTodoDoneParams,
         });
       });
 
@@ -1595,10 +1634,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: id,
         });
       });
 
@@ -1629,10 +1669,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: createCarePlanParams,
         });
       });
 
@@ -1663,10 +1704,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateCarePlanParams,
         });
       });
 
@@ -1697,10 +1739,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: createQuestionnaireParams,
         });
       });
 
@@ -1735,10 +1778,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: submitQuestionnaireResponseParams,
         });
       });
 
@@ -1769,10 +1813,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: submitCareWizardParams,
         });
       });
 
@@ -1803,10 +1848,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateBarrierParams,
         });
       });
 
@@ -1838,10 +1884,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateRedFlagParams,
         });
       });
 
@@ -1889,10 +1936,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: graduateMemberParams,
         });
       });
   };
@@ -1922,10 +1970,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: changeMemberDnaParams,
         });
       });
 
@@ -1955,10 +2004,11 @@ export class Mutations {
         this.defaultUserRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateJourneyParams,
         });
       });
 
@@ -1989,10 +2039,11 @@ export class Mutations {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: createBarrierParams,
         });
       });
 
@@ -2019,10 +2070,11 @@ export class Mutations {
         this.defaultAdminRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: createMobileVersionParams,
         });
       });
 
@@ -2051,10 +2103,11 @@ export class Mutations {
         this.defaultAdminRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateMinMobileVersionParams,
         });
       });
 
@@ -2085,10 +2138,11 @@ export class Mutations {
         this.defaultAdminRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: updateFaultyMobileVersionsParams,
         });
       });
 

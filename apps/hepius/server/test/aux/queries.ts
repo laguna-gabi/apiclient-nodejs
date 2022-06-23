@@ -8,7 +8,7 @@ import {
 } from '@argus/hepiusClient';
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
-import { generateGetSlotsParams, isResultValid } from '..';
+import { generateGetSlotsParams, handleExceptionReceived } from '..';
 import { RedFlag, RedFlagType } from '../../src/care';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
@@ -323,10 +323,11 @@ export class Queries {
         this.defaultUserRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: recordingLinkParams,
         });
       });
 
@@ -360,10 +361,11 @@ export class Queries {
         this.defaultUserRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: multipartUploadRecordingLinkParams,
         });
       });
 
@@ -390,10 +392,11 @@ export class Queries {
         this.defaultUserRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: recordingLinkParams,
         });
       });
 
@@ -577,10 +580,11 @@ export class Queries {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: getCommunicationParams,
         });
       });
 
@@ -825,10 +829,11 @@ export class Queries {
         requestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
+        return handleExceptionReceived({
           errors: ex.response.errors,
           missingFieldError,
           invalidFieldsErrors,
+          params: getMemberUploadJournalImageLinkParams,
         });
       });
 
