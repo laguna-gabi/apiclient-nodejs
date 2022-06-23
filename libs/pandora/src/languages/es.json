@@ -65,6 +65,52 @@
             "assessmentSubmitScoreOverThreshold": "",
             "memberCreateTodo": "",
             "appointmentSubmitOverdue": ""
+        },
+        "actionItems": {
+            "introduceYourself": {
+                "title": "",
+                "description": ""
+            },
+            "introduceLagunaHealth": {
+                "title": "",
+                "description": ""
+            },
+            "caregivers": {
+                "title": "",
+                "description": ""
+            },
+            "downloadApp": {
+                "title": "",
+                "description": ""
+            },
+            "ConversationalAssessment": {
+                "title": "",
+                "description": ""
+            },
+            "questionnaire": {
+                "title": "",
+                "description": ""
+            },
+            "careInformation": {
+                "title": "",
+                "description": ""
+            },
+            "homePreparation": {
+                "title": "",
+                "description": ""
+            },
+            "poc": {
+                "title": "",
+                "description": ""
+            },
+            "scheduleNextAppointment": {
+                "title": "",
+                "description": ""
+            },
+            "documentation": {
+                "title": "",
+                "description": ""
+            }
         }
     }
 }

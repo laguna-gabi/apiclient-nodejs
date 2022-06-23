@@ -65,6 +65,52 @@
             "assessmentSubmitScoreOverThreshold": "alerting results on {{assessmentName}} for {{member.firstName}}. Scored a `{{assessmentScore}}`",
             "memberCreateTodo": "{{member.firstName}} created a new todo '{{todoText}}'",
             "appointmentSubmitOverdue": "your session with {{member.firstName}} needs to be submitted"
+        },
+        "actionItems": {
+            "introduceYourself": {
+                "title": "Introduce yourself",
+                "description": "My name is Jeff, I'm recovery coach from Laguna Health. I've been working in Laguna Health for one year now, and I have 25 years of experience as a licensed psychologist."
+            },
+            "introduceLagunaHealth": {
+                "title": "Introduce Laguna Health",
+                "description": "Laguna Health partnered with Anthem inc to support you on your recovery journey. The reason for my call today is that we have information that your recently got admitted for unstable Angina."
+            },
+            "caregivers": {
+                "title": "Ask about member's caregivers",
+                "description": "Obtain their contact information and get consent to speak to them."
+            },
+            "downloadApp": {
+                "title": "Guide the member how to download the mobile app and register",
+                "description": "Discuss app features and how it will help elements of their recovery."
+            },
+            "ConversationalAssessment": {
+                "title": "Begin conversational assessment",
+                "description": "Some example questions for first call:\n - \"How are you doing today?\"\n - \"What brought you to in the hospital?\"."
+            },
+            "questionnaire": {
+                "title": "Questionnaire",
+                "description": "Member Persona (If depression or anxiety are suspected, administer PHQ9 and GAD7)."
+            },
+            "careInformation": {
+                "title": "Gather care information",
+                "description": "Are you in pain? When do you expect to be discharged? Where will you be going?"
+            },
+            "homePreparation": {
+                "title": "Home preparation",
+                "description": "Do you have what you need at home for your recovery? Examples: Food, medication (someone to pick it up), modifications to home- including safety?"
+            },
+            "poc": {
+                "title": "Create and implement POCs",
+                "description": "If barriers are identified: Include \"Prepare Home\"."
+            },
+            "scheduleNextAppointment": {
+                "title": "Schedule next appointment",
+                "description": "Set up an appointment in no more than 2 business days."
+            },
+            "documentation": {
+                "title": "Documentation",
+                "description": "Assessments, general notes, caregiver information."
+            }
         }
     }
 }
