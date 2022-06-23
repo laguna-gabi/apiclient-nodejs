@@ -163,6 +163,7 @@ export const FRAGMENT_ADMISSION = gql`
       id
       status
       name
+      rxNorm
       route
       dosage
       frequency

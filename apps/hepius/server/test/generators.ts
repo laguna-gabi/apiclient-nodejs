@@ -1502,6 +1502,7 @@ export const generateAdmissionMedicationParams = ({
     ...attachIdParam,
     status: MedicationStatus.start,
     name: lorem.word(),
+    rxNorm: lorem.word(),
     route: lorem.word(),
     dosage: lorem.word(),
     frequency: lorem.word(),

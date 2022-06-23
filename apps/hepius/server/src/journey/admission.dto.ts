@@ -373,6 +373,10 @@ export class Medication extends BaseCategory {
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
+  rxNorm?: string;
+
+  @Prop({ isNan: true })
+  @Field(() => String, { nullable: true })
   route?: string;
 
   @Prop({ isNan: true })
