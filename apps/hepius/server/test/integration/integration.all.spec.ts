@@ -3219,6 +3219,41 @@ describe('Integration tests: all', () => {
     expect(updateJourneyResult.org).toEqual(org);
   });
 
+  it('should fetch actionItems of primaryUserId', async () => {
+    const { member, user, org } = await creators.createMemberUserAndOptionalOrg();
+    /**
+     * creating another member, unrelated to user to see that the results
+     * from getActionItemsOfPrimaryUser won't display this member
+     */
+    await creators.createMemberUserAndOptionalOrg();
+    const additionalUser = await creators.createAndValidateUser({ orgs: [org.id] });
+
+    const actionItemUserParams = generateCreateOrSetActionItemParams({ memberId: member.id });
+    const actionItemAdditionalUserParams = generateCreateOrSetActionItemParams({
+      memberId: member.id,
+    });
+    const { id: idUserActionItem } = await handler.mutations.createOrSetActionItem({
+      createOrSetActionItemParams: actionItemUserParams,
+      requestHeaders: generateRequestHeaders(user.authId),
+    });
+    const { id: idAdditionalUserActionItem } = await handler.mutations.createOrSetActionItem({
+      createOrSetActionItemParams: actionItemAdditionalUserParams,
+      requestHeaders: generateRequestHeaders(additionalUser.authId),
+    });
+
+    const results = await handler.queries.getActionItemsOfPrimaryUser({
+      requestHeaders: generateRequestHeaders(user.authId),
+    });
+
+    expect(results.length).toEqual(2);
+    compareActionItem(results[0], actionItemUserParams);
+    expect(results[0].memberName).toEqual(`${member.firstName} ${member.lastName}`);
+    expect(results[0].id).toEqual(idUserActionItem);
+    compareActionItem(results[1], actionItemAdditionalUserParams);
+    expect(results[1].memberName).toEqual(`${member.firstName} ${member.lastName}`);
+    expect(results[1].id).toEqual(idAdditionalUserActionItem);
+  });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

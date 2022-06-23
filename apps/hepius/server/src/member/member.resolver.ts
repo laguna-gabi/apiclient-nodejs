@@ -81,7 +81,7 @@ import {
   getCorrelationId,
 } from '../common';
 import { Communication, CommunicationService, GetCommunicationParams } from '../communication';
-import { GraduateMemberParams, JourneyService } from '../journey';
+import { ActionItemByPrimaryUser, GraduateMemberParams, JourneyService } from '../journey';
 import {
   Bitly,
   CognitoService,
@@ -1046,6 +1046,13 @@ export class MemberResolver extends MemberBase {
         throw new Error(Errors.get(ErrorType.clientNotFound));
       }
     }
+  }
+
+  @Query(() => [ActionItemByPrimaryUser])
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.token })
+  async getActionItemsOfPrimaryUser(@Client('_id') userId): Promise<ActionItemByPrimaryUser[]> {
+    return this.memberService.getActionItemsOfPrimaryUser(userId);
   }
 
   /*************************************************************************************************

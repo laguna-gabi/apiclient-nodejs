@@ -45,6 +45,7 @@ import {
   UpdateMemberParams,
 } from './index';
 import { v4 } from 'uuid';
+import { ActionItemByPrimaryUser } from '../journey';
 
 @Injectable()
 export class MemberService extends AlertService {
@@ -262,6 +263,44 @@ export class MemberService extends AlertService {
 
       return { ...item, primaryUser, appointmentsCount, nextAppointment };
     });
+  }
+
+  async getActionItemsOfPrimaryUser(
+    primaryUserId: Types.ObjectId,
+  ): Promise<ActionItemByPrimaryUser[]> {
+    return this.memberModel.aggregate([
+      { $match: { primaryUserId } },
+      {
+        $lookup: {
+          from: 'journeys',
+          localField: '_id',
+          foreignField: 'memberId',
+          as: 'journeysRes',
+        },
+      },
+      { $addFields: { recentJourney: { $last: '$journeysRes' } } },
+      {
+        $lookup: {
+          from: 'actionitems',
+          localField: 'recentJourney._id',
+          foreignField: 'journeyId',
+          as: 'actionItems',
+        },
+      },
+      {
+        $unwind: {
+          path: '$actionItems',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          'actionItems.memberName': { $concat: ['$firstName', ' ', '$lastName'] },
+          'actionItems.id': '$actionItems._id',
+        },
+      },
+      { $replaceRoot: { newRoot: { $mergeObjects: ['$actionItems'] } } },
+    ]);
   }
 
   /**

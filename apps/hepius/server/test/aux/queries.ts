@@ -14,6 +14,7 @@ import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
   ActionItem,
+  ActionItemByPrimaryUser,
   Admission,
   DietaryMatcher,
   GetMemberUploadJournalAudioLinkParams,
@@ -450,6 +451,42 @@ export class Queries {
 
     const resultObject = result ? { members: result.getMembers } : {};
     return { ...resultObject, ...errorsObject };
+  };
+
+  getActionItemsOfPrimaryUser = async ({
+    requestHeaders,
+  }: {
+    requestHeaders;
+  }): Promise<ActionItemByPrimaryUser[]> => {
+    const result = await this.client.request(
+      gql`
+        query getActionItemsOfPrimaryUser {
+          getActionItemsOfPrimaryUser {
+            id
+            memberId
+            appointmentId
+            journeyId
+            title
+            status
+            deadline
+            rejectNote
+            description
+            category
+            priority
+            createdAt
+            createdBy
+            relatedEntities {
+              type
+              id
+            }
+            memberName
+          }
+        }
+      `,
+      undefined,
+      requestHeaders,
+    );
+    return result?.getActionItemsOfPrimaryUser;
   };
 
   getMembersAppointments = async ({

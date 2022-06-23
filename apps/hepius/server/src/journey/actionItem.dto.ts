@@ -166,6 +166,12 @@ export class ActionItem extends Identifier {
   updatedBy: Types.ObjectId;
 }
 
+@ObjectType()
+export class ActionItemByPrimaryUser extends ActionItem {
+  @Field(() => String)
+  memberName: string;
+}
+
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
