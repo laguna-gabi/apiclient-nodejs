@@ -30,7 +30,7 @@ import {
 } from '../../src/recording';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
-import { GetSlotsParams, UserSummary } from '../../src/user';
+import { GetSlotsParams, UserStatistics, UserSummary } from '../../src/user';
 import { FRAGMENT_ADMISSION, FRAGMENT_JOURNEY, FRAGMENT_MEMBER } from './fragments';
 
 export class Queries {
@@ -213,6 +213,31 @@ export class Queries {
       });
 
     return result?.getUserSlotsByAppointmentId;
+  };
+
+  getUserStatistics = async (
+    { requestHeaders = this.defaultUserRequestHeaders }: { requestHeaders? } = {
+      requestHeaders: this.defaultUserRequestHeaders,
+    },
+  ): Promise<UserStatistics> => {
+    const { getUserStatistics } = await this.client.request(
+      gql`
+        query getUserStatistics {
+          getUserStatistics {
+            averageNPSScore
+            totalActiveMembers
+            totalEngagedMembers
+            totalAppUsingMembers
+            averageSessionLength
+            totalGraduatedMembers
+          }
+        }
+      `,
+      undefined,
+      requestHeaders,
+    );
+
+    return getUserStatistics;
   };
 
   getMember = async ({

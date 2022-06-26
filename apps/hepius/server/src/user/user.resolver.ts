@@ -12,6 +12,7 @@ import {
   UpdateUserParams,
   UserConfig,
   UserService,
+  UserStatistics,
   UserSummary,
 } from '.';
 import {
@@ -171,6 +172,16 @@ export class UserResolver {
     { firstName, lastName, email },
   ): Promise<string> {
     return this.zendeskProvider.getAuthToken({ firstName, lastName, email });
+  }
+
+  @Query(() => UserStatistics)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.token })
+  async getUserStatistics(
+    @Client('id')
+    userId,
+  ): Promise<UserStatistics> {
+    return this.userService.getUserStatistics(userId);
   }
 
   @Mutation(() => Boolean)

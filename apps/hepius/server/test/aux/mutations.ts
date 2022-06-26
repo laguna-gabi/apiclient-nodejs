@@ -1771,6 +1771,17 @@ export class Mutations {
               submitQuestionnaireResponseParams: $submitQuestionnaireResponseParams
             ) {
               id
+              createdAt
+              createdBy
+              answers {
+                code
+                value
+              }
+              result {
+                severity
+                score
+                alert
+              }
             }
           }
         `,

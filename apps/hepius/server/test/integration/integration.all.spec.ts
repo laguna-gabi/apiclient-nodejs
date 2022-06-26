@@ -18,10 +18,19 @@ import {
   Platform,
   ServiceClientId,
   generateId,
+  randomEnum,
   translation,
 } from '@argus/pandora';
 import { articlesPath, general, hosts } from 'config';
-import { add, format, startOfToday, startOfTomorrow, sub, subDays } from 'date-fns';
+import {
+  add,
+  differenceInSeconds,
+  format,
+  startOfToday,
+  startOfTomorrow,
+  sub,
+  subDays,
+} from 'date-fns';
 import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
 import {
@@ -78,6 +87,7 @@ import {
 import {
   buildDailyLogQuestionnaire,
   buildLHPQuestionnaire,
+  buildNPSQuestionnaire,
   buildPHQ9Questionnaire,
   buildWHO5Questionnaire,
 } from '../../cmd/static';
@@ -113,6 +123,7 @@ import { Internationalization } from '../../src/providers';
 import {
   CreateQuestionnaireParams,
   HealthPersona,
+  QuestionnaireResponse,
   QuestionnaireType,
 } from '../../src/questionnaire';
 import {
@@ -127,6 +138,8 @@ import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import { Recording } from '../../src/recording';
 import { utcToZonedTime } from 'date-fns-tz';
 import { lookup } from 'zipcode-to-timezone';
+import { datatype } from 'faker/locale/zh_TW';
+import { _ } from 'lodash';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -859,6 +872,76 @@ describe('Integration tests: all', () => {
       expect(
         users.filter((userSummary) => userSummary.id === user.id)[0].currentMembersCount,
       ).toEqual(2);
+    }, 10000);
+
+    it('should get user statistics', async () => {
+      const maxMemberCount = 10;
+      // 0. create a user (with an organization) and a fellow (same organization) user
+      const org = await creators.createAndValidateOrg();
+      const testPrimaryUser = await creators.createAndValidateUser({ orgs: [org.id] });
+      const fellowUser = await creators.createAndValidateUser({ orgs: [org.id] });
+
+      // 1. create (N) members for whom our user is acting as a primary user
+      const [memberIds, totalAppUsingMembers] = await createMembers(
+        datatype.number(maxMemberCount) || 1,
+        testPrimaryUser,
+      );
+
+      // 2. for Total / Active and Graduated statistics - graduate K members (K < N)
+      const totalGraduatedMembers = datatype.number(memberIds.length);
+
+      for (let index = 0; index < totalGraduatedMembers; index++) {
+        await handler.mutations.graduateMember({
+          graduateMemberParams: { id: memberIds[index], isGraduated: true },
+        });
+      }
+
+      // 2. for avg. call duration - create recording with member - random duration of call
+      const recordings = await createRecordings(memberIds, [testPrimaryUser.id, fellowUser.id]);
+
+      // 3. for avg. NPS score - complete NPS QRs with a random score
+      const qrs = await submitNPSQuestionnaires(memberIds);
+
+      const averageNPSScore =
+        Math.round(
+          qrs
+            .map((qr) => qr.answers.find((answer) => answer.code === 'q1').value)
+            .reduce(function (avg, value, _, { length }) {
+              return avg + +value / length;
+            }, 0) * 100,
+        ) / 100;
+
+      const averageSessionLength =
+        Math.round(
+          recordings
+            .map((recording) => differenceInSeconds(recording.end, recording.start))
+            .reduce(function (avg, value, _, { length }) {
+              return avg + value / length;
+            }, 0) * 100,
+        ) / 100;
+
+      const userStatistics = await handler.queries.getUserStatistics({
+        requestHeaders: generateRequestHeaders(testPrimaryUser.authId),
+      });
+
+      const totalEngagedMembers = _.uniqBy(
+        recordings
+          .map((recording) => ({
+            memberId: recording.memberId.toString(),
+            duration: differenceInSeconds(recording.end, recording.start),
+          }))
+          .filter((entry) => entry.duration >= 300),
+        'memberId',
+      ).length;
+
+      expect(userStatistics).toEqual({
+        averageNPSScore,
+        totalActiveMembers: memberIds.length - totalGraduatedMembers,
+        totalEngagedMembers,
+        totalAppUsingMembers,
+        averageSessionLength,
+        totalGraduatedMembers,
+      });
     }, 10000);
   });
 
@@ -3338,5 +3421,110 @@ describe('Integration tests: all', () => {
     //@ts-ignore
     params.admitSource = 'physicianReferral';
     return params;
+  };
+
+  // Description: create members
+  // Inputs:
+  //  count: number of users to create
+  //  primaryUser: the primary user for the member (member org is the first org in primaryUser.orgs)
+  const createMembers = async (count: number, primaryUser: User): Promise<[string[], number]> => {
+    const ret: string[] = [];
+    let appUsingMembers = 0;
+    for (let i = 0; i < count; i++) {
+      const { id: memberId } = await handler.mutations.createMember({
+        memberParams: generateCreateMemberParams({
+          userId: primaryUser.id,
+          orgId: primaryUser.orgs[0],
+        }),
+      });
+
+      const { authId } = await handler.memberService.get(memberId);
+
+      const platform = randomEnum(Platform) as Platform;
+
+      const updateMemberConfigParams = generateUpdateMemberConfigParams({ platform });
+      delete updateMemberConfigParams.memberId;
+
+      await handler.mutations.updateMemberConfig({
+        updateMemberConfigParams,
+        requestHeaders: generateRequestHeaders(authId),
+      });
+
+      if (platform !== Platform.web) {
+        appUsingMembers++;
+      }
+
+      ret.push(memberId);
+    }
+    return [ret, appUsingMembers];
+  };
+
+  // Description: create recording entries (directly using recording service) for a list of members
+  // Inputs:
+  //  memberIds: the list of member ids
+  //  userIds: a list of optional users for the recording user field (randomly selected)
+  const createRecordings = async (
+    memberIds: string[],
+    userIds?: string[],
+  ): Promise<Recording[]> => {
+    const maxCallDuration = 600;
+    const maxRecordingSessionsPerMember = 5;
+    const ret = [];
+
+    for (let memberIndex = 0; memberIndex < memberIds.length; memberIndex++) {
+      //
+      const numberOfRecordings = datatype.number(maxRecordingSessionsPerMember) || 1;
+
+      for (let i = 0; i < numberOfRecordings; i++) {
+        const start = date.recent();
+        const end = add(start, { seconds: datatype.number(maxCallDuration) || 1 });
+        const recording = await handler.recordingService.updateRecording(
+          generateUpdateRecordingParams({
+            start,
+            end,
+            memberId: memberIds[i],
+            userId: userIds?.length ? userIds[datatype.number(userIds.length - 1)] : generateId(),
+          }),
+        );
+
+        ret.push(recording);
+      }
+    }
+
+    return ret;
+  };
+
+  // Description: submit NPS questionniure for a list of members
+  // Inputs:
+  //  memberIds: the list of member ids
+  const submitNPSQuestionnaires = async (memberIds: string[]): Promise<QuestionnaireResponse[]> => {
+    const ret = [];
+    const createQuestionnaireParams = buildNPSQuestionnaire();
+    const nps = await handler.mutations.createQuestionnaire({
+      createQuestionnaireParams,
+    });
+
+    for (let i = 0; i < memberIds.length; i++) {
+      const qr = await handler.mutations.submitQuestionnaireResponse({
+        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+          questionnaireId: nps.id,
+          memberId: memberIds[i],
+          answers: [
+            {
+              code: 'q1',
+              value: datatype
+                .number(
+                  createQuestionnaireParams.items.find((item) => item.code === 'q1').range.max
+                    .value,
+                )
+                .toString(),
+            },
+          ],
+        }),
+      });
+      ret.push(qr);
+    }
+
+    return ret;
   };
 });

@@ -102,7 +102,7 @@ import {
   QuestionnaireResponseDocument,
   QuestionnaireResponseDto,
 } from '../../src/questionnaire';
-import { Recording, RecordingDocument, RecordingDto } from '../../src/recording';
+import { Recording, RecordingDocument, RecordingDto, RecordingService } from '../../src/recording';
 import {
   Todo,
   TodoDocument,
@@ -152,6 +152,7 @@ export class Handler extends BaseHandler {
   defaultAdminRequestHeaders;
   discoveryService: DiscoveryService;
   reflector: Reflector;
+  recordingService: RecordingService;
 
   controlMemberModel: Model<ControlMemberDocument>;
   barrierTypeModel: Model<BarrierTypeDocument>;
@@ -238,6 +239,7 @@ export class Handler extends BaseHandler {
     this.featureFlagService = providers.featureFlagService;
     this.queueService = providers.queueService;
     this.notificationService = providers.notificationService;
+    this.recordingService = moduleFixture.get<RecordingService>(RecordingService);
 
     await dbConnect();
     this.communicationService = moduleFixture.get<CommunicationService>(CommunicationService);

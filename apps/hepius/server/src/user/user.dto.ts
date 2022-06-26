@@ -95,6 +95,27 @@ export class UserSummary extends User {
   isEnabled: boolean;
 }
 
+@ObjectType()
+export class UserStatistics {
+  @Field(() => Number)
+  totalActiveMembers: number;
+
+  @Field(() => Number)
+  totalGraduatedMembers: number;
+
+  @Field(() => Number)
+  totalEngagedMembers: number;
+
+  @Field(() => Number)
+  totalAppUsingMembers: number;
+
+  @Field(() => Number)
+  averageNPSScore: number;
+
+  @Field(() => Number)
+  averageSessionLength: number;
+}
+
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/

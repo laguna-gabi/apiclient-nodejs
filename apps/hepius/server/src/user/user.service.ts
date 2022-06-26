@@ -2,6 +2,7 @@ import {
   Environments,
   GlobalEventType,
   IEventNotifySlack,
+  Platform,
   SlackChannel,
   SlackIcon,
   formatEx,
@@ -23,6 +24,7 @@ import {
   UserConfig,
   UserConfigDocument,
   UserDocument,
+  UserStatistics,
   UserSummary,
   defaultSlotsParams,
 } from '.';
@@ -39,6 +41,7 @@ import {
   LoggerService,
 } from '../common';
 import { User, UserRole } from '@argus/hepiusClient';
+import { QuestionnaireType } from '../questionnaire';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -117,6 +120,29 @@ export class UserService extends BaseService {
         appointments: appointments.map(({ _id, ...app }) => ({ ...app, id: _id })),
       };
     });
+  }
+
+  async getUserStatistics(userId: string): Promise<UserStatistics> {
+    const [
+      { totalGraduatedMembers, totalActiveMembers, totalAppUsingMembers },
+      totalEngagedMembers,
+      averageNPSScore,
+      averageSessionLength,
+    ] = await Promise.all([
+      this.getTotalMembers(userId),
+      this.getTotalEngagedMembers(userId),
+      this.getAverageNPSScore(userId),
+      this.getAverageSessionLength(userId),
+    ]);
+
+    return {
+      totalGraduatedMembers,
+      totalActiveMembers,
+      totalAppUsingMembers,
+      totalEngagedMembers,
+      averageNPSScore,
+      averageSessionLength,
+    };
   }
 
   async insert(createUserParams: CreateUserParams): Promise<User> {
@@ -590,5 +616,305 @@ export class UserService extends BaseService {
       journeyIds: result?.journeyIds ? result.journeyIds : [],
       memberIds: result?.memberIds ? result.memberIds : [],
     };
+  }
+
+  private async getTotalMembers(userId: string): Promise<{
+    totalGraduatedMembers: number;
+    totalActiveMembers: number;
+    totalAppUsingMembers: number;
+  }> {
+    const [
+      {
+        graduated: totalGraduatedMembers,
+        notGraduated: totalActiveMembers,
+        appUsingMember: totalAppUsingMembers,
+      },
+    ] = await this.userModel.aggregate([
+      {
+        $match: {
+          _id: new Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: 'members',
+          localField: '_id',
+          foreignField: 'primaryUserId',
+          as: 'members',
+        },
+      },
+      {
+        $unwind: {
+          path: '$members',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'memberconfigs',
+          localField: 'members._id',
+          foreignField: 'memberId',
+          as: 'memberConfig',
+        },
+      },
+      {
+        $unwind: {
+          path: '$memberConfig',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'journeys',
+          localField: 'members._id',
+          foreignField: 'memberId',
+          as: 'journeysRes',
+        },
+      },
+      {
+        $addFields: {
+          recentJourney: {
+            $last: '$journeysRes',
+          },
+        },
+      },
+      {
+        $unset: 'journeysRes',
+      },
+      {
+        $project: {
+          graduated: {
+            $cond: [{ $eq: ['$recentJourney.isGraduated', true] }, 1, 0],
+          },
+          notGraduated: {
+            $cond: [{ $eq: ['$recentJourney.isGraduated', false] }, 1, 0],
+          },
+          appUsingMember: {
+            $cond: [
+              {
+                $in: [
+                  '$memberConfig.platform',
+                  [Platform.android.toString(), Platform.ios.toString()],
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          graduated: {
+            $sum: '$graduated',
+          },
+          notGraduated: {
+            $sum: '$notGraduated',
+          },
+          appUsingMember: {
+            $sum: '$appUsingMember',
+          },
+        },
+      },
+    ]);
+
+    return {
+      totalGraduatedMembers,
+      totalActiveMembers,
+      totalAppUsingMembers,
+    };
+  }
+
+  private async getTotalEngagedMembers(userId: string): Promise<number> {
+    const res = await this.userModel.aggregate([
+      {
+        $match: {
+          _id: new Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: 'members',
+          localField: '_id',
+          foreignField: 'primaryUserId',
+          as: 'member',
+        },
+      },
+      {
+        $unwind: {
+          path: '$member',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'recordings',
+          localField: 'member._id',
+          foreignField: 'memberId',
+          as: 'recording',
+        },
+      },
+      {
+        $unwind: {
+          path: '$recording',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          $and: [{ 'recording.start': { $exists: true } }, { 'recording.end': { $exists: true } }],
+        },
+      },
+      {
+        $addFields: {
+          duration: {
+            $dateDiff: { startDate: '$recording.start', endDate: '$recording.end', unit: 'second' },
+          },
+        },
+      },
+      {
+        $group: { _id: '$member._id', maxMemberDuration: { $max: '$duration' } },
+      },
+      {
+        $match: {
+          maxMemberDuration: { $gte: 300 },
+        },
+      },
+    ]);
+    return res.length;
+  }
+
+  private async getAverageNPSScore(userId: string): Promise<number> {
+    const [res] = await this.userModel.aggregate([
+      {
+        $match: {
+          _id: new Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: 'members',
+          localField: '_id',
+          foreignField: 'primaryUserId',
+          as: 'member',
+        },
+      },
+      {
+        $unwind: {
+          path: '$member',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'questionnaireresponses',
+          localField: 'member._id',
+          foreignField: 'memberId',
+          as: 'questionnaireresponse',
+        },
+      },
+      {
+        $unwind: {
+          path: '$questionnaireresponse',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'questionnaires',
+          localField: 'questionnaireresponse.questionnaireId',
+          foreignField: '_id',
+          as: 'questionnaireresponse.questionnaire',
+        },
+      },
+      {
+        $unwind: {
+          path: '$questionnaireresponse.questionnaire',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'questionnaireresponse.questionnaire.type': QuestionnaireType.nps.toString(),
+        },
+      },
+      {
+        $project: { npsAnswer: { $arrayElemAt: ['$questionnaireresponse.answers', 0] } },
+      },
+      {
+        $addFields: { npsAnswerValue: { $toInt: '$npsAnswer.value' } },
+      },
+      {
+        $group: {
+          _id: null,
+          totalNpsAverage: {
+            $avg: '$npsAnswerValue',
+          },
+        },
+      },
+    ]);
+
+    return Math.round((res?.totalNpsAverage || 0) * 100) / 100;
+  }
+
+  private async getAverageSessionLength(userId: string): Promise<number> {
+    const [res] = await this.userModel.aggregate([
+      {
+        $match: {
+          _id: new Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: 'members',
+          localField: '_id',
+          foreignField: 'primaryUserId',
+          as: 'member',
+        },
+      },
+      {
+        $unwind: {
+          path: '$member',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'recordings',
+          localField: 'member._id',
+          foreignField: 'memberId',
+          as: 'recording',
+        },
+      },
+      {
+        $unwind: {
+          path: '$recording',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          $and: [{ 'recording.start': { $exists: true } }, { 'recording.end': { $exists: true } }],
+        },
+      },
+      {
+        $addFields: {
+          duration: {
+            $dateDiff: { startDate: '$recording.start', endDate: '$recording.end', unit: 'second' },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          averageSessionLength: {
+            $avg: '$duration',
+          },
+        },
+      },
+    ]);
+
+    return Math.round((res?.averageSessionLength || 0) * 100) / 100;
   }
 }
