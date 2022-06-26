@@ -55,6 +55,8 @@ import { v4 } from 'uuid';
 import {
   ActionItem,
   ActionItemCategory,
+  ActionItemLink,
+  ActionItemLinkType,
   ActionItemPriority,
   ActionItemStatus,
   CreateOrSetActionItemParams,
@@ -1390,6 +1392,7 @@ export const generateCreateOrSetActionItemParams = ({
   rejectNote = lorem.words(2),
   deadline = fakerDate.soon(3),
   relatedEntities = [],
+  link = generateActionItemLink(),
 }: Partial<CreateOrSetActionItemParams> = {}): CreateOrSetActionItemParams => {
   return {
     id,
@@ -1403,6 +1406,17 @@ export const generateCreateOrSetActionItemParams = ({
     priority,
     rejectNote,
     relatedEntities,
+    link,
+  };
+};
+
+export const generateActionItemLink = ({
+  type = randomEnum(ActionItemLinkType) as ActionItemLinkType,
+  value = internet.url(),
+}: Partial<ActionItemLink> = {}): ActionItemLink => {
+  return {
+    type,
+    value,
   };
 };
 

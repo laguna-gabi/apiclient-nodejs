@@ -504,6 +504,10 @@ export class Queries {
               id
             }
             memberName
+            link {
+              type
+              value
+            }
           }
         }
       `,
@@ -1558,6 +1562,10 @@ export class Queries {
               relatedEntities {
                 type
                 id
+              }
+              link {
+                type
+                value
               }
             }
           }

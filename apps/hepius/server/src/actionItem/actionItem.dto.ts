@@ -43,7 +43,28 @@ export enum RelatedEntityType {
 
 registerEnumType(RelatedEntityType, { name: 'RelatedEntityType' });
 
-export const nullableActionItemKeys = ['deadline', 'description', 'rejectNote', 'category'];
+export enum ActionItemLinkType {
+  medicalSection = 'medicalSection',
+  createTodo = 'createTodo',
+  externalLink = 'externalLink',
+  createCaregiver = 'createCaregiver',
+}
+
+registerEnumType(ActionItemLinkType, { name: 'ActionItemLinkType' });
+
+export const nullableActionItemKeys = ['deadline', 'description', 'rejectNote', 'category', 'link'];
+
+@InputType('ActionItemLinkInput')
+@ObjectType()
+export class ActionItemLink {
+  @Prop({ type: String, enum: ActionItemLinkType })
+  @Field(() => ActionItemLinkType)
+  type: ActionItemLinkType;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  value?: string;
+}
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -92,11 +113,15 @@ export class CreateOrSetActionItemParams {
 
   @Field(() => String, { nullable: true })
   rejectNote?: string;
+
+  @Field(() => ActionItemLink, { nullable: true })
+  link?: ActionItemLink;
 }
 
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
+
 @InputType('RelatedEntityInput')
 @ObjectType()
 export class RelatedEntity {
@@ -155,6 +180,10 @@ export class ActionItem extends Identifier {
   @Prop({ type: String, enum: ActionItemPriority })
   @Field(() => ActionItemPriority)
   priority: ActionItemPriority;
+
+  @Prop({ type: ActionItemLink })
+  @Field(() => ActionItemLink, { nullable: true })
+  link?: ActionItemLink;
 
   @Field(() => Date)
   createdAt: Date;

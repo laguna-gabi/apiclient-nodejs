@@ -34,7 +34,7 @@ import {
 import { utcToZonedTime } from 'date-fns-tz';
 import { date, lorem } from 'faker';
 import { datatype } from 'faker/locale/zh_TW';
-import { _ } from 'lodash';
+import { uniqBy } from 'lodash';
 import { v4 } from 'uuid';
 import { lookup } from 'zipcode-to-timezone';
 import {
@@ -922,7 +922,7 @@ describe('Integration tests: all', () => {
         requestHeaders: generateRequestHeaders(testPrimaryUser.authId),
       });
 
-      const totalEngagedMembers = _.uniqBy(
+      const totalEngagedMembers = uniqBy(
         recordings
           .map((recording) => ({
             memberId: recording.memberId.toString(),
@@ -3350,6 +3350,7 @@ describe('Integration tests: all', () => {
     expect(actionItem.rejectNote).toEqual(createOrSetActionItemParams.rejectNote);
     expect(actionItem.category).toEqual(createOrSetActionItemParams.category);
     expect(actionItem.priority).toEqual(createOrSetActionItemParams.priority);
+    expect(actionItem.link).toEqual(createOrSetActionItemParams.link);
     expect(new Date(actionItem.deadline)).toEqual(createOrSetActionItemParams.deadline);
   };
 
