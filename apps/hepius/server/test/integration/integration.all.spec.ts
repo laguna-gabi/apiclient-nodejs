@@ -31,8 +31,12 @@ import {
   sub,
   subDays,
 } from 'date-fns';
+import { utcToZonedTime } from 'date-fns-tz';
 import { date, lorem } from 'faker';
+import { datatype } from 'faker/locale/zh_TW';
+import { _ } from 'lodash';
 import { v4 } from 'uuid';
+import { lookup } from 'zipcode-to-timezone';
 import {
   BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
@@ -91,6 +95,12 @@ import {
   buildPHQ9Questionnaire,
   buildWHO5Questionnaire,
 } from '../../cmd/static';
+import {
+  ActionItem,
+  ActionItemStatus,
+  CreateOrSetActionItemParams,
+  RelatedEntityType,
+} from '../../src/actionItem';
 import { RequestAppointmentParams, ScheduleAppointmentParams } from '../../src/appointment';
 import {
   AlertType,
@@ -109,16 +119,8 @@ import {
   DailyReportQueryInput,
   DailyReportResults,
 } from '../../src/dailyReport';
+import { ChangeMemberDnaParams, DischargeTo, UpdateJournalTextParams } from '../../src/journey';
 import { Member, ReplaceUserForMemberParams } from '../../src/member';
-import {
-  ActionItem,
-  ActionItemStatus,
-  ChangeMemberDnaParams,
-  CreateOrSetActionItemParams,
-  DischargeTo,
-  RelatedEntityType,
-  UpdateJournalTextParams,
-} from '../../src/journey';
 import { Internationalization } from '../../src/providers';
 import {
   CreateQuestionnaireParams,
@@ -126,6 +128,7 @@ import {
   QuestionnaireResponse,
   QuestionnaireType,
 } from '../../src/questionnaire';
+import { Recording } from '../../src/recording';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
@@ -135,11 +138,6 @@ import {
 } from '../../src/todo';
 import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
-import { Recording } from '../../src/recording';
-import { utcToZonedTime } from 'date-fns-tz';
-import { lookup } from 'zipcode-to-timezone';
-import { datatype } from 'faker/locale/zh_TW';
-import { _ } from 'lodash';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();

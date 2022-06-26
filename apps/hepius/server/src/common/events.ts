@@ -4,8 +4,8 @@ import { UpdatedAppointmentAction } from '.';
 import { AppointmentDocument } from '../appointment';
 import { Member } from '../member';
 import { Appointment, AppointmentStatus, Scores, User } from '@argus/hepiusClient';
-import { RelatedEntity } from '../journey';
 import { Org } from '../org';
+import { RelatedEntity } from '../actionItem';
 
 export enum EventType {
   //member

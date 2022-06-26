@@ -53,6 +53,15 @@ import { sign } from 'jsonwebtoken';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
+  ActionItem,
+  ActionItemCategory,
+  ActionItemPriority,
+  ActionItemStatus,
+  CreateOrSetActionItemParams,
+  RelatedEntity,
+  RelatedEntityType,
+} from '../src/actionItem';
+import {
   EndAppointmentParams,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
@@ -92,10 +101,6 @@ import {
 } from '../src/configuration';
 import { DailyReport, DailyReportCategoriesInput } from '../src/dailyReport';
 import {
-  ActionItem,
-  ActionItemCategory,
-  ActionItemPriority,
-  ActionItemStatus,
   Activity,
   AddCaregiverParams,
   AdmitSource,
@@ -108,7 +113,6 @@ import {
   ChangeAdmissionTreatmentRenderedParams,
   ChangeMemberDnaParams,
   ClinicalStatus,
-  CreateOrSetActionItemParams,
   DiagnosisSeverity,
   DietaryCategory,
   DietaryName,
@@ -122,8 +126,6 @@ import {
   MedicationStatus,
   PrimaryDiagnosisType,
   ReadmissionRisk,
-  RelatedEntity,
-  RelatedEntityType,
   ReplaceMemberOrgParams,
   SecondaryDiagnosisType,
   SetGeneralNotesParams,

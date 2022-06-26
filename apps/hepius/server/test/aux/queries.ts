@@ -9,12 +9,11 @@ import {
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { generateGetSlotsParams, handleExceptionReceived } from '..';
+import { ActionItem, ActionItemByPrimaryUser } from '../../src/actionItem';
 import { RedFlag, RedFlagType } from '../../src/care';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
-  ActionItem,
-  ActionItemByPrimaryUser,
   Admission,
   DietaryMatcher,
   GetMemberUploadJournalAudioLinkParams,

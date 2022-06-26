@@ -1,8 +1,9 @@
+import { Caregiver } from '@argus/hepiusClient';
+import { EntityName } from '@argus/pandora';
 import { Module } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  ActionItem,
-  ActionItemDto,
   Admission,
   AdmissionDto,
   AdmissionService,
@@ -31,12 +32,9 @@ import {
   TreatmentRenderedDto,
 } from '.';
 import { CommonModule, DismissedAlert, DismissedAlertDto, LoggerService } from '../common';
-import { ProvidersModule } from '../providers';
-import { Caregiver } from '@argus/hepiusClient';
 import { ChangeEventFactoryProvider } from '../db';
-import { EntityName } from '@argus/pandora';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrgModule } from '../org';
+import { ProvidersModule } from '../providers';
 
 @Module({
   imports: [
@@ -52,7 +50,6 @@ import { OrgModule } from '../org';
       { name: ExternalAppointment.name, schema: ExternalAppointmentDto },
       { name: Dietary.name, schema: DietaryDto },
       { name: Admission.name, schema: AdmissionDto },
-      { name: ActionItem.name, schema: ActionItemDto },
       { name: Journal.name, schema: JournalDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
     ]),

@@ -44,7 +44,6 @@ import {
   AddCaregiverParams,
   Admission,
   ChangeMemberDnaParams,
-  CreateOrSetActionItemParams,
   GraduateMemberParams,
   Journal,
   ReplaceMemberOrgParams,
@@ -84,6 +83,7 @@ import {
   Recording,
   UpdateRecordingParams,
 } from '../../src/recording';
+import { CreateOrSetActionItemParams } from '../../src/actionItem';
 
 export class Mutations {
   constructor(

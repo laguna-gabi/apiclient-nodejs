@@ -81,7 +81,7 @@ import {
   getCorrelationId,
 } from '../common';
 import { Communication, CommunicationService, GetCommunicationParams } from '../communication';
-import { ActionItemByPrimaryUser, GraduateMemberParams, JourneyService } from '../journey';
+import { GraduateMemberParams, JourneyService } from '../journey';
 import {
   Bitly,
   CognitoService,
@@ -116,6 +116,7 @@ import {
   UpdateMemberParams,
 } from './index';
 import { OrgService } from '../org';
+import { ActionItemByPrimaryUser, ActionItemService } from '../actionItem';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -131,6 +132,7 @@ export class MemberResolver extends MemberBase {
     protected readonly bitly: Bitly,
     readonly featureFlagService: FeatureFlagService,
     readonly journeyService: JourneyService,
+    readonly actionItemService: ActionItemService,
     readonly todoService: TodoService,
     readonly appointmentService: AppointmentService,
     readonly questionnaireService: QuestionnaireService,
@@ -550,7 +552,11 @@ export class MemberResolver extends MemberBase {
   ): Promise<Alert[]> {
     const members = await this.memberService.getUserMembers({ primaryUserId: userId });
     const memberAlerts = await this.memberService.getAlerts(userId, members, lastQueryAlert);
-    const journeyAlerts = await this.journeyService.getAlerts(userId, members, lastQueryAlert);
+    const actionItemAlerts = await this.actionItemService.getAlerts(
+      userId,
+      members,
+      lastQueryAlert,
+    );
     const todoAlerts = await this.todoService.getAlerts(userId, members, lastQueryAlert);
     const appointmentAlerts = await this.appointmentService.getAlerts(
       userId,
@@ -559,7 +565,7 @@ export class MemberResolver extends MemberBase {
     );
     const qAlerts = await this.questionnaireService.getAlerts(userId, members, lastQueryAlert);
 
-    return memberAlerts.concat(journeyAlerts, todoAlerts, appointmentAlerts, qAlerts);
+    return memberAlerts.concat(actionItemAlerts, todoAlerts, appointmentAlerts, qAlerts);
   }
 
   /************************************************************************************************

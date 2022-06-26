@@ -29,6 +29,7 @@ import { ServiceModule } from '../services';
 import { Todo, TodoDto, TodoModule } from '../todo';
 import { UserModule } from '../user';
 import { OrgModule } from '../org';
+import { ActionItemModule } from '../actionItem';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { OrgModule } from '../org';
     QuestionnaireModule,
     JourneyModule,
     TodoModule,
+    ActionItemModule,
     AppointmentModule,
     OrgModule,
     MongooseModule.forFeature([

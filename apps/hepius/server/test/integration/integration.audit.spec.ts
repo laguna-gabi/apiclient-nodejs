@@ -51,14 +51,7 @@ import {
   MemberDocument,
   ReplaceUserForMemberParams,
 } from '../../src/member';
-import {
-  ActionItem,
-  ActionItemDocument,
-  CaregiverDocument,
-  Journal,
-  JournalDocument,
-  JourneyDocument,
-} from '../../src/journey';
+import { CaregiverDocument, Journal, JournalDocument, JourneyDocument } from '../../src/journey';
 import {
   Questionnaire,
   QuestionnaireDocument,
@@ -75,6 +68,7 @@ import {
 } from '../../src/todo';
 import { UserConfigDocument, UserDocument } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
+import { ActionItem, ActionItemDocument } from '../../src/actionItem';
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();

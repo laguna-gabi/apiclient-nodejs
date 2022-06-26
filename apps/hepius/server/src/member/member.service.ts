@@ -45,7 +45,7 @@ import {
   UpdateMemberParams,
 } from './index';
 import { v4 } from 'uuid';
-import { ActionItemByPrimaryUser } from '../journey';
+import { ActionItemByPrimaryUser } from '../actionItem';
 
 @Injectable()
 export class MemberService extends AlertService {

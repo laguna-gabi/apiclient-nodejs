@@ -26,7 +26,8 @@ import {
   mockGenerateJourney,
   mockGenerateQuestionnaire,
 } from '../../test';
-import { JourneyService, RelatedEntityType } from '../../src/journey';
+import { JourneyService } from '../../src/journey';
+import { RelatedEntityType } from '../../src/actionItem';
 
 describe('QuestionnaireResolver', () => {
   let module: TestingModule;

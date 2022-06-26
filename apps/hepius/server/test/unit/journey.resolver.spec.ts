@@ -27,7 +27,6 @@ import { OrgService } from '../../src/org';
 import { StorageService } from '../../src/providers';
 import { dbDisconnect, defaultModules } from '../common';
 import {
-  generateCreateOrSetActionItemParams,
   generateGetMemberUploadJournalAudioLinkParams,
   generateGetMemberUploadJournalImageLinkParams,
   generateReplaceMemberOrgParams,
@@ -35,7 +34,6 @@ import {
   generateUniqueUrl,
   generateUpdateJournalTextParams,
   generateUpdateJourneyParams,
-  mockGenerateActionItem,
   mockGenerateOrg,
 } from '../generators';
 
@@ -221,29 +219,6 @@ describe(JourneyResolver.name, () => {
 
       expect(spyOnServiceSetGeneralNotes).toBeCalledTimes(1);
       expect(spyOnServiceSetGeneralNotes).toBeCalledWith(params);
-    });
-  });
-
-  describe('ActionItem', () => {
-    let spyOnServiceCreateOrSetActionItem;
-    beforeEach(() => {
-      spyOnServiceCreateOrSetActionItem = jest.spyOn(service, 'createOrSetActionItem');
-    });
-
-    afterEach(() => {
-      spyOnServiceCreateOrSetActionItem.mockReset();
-    });
-
-    it('should set an action item', async () => {
-      spyOnServiceCreateOrSetActionItem.mockImplementationOnce(async () =>
-        mockGenerateActionItem(),
-      );
-
-      const createOrSetActionItem = generateCreateOrSetActionItemParams();
-      await resolver.createOrSetActionItem(createOrSetActionItem);
-
-      expect(spyOnServiceCreateOrSetActionItem).toBeCalledTimes(1);
-      expect(spyOnServiceCreateOrSetActionItem).toBeCalledWith(createOrSetActionItem);
     });
   });
 

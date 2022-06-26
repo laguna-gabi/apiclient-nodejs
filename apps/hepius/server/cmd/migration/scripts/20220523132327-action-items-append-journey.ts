@@ -2,8 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AppModule } from '../../../src/app.module';
-import { ActionItem, Journey } from '../../../src/journey';
+import { Journey } from '../../../src/journey';
 import { Db } from 'mongodb';
+import { ActionItem } from '../../../src/actionItem';
 
 export const up = async (dryRun: boolean, db: Db) => {
   const app = await NestFactory.createApplicationContext(AppModule);

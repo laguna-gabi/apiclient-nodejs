@@ -91,6 +91,7 @@ import { UserService } from '../../src/user';
 import { TodoService } from '../../src/todo';
 import { AppointmentService } from '../../src/appointment';
 import { OrgService } from '../../src/org';
+import { ActionItemService } from '../../src/actionItem';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -98,6 +99,7 @@ describe('MemberResolver', () => {
   let service: MemberService;
   let userService: UserService;
   let todoService: TodoService;
+  let actionItemService: ActionItemService;
   let questionnaireService: QuestionnaireService;
   let appointmentService: AppointmentService;
   let storage: StorageService;
@@ -122,6 +124,7 @@ describe('MemberResolver', () => {
     service = module.get<MemberService>(MemberService);
     userService = module.get<UserService>(UserService);
     todoService = module.get<TodoService>(TodoService);
+    actionItemService = module.get<ActionItemService>(ActionItemService);
     questionnaireService = module.get<QuestionnaireService>(QuestionnaireService);
     appointmentService = module.get<AppointmentService>(AppointmentService);
     storage = module.get<StorageService>(StorageService);
@@ -1600,7 +1603,7 @@ describe('MemberResolver', () => {
 
     beforeEach(() => {
       spyOnServiceGetAlerts = jest.spyOn(service, 'getAlerts');
-      spyOnActionItemsServiceGetAlerts = jest.spyOn(journeyService, 'getAlerts');
+      spyOnActionItemsServiceGetAlerts = jest.spyOn(actionItemService, 'getAlerts');
       spyOnTodoServiceGetAlerts = jest.spyOn(todoService, 'getAlerts');
       spyOnAppointmentServiceGetAlerts = jest.spyOn(appointmentService, 'getAlerts');
       spyOnQuestionnareServiceGetAlerts = jest.spyOn(questionnaireService, 'getAlerts');

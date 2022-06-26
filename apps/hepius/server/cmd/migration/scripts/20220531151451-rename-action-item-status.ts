@@ -3,7 +3,7 @@ import { Db } from 'mongodb';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../../../src/app.module';
 import { Model } from 'mongoose';
-import { ActionItem, ActionItemStatus } from '../../../src/journey';
+import { ActionItem, ActionItemStatus } from '../../../src/actionItem';
 import { getModelToken } from '@nestjs/mongoose';
 // ------------------------------------------------------------------------------------------------
 // Description: migrate `up`

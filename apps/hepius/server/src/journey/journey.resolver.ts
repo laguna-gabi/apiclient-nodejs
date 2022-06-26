@@ -1,26 +1,14 @@
+import { Identifier, MemberRole, UserRole } from '@argus/hepiusClient';
+import { EntityName, StorageType } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
-import {
-  Ace,
-  AceStrategy,
-  Client,
-  ErrorType,
-  Errors,
-  EventType,
-  IEventOnPublishedJournal,
-  IEventOnReplaceMemberOrg,
-  IsValidObjectId,
-  LoggerService,
-  LoggingInterceptor,
-  Roles,
-} from '../common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { camelCase } from 'lodash';
 import {
-  ActionItem,
   Admission,
   AdmissionService,
   AudioType,
   ChangeMemberDnaParams,
-  CreateOrSetActionItemParams,
   DietaryHelper,
   DietaryMatcher,
   GetMemberUploadJournalAudioLinkParams,
@@ -36,12 +24,22 @@ import {
   UpdateJournalTextParams,
   UpdateJourneyParams,
 } from '.';
-import { Identifier, MemberRole, UserRole } from '@argus/hepiusClient';
-import { camelCase } from 'lodash';
-import { EntityName, StorageType } from '@argus/pandora';
-import { StorageService } from '../providers';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  Ace,
+  AceStrategy,
+  Client,
+  ErrorType,
+  Errors,
+  EventType,
+  IEventOnPublishedJournal,
+  IEventOnReplaceMemberOrg,
+  IsValidObjectId,
+  LoggerService,
+  LoggingInterceptor,
+  Roles,
+} from '../common';
 import { OrgService } from '../org';
+import { StorageService } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Journey)
@@ -150,32 +148,6 @@ export class JourneyResolver {
     return this.journeyService.setGeneralNotes(setGeneralNotesParams);
   }
 
-  /*************************************************************************************************
-   ****************************************** Action items *****************************************
-   ************************************************************************************************/
-
-  @Mutation(() => ActionItem)
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse)
-  async createOrSetActionItem(
-    @Args(camelCase(CreateOrSetActionItemParams.name))
-    createOrSetActionItemParams: CreateOrSetActionItemParams,
-  ) {
-    return this.journeyService.createOrSetActionItem(createOrSetActionItemParams);
-  }
-
-  @Query(() => [ActionItem])
-  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
-  @Ace({ entityName: EntityName.member, idLocator: 'memberId' })
-  async getActionItems(
-    @Args(
-      'memberId',
-      { type: () => String, nullable: false },
-      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid), { nullable: true }),
-    )
-    memberId: string,
-  ) {
-    return this.journeyService.getActionItems(memberId);
-  }
   /************************************************************************************************
    ****************************************** Admission *******************************************
    ************************************************************************************************/

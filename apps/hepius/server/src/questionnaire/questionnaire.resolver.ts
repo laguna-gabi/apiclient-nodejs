@@ -12,6 +12,7 @@ import {
   QuestionnaireType,
   SubmitQuestionnaireResponseParams,
 } from '.';
+import { RelatedEntityType } from '../actionItem';
 import {
   Ace,
   AceStrategy,
@@ -28,7 +29,7 @@ import {
   MemberUserRouteInterceptor,
   Roles,
 } from '../common';
-import { JourneyService, RelatedEntityType } from '../journey';
+import { JourneyService } from '../journey';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()

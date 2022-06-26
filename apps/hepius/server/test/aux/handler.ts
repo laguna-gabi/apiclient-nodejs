@@ -70,9 +70,6 @@ import {
   DailyReportService,
 } from '../../src/dailyReport';
 import {
-  ActionItem,
-  ActionItemDocument,
-  ActionItemDto,
   CaregiverDocument,
   CaregiverDto,
   Journal,
@@ -123,6 +120,7 @@ import {
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
 import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
 import { intersection } from 'lodash';
+import { ActionItem, ActionItemDocument, ActionItemDto } from '../../src/actionItem';
 
 export class Handler extends BaseHandler {
   sendBird;
