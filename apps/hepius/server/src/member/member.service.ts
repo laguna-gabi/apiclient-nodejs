@@ -290,7 +290,7 @@ export class MemberService extends AlertService {
       {
         $unwind: {
           path: '$actionItems',
-          preserveNullAndEmptyArrays: true,
+          preserveNullAndEmptyArrays: false,
         },
       },
       {
