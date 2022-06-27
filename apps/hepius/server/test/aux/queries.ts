@@ -1555,6 +1555,7 @@ export class Queries {
               id
               memberId
               appointmentId
+              barrierId
               journeyId
               title
               status

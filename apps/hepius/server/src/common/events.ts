@@ -43,6 +43,9 @@ export enum EventType {
 
   // general
   onUpdateRelatedEntity = 'onUpdateRelatedEntity',
+
+  // poc
+  onBarrierCreated = 'onBarrierCreated',
 }
 
 /*************************************************************************************************
@@ -91,10 +94,6 @@ export interface IEventOnReplaceMemberOrg {
   org: Org;
 }
 
-export interface IEventOnFirstAppointment {
-  memberId: string;
-  appointmentId: string;
-}
 /*************************************************************************************************
  **************************************** User interfaces ****************************************
  *************************************************************************************************/
@@ -189,4 +188,20 @@ export interface IEventUpdateHealthPersona {
 export interface IEventUpdateRelatedEntity {
   destEntity: RelatedEntity;
   sourceEntity: RelatedEntity;
+}
+
+/*************************************************************************************************
+ *************************************** Auto action items ***************************************
+ *************************************************************************************************/
+export interface IEventBaseAutoActionItem {
+  memberId: string;
+}
+
+export interface IEventOnFirstAppointment extends IEventBaseAutoActionItem {
+  appointmentId: string;
+}
+
+export interface IEventOnBarrierCreated extends IEventBaseAutoActionItem {
+  barrierId: string;
+  barrierDescription: string;
 }

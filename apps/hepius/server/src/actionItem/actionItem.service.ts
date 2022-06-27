@@ -49,7 +49,7 @@ export class ActionItemService extends AlertService {
   async createOrSetActionItem(
     createOrSetActionItemParams: CreateOrSetActionItemParams,
   ): Promise<Identifier> {
-    const { id, memberId, appointmentId, ...params } = createOrSetActionItemParams;
+    const { id, memberId, appointmentId, barrierId, ...params } = createOrSetActionItemParams;
 
     const setParams = {
       ...params,
@@ -85,11 +85,16 @@ export class ActionItemService extends AlertService {
     } else {
       // create a new action item
       const { id: journeyId } = await this.journeyService.getRecent(memberId);
+      const appointmentIdObject = appointmentId
+        ? { appointmentId: new Types.ObjectId(appointmentId) }
+        : {};
+      const barrierIdObject = barrierId ? { barrierId: new Types.ObjectId(barrierId) } : {};
       const createParams = {
         ...setParams,
         memberId: new Types.ObjectId(memberId),
         journeyId: new Types.ObjectId(journeyId),
-        appointmentId: appointmentId ? new Types.ObjectId(appointmentId) : undefined,
+        ...appointmentIdObject,
+        ...barrierIdObject,
       };
       result = await this.actionItemModel.create(createParams);
     }

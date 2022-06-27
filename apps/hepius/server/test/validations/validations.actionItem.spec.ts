@@ -21,7 +21,6 @@ describe('Validations - actionItem', () => {
       input                        | error
       ${{ id: 123 }}               | ${{ missingFieldError: stringError }}
       ${{ memberId: 123 }}         | ${{ missingFieldError: stringError }}
-      ${{ appointmentId: 123 }}    | ${{ missingFieldError: stringError }}
       ${{ title: 123 }}            | ${{ missingFieldError: stringError }}
       ${{ description: 123 }}      | ${{ missingFieldError: stringError }}
       ${{ rejectNote: 123 }}       | ${{ missingFieldError: stringError }}

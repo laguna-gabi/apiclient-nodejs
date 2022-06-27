@@ -16,6 +16,8 @@ import {
   Client,
   ErrorType,
   Errors,
+  EventType,
+  IEventOnBarrierCreated,
   Identifiers,
   IsValidObjectId,
   LoggingInterceptor,
@@ -33,6 +35,7 @@ import {
 } from '@argus/hepiusClient';
 import { EntityName } from '@argus/pandora';
 import { JourneyService } from '../journey';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
@@ -40,6 +43,7 @@ export class CareResolver {
   constructor(
     private readonly careService: CareService,
     private readonly journeyService: JourneyService,
+    readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**************************************************************************************************
@@ -92,10 +96,20 @@ export class CareResolver {
   @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
   @Ace({ entityName: EntityName.member, idLocator: `memberId` })
   async createBarrier(
+    @Client('_id') userId,
     @Args(camelCase(CreateBarrierParams.name)) createBarrierParams: CreateBarrierParams,
   ): Promise<Barrier> {
     const { id: journeyId } = await this.journeyService.getRecent(createBarrierParams.memberId);
-    return this.careService.createBarrier({ ...createBarrierParams, journeyId });
+    const barrier = await this.careService.createBarrier({ ...createBarrierParams, journeyId });
+    const barrierType = await this.careService.getBarrierType(barrier.type.toString());
+    const params: IEventOnBarrierCreated = {
+      memberId: createBarrierParams.memberId,
+      barrierId: barrier.id,
+      barrierDescription: barrierType.description,
+    };
+    this.eventEmitter.emit(EventType.onBarrierCreated, params);
+
+    return barrier;
   }
 
   @Mutation(() => Barrier)

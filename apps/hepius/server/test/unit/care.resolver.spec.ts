@@ -90,6 +90,7 @@ describe('CareResolver', () => {
     let spyOnServiceGetMemberBarriers;
     let spyOnServiceUpdateBarrier;
     let spyOnServiceGetBarrierTypes;
+    let spyOnServiceGetBarrierType;
     let spyOnServiceCreateBarrier;
     let spyOnJourneyServiceGetRecent;
 
@@ -98,9 +99,8 @@ describe('CareResolver', () => {
       spyOnServiceUpdateBarrier = jest.spyOn(service, 'updateBarrier');
       spyOnServiceCreateBarrier = jest.spyOn(service, 'createBarrier');
       spyOnServiceGetBarrierTypes = jest.spyOn(service, 'getBarrierTypes');
+      spyOnServiceGetBarrierType = jest.spyOn(service, 'getBarrierType');
       spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
-      spyOnServiceUpdateBarrier.mockImplementationOnce(async () => true);
-      spyOnServiceCreateBarrier.mockImplementationOnce(async () => undefined);
     });
 
     afterEach(() => {
@@ -108,14 +108,17 @@ describe('CareResolver', () => {
       spyOnServiceUpdateBarrier.mockReset();
       spyOnServiceCreateBarrier.mockReset();
       spyOnServiceGetBarrierTypes.mockReset();
+      spyOnServiceGetBarrierType.mockReset();
       spyOnJourneyServiceGetRecent.mockReset();
     });
 
     it('should create a barrier', async () => {
-      const params = generateCreateBarrierParams();
+      const params = generateCreateBarrierParams({ type: generateId() });
       const journeyId = generateId();
       spyOnJourneyServiceGetRecent.mockReturnValueOnce({ id: journeyId });
-      await resolver.createBarrier(params);
+      spyOnServiceCreateBarrier.mockReturnValueOnce({ id: generateId(), ...params });
+      spyOnServiceGetBarrierType.mockReturnValueOnce({ type: generateId() });
+      await resolver.createBarrier(generateId(), params);
 
       expect(spyOnServiceCreateBarrier).toBeCalledTimes(1);
       expect(spyOnServiceCreateBarrier).toBeCalledWith({ ...params, journeyId });

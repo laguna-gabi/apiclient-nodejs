@@ -128,6 +128,8 @@ describe(ActionItemService.name, () => {
       delete createActionItemParams1.status;
       delete createActionItemParams1.relatedEntities;
       delete createActionItemParams1.title;
+      createActionItemParams1.appointmentId = generateId();
+      createActionItemParams2.appointmentId = generateId();
 
       const { id: id1 } = await service.createOrSetActionItem(createActionItemParams1);
       const { id: id2 } = await service.createOrSetActionItem(createActionItemParams2);
@@ -166,6 +168,7 @@ describe(ActionItemService.name, () => {
       await journeyService.create({ memberId, orgId });
       // create
       const createActionItemParams1 = generateCreateOrSetActionItemParams({ memberId });
+      createActionItemParams1.appointmentId = generateId();
       const { id } = await service.createOrSetActionItem(createActionItemParams1);
 
       const resultsBefore = await service.getActionItems(memberId);
@@ -230,6 +233,7 @@ describe(ActionItemService.name, () => {
         memberId,
         relatedEntities: [questionnaire],
       });
+      createActionItemParams.appointmentId = generateId();
       const { id } = await service.createOrSetActionItem(createActionItemParams);
 
       const questionnaireResponse = {

@@ -5,10 +5,17 @@ import {
   ActionItemCategory,
   ActionItemService,
   AutoActionItemRelatedEntities,
-  AutoActionItems,
-  autoActionItemsOnFirstAppointment,
+  AutoActionMainItemType,
+  autoActionsMap,
 } from '.';
-import { EventType, IEventOnFirstAppointment, LoggerService, RelatedEntityType } from '../common';
+import {
+  EventType,
+  IEventBaseAutoActionItem,
+  IEventOnBarrierCreated,
+  IEventOnFirstAppointment,
+  LoggerService,
+  RelatedEntityType,
+} from '../common';
 import { Internationalization } from '../providers';
 import { QuestionnaireService } from '../questionnaire';
 
@@ -23,49 +30,58 @@ export class AutoActionItem {
 
   @OnEvent(EventType.onFirstAppointment, { async: true })
   async handleFirstAppointment(params: IEventOnFirstAppointment) {
-    this.logger.info(params, AutoActionItem.name, this.handleFirstAppointment.name);
-    try {
-      const { memberId, appointmentId } = params;
+    await this.createAutoActionItem({
+      type: AutoActionMainItemType.firstAppointment,
+      params,
+      methodName: this.handleFirstAppointment.name,
+      category: ActionItemCategory.jobAid,
+    });
+  }
+
+  @OnEvent(EventType.onBarrierCreated, { async: true })
+  async handleBarrierCreated(params: IEventOnBarrierCreated) {
+    const findResults = Object.values(AutoActionMainItemType).find(
+      (type) => type === params.barrierDescription.toLowerCase(),
+    );
+    if (findResults) {
+      const newParams = { memberId: params.memberId, barrierId: params.barrierId };
       await this.createAutoActionItem({
-        autoActionItem: autoActionItemsOnFirstAppointment,
-        category: ActionItemCategory.jobAid,
-        memberId,
-        appointmentId,
+        type: AutoActionMainItemType.fatigue,
+        params: newParams,
+        methodName: this.handleBarrierCreated.name,
+        category: ActionItemCategory.poc,
       });
-    } catch (ex) {
-      this.logger.error(
-        params,
-        AutoActionItem.name,
-        this.handleFirstAppointment.name,
-        formatEx(ex),
-      );
     }
   }
 
   private async createAutoActionItem({
-    autoActionItem,
+    type,
+    params,
+    methodName,
     category,
-    memberId,
-    appointmentId,
   }: {
-    autoActionItem: AutoActionItems;
+    type: AutoActionMainItemType;
+    params: IEventBaseAutoActionItem;
+    methodName: string;
     category: ActionItemCategory;
-    memberId: string;
-    appointmentId?: string;
   }) {
-    return Promise.all(
-      autoActionItem.map(async ({ autoActionItemType, relatedEntities }) => {
-        return this.actionItemService.createOrSetActionItem({
-          ...this.internationalization.getActionItem(autoActionItemType),
-          relatedEntities: relatedEntities
-            ? await this.populateRelatedEntities(relatedEntities)
-            : undefined,
-          category,
-          memberId,
-          appointmentId,
-        });
-      }),
-    );
+    this.logger.info(params, AutoActionItem.name, methodName);
+    try {
+      return Promise.all(
+        autoActionsMap.get(type).map(async ({ autoActionItemType, relatedEntities }) => {
+          return this.actionItemService.createOrSetActionItem({
+            ...this.internationalization.getActionItem(autoActionItemType),
+            relatedEntities: relatedEntities
+              ? await this.populateRelatedEntities(relatedEntities)
+              : undefined,
+            category,
+            ...params,
+          });
+        }),
+      );
+    } catch (ex) {
+      this.logger.error(params, AutoActionItem.name, methodName, formatEx(ex));
+    }
   }
 
   private async populateRelatedEntities(relatedEntities: AutoActionItemRelatedEntities[]) {
@@ -73,10 +89,7 @@ export class AutoActionItem {
       relatedEntities.map(async ({ type, questionnaireType }) => {
         if (type === RelatedEntityType.questionnaire) {
           const { id } = await this.questionnaireService.getQuestionnaireByType(questionnaireType);
-          return {
-            type,
-            id,
-          };
+          return { type, id };
         } else {
           return { type };
         }

@@ -5,7 +5,8 @@ import {
   ActionItemModule,
   ActionItemService,
   AutoActionItem,
-  autoActionItemsOnFirstAppointment,
+  AutoActionMainItemType,
+  autoActionsMap,
 } from '../../src/actionItem';
 import { LoggerService } from '../../src/common';
 import { QuestionnaireService } from '../../src/questionnaire';
@@ -53,22 +54,47 @@ describe(AutoActionItem.name, () => {
     });
 
     it('should create action items on first appointment', async () => {
-      const actionItems = mockGenerateActionItem();
+      const actionItem = mockGenerateActionItem();
       const memberId = generateId();
       const questionnaire = mockGenerateQuestionnaire();
       const appointmentId = generateId();
-      spyOnServiceCreateOrSetActionItem.mockImplementationOnce(async () => actionItems);
+      spyOnServiceCreateOrSetActionItem.mockImplementation(async () => actionItem);
       spyOnQuestionnaireServiceGetByType.mockImplementationOnce(async () => questionnaire);
 
       await autoActionItem.handleFirstAppointment({ memberId, appointmentId });
 
-      for (let i = 1; i < autoActionItemsOnFirstAppointment.length; i++) {
+      for (let i = 1; i < autoActionsMap.get(AutoActionMainItemType.firstAppointment).length; i++) {
         expect(spyOnServiceCreateOrSetActionItem).toHaveBeenNthCalledWith(
           i,
           expect.objectContaining({
             category: ActionItemCategory.jobAid,
             memberId,
             appointmentId,
+          }),
+        );
+      }
+    });
+
+    // eslint-disable-next-line max-len
+    it(`should create action items on create barrier ${AutoActionMainItemType.fatigue}`, async () => {
+      const actionItem = mockGenerateActionItem();
+      const memberId = generateId();
+      const barrierId = generateId();
+      spyOnServiceCreateOrSetActionItem.mockImplementation(async () => actionItem);
+
+      await autoActionItem.handleBarrierCreated({
+        memberId,
+        barrierId,
+        barrierDescription: 'Fatigue',
+      });
+
+      for (let i = 1; i < autoActionsMap.get(AutoActionMainItemType.fatigue).length; i++) {
+        expect(spyOnServiceCreateOrSetActionItem).toHaveBeenNthCalledWith(
+          i,
+          expect.objectContaining({
+            category: ActionItemCategory.poc,
+            memberId,
+            barrierId,
           }),
         );
       }

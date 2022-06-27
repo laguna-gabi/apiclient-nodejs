@@ -47,6 +47,7 @@ import {
 import { Mutations } from '../test/aux';
 import { SeedBase } from './seedBase';
 import { BarrierType, CarePlanType, Identifier, UserRole } from '@argus/hepiusClient';
+import { AutoActionMainItemType } from '../src/actionItem';
 
 /**
  * This is a seed file for initial local db creation.
@@ -254,6 +255,18 @@ export async function seed() {
   const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
   await base.mutations.submitCareWizard({
     submitCareWizardParams: wizardParams,
+  });
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
+      ' create barrier of type: fatigue - generates auto action items  \n' +
+      '----------------------------------------------------------------',
+  );
+  const { id } = barrierTypes.find(
+    (type) => type.description?.toLowerCase() === AutoActionMainItemType.fatigue,
+  );
+  await mutations.createBarrier({
+    createBarrierParams: { memberId, ...generateCreateBarrierParamsWizard({ type: id }) },
   });
 
   console.debug(

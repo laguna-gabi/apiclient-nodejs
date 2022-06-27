@@ -1383,7 +1383,6 @@ export const mockGenerateActionItem = ({
 export const generateCreateOrSetActionItemParams = ({
   id,
   memberId = generateId(),
-  appointmentId = generateId(),
   title = lorem.words(2),
   description = lorem.words(2),
   category = randomEnum(ActionItemCategory) as ActionItemCategory,
@@ -1398,7 +1397,6 @@ export const generateCreateOrSetActionItemParams = ({
     id,
     title,
     memberId,
-    appointmentId,
     deadline,
     description,
     category,

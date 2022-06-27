@@ -2,6 +2,7 @@ import {
   Appointment,
   AppointmentMethod,
   Barrier,
+  BarrierDomain,
   BarrierStatus,
   CarePlan,
   CarePlanStatus,
@@ -100,7 +101,8 @@ import {
   ActionItem,
   ActionItemCategory,
   ActionItemStatus,
-  autoActionItemsOnFirstAppointment,
+  AutoActionMainItemType,
+  autoActionsMap,
 } from '../../src/actionItem';
 import { RequestAppointmentParams, ScheduleAppointmentParams } from '../../src/appointment';
 import {
@@ -2895,7 +2897,7 @@ describe('Integration tests: all', () => {
 
       const results = await handler.queries.getActionItems({ memberId: member.id });
 
-      autoActionItemsOnFirstAppointment.map((actionItem) => {
+      autoActionsMap.get(AutoActionMainItemType.firstAppointment).map(async (actionItem) => {
         expect(results).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -2903,6 +2905,43 @@ describe('Integration tests: all', () => {
               category: ActionItemCategory.jobAid,
               memberId: member.id,
               appointmentId: appointments[0].id,
+            }),
+          ]),
+        );
+      });
+    });
+
+    // eslint-disable-next-line max-len
+    it(`should create autoActionItems on barrier ${AutoActionMainItemType.fatigue}`, async () => {
+      const { member } = await creators.createMemberUserAndOptionalOrg();
+
+      const { id: barrierTypeId } = await handler.careService.createBarrierType({
+        description: 'Fatigue',
+        domain: BarrierDomain.medical,
+        carePlanTypes: [],
+      });
+
+      const { id: barrierId } = await handler.mutations.createBarrier({
+        createBarrierParams: {
+          memberId: member.id,
+          ...generateCreateBarrierParamsWizard({ type: barrierTypeId }),
+        },
+      });
+
+      await delay(500);
+
+      const results = await handler.queries.getActionItems({ memberId: member.id });
+      expect(results.filter((actionItem) => actionItem.barrierId).length).toEqual(
+        autoActionsMap.get(AutoActionMainItemType.fatigue).length,
+      );
+      autoActionsMap.get(AutoActionMainItemType.fatigue).map(async (actionItem) => {
+        expect(results).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              ...handler.internationalization.getActionItem(actionItem.autoActionItemType),
+              category: ActionItemCategory.poc,
+              memberId: member.id,
+              barrierId,
             }),
           ]),
         );
