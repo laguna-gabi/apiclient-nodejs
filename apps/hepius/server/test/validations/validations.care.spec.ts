@@ -131,7 +131,6 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
     test.each`
       input                      | error
       ${{ id: 123 }}             | ${{ missingFieldError: stringError }}
-      ${{ type: 123 }}           | ${{ missingFieldError: stringError }}
       ${{ notes: 123 }}          | ${{ missingFieldError: stringError }}
       ${{ status: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "BarrierStatus" enum.' }}
     `(`should fail to update a barrier since $input is not valid`, async (params) => {

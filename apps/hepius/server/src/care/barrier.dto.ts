@@ -44,10 +44,6 @@ export class UpdateBarrierParams {
 
   @Field(() => BarrierStatus, { nullable: true })
   status?: BarrierStatus;
-
-  @Field(() => String, { nullable: true })
-  @IsObjectId({ message: Errors.get(ErrorType.barrierTypeInvalid) })
-  type?: string;
 }
 
 /**************************************************************************************************

@@ -1673,13 +1673,11 @@ export const generateUpdateBarrierParams = ({
   id,
   notes = lorem.words(4),
   status = BarrierStatus.completed,
-  type,
 }: Partial<UpdateBarrierParams> = {}) => {
   return {
     id,
     notes,
     status,
-    type,
   };
 };
 

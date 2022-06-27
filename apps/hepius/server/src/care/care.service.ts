@@ -167,11 +167,10 @@ export class CareService extends BaseService {
   }
 
   async updateBarrier(updateBarrierParams: UpdateBarrierParams): Promise<Barrier> {
-    const { type, id, status } = updateBarrierParams;
+    const { id, status } = updateBarrierParams;
     const updateParams: Partial<UpdateBarrierParams> = omitBy(
       {
         ...updateBarrierParams,
-        type: type ? new Types.ObjectId(type) : undefined,
         completedAt: status === BarrierStatus.completed ? new Date(Date.now()) : undefined,
       },
       isNil,

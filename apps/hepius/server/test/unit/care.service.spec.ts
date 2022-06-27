@@ -318,17 +318,16 @@ describe('CareService', () => {
       const barrierBefore = await service.getBarrier(id);
       expect(barrierBefore.completedAt).toBeUndefined();
 
-      const type2 = await generateBarrierType();
-      const updateParams = generateUpdateBarrierParams({ id, type: type2 });
+      const updateParams = generateUpdateBarrierParams({ id });
 
       const result = await service.updateBarrier(updateParams);
       expect(result.status).toEqual(updateParams.status);
       expect(result.notes).toEqual(updateParams.notes);
-      expect(result.type.toString()).toEqual(updateParams.type);
+      expect(result.type.toString()).toEqual(params.type);
       expect(result.completedAt).toEqual(expect.any(Date));
     });
 
-    test.each(['notes', 'status', 'type'])(
+    test.each(['notes', 'status'])(
       'should not override optional field %p when not set from params',
       async (param) => {
         const memberId = generateId();
@@ -344,8 +343,7 @@ describe('CareService', () => {
         const barrierBefore = await service.getBarrier(id);
         expect(barrierBefore.completedAt).toBeUndefined();
 
-        const type2 = await generateBarrierType();
-        const updateParams = generateUpdateBarrierParams({ id, type: type2 });
+        const updateParams = generateUpdateBarrierParams({ id });
         delete updateParams[param];
 
         const result = await service.updateBarrier(updateParams);
