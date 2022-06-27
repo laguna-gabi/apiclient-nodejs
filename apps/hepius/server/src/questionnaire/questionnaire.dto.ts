@@ -34,6 +34,7 @@ export enum QuestionnaireType {
   lhp = 'lhp',
   csat = 'csat',
   mdl = 'mdl',
+  cage = 'cage',
 }
 
 export const QuestionnaireAlerts: Map<QuestionnaireType, string> = new Map([
@@ -51,6 +52,7 @@ registerEnumType(QuestionnaireType, {
     lhp: { description: 'Healthcare Persona' },
     csat: { description: 'Customer Satisfaction' },
     mdl: { description: 'Member Daily Log' },
+    cage: { description: 'Cut, Annoyed, Guilty, and Eye' },
   },
 });
 

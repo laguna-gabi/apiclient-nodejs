@@ -319,7 +319,8 @@ export class QuestionnaireService extends AlertService {
       questionnaire.type === QuestionnaireType.gad7 ||
       questionnaire.type === QuestionnaireType.phq9 ||
       questionnaire.type === QuestionnaireType.nps ||
-      questionnaire.type === QuestionnaireType.who5
+      questionnaire.type === QuestionnaireType.who5 ||
+      questionnaire.type === QuestionnaireType.cage
     ) {
       score = answers.length
         ? answers

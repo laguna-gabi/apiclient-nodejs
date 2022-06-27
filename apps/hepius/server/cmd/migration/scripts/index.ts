@@ -66,3 +66,4 @@ export * as m20220616135238 from './20220616135238-move-admitDate-from-member-to
 export * as m20220620122740 from './20220620122740-add-daily-report-questionnaire';
 export * as m20220619153631 from './20220619153631-move-dischargeDate-from-member-to-1st-admission';
 export * as m20220621132118 from './20220621132118-move-drg-drgDesc-from-member-to-1st-diagnosis';
+export * as m20220626155432 from './20220626155432-add-CAGE-questionnaire';

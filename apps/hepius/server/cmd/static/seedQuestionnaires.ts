@@ -360,3 +360,35 @@ export const buildDailyLogQuestionnaire = (): CreateQuestionnaireParams => {
     isAssignableToMember: false,
   };
 };
+
+export const buildCAGEQuestionnaire = (): CreateQuestionnaireParams => {
+  const questions = [
+    'Have you ever felt you ought to cut down on your drinking or drug use?',
+    'Have people annoyed you by criticizing your drinking or drug use?',
+    'Have you felt bad or guilty about your drinking or drug use?',
+    // eslint-disable-next-line max-len
+    'Have you ever had a drink or used drugs first thing in the morning to steady your nerves or to get rid of a hangover (eye-opener)?',
+  ];
+
+  let count = 0;
+  const cageItems: Item[] = questions.map((question) => ({
+    code: `q${++count}`,
+    label: question,
+    type: ItemType.choice,
+    order: count,
+    required: false,
+    options: [
+      { label: 'YES', value: 1 },
+      { label: 'NO', value: 0 },
+    ],
+  }));
+
+  return {
+    name: `Cut, Annoyed, Guilty, and Eye`,
+    shortName: upperCase(QuestionnaireType.cage),
+    type: QuestionnaireType.cage,
+    items: cageItems,
+    isAssignableToMember: false,
+    severityLevels: [{ min: 2, max: 4, label: 'Substance Abuse' }],
+  };
+};
