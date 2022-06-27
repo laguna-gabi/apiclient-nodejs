@@ -16,6 +16,7 @@ import { Member, defaultMemberParams } from '../../src/member';
 import { Org } from '../../src/org';
 import { CreateUserParams } from '../../src/user';
 import { Appointment, AppointmentStatus, User, UserRole } from '@argus/hepiusClient';
+import { generateId } from '@argus/pandora';
 import { Identifiers, delay } from '../../src/common';
 import { buildGAD7Questionnaire, buildPHQ9Questionnaire } from '../../cmd/static';
 import { QuestionnaireType } from '../../src/questionnaire';
@@ -39,6 +40,10 @@ export class Creators {
       authId: v4(),
       username: v4(),
     });
+
+    const accessToken = generateId();
+    this.handler.sendBird.spyOnSendBirdCreateUser.mockResolvedValueOnce(accessToken);
+
     const user = await this.handler.mutations.createUser({ createUserParams });
     const result = await this.handler.queries.getUser({
       requestHeaders: generateRequestHeaders(user.authId),
@@ -58,6 +63,12 @@ export class Creators {
     expect(new Date(resultUserNew.createdAt)).toEqual(expect.any(Date));
 
     expect(result.roles).toEqual(expectedUser.roles.map((role) => camelCase(role)));
+
+    const userConfig = await this.handler.queries.getUserConfig({
+      requestHeaders: generateRequestHeaders(user.authId),
+    });
+
+    expect(userConfig).toEqual(expect.objectContaining({ accessToken }));
 
     return result;
   };

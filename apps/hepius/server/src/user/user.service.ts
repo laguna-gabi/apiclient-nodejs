@@ -511,7 +511,10 @@ export class UserService extends BaseService {
     this.logger.info(params, UserService.name, this.handleUpdateUserConfig.name);
     try {
       const { userId, accessToken } = params;
-      const result = await this.userConfigModel.updateOne({ userId }, { $set: { accessToken } });
+      const result = await this.userConfigModel.updateOne(
+        { userId: new Types.ObjectId(userId) },
+        { $set: { accessToken } },
+      );
 
       return result.modifiedCount === 1;
     } catch (ex) {

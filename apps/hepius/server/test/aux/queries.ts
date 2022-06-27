@@ -29,7 +29,7 @@ import {
 } from '../../src/recording';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
-import { GetSlotsParams, UserStatistics, UserSummary } from '../../src/user';
+import { GetSlotsParams, UserConfig, UserStatistics, UserSummary } from '../../src/user';
 import { FRAGMENT_ADMISSION, FRAGMENT_JOURNEY, FRAGMENT_MEMBER } from './fragments';
 
 export class Queries {
@@ -697,7 +697,13 @@ export class Queries {
     return result?.getMemberConfig;
   };
 
-  getUserConfig = async ({ invalidFieldsError }: { invalidFieldsError?: string }) => {
+  getUserConfig = async ({
+    invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    invalidFieldsError?: string;
+    requestHeaders?;
+  }): Promise<UserConfig> => {
     const result = await this.client
       .request(
         gql`
@@ -709,7 +715,7 @@ export class Queries {
           }
         `,
         {},
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         expect(ex.response.errors[0].message).toContain(invalidFieldsError);
