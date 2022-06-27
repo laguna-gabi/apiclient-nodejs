@@ -112,6 +112,90 @@
                     "title": "",
                     "description": ""
                 }
+            },
+            "barrier": {
+                "fatigue": {
+                    "empatheticResponse": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "assess1": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "assess2": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "assess3": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "assess4": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "assess5": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "assess6": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "assess7": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "assess8": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "supportiveStatement": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "prepareMemberToCallProvider1": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "prepareMemberToCallProvider2": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "prepareMemberToCallProvider3": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "prepareMemberToCallProvider4": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "toDoToEncourage1": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "toDoToEncourage2": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "toDoToEncourage3": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "toDoToEncourage4": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "toDoToEncourage5": {
+                        "title": "",
+                        "description": ""
+                    },
+                    "influence": {
+                        "title": "",
+                        "description": ""
+                    }
+                }
             }
         }
     }
