@@ -16,7 +16,9 @@ import { Member, defaultMemberParams } from '../../src/member';
 import { Org } from '../../src/org';
 import { CreateUserParams } from '../../src/user';
 import { Appointment, AppointmentStatus, User, UserRole } from '@argus/hepiusClient';
-import { Identifiers } from '../../src/common';
+import { Identifiers, delay } from '../../src/common';
+import { buildGAD7Questionnaire, buildPHQ9Questionnaire } from '../../cmd/static';
+import { QuestionnaireType } from '../../src/questionnaire';
 
 export class Creators {
   constructor(
@@ -76,6 +78,18 @@ export class Creators {
   }: {
     orgId?: string;
   } = {}): Promise<{ member: Member; user: User; org: Org }> => {
+    await Promise.all([
+      this.handler.questionnaireModel.updateOne(
+        { type: QuestionnaireType.phq9 },
+        { $set: { ...buildPHQ9Questionnaire(), active: true } },
+        { upsert: true },
+      ),
+      this.handler.questionnaireModel.updateOne(
+        { type: QuestionnaireType.gad7 },
+        { $set: { ...buildGAD7Questionnaire(), active: true } },
+        { upsert: true },
+      ),
+    ]);
     const org = orgId
       ? await this.handler.queries.getOrg({ id: orgId })
       : await this.createAndValidateOrg();
@@ -92,6 +106,8 @@ export class Creators {
     const requestHeaders = this.handler.defaultUserRequestHeaders;
     const memberParams = generateCreateMemberParams({ orgId: org.id, userId: user.id });
     const { id } = await this.handler.mutations.createMember({ memberParams });
+
+    await delay(200); // wait for appointment and action items creation
 
     const member = await this.handler.queries.getMember({ id, requestHeaders });
     expect(member.phone).toEqual(memberParams.phone);

@@ -2,6 +2,7 @@ import { BaseInternationalization, Language } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Member } from '../../src/member';
 import { AlertType } from '../../src/common';
+import { AutoActionItemType } from '../actionItem';
 
 @Injectable()
 export class Internationalization extends BaseInternationalization implements OnModuleInit {
@@ -17,5 +18,16 @@ export class Internationalization extends BaseInternationalization implements On
       ...data,
       lng: Language.en,
     });
+  }
+
+  getActionItem(autoActionItemType: AutoActionItemType): { title: string; description: string } {
+    return {
+      title: this.i18n.t(`actionItems.${autoActionItemType}.title`, {
+        lng: Language.en,
+      }),
+      description: this.i18n.t(`actionItems.${autoActionItemType}.description`, {
+        lng: Language.en,
+      }),
+    };
   }
 }

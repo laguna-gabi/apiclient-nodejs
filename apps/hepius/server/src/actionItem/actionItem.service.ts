@@ -11,7 +11,6 @@ import {
   ActionItemPriority,
   ActionItemStatus,
   CreateOrSetActionItemParams,
-  RelatedEntityType,
   nullableActionItemKeys,
 } from '.';
 import {
@@ -26,6 +25,7 @@ import {
   IEventDeleteMember,
   IEventUpdateRelatedEntity,
   LoggerService,
+  RelatedEntityType,
   deleteMemberObjects,
 } from '../common';
 import { ISoftDelete } from '../db';
@@ -138,7 +138,7 @@ export class ActionItemService extends AlertService {
 
   @OnEvent(EventType.onUpdateRelatedEntity, { async: true })
   async handleUpdateRelatedEntityActionItem(params: IEventUpdateRelatedEntity) {
-    this.logger.info(params, JourneyService.name, this.handleUpdateRelatedEntityActionItem.name);
+    this.logger.info(params, ActionItemService.name, this.handleUpdateRelatedEntityActionItem.name);
     try {
       const { destEntity, sourceEntity } = params;
       switch (destEntity.type) {

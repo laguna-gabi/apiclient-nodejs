@@ -83,6 +83,21 @@ export async function seed() {
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
+      '---------- load assessment templates (questionnaires) ----------\n' +
+      '----------------------------------------------------------------',
+  );
+  // GAD-7
+  await base.questionnaireService.createQuestionnaire(buildGAD7Questionnaire());
+  // PHQ-9
+  await base.questionnaireService.createQuestionnaire(buildPHQ9Questionnaire());
+  // WHO-5
+  await base.questionnaireService.createQuestionnaire(buildWHO5Questionnaire());
+  // NPS
+  await base.questionnaireService.createQuestionnaire(buildNPSQuestionnaire());
+  await base.questionnaireService.createQuestionnaire(buildLHPQuestionnaire());
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
       '------------------- Creating an organization -------------------\n' +
       '----------------------------------------------------------------',
   );
@@ -187,21 +202,6 @@ export async function seed() {
     text: lorem.word(),
   };
   await base.mutations.updateJournalText({ requestHeaders, updateJournalTextParams });
-
-  console.debug(
-    '\n----------------------------------------------------------------\n' +
-      '---------- load assessment templates (questionnaires) ----------\n' +
-      '----------------------------------------------------------------',
-  );
-  // GAD-7
-  await base.questionnaireService.createQuestionnaire(buildGAD7Questionnaire());
-  // PHQ-9
-  await base.questionnaireService.createQuestionnaire(buildPHQ9Questionnaire());
-  // WHO-5
-  await base.questionnaireService.createQuestionnaire(buildWHO5Questionnaire());
-  // NPS
-  await base.questionnaireService.createQuestionnaire(buildNPSQuestionnaire());
-  await base.questionnaireService.createQuestionnaire(buildLHPQuestionnaire());
 
   console.debug(
     '\n----------------------------------------------------------------\n' +

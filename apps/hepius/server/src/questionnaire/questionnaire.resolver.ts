@@ -12,7 +12,6 @@ import {
   QuestionnaireType,
   SubmitQuestionnaireResponseParams,
 } from '.';
-import { RelatedEntityType } from '../actionItem';
 import {
   Ace,
   AceStrategy,
@@ -27,6 +26,7 @@ import {
   MemberIdParam,
   MemberIdParamType,
   MemberUserRouteInterceptor,
+  RelatedEntityType,
   Roles,
 } from '../common';
 import { JourneyService } from '../journey';

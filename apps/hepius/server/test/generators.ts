@@ -60,8 +60,6 @@ import {
   ActionItemPriority,
   ActionItemStatus,
   CreateOrSetActionItemParams,
-  RelatedEntity,
-  RelatedEntityType,
 } from '../src/actionItem';
 import {
   EndAppointmentParams,
@@ -89,6 +87,8 @@ import {
   ChangeType,
   ItemType,
   RecordingType,
+  RelatedEntity,
+  RelatedEntityType,
   momentFormats,
   reformatDate,
 } from '../src/common';

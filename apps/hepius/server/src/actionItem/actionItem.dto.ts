@@ -4,7 +4,7 @@ import { Document, Types } from 'mongoose';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { IsDate, IsOptional } from 'class-validator';
-import { ErrorType, Errors } from '../common';
+import { ErrorType, Errors, RelatedEntity } from '../common';
 import { Identifier } from '@argus/hepiusClient';
 import { DefaultSchemaOptions } from '@argus/pandora';
 
@@ -34,14 +34,6 @@ export enum ActionItemPriority {
 }
 
 registerEnumType(ActionItemPriority, { name: 'ActionItemPriority' });
-
-export enum RelatedEntityType {
-  questionnaire = 'questionnaire',
-  questionnaireResponse = 'questionnaireResponse',
-  actionItem = 'actionItem',
-}
-
-registerEnumType(RelatedEntityType, { name: 'RelatedEntityType' });
 
 export enum ActionItemLinkType {
   medicalSection = 'medicalSection',
@@ -121,18 +113,6 @@ export class CreateOrSetActionItemParams {
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
-
-@InputType('RelatedEntityInput')
-@ObjectType()
-export class RelatedEntity {
-  @Prop({ type: String, enum: RelatedEntityType })
-  @Field(() => RelatedEntityType)
-  type: RelatedEntityType;
-
-  @Prop()
-  @Field(() => String, { nullable: true })
-  id?: string;
-}
 
 @ObjectType()
 @Schema(DefaultSchemaOptions)

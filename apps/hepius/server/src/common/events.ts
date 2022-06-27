@@ -1,11 +1,10 @@
 import { Platform, QueueType } from '@argus/pandora';
 import { HealthPersona, QuestionnaireResponse, QuestionnaireType } from '../questionnaire';
-import { UpdatedAppointmentAction } from '.';
+import { RelatedEntity, UpdatedAppointmentAction } from '.';
 import { AppointmentDocument } from '../appointment';
 import { Member } from '../member';
 import { Appointment, AppointmentStatus, Scores, User } from '@argus/hepiusClient';
 import { Org } from '../org';
-import { RelatedEntity } from '../actionItem';
 
 export enum EventType {
   //member
@@ -16,6 +15,7 @@ export enum EventType {
   onDeletedMember = 'onDeletedMember',
   onPublishedJournal = 'onPublishedJournal',
   onReplaceMemberOrg = 'onReplaceMemberOrg',
+  onFirstAppointment = 'onFirstAppointment',
 
   //user
   onNewUser = 'onNewUser',
@@ -91,6 +91,10 @@ export interface IEventOnReplaceMemberOrg {
   org: Org;
 }
 
+export interface IEventOnFirstAppointment {
+  memberId: string;
+  appointmentId: string;
+}
 /*************************************************************************************************
  **************************************** User interfaces ****************************************
  *************************************************************************************************/

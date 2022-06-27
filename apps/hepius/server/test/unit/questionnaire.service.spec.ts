@@ -226,8 +226,6 @@ describe('QuestionnaireService', () => {
 
       const allQuestionnaires = await service.getActiveQuestionnaires();
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       expect(allQuestionnaires.find((item) => item.id === id)).toEqual(
         expect.objectContaining({
           ...params,
@@ -247,8 +245,6 @@ describe('QuestionnaireService', () => {
 
       const questionnaire = await service.createQuestionnaire(params);
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       expect(await service.getQuestionnaireById(questionnaire.id)).toEqual(
         expect.objectContaining({
           ...params,
@@ -261,6 +257,22 @@ describe('QuestionnaireService', () => {
     it('should fail to get non existing questionnaire', async () => {
       await expect(service.getQuestionnaireById(generateId())).rejects.toThrow(
         Errors.get(ErrorType.questionnaireNotFound),
+      );
+    });
+  });
+
+  describe('getQuestionnaireByType', () => {
+    it('should get a single questionnaire by type', async () => {
+      const params: CreateQuestionnaireParams = generateCreateQuestionnaireParams();
+
+      const questionnaire = await service.createQuestionnaire(params);
+
+      expect(await service.getQuestionnaireByType(questionnaire.type)).toEqual(
+        expect.objectContaining({
+          ...params,
+          id: questionnaire.id,
+          active: true,
+        }),
       );
     });
   });

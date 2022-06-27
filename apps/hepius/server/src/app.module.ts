@@ -6,6 +6,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { TerminusModule } from '@nestjs/terminus';
 import { eventEmitter, skipBodyParseRouteList } from 'config';
 import { GraphQLError } from 'graphql';
+import { ActionItemModule } from './actionItem';
 import { AppointmentModule } from './appointment';
 import { AuthModule, AuthService } from './auth';
 import { AvailabilityModule } from './availability';
@@ -48,6 +49,7 @@ const badRequestException = 'Bad Request Exception';
     TerminusModule,
     CareModule,
     QuestionnaireModule,
+    ActionItemModule,
     EventEmitterModule.forRoot({ maxListeners: eventEmitter.maxListeners }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,

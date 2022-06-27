@@ -6,9 +6,14 @@ import {
   ActionItemPriority,
   ActionItemService,
   ActionItemStatus,
-  RelatedEntityType,
 } from '../../src/actionItem';
-import { ErrorType, Errors, IEventUpdateRelatedEntity, LoggerService } from '../../src/common';
+import {
+  ErrorType,
+  Errors,
+  IEventUpdateRelatedEntity,
+  LoggerService,
+  RelatedEntityType,
+} from '../../src/common';
 import { JourneyService } from '../../src/journey';
 import {
   dbConnect,

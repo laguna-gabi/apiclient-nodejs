@@ -18,6 +18,7 @@ import {
   Platform,
   ServiceClientId,
   generateId,
+  generateObjectId,
   randomEnum,
   translation,
 } from '@argus/pandora';
@@ -97,9 +98,9 @@ import {
 } from '../../cmd/static';
 import {
   ActionItem,
+  ActionItemCategory,
   ActionItemStatus,
-  CreateOrSetActionItemParams,
-  RelatedEntityType,
+  autoActionItemsOnFirstAppointment,
 } from '../../src/actionItem';
 import { RequestAppointmentParams, ScheduleAppointmentParams } from '../../src/appointment';
 import {
@@ -110,6 +111,7 @@ import {
   EventType,
   IEventOnUpdatedUser,
   ItemType,
+  RelatedEntityType,
   delay,
   momentFormats,
   reformatDate,
@@ -2779,9 +2781,14 @@ describe('Integration tests: all', () => {
 
       // verify action item has the related entity, and the status is completed
       const actionItems = await handler.queries.getActionItems({ memberId: member.id });
-      expect(actionItems.length).toEqual(1);
-      expect(actionItems[0].relatedEntities).toEqual([qrRelatedEntity, qrResponseRelatedEntity]);
-      expect(actionItems[0].status).toEqual(ActionItemStatus.completed);
+      expect(actionItems).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            relatedEntities: [qrRelatedEntity, qrResponseRelatedEntity],
+            status: ActionItemStatus.completed,
+          }),
+        ]),
+      );
     });
 
     // eslint-disable-next-line max-len
@@ -2848,9 +2855,58 @@ describe('Integration tests: all', () => {
       // get action items
       const actionItems = await handler.queries.getActionItems({ memberId: member.id });
 
-      //action items are desc sorted, so the last inserted action item is the 1st in the list
-      compareActionItem(actionItems[0], setActionItemParams2);
-      compareActionItem(actionItems[1], createOrSetActionItemParams);
+      expect(actionItems).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: id1,
+            title: createOrSetActionItemParams.title,
+            status: createOrSetActionItemParams.status,
+            relatedEntities: createOrSetActionItemParams.relatedEntities,
+            description: createOrSetActionItemParams.description,
+            rejectNote: createOrSetActionItemParams.rejectNote,
+            category: createOrSetActionItemParams.category,
+            priority: createOrSetActionItemParams.priority,
+            link: createOrSetActionItemParams.link,
+            deadline: createOrSetActionItemParams.deadline.toISOString(),
+          }),
+          expect.objectContaining({
+            id: id2,
+            title: setActionItemParams2.title,
+            status: setActionItemParams2.status,
+            relatedEntities: setActionItemParams2.relatedEntities,
+            description: setActionItemParams2.description,
+            rejectNote: setActionItemParams2.rejectNote,
+            category: setActionItemParams2.category,
+            priority: setActionItemParams2.priority,
+            link: setActionItemParams2.link,
+            deadline: setActionItemParams2.deadline.toISOString(),
+          }),
+        ]),
+      );
+    });
+
+    it('should create autoActionItems on first appointment', async () => {
+      const { member } = await creators.createMemberUserAndOptionalOrg();
+      const appointments = await handler.appointmentModel.find({
+        memberId: generateObjectId(member.id),
+      });
+
+      expect(appointments.length).toEqual(1);
+
+      const results = await handler.queries.getActionItems({ memberId: member.id });
+
+      autoActionItemsOnFirstAppointment.map((actionItem) => {
+        expect(results).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              ...handler.internationalization.getActionItem(actionItem.autoActionItemType),
+              category: ActionItemCategory.jobAid,
+              memberId: member.id,
+              appointmentId: appointments[0].id,
+            }),
+          ]),
+        );
+      });
     });
   });
 
@@ -3326,33 +3382,41 @@ describe('Integration tests: all', () => {
       requestHeaders: generateRequestHeaders(user.authId),
     });
 
-    expect(results.length).toEqual(2);
-    compareActionItem(results[0], actionItemUserParams);
-    expect(results[0].memberName).toEqual(`${member.firstName} ${member.lastName}`);
-    expect(results[0].id).toEqual(idUserActionItem);
-    compareActionItem(results[1], actionItemAdditionalUserParams);
-    expect(results[1].memberName).toEqual(`${member.firstName} ${member.lastName}`);
-    expect(results[1].id).toEqual(idAdditionalUserActionItem);
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: idUserActionItem,
+          title: actionItemUserParams.title,
+          status: actionItemUserParams.status,
+          relatedEntities: actionItemUserParams.relatedEntities,
+          description: actionItemUserParams.description,
+          rejectNote: actionItemUserParams.rejectNote,
+          category: actionItemUserParams.category,
+          priority: actionItemUserParams.priority,
+          link: actionItemUserParams.link,
+          deadline: actionItemUserParams.deadline.toISOString(),
+          memberName: `${member.firstName} ${member.lastName}`,
+        }),
+        expect.objectContaining({
+          id: idAdditionalUserActionItem,
+          title: actionItemAdditionalUserParams.title,
+          status: actionItemAdditionalUserParams.status,
+          relatedEntities: actionItemAdditionalUserParams.relatedEntities,
+          description: actionItemAdditionalUserParams.description,
+          rejectNote: actionItemAdditionalUserParams.rejectNote,
+          category: actionItemAdditionalUserParams.category,
+          priority: actionItemAdditionalUserParams.priority,
+          link: actionItemAdditionalUserParams.link,
+          deadline: actionItemAdditionalUserParams.deadline.toISOString(),
+          memberName: `${member.firstName} ${member.lastName}`,
+        }),
+      ]),
+    );
   });
 
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/
-
-  const compareActionItem = (
-    actionItem: ActionItem,
-    createOrSetActionItemParams: CreateOrSetActionItemParams,
-  ) => {
-    expect(actionItem.title).toEqual(createOrSetActionItemParams.title);
-    expect(actionItem.status).toEqual(createOrSetActionItemParams.status);
-    expect(actionItem.relatedEntities).toEqual(createOrSetActionItemParams.relatedEntities);
-    expect(actionItem.description).toEqual(createOrSetActionItemParams.description);
-    expect(actionItem.rejectNote).toEqual(createOrSetActionItemParams.rejectNote);
-    expect(actionItem.category).toEqual(createOrSetActionItemParams.category);
-    expect(actionItem.priority).toEqual(createOrSetActionItemParams.priority);
-    expect(actionItem.link).toEqual(createOrSetActionItemParams.link);
-    expect(new Date(actionItem.deadline)).toEqual(createOrSetActionItemParams.deadline);
-  };
 
   const createTodos = async (memberId: string, requestHeaders) => {
     const createTodoParams = generateCreateTodoParams({ memberId });

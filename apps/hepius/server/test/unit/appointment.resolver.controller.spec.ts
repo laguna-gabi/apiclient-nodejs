@@ -1,5 +1,11 @@
 import { AppointmentInternalKey, RegisterInternalKey, generateDispatchId } from '@argus/irisClient';
-import { generateId, generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import {
+  Platform,
+  generateId,
+  generateObjectId,
+  mockLogger,
+  mockProcessWarnings,
+} from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addMinutes } from 'date-fns';
@@ -13,6 +19,8 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
+  mockGenerateMember,
+  mockGenerateUser,
 } from '..';
 import {
   AppointmentController,
@@ -25,6 +33,7 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventOnNewMember,
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserCommunication,
   LoggerService,
@@ -423,6 +432,41 @@ describe('AppointmentResolver', () => {
       const result = await resolver.updateNotes(notesParams);
       expect(spyOnServiceUpdateNotes).toBeCalledWith(notesParams);
       expect(result).toEqual(notes);
+    });
+  });
+
+  describe('onNewMember', () => {
+    let spyOnRequestAppointment;
+    let spyOnJourneyServiceGetRecent;
+
+    beforeEach(() => {
+      spyOnRequestAppointment = jest.spyOn(service, 'request');
+      spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
+    });
+
+    afterEach(() => {
+      spyOnRequestAppointment.mockReset();
+      spyOnJourneyServiceGetRecent.mockReset();
+      spyOnEventEmitter.mockReset();
+    });
+
+    it(`should emit ${EventType.onFirstAppointment}`, async () => {
+      const journeyId = generateId();
+      const appointmentId = generateId();
+      const params: IEventOnNewMember = {
+        member: mockGenerateMember(),
+        user: mockGenerateUser(),
+        platform: Platform.android,
+      };
+      spyOnRequestAppointment.mockResolvedValue({ id: appointmentId });
+      spyOnJourneyServiceGetRecent.mockResolvedValue({ id: journeyId });
+
+      await resolver.onNewMember(params);
+
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onFirstAppointment, {
+        memberId: params.member.id.toString(),
+        appointmentId,
+      });
     });
   });
 

@@ -21,7 +21,7 @@ import {
 } from '.';
 import { IsObjectId } from '@argus/hepiusClient';
 import { differenceInMilliseconds, sub } from 'date-fns';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel, Prop } from '@nestjs/mongoose';
 
 /**************************************************************************************************
  *************************** Enum registration for external gql methods ***************************
@@ -65,6 +65,27 @@ export class RegisterForNotificationParams {
   @Field(() => Boolean, { nullable: true })
   @IsOptional()
   isPushNotificationsEnabled?: boolean;
+}
+
+export enum RelatedEntityType {
+  questionnaire = 'questionnaire',
+  questionnaireResponse = 'questionnaireResponse',
+  actionItem = 'actionItem',
+  caregiver = 'caregiver',
+  poc = 'poc',
+}
+
+registerEnumType(RelatedEntityType, { name: 'RelatedEntityType' });
+@InputType('RelatedEntityInput')
+@ObjectType()
+export class RelatedEntity {
+  @Prop({ type: String, enum: RelatedEntityType })
+  @Field(() => RelatedEntityType)
+  type: RelatedEntityType;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  id?: string;
 }
 
 /**************************************************************************************************

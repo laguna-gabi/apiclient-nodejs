@@ -20,6 +20,7 @@ import {
   Errors,
   EventType,
   IEventDeleteMember,
+  IEventOnFirstAppointment,
   IEventOnNewMember,
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserAppointments,
@@ -155,8 +156,12 @@ export class AppointmentResolver extends AppointmentBase {
 
   @OnEvent(EventType.onNewMember, { async: true })
   async onNewMember(params: IEventOnNewMember) {
-    this.logger.info(params, AppointmentResolver.name, this.onNewMember.name);
     const { member, user } = params;
+    this.logger.info(
+      { memberId: member.id, userId: user.id },
+      AppointmentResolver.name,
+      this.onNewMember.name,
+    );
     try {
       const { id: journeyId } = await this.journeyService.getRecent(member.id);
       const requestAppointmentParams: RequestAppointmentParams = {
@@ -167,6 +172,11 @@ export class AppointmentResolver extends AppointmentBase {
       };
       const { id: appointmentId } = await this.appointmentService.request(requestAppointmentParams);
       await this.notifyRegistration({ member, userId: user.id, appointmentId });
+      const params: IEventOnFirstAppointment = {
+        memberId: member.id.toString(),
+        appointmentId,
+      };
+      this.eventEmitter.emit(EventType.onFirstAppointment, params);
     } catch (ex) {
       this.logger.error(
         { memberId: member.id, userId: user.id },

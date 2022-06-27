@@ -87,6 +87,10 @@ export class QuestionnaireService extends AlertService {
     return questionnaire;
   }
 
+  async getQuestionnaireByType(questionnaireType: QuestionnaireType): Promise<Questionnaire> {
+    return this.questionnaire.findOne({ active: true, type: questionnaireType });
+  }
+
   async submitQuestionnaireResponse(
     submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams,
   ): Promise<QuestionnaireResponse> {

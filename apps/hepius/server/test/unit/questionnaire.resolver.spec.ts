@@ -8,7 +8,9 @@ import {
   EventType,
   IEventUpdateHealthPersona,
   IEventUpdateRelatedEntity,
+  RelatedEntityType,
 } from '../../src/common';
+import { JourneyService } from '../../src/journey';
 import {
   CreateQuestionnaireParams,
   HealthPersona,
@@ -26,8 +28,6 @@ import {
   mockGenerateJourney,
   mockGenerateQuestionnaire,
 } from '../../test';
-import { JourneyService } from '../../src/journey';
-import { RelatedEntityType } from '../../src/actionItem';
 
 describe('QuestionnaireResolver', () => {
   let module: TestingModule;

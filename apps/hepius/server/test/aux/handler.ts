@@ -90,7 +90,7 @@ import {
   MemberService,
 } from '../../src/member';
 import { Org, OrgService } from '../../src/org';
-import { WebhooksController } from '../../src/providers';
+import { Internationalization, WebhooksController } from '../../src/providers';
 import {
   Questionnaire,
   QuestionnaireDocument,
@@ -151,6 +151,7 @@ export class Handler extends BaseHandler {
   discoveryService: DiscoveryService;
   reflector: Reflector;
   recordingService: RecordingService;
+  internationalization: Internationalization;
 
   controlMemberModel: Model<ControlMemberDocument>;
   barrierTypeModel: Model<BarrierTypeDocument>;
@@ -238,6 +239,7 @@ export class Handler extends BaseHandler {
     this.queueService = providers.queueService;
     this.notificationService = providers.notificationService;
     this.recordingService = moduleFixture.get<RecordingService>(RecordingService);
+    this.internationalization = moduleFixture.get<Internationalization>(Internationalization);
 
     await dbConnect();
     this.communicationService = moduleFixture.get<CommunicationService>(CommunicationService);

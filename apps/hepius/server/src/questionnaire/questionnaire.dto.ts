@@ -16,11 +16,11 @@ import {
   OptionInterface,
   RangeElementInterface,
   RangeInterface,
+  RelatedEntity,
   SeverityLevelInterface,
 } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import { DefaultSchemaOptions } from '@argus/pandora';
-import { RelatedEntity } from '../actionItem';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
