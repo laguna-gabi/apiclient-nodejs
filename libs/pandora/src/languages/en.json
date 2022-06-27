@@ -90,7 +90,7 @@
                 },
                 "questionnaire": {
                     "title": "Questionnaire",
-                    "description": "Member Persona (If depression or anxiety are suspected, administer PHQ9 and GAD7)."
+                    "description": "Member Persona (If depression or anxiety are suspected, administer PHQ-9 and GAD-7)."
                 },
                 "careInformation": {
                     "title": "Gather care information",
@@ -194,6 +194,10 @@
                     "influence": {
                         "title": "Influence",
                         "description": "Physicians prefer that you report when your fatigue or weakness is not improving or worsening so they can evaluate if there is a cause that can be treated"
+                    },
+                    "memberTodo": {
+                        "title": "Member ToDo",
+                        "description": "Send the member PHQ-9"
                     }
                 }
             }

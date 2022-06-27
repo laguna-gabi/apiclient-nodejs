@@ -194,6 +194,10 @@
                     "influence": {
                         "title": "",
                         "description": ""
+                    },
+                    "memberTodo": {
+                        "title": "",
+                        "description": ""
                     }
                 }
             }
