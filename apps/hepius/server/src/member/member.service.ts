@@ -484,7 +484,7 @@ export class MemberService extends AlertService {
   }
 
   async getAllControl(): Promise<ControlMemberDocument[]> {
-    return this.controlMemberModel.find().populate({ path: 'org' });
+    return this.controlMemberModel.find();
   }
 
   async getUserMembers({
