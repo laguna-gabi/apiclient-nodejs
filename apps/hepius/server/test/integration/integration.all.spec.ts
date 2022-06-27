@@ -3481,7 +3481,7 @@ describe('Integration tests: all', () => {
           generateUpdateRecordingParams({
             start,
             end,
-            memberId: memberIds[i],
+            memberId: memberIds[memberIndex],
             userId: userIds?.length ? userIds[datatype.number(userIds.length - 1)] : generateId(),
           }),
         );
