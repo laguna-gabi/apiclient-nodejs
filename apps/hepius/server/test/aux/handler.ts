@@ -17,6 +17,7 @@ import {
   mockProcessWarnings,
   requestContextMiddleware,
 } from '@argus/pandora';
+import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
 import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -27,11 +28,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { datatype, lorem } from 'faker';
 import { GraphQLClient } from 'graphql-request';
 import { sign } from 'jsonwebtoken';
+import { intersection } from 'lodash';
 import { Model, model } from 'mongoose';
 import { Consumer } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { Mutations, Queries } from '.';
 import { generateCreateMemberParams, generateCreateUserParams, generateOrgParams } from '..';
+import { buildGAD7Questionnaire, buildPHQ9Questionnaire } from '../../cmd/static';
+import { ActionItem, ActionItemDocument, ActionItemDto } from '../../src/actionItem';
 import { AppModule } from '../../src/app.module';
 import {
   AppointmentDocument,
@@ -98,6 +102,7 @@ import {
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
   QuestionnaireResponseDto,
+  QuestionnaireType,
 } from '../../src/questionnaire';
 import { Recording, RecordingDocument, RecordingDto, RecordingService } from '../../src/recording';
 import {
@@ -118,9 +123,6 @@ import {
   UserService,
 } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
-import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
-import { intersection } from 'lodash';
-import { ActionItem, ActionItemDocument, ActionItemDto } from '../../src/actionItem';
 
 export class Handler extends BaseHandler {
   sendBird;
@@ -264,6 +266,19 @@ export class Handler extends BaseHandler {
       this.defaultAdminRequestHeaders,
     );
     this.queries = new Queries(this.client, this.defaultUserRequestHeaders);
+
+    await Promise.all([
+      this.questionnaireModel.updateOne(
+        { type: QuestionnaireType.phq9 },
+        { $set: { ...buildPHQ9Questionnaire(), active: true } },
+        { upsert: true },
+      ),
+      this.questionnaireModel.updateOne(
+        { type: QuestionnaireType.gad7 },
+        { $set: { ...buildGAD7Questionnaire(), active: true } },
+        { upsert: true },
+      ),
+    ]);
 
     const { id: orgId } = await this.mutations.createOrg({ orgParams: generateOrgParams() });
     this.cognitoService.spyOnCognitoServiceAddUser.mockResolvedValueOnce({

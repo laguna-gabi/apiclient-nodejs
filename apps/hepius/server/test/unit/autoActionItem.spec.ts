@@ -59,7 +59,7 @@ describe(AutoActionItem.name, () => {
       const questionnaire = mockGenerateQuestionnaire();
       const appointmentId = generateId();
       spyOnServiceCreateOrSetActionItem.mockImplementation(async () => actionItem);
-      spyOnQuestionnaireServiceGetByType.mockImplementationOnce(async () => questionnaire);
+      spyOnQuestionnaireServiceGetByType.mockImplementation(async () => questionnaire);
 
       await autoActionItem.handleFirstAppointment({ memberId, appointmentId });
 

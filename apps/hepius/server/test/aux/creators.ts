@@ -1,3 +1,5 @@
+import { Appointment, AppointmentStatus, User, UserRole } from '@argus/hepiusClient';
+import { generateId } from '@argus/pandora';
 import { camelCase, omit } from 'lodash';
 import { v4 } from 'uuid';
 import { AppointmentsIntegrationActions, Handler } from '.';
@@ -12,14 +14,10 @@ import {
   generateRequestHeaders,
 } from '..';
 import { EndAppointmentParams } from '../../src/appointment';
+import { Identifiers, delay } from '../../src/common';
 import { Member, defaultMemberParams } from '../../src/member';
 import { Org } from '../../src/org';
 import { CreateUserParams } from '../../src/user';
-import { Appointment, AppointmentStatus, User, UserRole } from '@argus/hepiusClient';
-import { generateId } from '@argus/pandora';
-import { Identifiers, delay } from '../../src/common';
-import { buildGAD7Questionnaire, buildPHQ9Questionnaire } from '../../cmd/static';
-import { QuestionnaireType } from '../../src/questionnaire';
 
 export class Creators {
   constructor(
@@ -89,18 +87,6 @@ export class Creators {
   }: {
     orgId?: string;
   } = {}): Promise<{ member: Member; user: User; org: Org }> => {
-    await Promise.all([
-      this.handler.questionnaireModel.updateOne(
-        { type: QuestionnaireType.phq9 },
-        { $set: { ...buildPHQ9Questionnaire(), active: true } },
-        { upsert: true },
-      ),
-      this.handler.questionnaireModel.updateOne(
-        { type: QuestionnaireType.gad7 },
-        { $set: { ...buildGAD7Questionnaire(), active: true } },
-        { upsert: true },
-      ),
-    ]);
     const org = orgId
       ? await this.handler.queries.getOrg({ id: orgId })
       : await this.createAndValidateOrg();
