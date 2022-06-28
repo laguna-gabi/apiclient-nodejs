@@ -230,12 +230,10 @@ describe('Validations - member', () => {
     });
 
     it('rest: should fail to create member if phone already exists', async () => {
-      const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-      const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
-      await handler.mutations.createMember({ memberParams });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
       const newMemberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
-        phone: memberParams.phone,
+        phone: member.phone,
       });
       await request(server).post(urls.members).send(newMemberParams).expect(400);
     });

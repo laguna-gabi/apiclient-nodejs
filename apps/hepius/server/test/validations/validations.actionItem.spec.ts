@@ -26,9 +26,9 @@ describe('Validations - actionItem', () => {
       ${{ rejectNote: 123 }}       | ${{ missingFieldError: stringError }}
       ${{ relatedEntities: 123 }}  | ${{ missingFieldError: 'Expected type "RelatedEntityInput" to be an object' }}
       ${{ link: 123 }}             | ${{ missingFieldError: 'Expected type "ActionItemLinkInput" to be an object' }}
-      ${{ status: 123 }}           | ${`Field "status" of required type "ActionItemStatus!" was not provided.`}
-      ${{ priority: 123 }}         | ${`Field "priority" of required type "ActionItemPriority!" was not provided.`}
-      ${{ category: 123 }}         | ${`Field "category" of required type "ActionItemCategory!" was not provided.`}
+      ${{ status: 123 }}           | ${{ missingFieldError: `Enum \"ActionItemStatus\" cannot represent non-string value` }}
+      ${{ priority: 123 }}         | ${{ missingFieldError: `Enum \"ActionItemPriority\" cannot represent non-string value` }}
+      ${{ category: 123 }}         | ${{ missingFieldError: `Enum \"ActionItemCategory\" cannot represent non-string value` }}
       ${{ deadline: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyActionItemDeadline)] }}
     `(`should fail to update actionItem since $input is not a valid type`, async (params) => {
       /* eslint-enable max-len */

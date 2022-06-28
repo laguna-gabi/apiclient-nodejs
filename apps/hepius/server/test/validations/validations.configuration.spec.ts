@@ -81,7 +81,7 @@ describe('Validations - Configuration', () => {
 
     /* eslint-disable max-len */
     test.each`
-      field         | input                           | errors
+      field         | input                           | error
       ${'version'}  | ${{ version: 1 }}               | ${stringError}
       ${'version'}  | ${{ version: '1.2.not-valid' }} | ${'version must be a Semantic Versioning Specification'}
       ${'platform'} | ${{ platform: 'not-valid' }}    | ${'does not exist in "Platform" enum'}

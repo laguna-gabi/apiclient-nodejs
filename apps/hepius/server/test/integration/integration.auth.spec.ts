@@ -189,7 +189,7 @@ describe('Integration tests : RBAC / ACE', () => {
       await handler.mutations.updateUser({
         updateUserParams: generateUpdateUserParams({
           id: userId,
-          orgs: access === Access.allowed ? [org.toString()] : [generateId()],
+          orgs: access === Access.allowed ? [org.id.toString()] : [generateId()],
           roles: [UserRole.coach],
         }),
         requestHeaders: handler.defaultAdminRequestHeaders,

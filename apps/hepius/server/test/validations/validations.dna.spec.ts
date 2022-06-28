@@ -111,6 +111,7 @@ describe('Validations - DNA', () => {
     test.each(Object.values(AdmissionCategory))(
       `should not fail to ${ChangeType.create} %p on missing optional keys`,
       async (admissionCategory) => {
+        const { member } = await creators.createMemberUserAndOptionalOrg();
         const { field, method } = admissionHelper.mapper.get(admissionCategory);
         const data = method({ changeType: ChangeType.create });
         const names = Object.getOwnPropertyNames(data).filter((name) => name !== 'changeType');
@@ -120,10 +121,12 @@ describe('Validations - DNA', () => {
             const newData = { ...data };
             delete newData[name];
             const changeMemberDnaParams: ChangeMemberDnaParams = {
-              memberId: generateId(),
+              memberId: member.id,
               [`${field}`]: newData,
             };
-            await handler.mutations.changeMemberDna({ changeMemberDnaParams });
+            await handler.mutations.changeMemberDna({
+              changeMemberDnaParams,
+            });
           }),
         );
       },
