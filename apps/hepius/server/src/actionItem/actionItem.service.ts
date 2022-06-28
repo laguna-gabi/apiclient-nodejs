@@ -104,9 +104,10 @@ export class ActionItemService extends AlertService {
 
   async getActionItems(memberId: string): Promise<ActionItem[]> {
     const { id: journeyId } = await this.journeyService.getRecent(memberId);
-    return this.actionItemModel
-      .find({ memberId: new Types.ObjectId(memberId), journeyId: new Types.ObjectId(journeyId) })
-      .sort({ updatedAt: -1 });
+    return this.actionItemModel.find({
+      memberId: new Types.ObjectId(memberId),
+      journeyId: new Types.ObjectId(journeyId),
+    });
   }
 
   async entityToAlerts(member): Promise<Alert[]> {

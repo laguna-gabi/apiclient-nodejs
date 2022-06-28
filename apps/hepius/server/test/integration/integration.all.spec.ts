@@ -1302,14 +1302,15 @@ describe('Integration tests: all', () => {
       const { member, user, org } = await creators.createMemberUserAndOptionalOrg();
       member1 = member;
       // add an overdue Action Item - within range (less than 30 days since deadline)
-      await handler.mutations.createOrSetActionItem({
+      const { id: aiId } = await handler.mutations.createOrSetActionItem({
         createOrSetActionItemParams: generateCreateOrSetActionItemParams({
           memberId: member1.id,
           status: ActionItemStatus.active,
           deadline: sub(new Date(), { days: 29 }),
         }),
       });
-      actionItem = (await handler.queries.getActionItems({ memberId: member1.id }))[0];
+      const actionItems = await handler.queries.getActionItems({ memberId: member1.id });
+      actionItem = actionItems.find((actionItem) => actionItem.id === aiId);
 
       const { id } = await handler.mutations.createMember({
         memberParams: generateCreateMemberParams({ orgId: org.id, userId: user.id }),
