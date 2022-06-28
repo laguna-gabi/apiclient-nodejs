@@ -12,6 +12,7 @@ import {
   SlackBot,
   StorageService,
   TwilioService,
+  Voximplant,
   WebhooksController,
   ZenDesk,
 } from '.';
@@ -31,6 +32,7 @@ const exportedProviders = [
   CloudMapService,
   Internationalization,
   ZenDesk,
+  Voximplant,
 ];
 
 @Module({

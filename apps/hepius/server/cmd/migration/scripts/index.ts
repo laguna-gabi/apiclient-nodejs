@@ -67,3 +67,4 @@ export * as m20220620122740 from './20220620122740-add-daily-report-questionnair
 export * as m20220619153631 from './20220619153631-move-dischargeDate-from-member-to-1st-admission';
 export * as m20220621132118 from './20220621132118-move-drg-drgDesc-from-member-to-1st-diagnosis';
 export * as m20220626155432 from './20220626155432-add-CAGE-questionnaire';
+export * as m20220627174738 from './20220627174738-create-voximplant-users-for-users';

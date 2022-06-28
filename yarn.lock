@@ -2077,6 +2077,15 @@
     "@typescript-eslint/types" "5.15.0"
     eslint-visitor-keys "^3.0.0"
 
+"@voximplant/apiclient-nodejs@^2.0.5":
+  version "2.0.5"
+  resolved "https://registry.npmjs.org/@voximplant/apiclient-nodejs/-/apiclient-nodejs-2.0.5.tgz#51b77989c3073277ccd6a4f06ea5ddffc3b0bbfc"
+  integrity sha512-xmUTxl88SFR95qEaIqUSMytSXyybKGeHm/Ze54vx8KJlsMiczD3ao1up0z0zjrRxM/G90xabnRrOg0IBRvwkaQ==
+  dependencies:
+    axios "^0.21.1"
+    form-data "^2.3.3"
+    jsonwebtoken "^8.5.1"
+
 "@webassemblyjs/ast@1.11.1":
   version "1.11.1"
   resolved "https://registry.npmjs.org/@webassemblyjs/ast/-/ast-1.11.1.tgz#2bfd767eae1a6996f432ff7e8d7fc75679c0b6a7"
@@ -7124,6 +7133,11 @@ mz@^2.4.0:
     any-promise "^1.0.0"
     object-assign "^4.0.1"
     thenify-all "^1.0.0"
+
+nanoid@^3.0.0:
+  version "3.3.4"
+  resolved "https://registry.npmjs.org/nanoid/-/nanoid-3.3.4.tgz#730b67e3cd09e2deacf03c027c81c9d9dbc5e8ab"
+  integrity sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==
 
 nanomatch@^1.2.9:
   version "1.2.13"

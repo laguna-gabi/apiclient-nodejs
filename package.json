@@ -30,6 +30,7 @@
     "@nestjs/terminus": "^8.0.4",
     "@slack/webhook": "^6.1.0",
     "@splitsoftware/splitio": "^10.17.2",
+    "@voximplant/apiclient-nodejs": "^2.0.5",
     "apollo-server-core": "^3.6.3",
     "apollo-server-express": "^3.6.3",
     "aws-sdk": "^2.1073.0",
@@ -54,6 +55,7 @@
     "mongoose": "6.2.3",
     "mongoose-delete": "^0.5.4",
     "mysql": "^2.18.1",
+    "nanoid": "^3.0.0",
     "nest-commander": "^2.4.0",
     "nestjs-pino": "^2.5.0",
     "node-fetch": "2.6.7",
@@ -77,8 +79,8 @@
     "zipcode-to-timezone": "^0.0.9"
   },
   "devDependencies": {
-    "@golevelup/nestjs-discovery": "^3.0.0",
     "@actions/core": "^1.6.0",
+    "@golevelup/nestjs-discovery": "^3.0.0",
     "@golevelup/ts-jest": "^0.3.2",
     "@lagunahealth/gql-generator": "^0.0.1",
     "@nestjs/cli": "^8.2.1",

@@ -30,6 +30,11 @@ export const ExternalConfigs = {
   zendesk: {
     token: 'zendesk.token',
   },
+  voximplant: {
+    token: 'voximplant.token',
+    applicationName: 'voximplant.applicationName',
+    applicationId: 'voximplant.applicationId',
+  },
 };
 
 @Injectable()

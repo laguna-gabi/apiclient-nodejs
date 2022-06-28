@@ -510,10 +510,10 @@ export class UserService extends BaseService {
   async handleUpdateUserConfig(params: IEventOnUpdateUserConfig): Promise<boolean> {
     this.logger.info(params, UserService.name, this.handleUpdateUserConfig.name);
     try {
-      const { userId, accessToken } = params;
+      const { userId, accessToken, voximplantId, voximplantPassword } = params;
       const result = await this.userConfigModel.updateOne(
         { userId: new Types.ObjectId(userId) },
-        { $set: { accessToken } },
+        { $set: { accessToken, voximplantId, voximplantPassword } },
       );
 
       return result.modifiedCount === 1;

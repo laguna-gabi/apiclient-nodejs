@@ -18,6 +18,12 @@ export class UserConfig {
   @Prop()
   @Field(() => String)
   accessToken: string;
+
+  @Prop()
+  voximplantId: number;
+
+  @Prop()
+  voximplantPassword: string;
 }
 
 /**************************************************************************************************

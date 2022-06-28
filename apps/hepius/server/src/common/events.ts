@@ -110,7 +110,9 @@ export interface IEventOnUpdatedUserCommunication extends IEventMember {
 
 export interface IEventOnUpdateUserConfig {
   userId: string;
-  accessToken: string;
+  accessToken?: string;
+  voximplantId?: number;
+  voximplantPassword?: string;
 }
 
 /*************************************************************************************************

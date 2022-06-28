@@ -40,3 +40,6 @@ yarn-error.log*
 # Graphql
 **/schema.gql
 **/gql
+
+# Voximplent
+voximplentToken.json
