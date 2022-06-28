@@ -7,6 +7,7 @@ import { IsDate, IsOptional } from 'class-validator';
 import { ErrorType, Errors, RelatedEntity } from '../common';
 import { Identifier } from '@argus/hepiusClient';
 import { DefaultSchemaOptions } from '@argus/pandora';
+import { ReadmissionRisk } from '../journey';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -185,6 +186,9 @@ export class ActionItem extends Identifier {
 export class ActionItemByPrimaryUser extends ActionItem {
   @Field(() => String)
   memberName: string;
+
+  @Field(() => ReadmissionRisk, { nullable: true })
+  readmissionRisk?: ReadmissionRisk;
 }
 
 /**************************************************************************************************

@@ -296,6 +296,7 @@ export class MemberService extends AlertService {
       {
         $addFields: {
           'actionItems.memberName': { $concat: ['$firstName', ' ', '$lastName'] },
+          'actionItems.readmissionRisk': '$recentJourney.readmissionRisk',
           'actionItems.id': '$actionItems._id',
         },
       },

@@ -123,7 +123,12 @@ import {
   DailyReportQueryInput,
   DailyReportResults,
 } from '../../src/dailyReport';
-import { ChangeMemberDnaParams, DischargeTo, UpdateJournalTextParams } from '../../src/journey';
+import {
+  ChangeMemberDnaParams,
+  DischargeTo,
+  ReadmissionRisk,
+  UpdateJournalTextParams,
+} from '../../src/journey';
 import { Member, ReplaceUserForMemberParams } from '../../src/member';
 import { Internationalization } from '../../src/providers';
 import {
@@ -3408,6 +3413,11 @@ describe('Integration tests: all', () => {
     await creators.createMemberUserAndOptionalOrg();
     const additionalUser = await creators.createAndValidateUser({ orgs: [org.id] });
 
+    const readmissionRisk = ReadmissionRisk.high;
+    await handler.mutations.updateJourney({
+      updateJourneyParams: { memberId: member.id, readmissionRisk },
+    });
+
     const actionItemUserParams = generateCreateOrSetActionItemParams({ memberId: member.id });
     const actionItemAdditionalUserParams = generateCreateOrSetActionItemParams({
       memberId: member.id,
@@ -3439,6 +3449,7 @@ describe('Integration tests: all', () => {
           link: actionItemUserParams.link,
           deadline: actionItemUserParams.deadline.toISOString(),
           memberName: `${member.firstName} ${member.lastName}`,
+          readmissionRisk,
         }),
         expect.objectContaining({
           id: idAdditionalUserActionItem,
@@ -3452,6 +3463,7 @@ describe('Integration tests: all', () => {
           link: actionItemAdditionalUserParams.link,
           deadline: actionItemAdditionalUserParams.deadline.toISOString(),
           memberName: `${member.firstName} ${member.lastName}`,
+          readmissionRisk,
         }),
       ]),
     );

@@ -504,6 +504,7 @@ export class Queries {
               id
             }
             memberName
+            readmissionRisk
             link {
               type
               value
