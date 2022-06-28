@@ -2931,17 +2931,20 @@ describe('Integration tests: all', () => {
       await delay(500);
 
       const results = await handler.queries.getActionItems({ memberId: member.id });
-      expect(results.filter((actionItem) => actionItem.barrierId).length).toEqual(
+      const barriersResults = results.filter((actionItem) => actionItem.barrierId);
+      expect(barriersResults.length).toEqual(
         autoActionsMap.get(AutoActionMainItemType.fatigue).length,
       );
       autoActionsMap.get(AutoActionMainItemType.fatigue).map(async (actionItem) => {
-        expect(results).toEqual(
+        expect(barriersResults).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               ...handler.internationalization.getActionItem(actionItem.autoActionItemType),
               category: ActionItemCategory.poc,
               memberId: member.id,
               barrierId,
+              relatedEntities: [],
+              link: actionItem.link ? { type: actionItem.link.type, value: null } : null,
             }),
           ]),
         );

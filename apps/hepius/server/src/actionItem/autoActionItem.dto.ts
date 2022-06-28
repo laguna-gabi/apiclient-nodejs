@@ -1,5 +1,6 @@
 import { RelatedEntity, RelatedEntityType } from '../common';
 import { QuestionnaireType } from '../questionnaire';
+import { ActionItemLink, ActionItemLinkType } from './actionItem.dto';
 
 /**************************************************************************************************
  ******************* fetching strings, aligning with pandora: languages/en.json *******************
@@ -33,6 +34,7 @@ export enum AutoActionBarrierFatigueItemType {
   prepareMemberToCallProvider2 = 'barrier.fatigue.prepareMemberToCallProvider2',
   prepareMemberToCallProvider3 = 'barrier.fatigue.prepareMemberToCallProvider3',
   prepareMemberToCallProvider4 = 'barrier.fatigue.prepareMemberToCallProvider4',
+  memberTodo = 'barrier.fatigue.memberTodo',
   toDoToEncourage1 = 'barrier.fatigue.toDoToEncourage1',
   toDoToEncourage2 = 'barrier.fatigue.toDoToEncourage2',
   toDoToEncourage3 = 'barrier.fatigue.toDoToEncourage3',
@@ -53,6 +55,7 @@ export class AutoActionItemRelatedEntities extends RelatedEntity {
 export type AutoActionItems = {
   autoActionItemType: AutoActionItemType;
   relatedEntities?: AutoActionItemRelatedEntities[];
+  link?: ActionItemLink;
 }[];
 
 export enum AutoActionMainItemType {
@@ -112,6 +115,10 @@ export const autoActionsMap: Map<AutoActionMainItemType, AutoActionItems> = new 
       { autoActionItemType: AutoActionBarrierFatigueItemType.prepareMemberToCallProvider2 },
       { autoActionItemType: AutoActionBarrierFatigueItemType.prepareMemberToCallProvider3 },
       { autoActionItemType: AutoActionBarrierFatigueItemType.prepareMemberToCallProvider4 },
+      {
+        autoActionItemType: AutoActionBarrierFatigueItemType.memberTodo,
+        link: { type: ActionItemLinkType.createTodo },
+      },
       { autoActionItemType: AutoActionBarrierFatigueItemType.toDoToEncourage1 },
       { autoActionItemType: AutoActionBarrierFatigueItemType.toDoToEncourage2 },
       { autoActionItemType: AutoActionBarrierFatigueItemType.toDoToEncourage3 },

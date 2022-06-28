@@ -68,13 +68,14 @@ export class AutoActionItem {
     this.logger.info(params, AutoActionItem.name, methodName);
     try {
       return Promise.all(
-        autoActionsMap.get(type).map(async ({ autoActionItemType, relatedEntities }) => {
+        autoActionsMap.get(type).map(async ({ autoActionItemType, relatedEntities, link }) => {
           return this.actionItemService.createOrSetActionItem({
             ...this.internationalization.getActionItem(autoActionItemType),
             relatedEntities: relatedEntities
               ? await this.populateRelatedEntities(relatedEntities)
               : undefined,
             category,
+            link,
             ...params,
           });
         }),
