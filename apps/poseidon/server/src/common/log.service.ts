@@ -2,6 +2,7 @@ import {
   BaseLogger,
   FailureReason,
   GlobalEventType,
+  IEventNotifySlack,
   ServiceName,
   SlackChannel,
   SlackIcon,
@@ -34,5 +35,12 @@ export class LoggerService extends BaseLogger {
       icon: SlackIcon.critical,
       channel: SlackChannel.notifications,
     });
+    const slackParams: IEventNotifySlack = {
+      header: '*An error has occurred*',
+      message: log || '',
+      icon: SlackIcon.critical,
+      channel: SlackChannel.notifications,
+    };
+    this.eventEmitter.emit(GlobalEventType.notifySlack, slackParams);
   }
 }

@@ -1,4 +1,4 @@
-import { StorageType, formatEx } from '@argus/pandora';
+import { StorageType } from '@argus/pandora';
 import {
   ConversationPercentage,
   Speaker,
@@ -87,12 +87,9 @@ export class TranscriptService {
         { $set: { conversationPercentage, status: TranscriptStatus.done } },
       );
     } catch (ex) {
-      this.logger.error(
-        params,
-        TranscriptService.name,
-        this.handleTranscriptTranscribed.name,
-        formatEx(ex),
-      );
+      this.logger.error(params, TranscriptService.name, this.handleTranscriptTranscribed.name, {
+        message: JSON.stringify(ex),
+      });
     }
   }
 
@@ -106,12 +103,9 @@ export class TranscriptService {
         { $set: { status: TranscriptStatus.error, failureReason } },
       );
     } catch (ex) {
-      this.logger.error(
-        params,
-        TranscriptService.name,
-        this.handleTranscriptFailed.name,
-        formatEx(ex),
-      );
+      this.logger.error(params, TranscriptService.name, this.handleTranscriptFailed.name, {
+        message: JSON.stringify(ex),
+      });
     }
   }
 

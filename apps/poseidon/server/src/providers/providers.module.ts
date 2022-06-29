@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { RevAI, WebhooksController } from '.';
+import { RevAI, Slack, WebhooksController } from '.';
 import { CommonModule } from '../common';
 import { ConfigsService, QueueService, StorageService } from './aws';
 
 @Module({
   imports: [CommonModule],
-  providers: [ConfigsService, QueueService, StorageService, RevAI],
+  providers: [ConfigsService, Slack, QueueService, StorageService, RevAI],
   exports: [ConfigsService, RevAI, StorageService],
   controllers: [WebhooksController],
 })
