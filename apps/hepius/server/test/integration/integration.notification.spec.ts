@@ -1659,6 +1659,7 @@ describe('Integration tests: notifications', () => {
               alertCondition: [{ type: AlertConditionType.equal, value: alertValue.toString() }],
             }),
           ],
+          buildResult: true,
         });
 
       const { id: questionnaireId } = await handler.mutations.createQuestionnaire({

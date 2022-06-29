@@ -2644,6 +2644,7 @@ describe('Integration tests: all', () => {
             }),
           ],
           notificationScoreThreshold: 2,
+          buildResult: true,
         });
 
       const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
@@ -2755,6 +2756,7 @@ describe('Integration tests: all', () => {
             }),
           ],
           notificationScoreThreshold: 2,
+          buildResult: true,
         });
 
       const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
@@ -2801,7 +2803,7 @@ describe('Integration tests: all', () => {
     });
 
     // eslint-disable-next-line max-len
-    it('should create a daily rlog entry for a member when a `Member Daily Log` questionnaire is submitted', async () => {
+    it('should create a daily log entry for a member when a `Member Daily Log` questionnaire is submitted', async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
 
       const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
@@ -3512,6 +3514,7 @@ describe('Integration tests: all', () => {
         }),
       ],
       notificationScoreThreshold: 2,
+      buildResult: true,
     });
 
     const { id: questionnaireId } = await handler.mutations // .setContextUserId(userId, '', [UserRole.lagunaAdmin])

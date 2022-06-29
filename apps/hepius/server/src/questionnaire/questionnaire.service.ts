@@ -18,6 +18,7 @@ import {
   QuestionnaireResponseDocument,
   QuestionnaireResponseResult,
   QuestionnaireType,
+  ReadinessQuestionGroup,
   SubmitQuestionnaireResponseParams,
 } from '.';
 import {
@@ -122,8 +123,8 @@ export class QuestionnaireService extends AlertService {
 
     // 4. notify #escalation-support (if needed)
     if (
-      questionnaireResponse.result.alert ||
-      this.isOverThreshold(questionnaire, questionnaireResponse.result.score)
+      questionnaireResponse.result?.alert ||
+      this.isOverThreshold(questionnaire, questionnaireResponse.result?.score)
     ) {
       const params: IEventOnAlertForQRSubmit = {
         memberId: submitQuestionnaireResponseParams.memberId,
@@ -316,40 +317,16 @@ export class QuestionnaireService extends AlertService {
   }
 
   buildResult(answers: Answer[], questionnaire: Questionnaire): QuestionnaireResponseResult {
-    let score: number;
-    let severity: string;
-
-    if (
-      questionnaire.type === QuestionnaireType.gad7 ||
-      questionnaire.type === QuestionnaireType.phq9 ||
-      questionnaire.type === QuestionnaireType.nps ||
-      questionnaire.type === QuestionnaireType.who5 ||
-      questionnaire.type === QuestionnaireType.cage
-    ) {
-      score = answers.length
-        ? answers
-            .map((answer) => parseInt(answer.value))
-            .reduce((valueA, valueB) => {
-              return valueA + valueB;
-            }) * (questionnaire.scoreFactor || 1)
-        : 0;
-
-      severity = questionnaire?.severityLevels.find(
-        (severity) => severity.min <= score && severity.max >= score,
-      )?.label;
+    if (questionnaire.buildResult) {
+      switch (questionnaire.type) {
+        case QuestionnaireType.rcqtv:
+          return this.rcqtvBuildResults(answers);
+        case QuestionnaireType.lhp:
+          return this.lhpBuildResults(answers, questionnaire);
+        default:
+          return this.defaultBuildResults(answers, questionnaire);
+      }
     }
-
-    if (questionnaire.type === QuestionnaireType.lhp) {
-      severity = this.calculateHealthPersona(answers);
-    }
-
-    return {
-      score,
-      severity,
-      alert: answers.find((answer) => this.isAlertConditionsSatisfied(answer, questionnaire))
-        ? true
-        : false,
-    };
   }
 
   private isAlertConditionsSatisfied(answer: Answer, questionnaire: Questionnaire): boolean {
@@ -449,5 +426,135 @@ export class QuestionnaireService extends AlertService {
     }
 
     return false;
+  }
+
+  // Description: default score, severity label and alert calculation
+  private defaultBuildResults(
+    answers: Answer[],
+    questionnaire: Questionnaire,
+  ): QuestionnaireResponseResult {
+    const score = answers.length
+      ? answers
+          .map((answer) => parseInt(answer.value))
+          .reduce((valueA, valueB) => {
+            return valueA + valueB;
+          }) * (questionnaire.scoreFactor || 1)
+      : 0;
+
+    const severity = questionnaire?.severityLevels.find(
+      (severity) => severity.min <= score && severity.max >= score,
+    )?.label;
+
+    return {
+      score,
+      severity,
+      alert: answers.find((answer) => this.isAlertConditionsSatisfied(answer, questionnaire))
+        ? true
+        : false,
+    };
+  }
+
+  // Description: custom score, severity label and alert calculation for LHP type questionnaire
+  private lhpBuildResults(
+    answers: Answer[],
+    questionnaire: Questionnaire,
+  ): QuestionnaireResponseResult {
+    return {
+      ...this.defaultBuildResults(answers, questionnaire),
+      severity: this.calculateHealthPersona(answers),
+    };
+  }
+
+  /** Description: custom score, severity label and alert calculation for RCQ-TV type questionnaire
+   * {@link: https://app.shortcut.com/laguna-health/story/5598/support-readiness-to-change-questionnaire}
+   */
+  private rcqtvBuildResults(answers: Answer[]): QuestionnaireResponseResult {
+    const groups = new Map<
+      string,
+      {
+        questions: string[];
+        priority?: number;
+        totalScore: number;
+        factor: number; // factor value for total score in the case where 1 out of 4 questions is missing
+        answered: number; // number of answered question in group (0-4)
+        invalid: boolean; // `true` if less than 3 questions are answered in this group
+      }
+    >([
+      [
+        ReadinessQuestionGroup.Precontemplation,
+        {
+          priority: 0,
+          questions: ['q1', 'q3', 'q6', 'q10'],
+          totalScore: 0,
+          factor: 1,
+          answered: 0,
+          invalid: true,
+        },
+      ],
+      [
+        ReadinessQuestionGroup.Contemplation,
+        {
+          priority: 1,
+          questions: ['q2', 'q4', 'q7', 'q11'],
+          totalScore: 0,
+          factor: 1,
+          answered: 0,
+          invalid: true,
+        },
+      ],
+      [
+        ReadinessQuestionGroup.Action,
+        {
+          priority: 2,
+          questions: ['q5', 'q8', 'q9', 'q12'],
+          totalScore: 0,
+          factor: 1,
+          answered: 0,
+          invalid: true,
+        },
+      ],
+    ]);
+
+    let foundInvalidGroup = false;
+    // calculate total score per group (note: if there's no answer it is considered as `0` value - `Unsure` )
+    groups.forEach((value, key) => {
+      answers.forEach((answer) => {
+        if (value.questions.includes(answer.code)) {
+          groups.get(key).totalScore += +answer.value;
+          groups.get(key).answered++;
+          groups.get(key).invalid = groups.get(key).answered < 3;
+          groups.get(key).factor = groups.get(key).answered === 3 ? 4 / 3 : 1;
+        }
+      });
+
+      // once we completed a group scan and it is marked as invalid we can exit with 'Invalid' severity label
+      if (value.invalid) {
+        foundInvalidGroup = true;
+        return;
+      }
+    });
+
+    if (foundInvalidGroup) {
+      return { severity: ReadinessQuestionGroup.Invalid };
+    }
+
+    // pick a severity - group with highest total score should prevail (if two groups have the same score the `weight` of the group should determine the prevailing group)
+    let selectedGroup;
+
+    groups.forEach((value, key) => {
+      if (
+        !selectedGroup ||
+        value.totalScore * value.factor > selectedGroup.totalScore * selectedGroup.factor ||
+        (value.totalScore * value.factor === selectedGroup.totalScore * selectedGroup.factor &&
+          selectedGroup.priority < value.priority)
+      ) {
+        selectedGroup = { ...value, category: key };
+      }
+    });
+
+    return {
+      score: selectedGroup.totalScore * selectedGroup.factor,
+      severity: selectedGroup.category,
+    };
   }
 }

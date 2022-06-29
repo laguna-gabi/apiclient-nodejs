@@ -35,6 +35,7 @@ export enum QuestionnaireType {
   csat = 'csat',
   mdl = 'mdl',
   cage = 'cage',
+  rcqtv = 'rcqtv',
 }
 
 export const QuestionnaireAlerts: Map<QuestionnaireType, string> = new Map([
@@ -53,6 +54,7 @@ registerEnumType(QuestionnaireType, {
     csat: { description: 'Customer Satisfaction' },
     mdl: { description: 'Member Daily Log' },
     cage: { description: 'Cut, Annoyed, Guilty, and Eye' },
+    rcqtv: { description: 'Readiness to Change Questionnaire - Treatment Version' },
   },
 });
 
@@ -97,6 +99,12 @@ export enum HealthPersona {
 
 registerEnumType(HealthPersona, { name: 'HealthPersona' });
 
+export enum ReadinessQuestionGroup {
+  Precontemplation = 'Precontemplation',
+  Contemplation = 'Contemplation',
+  Action = 'Action',
+  Invalid = 'Invalid',
+}
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
@@ -133,7 +141,11 @@ export class CreateQuestionnaireParams {
   @Field(() => Number, { nullable: true })
   notificationScoreThreshold?: number;
 
-  @Field(() => Boolean, { nullable: true })
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      'determine if notification should be sent if threshold is over or under threshold number',
+  })
   notificationScoreThresholdReverse?: boolean;
 
   @Field(() => Number, {
@@ -141,6 +153,15 @@ export class CreateQuestionnaireParams {
     description: 'total score is multiplied by this factor for display',
   })
   scoreFactor?: number;
+
+  @Prop()
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      'determine if results should be built for this type of questionnaire ' +
+      '- score calculation, label and alerts',
+  })
+  buildResult?: boolean;
 }
 
 @InputType()
@@ -266,6 +287,10 @@ export class Questionnaire extends Identifier {
 
   @Field(() => String, { nullable: true })
   createdBy?: Types.ObjectId;
+
+  @Prop()
+  @Field(() => Boolean, { nullable: true })
+  buildResult?: boolean;
 }
 
 @ObjectType()

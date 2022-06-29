@@ -6,11 +6,13 @@ import { Model, Types, model } from 'mongoose';
 import {
   buildGAD7Questionnaire,
   buildLHPQuestionnaire,
+  buildReadinessToChangeQuestionnaire,
   buildWHO5Questionnaire,
 } from '../../cmd/static';
 import { ErrorType, Errors, EventType, ItemType, LoggerService } from '../../src/common';
 import {
   AlertConditionType,
+  Answer,
   CreateQuestionnaireParams,
   HealthPersona,
   PersonasOptions,
@@ -21,8 +23,10 @@ import {
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
   QuestionnaireResponseDto,
+  QuestionnaireResponseResult,
   QuestionnaireService,
   QuestionnaireType,
+  ReadinessQuestionGroup,
 } from '../../src/questionnaire';
 import {
   checkDelete,
@@ -109,6 +113,7 @@ describe('QuestionnaireService', () => {
           { min: 3, max: 6, label: 'severity high' },
         ],
         notificationScoreThreshold: 5,
+        buildResult: true,
       }),
     );
 
@@ -143,6 +148,7 @@ describe('QuestionnaireService', () => {
         ],
         scoreFactor: 2,
         notificationScoreThreshold: 4,
+        buildResult: true,
       }),
     );
 
@@ -173,6 +179,7 @@ describe('QuestionnaireService', () => {
           { min: 7, max: 8, label: 'Passive' },
           { min: 9, max: 10, label: 'Promoter' },
         ],
+        buildResult: true,
       }),
     );
 
@@ -949,32 +956,150 @@ describe('QuestionnaireService', () => {
       who5 = await service.createQuestionnaire(buildWHO5Questionnaire());
     });
 
-    /* eslint-disable max-len */
-    test.each`
-      result                                                      | answers                                                                                                                                         | alert
-      ${{ score: 92, severity: 'good well-being', alert: false }} | ${[{ code: 'q1', value: '5' }, { code: 'q2', value: '4' }, { code: 'q3', value: '5' }, { code: 'q4', value: '4' }, { code: 'q5', value: '5' }]} | ${false}
-      ${{ score: 48, severity: 'poor well-being', alert: false }} | ${[{ code: 'q1', value: '2' }, { code: 'q2', value: '3' }, { code: 'q3', value: '2' }, { code: 'q4', value: '3' }, { code: 'q5', value: '2' }]} | ${true}
-    `('should calculate result to be $result', async (params) => {
+    it.each([
+      [
+        'should result in `good well-being` - no alert should be issued',
+        { score: 92, severity: 'good well-being', alert: false },
+        [
+          { code: 'q1', value: '5' },
+          { code: 'q2', value: '4' },
+          { code: 'q3', value: '5' },
+          { code: 'q4', value: '4' },
+          { code: 'q5', value: '5' },
+        ],
+        false,
+      ],
+      [
+        'should result in `poor well-being` - alert should be issued',
+        { score: 48, severity: 'poor well-being', alert: false },
+        [
+          { code: 'q1', value: '2' },
+          { code: 'q2', value: '3' },
+          { code: 'q3', value: '2' },
+          { code: 'q4', value: '3' },
+          { code: 'q5', value: '2' },
+        ],
+        true,
+      ],
+    ])('%s', async (_, result, answers, alert) => {
       const submitResponse = {
         questionnaireId: who5.id.toString(),
         memberId: generateId(),
         journeyId: generateId(),
-        answers: params.answers,
+        answers: answers,
       };
 
       const qr = await service.submitQuestionnaireResponse(submitResponse);
-      expect(qr.result).toEqual(params.result);
+      expect(qr.result).toEqual(result);
 
-      if (params.alert) {
+      if (alert) {
         expect(spyOnEventEmitter).toHaveBeenCalledWith(EventType.onAlertForQRSubmit, {
           memberId: submitResponse.memberId,
           questionnaireName: who5.shortName,
           questionnaireResponseId: qr.id.toString(),
           questionnaireType: QuestionnaireType.who5,
-          score: params.result.score.toString(),
+          score: result.score.toString(),
         });
       }
     });
     /* eslint-enable max-len */
+  });
+
+  describe(QuestionnaireType.rcqtv, () => {
+    let rcqtv: Questionnaire;
+    beforeAll(async () => {
+      rcqtv = await service.createQuestionnaire(buildReadinessToChangeQuestionnaire());
+    });
+
+    it.each([
+      [
+        `readiness to change is ${ReadinessQuestionGroup.Precontemplation} - no factor`,
+        [
+          { code: 'q1', value: '1' }, // PC
+          { code: 'q2', value: '-2' }, // C
+          { code: 'q3', value: '-2' }, // PC
+          { code: 'q4', value: '-2' }, // C
+          { code: 'q5', value: '-2' }, // A
+          { code: 'q6', value: '0' }, // PC
+          { code: 'q7', value: '-2' }, // C
+          { code: 'q8', value: '-2' }, // A
+          { code: 'q9', value: '-2' }, // A
+          { code: 'q10', value: '-1' }, // PC
+          { code: 'q11', value: '-2' }, // C
+          { code: 'q12', value: '-2' }, // A
+        ] as Answer[],
+        {
+          severity: ReadinessQuestionGroup.Precontemplation,
+          score: -2,
+        } as QuestionnaireResponseResult,
+      ],
+      [
+        // eslint-disable-next-line max-len
+        `readiness to change is ${ReadinessQuestionGroup.Contemplation} - no factor. same score as ${ReadinessQuestionGroup.Precontemplation}`,
+        [
+          { code: 'q1', value: '1' }, // PC
+          { code: 'q2', value: '1' }, // C
+          { code: 'q3', value: '2' }, // PC
+          { code: 'q4', value: '2' }, // C
+          { code: 'q5', value: '-2' }, // A
+          { code: 'q6', value: '1' }, // PC
+          { code: 'q7', value: '1' }, // C
+          { code: 'q8', value: '-2' }, // A
+          { code: 'q9', value: '-2' }, // A
+          { code: 'q10', value: '2' }, // PC
+          { code: 'q11', value: '2' }, // C
+          { code: 'q12', value: '-2' }, // A
+        ] as Answer[],
+        { severity: ReadinessQuestionGroup.Contemplation, score: 6 } as QuestionnaireResponseResult,
+      ],
+      [
+        // eslint-disable-next-line max-len
+        `readiness to change is ${ReadinessQuestionGroup.Action} - with factor it has the same score as ${ReadinessQuestionGroup.Contemplation} (which has a lower priority)`,
+        [
+          { code: 'q1', value: '0' }, // PC
+          { code: 'q2', value: '1' }, // C
+          { code: 'q3', value: '0' }, // PC
+          { code: 'q4', value: '1' }, // C
+          { code: 'q5', value: '1' }, // A
+          { code: 'q6', value: '0' }, // PC
+          { code: 'q7', value: '1' }, // C
+          { code: 'q8', value: '1' }, // A
+          { code: 'q9', value: '1' }, // A
+          { code: 'q10', value: '0' }, // PC
+          { code: 'q11', value: '1' }, // C
+          // { code: 'q12', value: '1' }, // A - not answered - will increase a factor (4/3)
+        ] as Answer[],
+        { severity: ReadinessQuestionGroup.Action, score: 4 } as QuestionnaireResponseResult,
+      ],
+      [
+        // eslint-disable-next-line max-len
+        `readiness to change is ${ReadinessQuestionGroup.Invalid} - ${ReadinessQuestionGroup.Action} group is missing more than 1 question`,
+        [
+          { code: 'q1', value: '0' }, // PC
+          { code: 'q2', value: '1' }, // C
+          { code: 'q3', value: '0' }, // PC
+          { code: 'q4', value: '1' }, // C
+          { code: 'q5', value: '1' }, // A
+          { code: 'q6', value: '0' }, // PC
+          { code: 'q7', value: '1' }, // C
+          { code: 'q8', value: '1' }, // A
+          // { code: 'q9', value: '1' }, // A - not answered
+          { code: 'q10', value: '0' }, // PC
+          { code: 'q11', value: '1' }, // C
+          // { code: 'q12', value: '1' }, // A - not answered
+        ] as Answer[],
+        { severity: ReadinessQuestionGroup.Invalid } as QuestionnaireResponseResult,
+      ],
+    ])('%s', async (_, answers, result) => {
+      const submitResponse = {
+        questionnaireId: rcqtv.id.toString(),
+        memberId: generateId(),
+        journeyId: generateId(),
+        answers,
+      };
+
+      const qr = await service.submitQuestionnaireResponse(submitResponse);
+      expect(qr.result).toEqual(result);
+    });
   });
 });

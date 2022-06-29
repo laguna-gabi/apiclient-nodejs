@@ -1273,6 +1273,7 @@ export const mockGenerateQuestionnaire = ({
     { min: 5, max: 6, label: 'severity 2' },
   ],
   createdBy = generateObjectId(),
+  buildResult,
 }: Partial<Questionnaire> = {}): Questionnaire => {
   const isAssignableToMember = getIsAssignableToMember(type);
   return {
@@ -1285,6 +1286,7 @@ export const mockGenerateQuestionnaire = ({
     isAssignableToMember,
     severityLevels,
     createdBy,
+    buildResult,
   };
 };
 
@@ -1299,6 +1301,7 @@ export const generateCreateQuestionnaireParams = ({
   ],
   notificationScoreThreshold,
   scoreFactor,
+  buildResult,
 }: Partial<CreateQuestionnaireParams> = {}): CreateQuestionnaireParams => {
   const isAssignableToMember = getIsAssignableToMember(type);
   return {
@@ -1310,6 +1313,7 @@ export const generateCreateQuestionnaireParams = ({
     severityLevels,
     notificationScoreThreshold,
     scoreFactor,
+    buildResult,
   };
 };
 

@@ -61,6 +61,7 @@ export const buildGAD7Questionnaire = (): CreateQuestionnaireParams => {
       { min: 15, max: 21, label: 'Severe Anxiety' },
     ],
     notificationScoreThreshold: 6,
+    buildResult: true,
   };
 };
 
@@ -127,6 +128,7 @@ export const buildPHQ9Questionnaire = (): CreateQuestionnaireParams => {
       { min: 20, max: 29, label: 'Severe Depression' },
     ],
     notificationScoreThreshold: 10,
+    buildResult: true,
   };
 };
 
@@ -184,6 +186,7 @@ export const buildWHO5Questionnaire = (): CreateQuestionnaireParams => {
     notificationScoreThreshold: 51,
     notificationScoreThresholdReverse: true,
     scoreFactor: 4,
+    buildResult: true,
   };
 };
 
@@ -208,6 +211,7 @@ export const buildNPSQuestionnaire = (): CreateQuestionnaireParams => {
       { min: 7, max: 8, label: 'Passive' },
       { min: 9, max: 10, label: 'Promoter' },
     ],
+    buildResult: true,
   };
 };
 
@@ -258,6 +262,7 @@ export const buildLHPQuestionnaire = (): CreateQuestionnaireParams => {
     type: QuestionnaireType.lhp,
     items: groupItems,
     isAssignableToMember: false,
+    buildResult: true,
   };
 };
 
@@ -390,5 +395,50 @@ export const buildCAGEQuestionnaire = (): CreateQuestionnaireParams => {
     items: cageItems,
     isAssignableToMember: false,
     severityLevels: [{ min: 2, max: 4, label: 'Substance Abuse' }],
+    buildResult: true,
+  };
+};
+
+export const buildReadinessToChangeQuestionnaire = (): CreateQuestionnaireParams => {
+  const questions = [
+    'It’s a waste of time thinking about my drinking because I do not have a problem.',
+    'I enjoy my drinking but sometimes I drink too much.',
+    'There is nothing seriously wrong with my drinking.',
+    'Sometimes I think I should quit or cut down on my drinking.',
+    'Anyone can talk about wanting to do something about their drinking, ' +
+      'but I’m actually doing something about it.',
+    'I am a fairly normal drinker.',
+    'My drinking is a problem sometimes.',
+    'I am actually changing my drinking habits right now (either cutting down or quitting).',
+    'I have started to carry out a plan to cut down or quit drinking.',
+    'There is nothing I really need to change about my drinking.',
+    'Sometimes I wonder if my drinking is out of control',
+    'I am actively working on my drinking problem.',
+  ];
+
+  let count = 0;
+  const rcqtvItems: Item[] = questions.map((question) => ({
+    code: `q${++count}`,
+    label: question,
+    type: ItemType.choice,
+    order: count,
+    required: false,
+    options: [
+      { label: 'Strongly disagree', value: -2 },
+      { label: 'Disagree', value: -1 },
+      { label: 'Unsure', value: 0 },
+      { label: 'Agree', value: 1 },
+      { label: 'Strongly agree', value: 2 },
+    ],
+    buildResult: true,
+  }));
+
+  return {
+    name: `Readiness to Change Questionnaire - Treatment Version`,
+    shortName: upperCase(QuestionnaireType.rcqtv),
+    type: QuestionnaireType.rcqtv,
+    items: rcqtvItems,
+    isAssignableToMember: false,
+    buildResult: true,
   };
 };
