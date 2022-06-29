@@ -2,6 +2,7 @@ import { Environments, formatEx } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import VoximplantApiClient from '@voximplant/apiclient-nodejs';
+import * as crypto from 'crypto';
 import { writeFileSync } from 'fs';
 import { nanoid } from 'nanoid';
 import { ConfigsService, ExternalConfigs } from '.';
@@ -66,5 +67,20 @@ export class Voximplant implements OnModuleInit {
         formatEx(ex),
       );
     }
+  }
+
+  generateToken({
+    userName,
+    userPassword,
+    key,
+  }: {
+    userName: string;
+    userPassword: string;
+    key: string;
+  }) {
+    let md5 = crypto.createHash('md5');
+    const hash = md5.update(`${userName}:voximplant.com:${userPassword}`).digest('hex');
+    md5 = crypto.createHash('md5');
+    return md5.update(`${key}\|${hash}`).digest('hex');
   }
 }

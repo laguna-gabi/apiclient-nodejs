@@ -191,7 +191,7 @@ import {
   TodoStatus,
   UpdateTodoParams,
 } from '../src/todo';
-import { CreateUserParams, GetSlotsParams, UpdateUserParams } from '../src/user';
+import { CreateUserParams, GetSlotsParams, UpdateUserParams, UserConfig } from '../src/user';
 
 /**************************************************************************************************
  ********************************************* Member *********************************************
@@ -663,6 +663,22 @@ export const generateGetSlotsParams = ({
     notBefore,
     orgIds,
   };
+};
+
+/**************************************************************************************************
+ **************************************** UserConfig **********************************************
+ *************************************************************************************************/
+
+export const mockGenerateUserConfig = ({
+  userId = generateObjectId(),
+  accessToken = generateId(),
+  voximplantId = datatype.number({
+    min: 1000000,
+    max: 9999999,
+  }),
+  voximplantPassword = generateId(),
+}: Partial<UserConfig> = {}): UserConfig => {
+  return { userId, accessToken, voximplantId, voximplantPassword };
 };
 
 /**************************************************************************************************

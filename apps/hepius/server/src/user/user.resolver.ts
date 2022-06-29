@@ -31,7 +31,7 @@ import {
   LoggingInterceptor,
   Roles,
 } from '../common';
-import { CognitoService, ZenDesk } from '../providers';
+import { CognitoService, Voximplant, ZenDesk } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => User)
@@ -40,6 +40,7 @@ export class UserResolver {
     private readonly userService: UserService,
     private readonly cognitoService: CognitoService,
     private readonly zendeskProvider: ZenDesk,
+    private readonly voximplant: Voximplant,
     private eventEmitter: EventEmitter2,
     private readonly logger: LoggerService,
   ) {}
@@ -221,6 +222,23 @@ export class UserResolver {
     }
 
     return this.cognitoService.enableClient(user.firstName.toLowerCase());
+  }
+
+  @Query(() => String)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ strategy: AceStrategy.rbac })
+  async getVoximplantToken(
+    @Client('id')
+    userId,
+    @Args('key', { type: () => String })
+    key: string,
+  ): Promise<string> {
+    const { voximplantPassword } = await this.userService.getUserConfig(userId);
+    return this.voximplant.generateToken({
+      userName: userId,
+      userPassword: voximplantPassword,
+      key,
+    });
   }
 
   protected notifyUpdatedUserConfig(user: User) {

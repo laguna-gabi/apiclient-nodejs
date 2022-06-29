@@ -6,6 +6,7 @@ import {
   Language,
   QueueType,
   generateId,
+  generateObjectId,
   mockLogger,
   mockProcessWarnings,
 } from '@argus/pandora';
@@ -20,6 +21,7 @@ import {
   generateGetSlotsParams,
   generateUpdateUserParams,
   mockGenerateUser,
+  mockGenerateUserConfig,
 } from '..';
 import {
   ErrorType,
@@ -29,7 +31,7 @@ import {
   IEventOnNewUser,
   LoggerService,
 } from '../../src/common';
-import { CognitoService } from '../../src/providers';
+import { CognitoService, Voximplant } from '../../src/providers';
 import {
   GetSlotsParams,
   UserController,
@@ -44,6 +46,7 @@ describe('UserResolver', () => {
   let controller: UserController;
   let service: UserService;
   let cognitoService: CognitoService;
+  let voximplant: Voximplant;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter;
 
@@ -57,6 +60,7 @@ describe('UserResolver', () => {
     controller = module.get<UserController>(UserController);
     service = module.get<UserService>(UserService);
     cognitoService = module.get<CognitoService>(CognitoService);
+    voximplant = module.get<Voximplant>(Voximplant);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     mockLogger(module.get<LoggerService>(LoggerService));
@@ -474,6 +478,40 @@ describe('UserResolver', () => {
       expect(spyOnCognitoServiceEnableClient).toBeCalledWith(userParams.firstName.toLowerCase());
 
       spyOnCognitoServiceEnableClient.mockReset();
+    });
+  });
+
+  describe('getVoximplantToken', () => {
+    let spyOnServiceGetUserConfig;
+    let spyOnVoximplantGenerateToken;
+
+    beforeEach(() => {
+      spyOnServiceGetUserConfig = jest.spyOn(service, 'getUserConfig');
+      spyOnVoximplantGenerateToken = jest.spyOn(voximplant, 'generateToken');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetUserConfig.mockReset();
+      spyOnVoximplantGenerateToken.mockReset();
+    });
+
+    it('should get voximplant token', async () => {
+      const userId = generateId();
+      const key = generateId();
+      const userConfig = mockGenerateUserConfig({ userId: generateObjectId(userId) });
+      const token = generateId();
+      spyOnServiceGetUserConfig.mockImplementationOnce(async () => userConfig);
+      spyOnVoximplantGenerateToken.mockImplementationOnce(() => token);
+
+      const result = await resolver.getVoximplantToken(userId, key);
+
+      expect(result).toEqual(token);
+      expect(spyOnServiceGetUserConfig).toBeCalledWith(userId);
+      expect(spyOnVoximplantGenerateToken).toBeCalledWith({
+        userName: userId,
+        userPassword: userConfig.voximplantPassword,
+        key,
+      });
     });
   });
 });
