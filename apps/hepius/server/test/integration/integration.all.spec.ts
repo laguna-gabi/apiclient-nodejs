@@ -1667,17 +1667,30 @@ describe('Integration tests: all', () => {
 
     it('should get alert questionnaire (WHO5): score is under (reverse) threshold', async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
-      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
+      const { id: phq9QuestionnaireId } = await handler.mutations.createQuestionnaire({
         createQuestionnaireParams: buildWHO5Questionnaire(),
+      });
+
+      const { id: mdlQuestionnaireId } = await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams: buildDailyLogQuestionnaire(),
       });
 
       const fill = Array.from({ length: 5 }, (_, i) => i + 1);
       await handler.mutations.submitQuestionnaireResponse({
         requestHeaders: generateRequestHeaders(user.authId),
         submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
-          questionnaireId,
+          questionnaireId: phq9QuestionnaireId,
           memberId: member.id,
           answers: fill.map((num) => ({ code: `q${num}`, value: '1' })), // low value will yield an under threshold (poor results for who5)
+        }),
+      });
+
+      await handler.mutations.submitQuestionnaireResponse({
+        requestHeaders: generateRequestHeaders(user.authId),
+        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+          questionnaireId: mdlQuestionnaireId,
+          memberId: member.id,
+          answers: [{ code: DailyReportCategoryTypes.Sleep, value: '3' }], // submit a QR which does not yield a `result` object to confirm no NPE (https://app.shortcut.com/laguna-health/story/5634/fix-npe-when-checking-questionnaire-result-score-value)
         }),
       });
 

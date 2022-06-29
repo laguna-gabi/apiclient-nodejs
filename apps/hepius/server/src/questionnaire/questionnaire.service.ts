@@ -240,8 +240,8 @@ export class QuestionnaireService extends AlertService {
         const results = this.buildResult(qr.answers, template);
 
         if (
-          this.isOverThreshold(template, results.score) ||
-          (results.alert && QuestionnaireAlerts.get(template.type))
+          this.isOverThreshold(template, results?.score) ||
+          (results?.alert && QuestionnaireAlerts.get(template.type))
         ) {
           return {
             id: `${qr.id}_${AlertType.assessmentSubmitScoreOverThreshold}`,
