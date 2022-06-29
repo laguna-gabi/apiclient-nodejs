@@ -27,6 +27,7 @@ export class RevAI implements OnModuleInit {
           url: `${hosts.api}/${webhooks}/${revai}`,
           auth_headers: { ['authorization']: this.webhookToken },
         },
+        transcriber: 'machine_v2',
       });
       return id;
     }
