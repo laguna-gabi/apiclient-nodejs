@@ -43,6 +43,7 @@ export const RedFlagTypeTable = 'harmony_red_flag_type';
 export const RedFlagTable = 'harmony_red_flag';
 export const CarePlanTypeTable = 'harmony_care_plan_type';
 export const CarePlanTable = 'harmony_care_plan';
+export const AdmissionTable = 'harmony_admission';
 
 export enum SheetOption {
   members = 'members',
@@ -53,6 +54,7 @@ export enum SheetOption {
   barriers = 'barriers',
   redflags = 'redflags',
   careplans = 'careplans',
+  admissions = 'admissions',
   all = 'all',
 }
 
@@ -189,7 +191,7 @@ export class MemberData {
 
 @Entity({ name: CoachTable })
 export class CoachData {
-  @PrimaryColumn('varchar', { length: 100 })
+  @PrimaryColumn('varchar', { length: 50 })
   user_id: string;
   @Column('datetime', { nullable: true })
   created: string;
@@ -226,22 +228,22 @@ export class QuestionnaireResponseData {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @PrimaryColumn('varchar', { length: 100 })
+  @PrimaryColumn('varchar', { length: 50 })
   member_id: string;
 
-  @Column('varchar', { length: 50, name: 'qr_id' })
+  @Column('varchar', { length: 50 })
   qr_id: string;
 
-  @Column('varchar', { length: 50, name: 'questionnaire_id' })
+  @Column('varchar', { length: 50 })
   questionnaire_id: string;
 
-  @Column('varchar', { length: 50, name: 'questionnaire_type' })
+  @Column('varchar', { length: 50 })
   questionnaire_type: string;
 
   @Column('varchar', { length: 50, name: 'answer_name' })
   answer_code: string;
 
-  @Column('varchar', { length: 50, name: 'answer_value' })
+  @Column('varchar', { length: 50 })
   answer_value: string;
 
   @Column('datetime', { nullable: true })
@@ -250,7 +252,7 @@ export class QuestionnaireResponseData {
 
 @Entity({ name: CaregiverTable })
 export class CaregiverData {
-  @PrimaryColumn('varchar', { length: 100 })
+  @PrimaryColumn('varchar', { length: 50 })
   id: string;
 
   @Column('varchar', { length: 50, name: 'member_id' })
@@ -360,9 +362,9 @@ export class AppointmentsMemberData {
 }
 
 export class BaseCareData {
-  @PrimaryColumn('varchar', { length: 100 })
+  @PrimaryColumn('varchar', { length: 50 })
   id: string;
-  @Column('varchar', { length: 50, name: 'member_id' })
+  @Column('varchar', { length: 50 })
   member_id: string;
   @Column('varchar', { length: 50 })
   type: string;
@@ -378,7 +380,7 @@ export class BaseCareData {
 
 @Entity({ name: BarrierTypeTable })
 export class BarrierTypeData {
-  @PrimaryColumn('varchar', { length: 100 })
+  @PrimaryColumn('varchar', { length: 50 })
   id: string;
   @Column('varchar', { length: 200 })
   description: string;
@@ -398,7 +400,7 @@ export class BarrierData extends BaseCareData {
 
 @Entity({ name: RedFlagTypeTable })
 export class RedFlagTypeData {
-  @PrimaryColumn('varchar', { length: 100 })
+  @PrimaryColumn('varchar', { length: 50 })
   id: string;
   @Column('varchar')
   description: string;
@@ -406,7 +408,7 @@ export class RedFlagTypeData {
 
 @Entity({ name: RedFlagTable })
 export class RedFlagData {
-  @PrimaryColumn('varchar', { length: 100 })
+  @PrimaryColumn('varchar', { length: 50 })
   id: string;
   @Column('varchar', { length: 100 })
   member_id: string;
@@ -422,7 +424,7 @@ export class RedFlagData {
 
 @Entity({ name: CarePlanTypeTable })
 export class CarePlanTypeData {
-  @PrimaryColumn('varchar', { length: 100 })
+  @PrimaryColumn('varchar', { length: 50 })
   id: string;
   @Column('varchar')
   description: string;
@@ -438,6 +440,30 @@ export class CarePlanData extends BaseCareData {
   dueDate?: string;
   @Column('varchar', { length: 50 })
   status: CarePlanStatus;
+}
+
+@Entity({ name: AdmissionTable })
+export class AdmissionData {
+  @PrimaryColumn('varchar', { length: 50 })
+  id: string;
+  @Column('varchar', { length: 50 })
+  member_id: string;
+  @Column('varchar', { length: 50 })
+  journey_id: string;
+  @Column('blob', { nullable: true })
+  admission_summary: string;
+  @Column('date')
+  admit_date: string;
+  @Column('varchar', { length: 50 })
+  admit_type: string;
+  @Column('date')
+  discharge_date: string;
+  @Column('varchar', { length: 50 })
+  discharge_to: string;
+  @Column('varchar', { length: 50 })
+  drg: string;
+  @Column('blob', { nullable: true })
+  drg_desc: string;
 }
 
 export type AnalyticsData = CoachData | MemberData | AppointmentsMemberData;

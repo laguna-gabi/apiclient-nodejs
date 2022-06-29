@@ -11,6 +11,8 @@ import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import { Command, CommandRunner, Option } from 'nest-commander';
 import { DataSource, QueryRunner } from 'typeorm';
 import {
+  AdmissionData,
+  AdmissionTable,
   AnalyticsService,
   AppointmentTable,
   AppointmentsMemberData,
@@ -96,6 +98,7 @@ export class AnalyticsCommand implements CommandRunner {
         RedFlagData,
         CarePlanTypeData,
         CarePlanData,
+        AdmissionData,
       ],
       synchronize: true,
       logging: false,
@@ -352,6 +355,19 @@ export class AnalyticsCommand implements CommandRunner {
           await this.queryRunner.clearTable(CarePlanTable);
         }
         await AppDataSource.manager.save(await this.analyticsService.getCarePlansData());
+      }
+
+      if (options.sheet === SheetOption.admissions || options.sheet === SheetOption.all) {
+        console.debug(
+          '\n----------------------------------------------------------------\n' +
+            '------------------- Generating Admissions Data ------------------\n' +
+            '----------------------------------------------------------------',
+        );
+        const admissionTable = await this.queryRunner.getTable(AdmissionTable);
+        if (admissionTable) {
+          await this.queryRunner.clearTable(AdmissionTable);
+        }
+        await AppDataSource.manager.save(await this.analyticsService.getAdmissionData());
       }
 
       /***************************** Import Data Enrichment  **************************************/

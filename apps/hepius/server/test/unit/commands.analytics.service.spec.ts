@@ -49,7 +49,7 @@ import {
   User,
   mockGenerateCaregiver,
 } from '@argus/hepiusClient';
-import { Admission, Journey, JourneyModule } from '../../src/journey';
+import { Admission, AdmitType, DischargeTo, Journey, JourneyModule } from '../../src/journey';
 import { lorem } from 'faker';
 
 describe('Commands: AnalyticsService', () => {
@@ -64,6 +64,7 @@ describe('Commands: AnalyticsService', () => {
   let redFlagsModel: Model<RedFlag>;
   let carePlanTypesModel: Model<CarePlanType>;
   let carePlansModel: Model<CarePlan>;
+  let admissionsModel: Model<Admission>;
 
   const now = new Date(Date.UTC(2021, 1, 2, 3, 4, 5));
 
@@ -110,6 +111,7 @@ describe('Commands: AnalyticsService', () => {
     redFlagsModel = module.get<Model<RedFlag>>(getModelToken(RedFlag.name));
     carePlanTypesModel = module.get<Model<CarePlanType>>(getModelToken(CarePlanType.name));
     carePlansModel = module.get<Model<CarePlan>>(getModelToken(CarePlan.name));
+    admissionsModel = module.get<Model<Admission>>(getModelToken(Admission.name));
 
     // mock the user model to upload all actors (users) during init
     jest
@@ -1109,6 +1111,70 @@ describe('Commands: AnalyticsService', () => {
             dueDate: reformatDate(carePlan.dueDate.toString(), momentFormats.mysqlDateTime),
           })),
         ),
+      );
+    });
+  });
+
+  describe('admissions', () => {
+    let admissionsModelSpy;
+
+    beforeAll(async () => {
+      admissionsModelSpy = jest.spyOn(admissionsModel, 'find');
+    });
+
+    afterEach(() => {
+      admissionsModelSpy.mockReset();
+    });
+
+    it('should return an empty list of admissions', async () => {
+      admissionsModelSpy.mockReturnValueOnce([]);
+      const data = await analyticsService.getAdmissionData();
+      expect(data).toEqual([]);
+    });
+
+    it('should return non-empty admissions data entries', async () => {
+      const admissions = [
+        {
+          id: generateObjectId(),
+          memberId: generateObjectId(),
+          journeyId: generateObjectId(),
+          admissionSummary: lorem.sentences(),
+          admitDate: generateDateOnly(subDays(new Date(), 10)),
+          admitType: AdmitType.snf,
+          dischargeDate: generateDateOnly(subDays(new Date(), 5)),
+          dischargeTo: DischargeTo.hospital,
+          drg: lorem.word(),
+          drgDesc: lorem.sentences(),
+        },
+        {
+          id: generateObjectId(),
+          memberId: generateObjectId(),
+          journeyId: generateObjectId(),
+          admissionSummary: lorem.sentences(),
+          admitDate: generateDateOnly(subDays(new Date(), 20)),
+          admitType: AdmitType.urgent,
+        },
+      ];
+      admissionsModelSpy.mockReturnValue(admissions);
+
+      const data = await analyticsService.getAdmissionData();
+
+      expect(data).toEqual(
+        admissions.map((admission) => ({
+          id: admission.id,
+          member_id: admission.memberId.toString(),
+          journey_id: admission.journeyId.toString(),
+          admission_summary: admission.admissionSummary,
+          admit_date: reformatDate(admission.admitDate.toString(), momentFormats.mysqlDateTime),
+          admit_type: admission.admitType,
+          discharge_date: reformatDate(
+            admission.dischargeDate?.toString(),
+            momentFormats.mysqlDateTime,
+          ),
+          discharge_to: admission.dischargeTo,
+          drg: admission.drg,
+          drg_desc: admission.drgDesc,
+        })),
       );
     });
   });

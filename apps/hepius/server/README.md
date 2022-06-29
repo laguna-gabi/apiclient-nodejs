@@ -171,6 +171,19 @@ OR
 yarn analytics:dump:<env>
 ```
 
+### Connect to a local sql db in order to view results
+<br/>In order to view the results generated on the previous section, you can:
+1. make sure that you have a local connection to sql, on you dockers lists (under `argus`)
+2. download an ide having a support for mySql.
+3. use the following connection data in order to view the local results:
+```
+host: 127.0.0.1
+port: 3306
+user: root
+password: admin
+dbName: laguna
+```
+
 ### Uploading a new version to EC2 auto loader
 1. in AWS console navigate to the EC2 machine list 
 2. select the `Data Analytics` machine and `connect` to it (via console)

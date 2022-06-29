@@ -18,6 +18,7 @@ import { json2csv } from 'json-2-csv';
 import { omit } from 'lodash';
 import { Connection, Model, Types } from 'mongoose';
 import {
+  AdmissionData,
   AnalyticsData,
   AnalyticsDataAggregate,
   AppointmentAttendanceStatus,
@@ -58,7 +59,7 @@ import {
 } from '../../src/care';
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import { Member, MemberDocument, MemberService } from '../../src/member';
-import { CaregiverDocument } from '../../src/journey';
+import { Admission, AdmissionDocument, CaregiverDocument } from '../../src/journey';
 import { StorageService } from '../../src/providers';
 import {
   Questionnaire,
@@ -97,6 +98,8 @@ export class AnalyticsService {
     private readonly carePlanTypeModel: Model<CarePlanTypeDocument>,
     @InjectModel(CarePlan.name)
     private readonly carePlanModel: Model<CarePlanDocument>,
+    @InjectModel(Admission.name)
+    private readonly admissionModel: Model<AdmissionDocument>,
   ) {}
 
   private userData: Map<string, string>;
@@ -441,6 +444,32 @@ export class AnalyticsService {
     return data;
   }
 
+  async getAdmissionData(): Promise<AdmissionData[]> {
+    const admissions: Admission[] = await this.admissionModel.find();
+    return admissions.map((admission: Admission) => {
+      const admissionData = new AdmissionData();
+
+      admissionData.id = admission.id;
+      admissionData.member_id = admission.memberId.toString();
+      admissionData.journey_id = admission.journeyId.toString();
+      admissionData.admission_summary = admission.admissionSummary;
+      admissionData.admit_date = reformatDate(
+        admission.admitDate?.toString(),
+        momentFormats.mysqlDateTime,
+      );
+      admissionData.admit_type = admission.admitType;
+      admissionData.discharge_date = reformatDate(
+        admission.dischargeDate?.toString(),
+        momentFormats.mysqlDateTime,
+      );
+      admissionData.discharge_to = admission.dischargeTo;
+      admissionData.drg = admission.drg;
+      admissionData.drg_desc = admission.drgDesc;
+
+      return admissionData;
+    });
+  }
+
   async getCoachersDataAggregate(): Promise<CoachDataAggregate[]> {
     return this.userModel.aggregate([
       {
@@ -520,10 +549,10 @@ export class AnalyticsService {
       SummaryFileSuffix,
     );
 
-    const { admitDate, drg, drgDesc } =
-      member.recentJourney?.admissions && member.recentJourney?.admissions[0];
-    const dischargeDate =
-      member.recentJourney?.admissions && member.recentJourney?.admissions[0]?.dischargeDate;
+    const hasAdmission =
+      member.recentJourney?.admissions && member.recentJourney?.admissions.length >= 1;
+    const { admitDate, drg, drgDesc } = hasAdmission && member.recentJourney?.admissions[0];
+    const dischargeDate = hasAdmission && member.recentJourney?.admissions[0]?.dischargeDate;
     const daysSinceDischarge = this.calculateDaysSinceDischarge(dischargeDate);
 
     const { firstActivationScore, lastActivationScore, firstWellbeingScore, lastWellbeingScore } =
