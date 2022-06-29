@@ -100,6 +100,7 @@ import {
 import {
   ActionItem,
   ActionItemCategory,
+  ActionItemSource,
   ActionItemStatus,
   AutoActionMainItemType,
   autoActionsMap,
@@ -2908,7 +2909,8 @@ describe('Integration tests: all', () => {
           expect.arrayContaining([
             expect.objectContaining({
               ...handler.internationalization.getActionItem(actionItem.autoActionItemType),
-              category: ActionItemCategory.jobAid,
+              category: ActionItemCategory.nextSession,
+              source: ActionItemSource.jobAid,
               memberId: member.id,
               appointmentId: appointments[0].id,
             }),
@@ -2946,7 +2948,8 @@ describe('Integration tests: all', () => {
           expect.arrayContaining([
             expect.objectContaining({
               ...handler.internationalization.getActionItem(actionItem.autoActionItemType),
-              category: ActionItemCategory.poc,
+              category: ActionItemCategory.nextSession,
+              source: ActionItemSource.poc,
               memberId: member.id,
               barrierId,
               relatedEntities: [],

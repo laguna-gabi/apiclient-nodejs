@@ -4,6 +4,7 @@ import {
   ActionItemCategory,
   ActionItemModule,
   ActionItemService,
+  ActionItemSource,
   AutoActionItem,
   AutoActionMainItemType,
   autoActionsMap,
@@ -67,7 +68,8 @@ describe(AutoActionItem.name, () => {
         expect(spyOnServiceCreateOrSetActionItem).toHaveBeenNthCalledWith(
           i,
           expect.objectContaining({
-            category: ActionItemCategory.jobAid,
+            category: ActionItemCategory.nextSession,
+            source: ActionItemSource.jobAid,
             memberId,
             appointmentId,
           }),
@@ -92,7 +94,8 @@ describe(AutoActionItem.name, () => {
         expect(spyOnServiceCreateOrSetActionItem).toHaveBeenNthCalledWith(
           i,
           expect.objectContaining({
-            category: ActionItemCategory.poc,
+            category: ActionItemCategory.nextSession,
+            source: ActionItemSource.poc,
             memberId,
             barrierId,
           }),

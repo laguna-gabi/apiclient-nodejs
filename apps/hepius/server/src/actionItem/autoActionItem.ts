@@ -4,6 +4,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import {
   ActionItemCategory,
   ActionItemService,
+  ActionItemSource,
   AutoActionItemRelatedEntities,
   AutoActionMainItemType,
   autoActionsMap,
@@ -34,7 +35,8 @@ export class AutoActionItem {
       type: AutoActionMainItemType.firstAppointment,
       params,
       methodName: this.handleFirstAppointment.name,
-      category: ActionItemCategory.jobAid,
+      source: ActionItemSource.jobAid,
+      category: ActionItemCategory.nextSession,
     });
   }
 
@@ -49,7 +51,8 @@ export class AutoActionItem {
         type: AutoActionMainItemType.fatigue,
         params: newParams,
         methodName: this.handleBarrierCreated.name,
-        category: ActionItemCategory.poc,
+        source: ActionItemSource.poc,
+        category: ActionItemCategory.nextSession,
       });
     }
   }
@@ -59,11 +62,13 @@ export class AutoActionItem {
     params,
     methodName,
     category,
+    source,
   }: {
     type: AutoActionMainItemType;
     params: IEventBaseAutoActionItem;
     methodName: string;
-    category: ActionItemCategory;
+    category?: ActionItemCategory;
+    source?: ActionItemSource;
   }) {
     this.logger.info(params, AutoActionItem.name, methodName);
     try {
@@ -76,6 +81,7 @@ export class AutoActionItem {
               : undefined,
             category,
             link,
+            source,
             ...params,
           });
         }),

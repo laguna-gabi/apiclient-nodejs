@@ -58,6 +58,7 @@ import {
   ActionItemLink,
   ActionItemLinkType,
   ActionItemPriority,
+  ActionItemSource,
   ActionItemStatus,
   CreateOrSetActionItemParams,
 } from '../src/actionItem';
@@ -1391,6 +1392,7 @@ export const generateCreateOrSetActionItemParams = ({
   rejectNote = lorem.words(2),
   deadline = fakerDate.soon(3),
   relatedEntities = [],
+  source = randomEnum(ActionItemSource) as ActionItemSource,
   link = generateActionItemLink(),
 }: Partial<CreateOrSetActionItemParams> = {}): CreateOrSetActionItemParams => {
   return {
@@ -1404,6 +1406,7 @@ export const generateCreateOrSetActionItemParams = ({
     priority,
     rejectNote,
     relatedEntities,
+    source,
     link,
   };
 };

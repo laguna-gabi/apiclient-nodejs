@@ -505,6 +505,7 @@ export class Queries {
             }
             memberName
             readmissionRisk
+            source
             link {
               type
               value
@@ -1571,6 +1572,7 @@ export class Queries {
                 type
                 id
               }
+              source
               link {
                 type
                 value

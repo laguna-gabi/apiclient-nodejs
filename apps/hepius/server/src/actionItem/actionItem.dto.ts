@@ -24,11 +24,16 @@ export enum ActionItemCategory {
   learn = 'learn',
   legWork = 'legWork',
   nextSession = 'nextSession',
+}
+
+registerEnumType(ActionItemCategory, { name: 'ActionItemCategory' });
+
+export enum ActionItemSource {
   jobAid = 'jobAid',
   poc = 'poc',
 }
 
-registerEnumType(ActionItemCategory, { name: 'ActionItemCategory' });
+registerEnumType(ActionItemSource, { name: 'ActionItemSource' });
 
 export enum ActionItemPriority {
   urgent = 'urgent',
@@ -46,7 +51,14 @@ export enum ActionItemLinkType {
 
 registerEnumType(ActionItemLinkType, { name: 'ActionItemLinkType' });
 
-export const nullableActionItemKeys = ['deadline', 'description', 'rejectNote', 'category', 'link'];
+export const nullableActionItemKeys = [
+  'deadline',
+  'description',
+  'rejectNote',
+  'category',
+  'link',
+  'context',
+];
 
 @InputType('ActionItemLinkInput')
 @ObjectType()
@@ -98,6 +110,9 @@ export class CreateOrSetActionItemParams {
 
   @Field(() => ActionItemCategory, { nullable: true })
   category?: ActionItemCategory;
+
+  @Field(() => ActionItemSource, { nullable: true })
+  source?: ActionItemSource;
 
   @Field(() => ActionItemPriority, { nullable: true })
   priority?: ActionItemPriority;
@@ -163,6 +178,10 @@ export class ActionItem extends Identifier {
   @Prop({ type: String, enum: ActionItemCategory })
   @Field(() => ActionItemCategory, { nullable: true })
   category?: ActionItemCategory;
+
+  @Prop({ type: String, enum: ActionItemSource })
+  @Field(() => ActionItemSource, { nullable: true })
+  source?: ActionItemSource;
 
   @Prop({ type: String, enum: ActionItemPriority })
   @Field(() => ActionItemPriority)

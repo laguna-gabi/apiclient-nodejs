@@ -77,7 +77,7 @@ export const autoActionsMap: Map<AutoActionMainItemType, AutoActionItems> = new 
       { autoActionItemType: AutoActionAppointmentItemType.introduceLagunaHealth },
       {
         autoActionItemType: AutoActionAppointmentItemType.caregivers,
-        relatedEntities: [{ type: RelatedEntityType.caregiver }],
+        link: { type: ActionItemLinkType.createCaregiver },
       },
       { autoActionItemType: AutoActionAppointmentItemType.downloadApp },
       { autoActionItemType: AutoActionAppointmentItemType.conversationalAssessment },
@@ -92,7 +92,6 @@ export const autoActionsMap: Map<AutoActionMainItemType, AutoActionItems> = new 
       { autoActionItemType: AutoActionAppointmentItemType.homePreparation },
       {
         autoActionItemType: AutoActionAppointmentItemType.poc,
-        relatedEntities: [{ type: RelatedEntityType.poc }],
       },
       { autoActionItemType: AutoActionAppointmentItemType.scheduleNextAppointment },
       { autoActionItemType: AutoActionAppointmentItemType.documentation },
