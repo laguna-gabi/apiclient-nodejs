@@ -88,10 +88,6 @@
                     "title": "",
                     "description": ""
                 },
-                "questionnaire": {
-                    "title": "",
-                    "description": ""
-                },
                 "careInformation": {
                     "title": "",
                     "description": ""
@@ -116,89 +112,63 @@
             "barrier": {
                 "fatigue": {
                     "empatheticResponse": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "assess1": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "assess2": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "assess3": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "assess4": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "assess5": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "assess6": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "assess7": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "assess8": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "supportiveStatement": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "prepareMemberToCallProvider1": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "prepareMemberToCallProvider2": {
                         "title": "",
                         "description": ""
                     },
                     "prepareMemberToCallProvider3": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "prepareMemberToCallProvider4": {
                         "title": "",
                         "description": ""
                     },
-                    "toDoToEncourage1": {
-                        "title": "",
-                        "description": ""
-                    },
-                    "toDoToEncourage2": {
-                        "title": "",
-                        "description": ""
-                    },
-                    "toDoToEncourage3": {
-                        "title": "",
-                        "description": ""
-                    },
-                    "toDoToEncourage4": {
-                        "title": "",
-                        "description": ""
-                    },
-                    "toDoToEncourage5": {
-                        "title": "",
-                        "description": ""
-                    },
                     "influence": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
                     },
                     "memberTodo": {
-                        "title": "",
-                        "description": ""
+                        "title": ""
+                    },
+                    "prepareForMeeting": {
+                        "title": ""
                     }
+                }
+            },
+            "shared": {
+                "questionnaire": {
+                    "title": ""
                 }
             }
         }
