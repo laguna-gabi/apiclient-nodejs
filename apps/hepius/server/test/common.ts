@@ -47,6 +47,7 @@ export class BaseHandler {
   module: GraphQLModule;
   userService: UserService;
   userResolver: UserResolver;
+  userModel;
   eventEmitter: EventEmitter2;
   tcpClient: ClientProxy;
 }

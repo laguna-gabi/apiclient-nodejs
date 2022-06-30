@@ -23,7 +23,6 @@ import {
 } from '../src/care';
 import { ChangeType, delay } from '../src/common';
 import { UpdateJournalTextParams } from '../src/journey';
-import { UserService } from '../src/user';
 import {
   dbConnect,
   dbDisconnect,
@@ -46,7 +45,7 @@ import {
 } from '../test';
 import { Mutations } from '../test/aux';
 import { SeedBase } from './seedBase';
-import { BarrierType, CarePlanType, Identifier, UserRole } from '@argus/hepiusClient';
+import { BarrierType, CarePlanType } from '@argus/hepiusClient';
 import { AutoActionMainItemType } from '../src/actionItem';
 
 /**
@@ -63,24 +62,12 @@ import { AutoActionMainItemType } from '../src/actionItem';
  */
 
 let mutations: Mutations;
-let userService: UserService; //used for internal method, isn't exposed on queries
 
 export async function seed() {
   const base = new SeedBase();
   await base.init();
   await dbConnect();
   mutations = base.mutations;
-  userService = base.userService;
-
-  const users = await userService.getRegisteredUsers();
-  if (users.length === 0) {
-    //No users existing in the db, creating one
-    await createUser([UserRole.lagunaCoach], 'user');
-    //Since Sendbird is doing async calls in event emitter,
-    //we need to wait a while for the actions to be finished since in createMember we're creating
-    //a groupChannel that should wait for the user to be registered on sendbird.
-    await delay(5000);
-  }
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
@@ -110,12 +97,14 @@ export async function seed() {
       '---------------------- Creating a member -----------------------\n' +
       '----------------------------------------------------------------',
   );
-  const userId = await userService.getAvailableUser();
+  const user = await mutations.createUser({
+    createUserParams: generateCreateUserParams({ orgs: [org.id] }),
+  });
   const memberParams = generateCreateMemberParams({
     orgId: org.id,
     email: internet.email(),
     zipCode: generateZipCode(),
-    userId: userId.toString(),
+    userId: user.id,
   });
 
   const { id: memberId } = await mutations.createMember({
@@ -288,19 +277,6 @@ export async function seed() {
 /**************************************************************************************************
  **************************************** Internal methods ****************************************
  *************************************************************************************************/
-
-const createUser = async (roles: UserRole[], userText: string): Promise<Identifier> => {
-  const user = await mutations.createUser({
-    createUserParams: generateCreateUserParams({
-      roles,
-    }),
-  });
-  const token = sign({ username: user.id, sub: user.authId }, 'key-123');
-  console.log(`${user.id} : ${userText} of type ${roles} - valid token: ${token}`);
-
-  return { id: user.id };
-};
-
 const requestAppointment = async (memberId: string, userId: string) => {
   const appointment = await mutations.requestAppointment({
     appointmentParams: generateRequestAppointmentParams({

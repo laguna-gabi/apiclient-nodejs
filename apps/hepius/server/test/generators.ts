@@ -1913,6 +1913,7 @@ export const generateRandomHeight = () =>
   datatype.number({ min: graphql.validators.height.min, max: graphql.validators.height.max });
 export const generateRandomWeight = () =>
   datatype.number({ min: graphql.validators.weight.min, max: graphql.validators.weight.max });
+export const generateRandomPort = () => Math.floor(Math.random() * 9000) + 1000;
 export const generateUniqueUrl = () => `${v4()}.${internet.url()}`;
 export const generateRandomName = (length: number): string => lorem.words(length).substr(0, length);
 

@@ -25,15 +25,19 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ClientProxy, ClientsModule, MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getConnectionToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { datatype, lorem } from 'faker';
+import { lorem } from 'faker';
 import { GraphQLClient } from 'graphql-request';
 import { sign } from 'jsonwebtoken';
-import { intersection } from 'lodash';
 import { Model, model } from 'mongoose';
 import { Consumer } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { Mutations, Queries } from '.';
-import { generateCreateMemberParams, generateCreateUserParams, generateOrgParams } from '..';
+import {
+  generateCreateMemberParams,
+  generateCreateUserParams,
+  generateOrgParams,
+  generateRandomPort,
+} from '..';
 import { buildGAD7Questionnaire, buildPHQ9Questionnaire } from '../../cmd/static';
 import { ActionItem, ActionItemDocument, ActionItemDto } from '../../src/actionItem';
 import { AppModule } from '../../src/app.module';
@@ -60,7 +64,13 @@ import {
   RedFlagDto,
   RedFlagType,
 } from '../../src/care';
-import { EventType, IEventOnNewUser, LoggerService, defaultAuditDbValues } from '../../src/common';
+import {
+  EventType,
+  IEventOnNewUser,
+  LoggerService,
+  defaultAuditDbValues,
+  delay,
+} from '../../src/common';
 import {
   Communication,
   CommunicationDocument,
@@ -182,7 +192,7 @@ export class Handler extends BaseHandler {
   async beforeAll() {
     mockProcessWarnings(); // to hide pino prettyPrint warning
 
-    const tcpPort = datatype.number({ min: 1000, max: 3000 });
+    const tcpPort = generateRandomPort();
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         AppModule,
@@ -347,12 +357,14 @@ export class Handler extends BaseHandler {
     this.defaultUserRequestHeaders = await initClients(
       this.userService,
       this.userResolver,
+      this.userModel,
       this.eventEmitter,
       [UserRole.lagunaNurse, UserRole.lagunaCoach],
     );
     this.defaultAdminRequestHeaders = await initClients(
       this.userService,
       this.userResolver,
+      this.userModel,
       this.eventEmitter,
       [UserRole.lagunaAdmin],
     );
@@ -394,14 +406,14 @@ export class Handler extends BaseHandler {
 export const initClients = async (
   userService: UserService,
   userResolver: UserResolver,
+  userModel: Model<UserDocument>,
   eventEmitter: EventEmitter2,
   roles: UserRole[],
+  live = false,
 ) => {
-  const users = (await userService.getUsers()).filter(
-    (user) => intersection(roles, user.roles).length,
-  );
-  let sub;
-  if (users.length === 0) {
+  const resultUser = await userModel.findOne({ roles });
+  let sub = resultUser?.authId;
+  if (!resultUser) {
     const createUserParams = generateCreateUserParams({ roles });
     const { id } = await userService.insert(createUserParams);
     const user = await userService.updateAuthIdAndUsername(id, v4(), createUserParams.firstName);
@@ -411,11 +423,11 @@ export const initClients = async (
     // @ts-ignore
     userResolver.notifyUpdatedUserConfig(user);
     sub = user.authId;
-  } else {
-    sub = users[0].authId;
+    if (live) {
+      // only when running from seed - we need to pend user creation on sendbird
+      await delay(2500);
+    }
   }
 
-  return {
-    Authorization: sign({ sub }, 'secret'),
-  };
+  return { Authorization: sign({ sub }, 'secret') };
 };
