@@ -29,7 +29,7 @@
     "@nestjs/swagger": "^5.2.0",
     "@nestjs/terminus": "^8.0.4",
     "@slack/webhook": "^6.1.0",
-    "@splitsoftware/splitio": "^10.17.2",
+    "@splitsoftware/splitio": "^10.19.1",
     "@voximplant/apiclient-nodejs": "^2.0.5",
     "apollo-server-core": "^3.6.3",
     "apollo-server-express": "^3.6.3",

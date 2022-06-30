@@ -410,7 +410,7 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.16.7"
 
-"@babel/runtime@^7.13.10", "@babel/runtime@^7.17.2":
+"@babel/runtime@^7.17.2":
   version "7.17.7"
   resolved "https://registry.npmjs.org/@babel/runtime/-/runtime-7.17.7.tgz#a5f3328dc41ff39d803f311cfe17703418cf9825"
   integrity sha512-L6rvG9GDxaLgFjg41K+5Yv9OMrU98sWe+Ykmc6FDJW/+vYZMhdOMKkISgzptMaERHvS2Y2lw9MDRm2gHhlQQoA==
@@ -1483,22 +1483,27 @@
     "@types/node" ">=12.0.0"
     axios "^0.21.4"
 
-"@splitsoftware/splitio@^10.17.2":
-  version "10.17.3"
-  resolved "https://registry.npmjs.org/@splitsoftware/splitio/-/splitio-10.17.3.tgz#97621b5f8e5f8b094c697e7b2c2091237d84d7fd"
-  integrity sha512-TKcW5+T4hhdq4Zsp495m2RR0fo+CJXdepHXSFkz1TkAlkFnXh3+bTn90AVDPU0/Xc4tB8/9kjKLoKA6+PAdA7Q==
+"@splitsoftware/splitio-commons@1.4.1":
+  version "1.4.1"
+  resolved "https://registry.npmjs.org/@splitsoftware/splitio-commons/-/splitio-commons-1.4.1.tgz#ed2687695f55c67d66967176aad58a65b3068a7c"
+  integrity sha512-ukgiyi8Ga3wW0jiwVLMadgcShmqWO/IiQFDkoKIBkUF3H7ri9/deShJWHBMVldpLD+uLbgmzOPXwO8okwQqyKA==
   dependencies:
-    "@babel/runtime" "^7.13.10"
+    tslib "^2.3.1"
+
+"@splitsoftware/splitio@^10.19.1":
+  version "10.19.1"
+  resolved "https://registry.npmjs.org/@splitsoftware/splitio/-/splitio-10.19.1.tgz#93d15d31f769921aa436432cbbd3d172779fdf33"
+  integrity sha512-iAf0UL3ZMZMxfqgrhpigaWx893uM4qmj72P5sOVq66lZhJBXDQJSijaozxCoxC+/QM4wYYRePV2meJn1q5fD+g==
+  dependencies:
+    "@splitsoftware/splitio-commons" "1.4.1"
     "@types/google.analytics" "0.0.40"
-    events "3.1.0"
+    "@types/ioredis" "^4.28.0"
     ioredis "^4.28.0"
-    ip "1.1.5"
     js-yaml "3.13.1"
     node-fetch "^2.6.7"
-    object-assign "^4.1.1"
     unfetch "^4.2.0"
   optionalDependencies:
-    eventsource "^1.0.7"
+    eventsource "^1.1.2"
 
 "@sqltools/formatter@^1.2.2":
   version "1.2.3"
@@ -1786,6 +1791,13 @@
   integrity sha512-MOkzsEp1Jk5bXuAsHsUi6BVv0zCO+7/2PTiZMXWDSsMXvNU6w/PLMQT2vHn8hy2i0JqojPz1Sz6rsFjHtsU0lA==
   dependencies:
     graphql "*"
+
+"@types/ioredis@^4.28.0":
+  version "4.28.10"
+  resolved "https://registry.npmjs.org/@types/ioredis/-/ioredis-4.28.10.tgz#40ceb157a4141088d1394bb87c98ed09a75a06ff"
+  integrity sha512-69LyhUgrXdgcNDv7ogs1qXZomnfOEnSmrmMFqKgt1XMJxmoOSG/u3wYy13yACIfKuMJ8IhKgHafDO3sx19zVQQ==
+  dependencies:
+    "@types/node" "*"
 
 "@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0", "@types/istanbul-lib-coverage@^2.0.1":
   version "2.0.4"
@@ -4167,22 +4179,15 @@ events@1.1.1:
   resolved "https://registry.npmjs.org/events/-/events-1.1.1.tgz#9ebdb7635ad099c70dcc4c2a1f5004288e8bd924"
   integrity sha1-nr23Y1rQmccNzEwqH1AEKI6L2SQ=
 
-events@3.1.0:
-  version "3.1.0"
-  resolved "https://registry.npmjs.org/events/-/events-3.1.0.tgz#84279af1b34cb75aa88bf5ff291f6d0bd9b31a59"
-  integrity sha512-Rv+u8MLHNOdMjTAFeT3nCjHn2aGlx435FP/sDHNaRhDEMwyI/aB22Kj2qIN8R0cw3z28psEQLYwxVKLsKrMgWg==
-
 events@^3.2.0:
   version "3.3.0"
   resolved "https://registry.npmjs.org/events/-/events-3.3.0.tgz#31a95ad0a924e2d2c419a813aeb2c4e878ea7400"
   integrity sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==
 
-eventsource@^1.0.7:
-  version "1.1.0"
-  resolved "https://registry.npmjs.org/eventsource/-/eventsource-1.1.0.tgz#00e8ca7c92109e94b0ddf32dac677d841028cfaf"
-  integrity sha512-VSJjT5oCNrFvCS6igjzPAt5hBzQ2qPBFIbJ03zLI9SE0mxwZpMw6BfJrbFHm1a141AavMEB8JHmBhWAd66PfCg==
-  dependencies:
-    original "^1.0.0"
+eventsource@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.npmjs.org/eventsource/-/eventsource-1.1.2.tgz#bc75ae1c60209e7cb1541231980460343eaea7c2"
+  integrity sha512-xAH3zWhgO2/3KIniEKYPr8plNSzlGINOUqYj0m0u7AB81iRw8b/3E73W6AuU+6klLbaSFmZnaETQ2lXPfAydrA==
 
 exec-sh@^0.3.2:
   version "0.3.6"
@@ -5181,7 +5186,7 @@ ioredis@^4.28.0:
     redis-parser "^3.0.0"
     standard-as-callback "^2.1.0"
 
-ip@1.1.5, ip@^1.1.5:
+ip@^1.1.5:
   version "1.1.5"
   resolved "https://registry.npmjs.org/ip/-/ip-1.1.5.tgz#bdded70114290828c0a039e72ef25f5aaec4354a"
   integrity sha1-vd7XARQpCCjAoDnnLvJfWq7ENUo=
@@ -7493,13 +7498,6 @@ ora@5.4.1, ora@^5.4.1:
     strip-ansi "^6.0.0"
     wcwidth "^1.0.1"
 
-original@^1.0.0:
-  version "1.0.2"
-  resolved "https://registry.npmjs.org/original/-/original-1.0.2.tgz#e442a61cffe1c5fd20a65f3261c26663b303f25f"
-  integrity sha512-hyBVl6iqqUOJ8FqRe+l/gS8H+kKYjrEndd5Pm1MfBtsEKA038HkkdbAl/72EAXGyonD/PFsvmVG+EvcIpliMBg==
-  dependencies:
-    url-parse "^1.4.3"
-
 os-name@4.0.1:
   version "4.0.1"
   resolved "https://registry.npmjs.org/os-name/-/os-name-4.0.1.tgz#32cee7823de85a8897647ba4d76db46bf845e555"
@@ -9504,7 +9502,7 @@ urix@^0.1.0:
   resolved "https://registry.npmjs.org/urix/-/urix-0.1.0.tgz#da937f7a62e21fec1fd18d49b35c2935067a6c72"
   integrity sha1-2pN/emLiH+wf0Y1Js1wpNQZ6bHI=
 
-url-parse@^1.4.3, url-parse@^1.5.3:
+url-parse@^1.5.3:
   version "1.5.10"
   resolved "https://registry.npmjs.org/url-parse/-/url-parse-1.5.10.tgz#9d3c2f736c1d75dd3bd2be507dcc111f1e2ea9c1"
   integrity sha512-WypcfiRhfeUP9vvF0j6rw0J3hrWrw6iZv3+22h6iRMJ/8z1Tj6XfLP4DsUix5MhMPnXpiHDoKyoZ/bdCkwBCiQ==
