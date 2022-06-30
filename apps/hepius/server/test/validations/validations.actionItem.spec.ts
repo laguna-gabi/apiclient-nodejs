@@ -1,8 +1,6 @@
-import { BEFORE_ALL_TIMEOUT, generateCreateOrSetActionItemParams } from '..';
+import { BEFORE_ALL_TIMEOUT, generateCreateOrSetActionItemParams, stringError } from '..';
 import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
-
-const stringError = `String cannot represent a non string value`;
 
 describe('Validations - actionItem', () => {
   const handler: Handler = new Handler();

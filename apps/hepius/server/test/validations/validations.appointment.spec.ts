@@ -5,18 +5,18 @@ import { date, lorem } from 'faker';
 import * as request from 'supertest';
 import {
   BEFORE_ALL_TIMEOUT,
+  booleanError,
+  floatError,
   generateEndAppointmentParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
+  stringError,
   urls,
 } from '..';
 import { EndAppointmentParams, RequestAppointmentParams } from '../../src/appointment';
 import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
-
-const stringError = `String cannot represent a non string value`;
-const floatError = `Float cannot represent non numeric value`;
 
 describe('Validations - appointment', () => {
   const handler: Handler = new Handler();
@@ -219,7 +219,7 @@ describe('Validations - appointment', () => {
       field             | input                      | error
       ${'id'}           | ${{ id: 123 }}             | ${{ missingFieldError: stringError }}
       ${'id'}           | ${{ id: '123' }}           | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentIdInvalid)] }}
-      ${'noShow'}       | ${{ noShow: 'not-valid' }} | ${{ missingFieldError: 'Boolean cannot represent a non boolean value' }}
+      ${'noShow'}       | ${{ noShow: 'not-valid' }} | ${{ missingFieldError: booleanError }}
       ${'noShowReason'} | ${{ noShowReason: 123 }}   | ${{ missingFieldError: stringError }}
     `(
       /* eslint-enable max-len */

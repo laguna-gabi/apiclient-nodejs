@@ -1,10 +1,8 @@
-import { BEFORE_ALL_TIMEOUT } from '..';
+import { BEFORE_ALL_TIMEOUT, stringError } from '..';
 import { AvailabilityInput } from '../../src/availability';
 import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
 import { generateAvailabilityInput } from '../generators';
-
-const stringError = `String cannot represent a non string value`;
 
 describe('Validations - availability', () => {
   const handler: Handler = new Handler();

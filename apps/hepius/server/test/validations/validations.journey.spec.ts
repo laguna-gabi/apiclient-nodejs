@@ -4,12 +4,12 @@ import {
   generateRequestHeaders,
   generateSetGeneralNotesParams,
   generateUpdateJourneyParams,
+  stringError,
 } from '..';
 import { Handler } from '../aux/handler';
 import { AddCaregiverParams, UpdateJourneyParams } from '../../src/journey';
 import { ErrorType, Errors } from '../../src/common';
 import { generateId } from '@argus/pandora';
-const stringError = `String cannot represent a non string value`;
 
 describe('Validations - Journey', () => {
   const handler: Handler = new Handler();

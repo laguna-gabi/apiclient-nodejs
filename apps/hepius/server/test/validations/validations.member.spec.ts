@@ -12,6 +12,8 @@ import * as request from 'supertest';
 import { v4 } from 'uuid';
 import {
   BEFORE_ALL_TIMEOUT,
+  booleanError,
+  floatError,
   generateCancelNotifyParams,
   generateCreateMemberParams,
   generateDateOnly,
@@ -30,6 +32,7 @@ import {
   generateUniqueUrl,
   generateUpdateJournalTextParams,
   generateUpdateMemberParams,
+  stringError,
   urls,
 } from '..';
 import {
@@ -52,9 +55,6 @@ import {
 } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators } from '../aux';
 import { Handler } from '../aux/handler';
-
-const stringError = `String cannot represent a non string value`;
-const BooleanError = `Boolean cannot represent a non boolean value`;
 
 describe('Validations - member', () => {
   const handler: Handler = new Handler();
@@ -156,7 +156,7 @@ describe('Validations - member', () => {
       ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
       ${{ userId: 'not-valid' }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
       ${{ maritalStatus: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "MaritalStatus" enum' }}
-      ${{ height: 'not-valid' }}        | ${{ missingFieldError: `Float cannot represent non numeric value` }}
+      ${{ height: 'not-valid' }}        | ${{ missingFieldError: floatError }}
     `(
       /* eslint-enable max-len */
       `should fail to create a member since setting $input is not a valid`,
@@ -305,7 +305,7 @@ describe('Validations - member', () => {
 
     /* eslint-disable max-len */
     test.each`
-      input                             | missing
+      input                             | errors
       ${{ memberId: 123 }}              | ${stringError}
       ${{ dischargeDocumentType: 123 }} | ${'cannot represent non-string value'}
     `(`should fail to delete discharge document since $input is invalid`, async (params) => {
@@ -314,7 +314,7 @@ describe('Validations - member', () => {
       });
       await handler.mutations.deleteDischargeDocument({
         deleteDischargeDocumentParams,
-        missingFieldError: params.missing,
+        missingFieldError: params.errors,
       });
     });
   });
@@ -891,7 +891,7 @@ describe('Validations - member', () => {
     test.each`
       input            | error
       ${{ id: 123 }}   | ${stringError}
-      ${{ hard: 123 }} | ${BooleanError}
+      ${{ hard: 123 }} | ${booleanError}
     `(`should fail to set new user to member since $input is not a valid type`, async (params) => {
       const deleteMemberParams = generateDeleteMemberParams({ ...params.input });
       await handler.mutations.deleteMember({

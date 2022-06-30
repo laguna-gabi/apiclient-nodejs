@@ -1,8 +1,10 @@
 import {
   BEFORE_ALL_TIMEOUT,
+  booleanError,
   generateCreateMobileVersionParams,
   generateUpdateFaultyMobileVersionsParams,
   generateUpdateMinMobileVersionParams,
+  stringError,
 } from '..';
 import {
   CreateMobileVersionParams,
@@ -10,8 +12,6 @@ import {
   UpdateMinMobileVersionParams,
 } from '../../src/configuration';
 import { Handler } from '../aux';
-
-const stringError = `String cannot represent a non string value`;
 
 describe('Validations - Configuration', () => {
   const handler: Handler = new Handler();
@@ -48,7 +48,7 @@ describe('Validations - Configuration', () => {
       ${'version'}    | ${{ version: 1 }}               | ${stringError}
       ${'version'}    | ${{ version: '1.2.not-valid' }} | ${'version must be a Semantic Versioning Specification'}
       ${'platform'}   | ${{ platform: 'not-valid' }}    | ${'does not exist in "Platform" enum'}
-      ${'minVersion'} | ${{ minVersion: 'not-valid' }}  | ${'Boolean cannot represent a non boolean value'}
+      ${'minVersion'} | ${{ minVersion: 'not-valid' }}  | ${booleanError}
     `(
       /* eslint-enable max-len */
       `should fail to create an org since $field is not valid`,

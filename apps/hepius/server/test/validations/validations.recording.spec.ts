@@ -1,10 +1,8 @@
 import { generateId } from '@argus/pandora';
-import { BEFORE_ALL_TIMEOUT, generateUpdateRecordingParams } from '..';
+import { BEFORE_ALL_TIMEOUT, booleanError, generateUpdateRecordingParams, stringError } from '..';
 import { ErrorType, Errors } from '../../src/common';
 import { AppointmentsIntegrationActions, Creators } from '../aux';
 import { Handler } from '../aux/handler';
-
-const stringError = `String cannot represent a non string value`;
 
 describe('Validations - member', () => {
   const handler: Handler = new Handler();
@@ -117,10 +115,10 @@ describe('Validations - member', () => {
       ${{ id: 123 }}                   | ${stringError}
       ${{ memberId: 123 }}             | ${stringError}
       ${{ userId: 123 }}               | ${stringError}
-      ${{ answered: 123 }}             | ${'Boolean cannot represent a non boolean value'}
+      ${{ answered: 123 }}             | ${booleanError}
       ${{ phone: 123 }}                | ${stringError}
-      ${{ consent: 123 }}              | ${'Boolean cannot represent a non boolean value'}
-      ${{ identityVerification: 123 }} | ${'Boolean cannot represent a non boolean value'}
+      ${{ consent: 123 }}              | ${booleanError}
+      ${{ identityVerification: 123 }} | ${booleanError}
     `(`should fail to update recording since $input is not a valid type`, async (params) => {
       const updateRecordingParams = generateUpdateRecordingParams({ ...params.input });
       await handler.mutations.updateRecording({

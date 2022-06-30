@@ -7,7 +7,6 @@ import {
   RequestContext,
   ServiceName,
   generateId,
-  webhooks,
 } from '@argus/pandora';
 import { INestApplication } from '@nestjs/common';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
@@ -17,7 +16,6 @@ import { TestingModule } from '@nestjs/testing';
 import { db } from 'config';
 import { Document, Model, Types, connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
-import { apiPrefix } from '../src/common';
 import { Audit, DbModule } from '../src/db';
 import { Member, defaultMemberParams } from '../src/member';
 import { BaseCategory } from '../src/journey';
@@ -52,16 +50,6 @@ export class BaseHandler {
   eventEmitter: EventEmitter2;
   tcpClient: ClientProxy;
 }
-
-export const urls = {
-  scheduleAppointments: `/${apiPrefix}/appointments/schedule`,
-  slots: `/${apiPrefix}/users/slots`,
-  members: `/${apiPrefix}/members/create`,
-  orgs: `/${apiPrefix}/orgs/details`,
-  webhooks: `/${apiPrefix}/${webhooks}`,
-};
-
-export const BEFORE_ALL_TIMEOUT = 15000;
 
 export const compareUsers = (user: User, userBase) => {
   expect(user.firstName).toEqual(userBase.firstName);

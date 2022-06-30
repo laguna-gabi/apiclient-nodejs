@@ -1,5 +1,5 @@
 import { generateId } from '@argus/pandora';
-import { BEFORE_ALL_TIMEOUT, generateCreateBarrierParams } from '..';
+import { BEFORE_ALL_TIMEOUT, generateCreateBarrierParams, stringError } from '..';
 import {
   CreateBarrierParams,
   UpdateBarrierParams,
@@ -20,8 +20,6 @@ import {
   generateUpdateRedFlagParams,
 } from '../generators';
 import { CreateCarePlanParams } from '@argus/hepiusClient';
-
-const stringError = `String cannot represent a non string value`;
 
 describe('Validations - care (barriers & care plans & red flags)', () => {
   const handler: Handler = new Handler();

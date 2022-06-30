@@ -5,17 +5,17 @@ import * as request from 'supertest';
 import { v4 } from 'uuid';
 import {
   BEFORE_ALL_TIMEOUT,
+  floatError,
   generateCreateUserParams,
   generateRandomName,
   generateRequestHeaders,
+  stringError,
   urls,
 } from '..';
 import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
 import { CreateUserParams, GetSlotsParams, UpdateUserParams } from '../../src/user';
 import { Handler } from '../aux';
 import { generateGetSlotsParams, generateUpdateUserParams } from '../generators';
-
-const stringError = `String cannot represent a non string value`;
 
 describe('Validations - user', () => {
   const handler: Handler = new Handler();
@@ -95,7 +95,7 @@ describe('Validations - user', () => {
     ${'phone'}       | ${{ phone: 222 }}               | ${{ missingFieldError: stringError }}
     ${'phone'}       | ${{ phone: '+410' }}            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhone)] }}
     ${'title'}       | ${{ title: 222 }}               | ${{ missingFieldError: stringError }}
-    ${'maxMembers'}  | ${{ maxMembers: lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
+    ${'maxMembers'}  | ${{ maxMembers: lorem.word() }} | ${{ missingFieldError: floatError }}
     ${'languages'}   | ${{ languages: lorem.word() }}  | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
     ${'orgs'}        | ${{ orgs: ['not-valid'] }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyOrgIdInvalid)] }}
   `(
@@ -119,7 +119,7 @@ describe('Validations - user', () => {
     ${'lastName'}    | ${{ lastName: 222 }}            | ${{ missingFieldError: stringError }}
     ${'roles'}       | ${{ roles: [222] }}             | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
     ${'title'}       | ${{ title: 222 }}               | ${{ missingFieldError: stringError }}
-    ${'maxMembers'}  | ${{ maxMembers: lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
+    ${'maxMembers'}  | ${{ maxMembers: lorem.word() }} | ${{ missingFieldError: floatError }}
     ${'languages'}   | ${{ languages: lorem.word() }}  | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
     ${'orgs'}        | ${{ orgs: ['not-valid'] }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyOrgIdInvalid)] }}
   `(

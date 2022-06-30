@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import { generateId } from '@argus/pandora';
-import { BEFORE_ALL_TIMEOUT } from '..';
+import { BEFORE_ALL_TIMEOUT, stringError } from '..';
 import { ErrorType, Errors, ItemType } from '../../src/common';
 import {
   CreateQuestionnaireParams,
@@ -12,8 +12,6 @@ import {
   generateSubmitQuestionnaireResponseParams,
   mockGenerateQuestionnaireItem,
 } from '../generators';
-
-const stringError = `String cannot represent a non string value`;
 
 describe('Validations - questionnaire', () => {
   const handler: Handler = new Handler();

@@ -1,10 +1,8 @@
 import { generateId } from '@argus/pandora';
-import { BEFORE_ALL_TIMEOUT, generateOrgParams } from '..';
+import { BEFORE_ALL_TIMEOUT, generateOrgParams, intError, stringError } from '..';
 import { ErrorType, Errors, HttpErrorCodes, HttpErrorMessage } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
 import { Handler } from '../aux';
-
-const stringError = `String cannot represent a non string value`;
 
 describe('Validations - org', () => {
   const handler: Handler = new Handler();
@@ -34,7 +32,7 @@ describe('Validations - org', () => {
     field              | input                      | errors
     ${'name'}          | ${{ name: 1 }}             | ${stringError}
     ${'type'}          | ${{ type: 'not-valid' }}   | ${'does not exist in "OrgType" enum'}
-    ${'trialDuration'} | ${{ trialDuration: 24.8 }} | ${'Int cannot represent non-integer value'}
+    ${'trialDuration'} | ${{ trialDuration: 24.8 }} | ${intError}
     ${'zipCode'}       | ${{ zipCode: 1 }}          | ${stringError}
   `(
     /* eslint-enable max-len */

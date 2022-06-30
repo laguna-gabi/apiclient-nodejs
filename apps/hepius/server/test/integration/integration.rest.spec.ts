@@ -1,9 +1,9 @@
 import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import * as request from 'supertest';
-import { generateRequestHeaders } from '..';
+import { BEFORE_ALL_TIMEOUT, generateRequestHeaders, urls } from '..';
 import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
-import { BEFORE_ALL_TIMEOUT, compareMembers, urls } from '../common';
+import { compareMembers } from '../common';
 import {
   generateAvailabilityInput,
   generateCreateMemberParams,

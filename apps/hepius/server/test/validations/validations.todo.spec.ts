@@ -8,6 +8,7 @@ import {
   generateGetTodoDonesParams,
   generateRequestHeaders,
   generateUpdateTodoParams,
+  stringError,
 } from '..';
 import { ErrorType, Errors } from '../../src/common';
 import {
@@ -17,8 +18,6 @@ import {
   UpdateTodoParams,
 } from '../../src/todo';
 import { Handler } from '../aux/handler';
-
-const stringError = `String cannot represent a non string value`;
 
 describe('Validations - todo', () => {
   const handler: Handler = new Handler();
