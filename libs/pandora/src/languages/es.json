@@ -107,64 +107,42 @@
             },
             "barrier": {
                 "fatigue": {
-                    "empatheticResponse": {
-                        "title": ""
-                    },
                     "assess1": {
-                        "title": ""
+                        "title": "",
+                        "description": ""
                     },
                     "assess2": {
-                        "title": ""
+                        "title": "",
+                        "description": ""
                     },
                     "assess3": {
-                        "title": ""
-                    },
-                    "assess4": {
-                        "title": ""
-                    },
-                    "assess5": {
-                        "title": ""
-                    },
-                    "assess6": {
-                        "title": ""
-                    },
-                    "assess7": {
-                        "title": ""
-                    },
-                    "assess8": {
-                        "title": ""
-                    },
-                    "supportiveStatement": {
-                        "title": ""
+                        "title": "",
+                        "description": ""
                     },
                     "prepareMemberToCallProvider1": {
-                        "title": ""
+                        "title": "",
+                        "description": ""
                     },
                     "prepareMemberToCallProvider2": {
                         "title": "",
                         "description": ""
                     },
                     "prepareMemberToCallProvider3": {
-                        "title": ""
-                    },
-                    "prepareMemberToCallProvider4": {
                         "title": "",
                         "description": ""
                     },
-                    "influence": {
-                        "title": ""
+                    "phq9Questionnaire": {
+                        "title": "",
+                        "description": ""
                     },
-                    "memberTodo": {
-                        "title": ""
+                    "memberTodo1": {
+                        "title": "",
+                        "description": ""
                     },
-                    "prepareForMeeting": {
-                        "title": ""
+                    "memberTodo2": {
+                        "title": "",
+                        "description": ""
                     }
-                }
-            },
-            "shared": {
-                "questionnaire": {
-                    "title": ""
                 }
             }
         }

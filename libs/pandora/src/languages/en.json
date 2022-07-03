@@ -107,64 +107,42 @@
             },
             "barrier": {
                 "fatigue": {
-                    "empatheticResponse": {
-                        "title": "Empathetic response: Recovery can be exhausting. Your body is working hard. It can be stressful when you are too tired or weak to take care of yourself"
-                    },
                     "assess1": {
-                        "title": "Assess: Is the member more tired/weak than they were- is it improving or getting worse?"
+                        "title": "Assess: Is the member more tired/weak than before?",
+                        "description": "Has it been improving or getting worse? \"Recovery can be exhausting. Your body is working hard. It can be stressful when you are too tired or weak to take care of yourself. We will figure this out together\""
                     },
                     "assess2": {
-                        "title": "Assess: Has the member discussed the fatigue/ weakness with their healthcare team?"
+                        "title": "Assess: Has the member discussed the fatigue/weakness with their healthcare team?",
+                        "description": "Help prepare the member to discuss with their providers."
                     },
                     "assess3": {
-                        "title": "Assess: Does your member have the needed providers: PCP, specialists?"
-                    },
-                    "assess4": {
-                        "title": "Assess: Is the member comfortable calling their healthcare team?"
-                    },
-                    "assess5": {
-                        "title": "Assess: What is your member’s ability to communicate symptoms to their healthcare team?"
-                    },
-                    "assess6": {
-                        "title": "Assess: Does the member have people in their care circle to assist with making phone calls and taking the member to their appointments?"
-                    },
-                    "assess7": {
-                        "title": "Assess: What benefits does the member have for telehealth or home health visits?"
-                    },
-                    "assess8": {
-                        "title": "Assess: If your member is too tired or weak to travel, consider telehealth/ home health services as an option"
-                    },
-                    "supportiveStatement": {
-                        "title": "Supportive Statement: We will figure this out together"
+                        "title": "Assess: Is the member comfortable communicating symptoms to their healthcare team?",
+                        "description": "If not comfortable, help prep member to discuss with their providers"
                     },
                     "prepareMemberToCallProvider1": {
-                        "title": "Prepare your member to call the provider: Help your member make a list of symptoms to report to the healthcare team"
+                        "title": "Prep healthcare team visit: symptoms",
+                        "description": "\"Physicians prefer that you report when your fatigue or weakness is not improving or worsening so they can evaluate if there is a cause that can be treated.\" Help your member make a list of symptoms to report to the healthcare team."
                     },
                     "prepareMemberToCallProvider2": {
-                        "title": "Prepare your member to call the provider",
-                        "description": "Include contextual information: When weakness started, any procedures/ illnesses that member recently had, new medications the member may have been started on, patterns of sleep, excessive movement/ exercise, changes or stressors in the member’s life"
+                        "title": "Prep healthcare team visit: clinical context",
+                        "description": "Include contextual information: - When weakness started\n - Recent procedures and illnesses\n - New medications\n - Sleep patterns\n - Excessive movement or exercise\n - Changes or stressors in the member’s life\n"
                     },
                     "prepareMemberToCallProvider3": {
-                        "title": "Prepare your member to call the provider: If there is a caretaker involved: Include them in the preparation discussion"
+                        "title": "Prep healthcare team visit: call together (optional)",
+                        "description": "If the member is reluctant to communicate their symptoms effectively to the healthcare team, conference call with the member and the healthcare team."
                     },
-                    "prepareMemberToCallProvider4": {
-                        "title": "Prepare your member to call the provider",
-                        "description": "If the member is unable to call the healthcare team or is unable to communicate effectively, call the healthcare team with the member on the phone (conference call). This way the member can give consent for you to speak on their behalf. You are also role-modeling how to advocate and if the physician has a question for the member, they will be on the call"
+                    "phq9Questionnaire": {
+                        "title": "PHQ-9 Questionnaire",
+                        "description": "Conduct the PHQ-9 on the phone or send it to the member in the app to be filled out after the appointment"
                     },
-                    "influence": {
-                        "title": "Influence: Physicians prefer that you report when your fatigue or weakness is not improving or worsening so they can evaluate if there is a cause that can be treated"
+                    "memberTodo1": {
+                        "title": "Member To-Do: How to prepare for a doctor's appointment",
+                        "description": "Send the member the \"How to prepare for a doctor's appointment\" in the Laguna app"
                     },
-                    "memberTodo": {
-                        "title": "Member ToDo: Send the member the following audio recording: Walking meditation"
-                    },
-                    "prepareForMeeting": {
-                        "title": "Prep for the first session with the member"
+                    "memberTodo2": {
+                        "title": "Member To-Do: Communicate symptoms to the healthcare team",
+                        "description": "Add Member To-Do to stress urgency in contacting the healthcare team"
                     }
-                }
-            },
-            "shared": {
-                "questionnaire": {
-                    "title": "Fill questionnaire"
                 }
             }
         }
