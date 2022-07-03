@@ -38,7 +38,17 @@ import {
   generateOrgParams,
   generateRandomPort,
 } from '..';
-import { buildDailyLogQuestionnaire, buildLHPQuestionnaire } from '../../cmd/static';
+import {
+  buildCAGEQuestionnaire,
+  buildCSATQuestionnaire,
+  buildDailyLogQuestionnaire,
+  buildGAD7Questionnaire,
+  buildLHPQuestionnaire,
+  buildNPSQuestionnaire,
+  buildPHQ9Questionnaire,
+  buildReadinessToChangeQuestionnaire,
+  buildWHO5Questionnaire,
+} from '../../cmd/static';
 import { ActionItem, ActionItemDocument, ActionItemDto } from '../../src/actionItem';
 import { AppModule } from '../../src/app.module';
 import {
@@ -277,18 +287,7 @@ export class Handler extends BaseHandler {
     );
     this.queries = new Queries(this.client, this.defaultUserRequestHeaders);
 
-    await Promise.all([
-      this.questionnaireModel.updateOne(
-        { type: QuestionnaireType.phq9 },
-        { $set: { ...buildLHPQuestionnaire(), active: true } },
-        { upsert: true },
-      ),
-      this.questionnaireModel.updateOne(
-        { type: QuestionnaireType.gad7 },
-        { $set: { ...buildDailyLogQuestionnaire(), active: true } },
-        { upsert: true },
-      ),
-    ]);
+    await this.initQuestionnaires();
 
     const { id: orgId } = await this.mutations.createOrg({ orgParams: generateOrgParams() });
     this.cognitoService.spyOnCognitoServiceAddUser.mockResolvedValueOnce({
@@ -400,6 +399,28 @@ export class Handler extends BaseHandler {
     this.questionnaireModel = model<QuestionnaireDocument>(Questionnaire.name, QuestionnaireDto);
     this.appointmentModel = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     this.notesModel = model<NotesDocument>(Notes.name, NotesDto);
+  }
+
+  private async initQuestionnaires() {
+    return Promise.all(
+      [
+        { type: QuestionnaireType.gad7, questionnaire: buildGAD7Questionnaire() },
+        { type: QuestionnaireType.phq9, questionnaire: buildPHQ9Questionnaire() },
+        { type: QuestionnaireType.who5, questionnaire: buildWHO5Questionnaire() },
+        { type: QuestionnaireType.nps, questionnaire: buildNPSQuestionnaire() },
+        { type: QuestionnaireType.lhp, questionnaire: buildLHPQuestionnaire() },
+        { type: QuestionnaireType.csat, questionnaire: buildCSATQuestionnaire() },
+        { type: QuestionnaireType.mdl, questionnaire: buildDailyLogQuestionnaire() },
+        { type: QuestionnaireType.cage, questionnaire: buildCAGEQuestionnaire() },
+        { type: QuestionnaireType.rcqtv, questionnaire: buildReadinessToChangeQuestionnaire() },
+      ].map(async ({ type, questionnaire }) => {
+        return this.questionnaireModel.updateOne(
+          { type },
+          { $set: { ...questionnaire, active: true } },
+          { upsert: true },
+        );
+      }),
+    );
   }
 }
 

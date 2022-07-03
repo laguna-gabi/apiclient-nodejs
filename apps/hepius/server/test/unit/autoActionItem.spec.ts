@@ -82,7 +82,9 @@ describe(AutoActionItem.name, () => {
       const actionItem = mockGenerateActionItem();
       const memberId = generateId();
       const barrierId = generateId();
+      const questionnaire = mockGenerateQuestionnaire();
       spyOnServiceCreateOrSetActionItem.mockImplementation(async () => actionItem);
+      spyOnQuestionnaireServiceGetByType.mockImplementation(async () => questionnaire);
 
       await autoActionItem.handleBarrierCreated({
         memberId,

@@ -36,7 +36,7 @@ import {
 import { utcToZonedTime } from 'date-fns-tz';
 import { date, lorem } from 'faker';
 import { datatype } from 'faker/locale/zh_TW';
-import { uniqBy } from 'lodash';
+import { isNil, omitBy, uniqBy } from 'lodash';
 import { v4 } from 'uuid';
 import { lookup } from 'zipcode-to-timezone';
 import {
@@ -2922,13 +2922,30 @@ describe('Integration tests: all', () => {
       autoActionsMap.get(AutoActionMainItemType.firstAppointment).map(async (actionItem) => {
         expect(results).toEqual(
           expect.arrayContaining([
-            expect.objectContaining({
-              ...handler.internationalization.getActionItem(actionItem.autoActionItemType),
-              category: ActionItemCategory.nextSession,
-              source: ActionItemSource.jobAid,
-              memberId: member.id,
-              appointmentId: appointments[0].id,
-            }),
+            expect.objectContaining(
+              omitBy(
+                {
+                  ...handler.internationalization.getActionItem(actionItem.autoActionItemType),
+                  category: ActionItemCategory.nextSession,
+                  source: ActionItemSource.jobAid,
+                  memberId: member.id,
+                  appointmentId: appointments[0].id,
+                  relatedEntities: await getExpectedRelatedEntities(actionItem.relatedEntities),
+                  link:
+                    actionItem.link &&
+                    expect.objectContaining(
+                      omitBy(
+                        {
+                          type: actionItem.link.type,
+                          value: actionItem.link.value,
+                        },
+                        isNil,
+                      ),
+                    ),
+                },
+                isNil,
+              ),
+            ),
           ]),
         );
       });
@@ -2961,19 +2978,49 @@ describe('Integration tests: all', () => {
       autoActionsMap.get(AutoActionMainItemType.fatigue).map(async (actionItem) => {
         expect(barriersResults).toEqual(
           expect.arrayContaining([
-            expect.objectContaining({
-              ...handler.internationalization.getActionItem(actionItem.autoActionItemType),
-              category: ActionItemCategory.nextSession,
-              source: ActionItemSource.poc,
-              memberId: member.id,
-              barrierId,
-              relatedEntities: [],
-              link: actionItem.link ? { type: actionItem.link.type, value: null } : null,
-            }),
+            expect.objectContaining(
+              omitBy(
+                {
+                  ...handler.internationalization.getActionItem(actionItem.autoActionItemType),
+                  category: ActionItemCategory.nextSession,
+                  source: ActionItemSource.poc,
+                  memberId: member.id,
+                  barrierId,
+                  relatedEntities: await getExpectedRelatedEntities(actionItem.relatedEntities),
+                  link:
+                    actionItem.link &&
+                    expect.objectContaining(
+                      omitBy(
+                        {
+                          type: actionItem.link.type,
+                          value: actionItem.link.value,
+                        },
+                        isNil,
+                      ),
+                    ),
+                },
+                isNil,
+              ),
+            ),
           ]),
         );
       });
     });
+
+    const getExpectedRelatedEntities = async (relatedEntities) => {
+      const questionnaires = await handler.queries.getActiveQuestionnaires();
+      if (!relatedEntities) return [];
+      return relatedEntities.map((relatedEntity) => {
+        if (relatedEntity.type === RelatedEntityType.questionnaire) {
+          const questionnaire = questionnaires.find(
+            (qr) => qr.type === relatedEntity.questionnaireType,
+          );
+          return { type: relatedEntity.type, id: questionnaire.id };
+        } else {
+          return { type: relatedEntity.type };
+        }
+      });
+    };
   });
 
   describe('Client', () => {

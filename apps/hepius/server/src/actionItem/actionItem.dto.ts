@@ -58,7 +58,7 @@ export const nullableActionItemKeys = [
   'rejectNote',
   'category',
   'link',
-  'context',
+  'source',
 ];
 
 @InputType('ActionItemLinkInput')

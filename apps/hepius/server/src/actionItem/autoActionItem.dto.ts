@@ -19,27 +19,15 @@ export enum AutoActionAppointmentItemType {
 }
 
 export enum AutoActionBarrierFatigueItemType {
-  empatheticResponse = 'barrier.fatigue.empatheticResponse',
   assess1 = 'barrier.fatigue.assess1',
   assess2 = 'barrier.fatigue.assess2',
   assess3 = 'barrier.fatigue.assess3',
-  assess4 = 'barrier.fatigue.assess4',
-  assess5 = 'barrier.fatigue.assess5',
-  assess6 = 'barrier.fatigue.assess6',
-  assess7 = 'barrier.fatigue.assess7',
-  assess8 = 'barrier.fatigue.assess8',
-  supportiveStatement = 'barrier.fatigue.supportiveStatement',
   prepareMemberToCallProvider1 = 'barrier.fatigue.prepareMemberToCallProvider1',
   prepareMemberToCallProvider2 = 'barrier.fatigue.prepareMemberToCallProvider2',
   prepareMemberToCallProvider3 = 'barrier.fatigue.prepareMemberToCallProvider3',
-  prepareMemberToCallProvider4 = 'barrier.fatigue.prepareMemberToCallProvider4',
-  memberTodo = 'barrier.fatigue.memberTodo',
-  toDoToEncourage1 = 'barrier.fatigue.toDoToEncourage1',
-  toDoToEncourage2 = 'barrier.fatigue.toDoToEncourage2',
-  toDoToEncourage3 = 'barrier.fatigue.toDoToEncourage3',
-  toDoToEncourage4 = 'barrier.fatigue.toDoToEncourage4',
-  toDoToEncourage5 = 'barrier.fatigue.toDoToEncourage5',
-  influence = 'barrier.fatigue.influence',
+  phq9Questionnaire = 'barrier.fatigue.phq9Questionnaire',
+  memberTodo1 = 'barrier.fatigue.memberTodo1',
+  memberTodo2 = 'barrier.fatigue.memberTodo2',
 }
 
 export type AutoActionItemType = AutoActionAppointmentItemType | AutoActionBarrierFatigueItemType;
@@ -102,30 +90,26 @@ export const autoActionsMap: Map<AutoActionMainItemType, AutoActionItems> = new 
   [
     AutoActionMainItemType.fatigue,
     [
-      { autoActionItemType: AutoActionBarrierFatigueItemType.empatheticResponse },
       { autoActionItemType: AutoActionBarrierFatigueItemType.assess1 },
       { autoActionItemType: AutoActionBarrierFatigueItemType.assess2 },
       { autoActionItemType: AutoActionBarrierFatigueItemType.assess3 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.assess4 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.assess5 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.assess6 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.assess7 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.assess8 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.supportiveStatement },
       { autoActionItemType: AutoActionBarrierFatigueItemType.prepareMemberToCallProvider1 },
       { autoActionItemType: AutoActionBarrierFatigueItemType.prepareMemberToCallProvider2 },
       { autoActionItemType: AutoActionBarrierFatigueItemType.prepareMemberToCallProvider3 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.prepareMemberToCallProvider4 },
       {
-        autoActionItemType: AutoActionBarrierFatigueItemType.memberTodo,
+        autoActionItemType: AutoActionBarrierFatigueItemType.phq9Questionnaire,
+        relatedEntities: [
+          { type: RelatedEntityType.questionnaire, questionnaireType: QuestionnaireType.phq9 },
+        ],
+      },
+      {
+        autoActionItemType: AutoActionBarrierFatigueItemType.memberTodo1,
+        link: { type: ActionItemLinkType.createTodo, value: ActionTodoLabel.Explore },
+      },
+      {
+        autoActionItemType: AutoActionBarrierFatigueItemType.memberTodo2,
         link: { type: ActionItemLinkType.createTodo },
       },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.toDoToEncourage1 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.toDoToEncourage2 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.toDoToEncourage3 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.toDoToEncourage4 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.toDoToEncourage5 },
-      { autoActionItemType: AutoActionBarrierFatigueItemType.influence },
     ],
   ],
 ]);
