@@ -97,14 +97,14 @@ registerEnumType(DischargeTo, { name: 'DischargeTo' });
 export enum WarningSigns {
   confusion = 'confusion',
   difficultyBreathingOrShortnessOfBreath = 'difficulty breathing or shortness of breath',
-  // eslint-disable-next-line max-len
-  nauseaVomitingAndOrDiarrheaThatWillNotStop = 'nausea, vomiting and/or diarrhea that will not stop',
+  nauseaVomitingAndOrDiarrheaThatWillNotStop = 'nausea, vomiting and/or' +
+    ' diarrhea that will not stop',
   passingOut = 'Passing out (Syncope)',
   severeDizziness = 'severe dizziness',
   significantIncreaseOrStartOfPain = 'significant increase or start of pain',
   tempOf101FOrHigher = 'temp of 101 F or higher',
-  // eslint-disable-next-line max-len
-  woundIncisionIsWorsening = 'wound/incision is worsening (increasing redness, swelling, tenderness, warmth, change in appearance, or increased drainage)',
+  woundIncisionIsWorsening = 'wound/incision is worsening (increasing redness, swelling,' +
+    ' tenderness, warmth, change in appearance, or increased drainage)',
 }
 registerEnumType(WarningSigns, { name: 'WarningSigns' });
 
@@ -164,8 +164,8 @@ export enum DietaryName {
   fasting = 'fasting',
   lowPotassium = 'low potassium diet',
   chronicKidneyDiseaseHemodialysis = 'chronic kidney disease hemodialysis',
-  // eslint-disable-next-line max-len
-  acuteRenalFailurePeritonealDialysisRenalTransplant = 'acute renal failure peritoneal dialysis renal transplant',
+  acuteRenalFailurePeritonealDialysisRenalTransplant = 'acute renal failure peritoneal' +
+    ' dialysis renal transplant',
   lowSodium = 'low sodium diet',
   bariatricSurgery = 'bariatric surgery diet',
   easyToChew = 'easy to chew diet',
@@ -256,8 +256,8 @@ export enum ExternalAppointmentType {
   dermatology = 'dermatology',
   durableMedicalEquipment = 'durable medical equipment',
   diagnosticImaging = 'diagnostic imaging',
-  // eslint-disable-next-line max-len
-  comprehensiveMedicationTherapyManagementReview = 'comprehensive medication therapy management review',
+  comprehensiveMedicationTherapyManagementReview = 'comprehensive medication therapy' +
+    ' management review',
   dietaryNutritionalServices = 'dietary/nutritional services',
   telemedicine = 'telemedicine',
   diabeticEducation = 'diabetic education',

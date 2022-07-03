@@ -29,12 +29,7 @@ export class MemberUserRouteInterceptor implements NestInterceptor<void> {
     const { _id: clientId, roles: clientRoles } =
       GqlExecutionContext.create(context).getContext().req.user;
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const memberId: string = this.reflector.get<string[]>(
-      DecoratorType.memberId,
-      context.getHandler(),
-    );
+    const memberId = this.reflector.get(DecoratorType.memberId, context.getHandler());
     if (!memberId) {
       throw new Error(Errors.get(ErrorType.memberIdMetadataMissing));
     }

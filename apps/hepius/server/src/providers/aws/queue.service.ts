@@ -159,9 +159,10 @@ export class QueueService implements OnModuleInit {
     const memberId = normalImageKey.split('/')[2];
     const journalId = normalImageKey.split('/')[3].split('_')[0];
     const imageFormat = normalImageKey.split('/')[3].split('.')[1];
-    // eslint-disable-next-line max-len
-    const smallImageKey = `public/${StorageType.journals}/${memberId}/${journalId}_SmallImage.${imageFormat}`;
 
-    await this.storageService.createJournalImageThumbnail(normalImageKey, smallImageKey);
+    await this.storageService.createJournalImageThumbnail(
+      normalImageKey,
+      `public/${StorageType.journals}/${memberId}/${journalId}_SmallImage.${imageFormat}`,
+    );
   }
 }

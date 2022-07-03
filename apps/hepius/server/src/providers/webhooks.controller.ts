@@ -79,8 +79,9 @@ export class WebhooksController {
     } else {
       const params: IEventNotifySlack = {
         header: `*Twilio webhook*`,
-        // eslint-disable-next-line max-len
-        message: `request from an unknown client was made to Post ${apiPrefix}/${webhooks}/twilio/incoming-sms`,
+        message:
+          `request from an unknown client was made to` +
+          ` Post ${apiPrefix}/${webhooks}/twilio/incoming-sms`,
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };

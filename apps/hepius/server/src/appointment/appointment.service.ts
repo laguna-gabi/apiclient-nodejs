@@ -264,9 +264,7 @@ export class AppointmentService extends AlertService {
     }
 
     if (result.notes) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      await this.deleteNotes({ notes: result.notes._id, deletedBy: deletedByObject, hard });
+      await this.deleteNotes({ notes: result.notes, deletedBy: deletedByObject, hard });
     }
     return true;
   }

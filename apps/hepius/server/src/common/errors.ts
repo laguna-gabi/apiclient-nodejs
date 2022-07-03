@@ -289,13 +289,13 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [
     ErrorType.notificationNotAllowedNoRequestedAppointment.valueOf(),
-    // eslint-disable-next-line max-len
-    `scheduleAppointment notification can not be preformed since you do not have a requested appointment with this member`,
+    `scheduleAppointment notification can not be preformed since you do not have a requested` +
+      ` appointment with this member`,
   ],
   [
     ErrorType.notifyContentMetadataInvalid.valueOf(),
-    // eslint-disable-next-line max-len
-    `when calling notify content with contentType answerQuestionnaire questionnaireId must be provided in metadata`,
+    `when calling notify content with contentType answerQuestionnaire questionnaireId` +
+      ` must be provided in metadata`,
   ],
   [ErrorType.appointmentIdNotFound.valueOf(), `appointment ${notFoundPrefix}`],
   [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateTimeInstanceFormat}`],
@@ -472,8 +472,8 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [
     ErrorType.admissionDietaryCategoryNameMismatch.valueOf(),
-    // eslint-disable-next-line max-len
-    `dietary category and name dont match, as each category has designated names. please use getAdmissionsDietaryMatcher to get the match between category and name`,
+    `dietary category and name dont match, as each category has designated names.` +
+      ` please use getAdmissionsDietaryMatcher to get the match between category and name`,
   ],
   [ErrorType.admissionDietaryDate.valueOf(), `dietary date ${dateInstanceFormat}`],
   [ErrorType.admissionMedicationStartDate.valueOf(), `medication startDate ${dateInstanceFormat}`],
