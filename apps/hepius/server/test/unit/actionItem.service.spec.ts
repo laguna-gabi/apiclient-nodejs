@@ -46,70 +46,7 @@ describe(ActionItemService.name, () => {
     await dbDisconnect();
   });
 
-  describe('createOrSetActionItem', () => {
-    it('should create an action item', async () => {
-      const memberId = generateId();
-      const orgId = generateId();
-      await journeyService.create({ memberId, orgId });
-      const createActionItemParams = generateCreateOrSetActionItemParams({ memberId });
-      const { id } = await service.createOrSetActionItem(createActionItemParams);
-
-      expect(id).toEqual(expect.any(String));
-    });
-
-    it('should update an existing action item', async () => {
-      const memberId = generateId();
-      const orgId = generateId();
-      await journeyService.create({ memberId, orgId });
-      const createActionItemParams = generateCreateOrSetActionItemParams({ memberId });
-      const { id } = await service.createOrSetActionItem(createActionItemParams);
-
-      const updateParams = generateCreateOrSetActionItemParams({ id });
-      await service.createOrSetActionItem(updateParams);
-      const results = await service.getActionItems(memberId);
-      delete updateParams.memberId;
-      delete updateParams.appointmentId;
-
-      expect(results).toEqual(
-        expect.arrayContaining([expect.objectContaining({ ...updateParams })]),
-      );
-    });
-
-    it('should override current params, even when undefined', async () => {
-      const memberId = generateId();
-      const orgId = generateId();
-      await journeyService.create({ memberId, orgId });
-      const createActionItemParams = generateCreateOrSetActionItemParams({ memberId });
-      const { id } = await service.createOrSetActionItem(createActionItemParams);
-
-      const updateParams = generateCreateOrSetActionItemParams({ id });
-      delete updateParams.category;
-      delete updateParams.description;
-      delete updateParams.memberId;
-      delete updateParams.appointmentId;
-      await service.createOrSetActionItem(updateParams);
-      const results = await service.getActionItems(memberId);
-      expect(results).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ ...updateParams, category: undefined, description: undefined }),
-        ]),
-      );
-    });
-
-    it('should not be able to set for a non existing action item', async () => {
-      await expect(
-        service.createOrSetActionItem(generateCreateOrSetActionItemParams({ id: generateId() })),
-      ).rejects.toThrow(Errors.get(ErrorType.journeyActionItemIdNotFound));
-    });
-
-    it('should not be able to create action item for a non existing member', async () => {
-      await expect(
-        service.createOrSetActionItem(generateCreateOrSetActionItemParams()),
-      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
-    });
-  });
-
-  describe('getActionItems', () => {
+  describe('createOrSetActionItem + getActionItems', () => {
     it(`should create and get member's action items`, async () => {
       const memberId = generateId();
       const orgId = generateId();
@@ -128,8 +65,6 @@ describe(ActionItemService.name, () => {
       delete createActionItemParams1.status;
       delete createActionItemParams1.relatedEntities;
       delete createActionItemParams1.title;
-      createActionItemParams1.appointmentId = generateId();
-      createActionItemParams2.appointmentId = generateId();
 
       const { id: id1 } = await service.createOrSetActionItem(createActionItemParams1);
       const { id: id2 } = await service.createOrSetActionItem(createActionItemParams2);
@@ -162,26 +97,13 @@ describe(ActionItemService.name, () => {
       );
     });
 
-    it(`should override action item with new params`, async () => {
+    it(`should override action item with new params, even when undefined`, async () => {
       const memberId = generateId();
       const orgId = generateId();
       await journeyService.create({ memberId, orgId });
       // create
       const createActionItemParams1 = generateCreateOrSetActionItemParams({ memberId });
-      createActionItemParams1.appointmentId = generateId();
       const { id } = await service.createOrSetActionItem(createActionItemParams1);
-
-      const resultsBefore = await service.getActionItems(memberId);
-      expect(resultsBefore).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...createActionItemParams1,
-            id,
-            memberId: new Types.ObjectId(memberId),
-            appointmentId: new Types.ObjectId(createActionItemParams1.appointmentId),
-          }),
-        ]),
-      );
 
       // set
       const createActionItemParams2 = generateCreateOrSetActionItemParams({
@@ -202,7 +124,7 @@ describe(ActionItemService.name, () => {
             ...createActionItemParams2,
             id,
             memberId: new Types.ObjectId(memberId),
-            appointmentId: new Types.ObjectId(createActionItemParams1.appointmentId),
+            appointmentId: new Types.ObjectId(createActionItemParams2.appointmentId),
             description: undefined,
             rejectNote: undefined,
             category: undefined,
@@ -212,13 +134,25 @@ describe(ActionItemService.name, () => {
       );
     });
 
-    it('should return empty array on non existing action items per member', async () => {
-      const memberId = generateId();
-      const orgId = generateId();
-      await journeyService.create({ memberId, orgId });
-      const results = await service.getActionItems(memberId);
-      expect(results.length).toEqual(0);
+    it('should not be able to set for a non existing action item', async () => {
+      await expect(
+        service.createOrSetActionItem(generateCreateOrSetActionItemParams({ id: generateId() })),
+      ).rejects.toThrow(Errors.get(ErrorType.journeyActionItemIdNotFound));
     });
+
+    it('should not be able to create action item for a non existing member', async () => {
+      await expect(
+        service.createOrSetActionItem(generateCreateOrSetActionItemParams()),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+    });
+  });
+
+  it('should return empty array on non existing action items per member', async () => {
+    const memberId = generateId();
+    const orgId = generateId();
+    await journeyService.create({ memberId, orgId });
+    const results = await service.getActionItems(memberId);
+    expect(results.length).toEqual(0);
   });
 
   describe('handleUpdateRelatedEntityActionItem', () => {
@@ -260,14 +194,6 @@ describe(ActionItemService.name, () => {
           }),
         ]),
       );
-    });
-
-    it('should return empty array on non existing action items per member', async () => {
-      const memberId = generateId();
-      const orgId = generateId();
-      await journeyService.create({ memberId, orgId });
-      const results = await service.getActionItems(memberId);
-      expect(results.length).toEqual(0);
     });
   });
 });

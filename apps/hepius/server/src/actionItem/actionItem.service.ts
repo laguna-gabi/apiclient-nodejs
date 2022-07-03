@@ -50,9 +50,13 @@ export class ActionItemService extends AlertService {
     createOrSetActionItemParams: CreateOrSetActionItemParams,
   ): Promise<Identifier> {
     const { id, memberId, appointmentId, barrierId, ...params } = createOrSetActionItemParams;
+    const appointmentIdObject = appointmentId
+      ? { appointmentId: new Types.ObjectId(appointmentId) }
+      : {};
 
     const setParams = {
       ...params,
+      ...appointmentIdObject,
       // set default params
       status: params.status || ActionItemStatus.active,
       priority: params.priority || ActionItemPriority.normal,
@@ -85,15 +89,11 @@ export class ActionItemService extends AlertService {
     } else {
       // create a new action item
       const { id: journeyId } = await this.journeyService.getRecent(memberId);
-      const appointmentIdObject = appointmentId
-        ? { appointmentId: new Types.ObjectId(appointmentId) }
-        : {};
       const barrierIdObject = barrierId ? { barrierId: new Types.ObjectId(barrierId) } : {};
       const createParams = {
         ...setParams,
         memberId: new Types.ObjectId(memberId),
         journeyId: new Types.ObjectId(journeyId),
-        ...appointmentIdObject,
         ...barrierIdObject,
       };
       result = await this.actionItemModel.create(createParams);

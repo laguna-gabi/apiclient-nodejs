@@ -124,8 +124,10 @@ export class CreateOrSetActionItemParams {
   @Field(() => ActionItemLink, { nullable: true })
   link?: ActionItemLink;
 
-  //internal fields
+  @Field(() => String, { nullable: true })
   appointmentId?: string;
+
+  //internal fields
   barrierId?: string;
 }
 
