@@ -3,6 +3,7 @@ import { internet, lorem } from 'faker';
 import { sign } from 'jsonwebtoken';
 import { model } from 'mongoose';
 import {
+  buildDailyLogQuestionnaire,
   buildGAD7Questionnaire,
   buildLHPQuestionnaire,
   buildNPSQuestionnaire,
@@ -74,15 +75,12 @@ export async function seed() {
       '---------- load assessment templates (questionnaires) ----------\n' +
       '----------------------------------------------------------------',
   );
-  // GAD-7
   await base.questionnaireService.createQuestionnaire(buildGAD7Questionnaire());
-  // PHQ-9
   await base.questionnaireService.createQuestionnaire(buildPHQ9Questionnaire());
-  // WHO-5
   await base.questionnaireService.createQuestionnaire(buildWHO5Questionnaire());
-  // NPS
   await base.questionnaireService.createQuestionnaire(buildNPSQuestionnaire());
   await base.questionnaireService.createQuestionnaire(buildLHPQuestionnaire());
+  await base.questionnaireService.createQuestionnaire(buildDailyLogQuestionnaire());
 
   console.debug(
     '\n----------------------------------------------------------------\n' +

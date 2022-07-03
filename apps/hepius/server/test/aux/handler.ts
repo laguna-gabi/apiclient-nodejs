@@ -38,7 +38,7 @@ import {
   generateOrgParams,
   generateRandomPort,
 } from '..';
-import { buildGAD7Questionnaire, buildPHQ9Questionnaire } from '../../cmd/static';
+import { buildDailyLogQuestionnaire, buildLHPQuestionnaire } from '../../cmd/static';
 import { ActionItem, ActionItemDocument, ActionItemDto } from '../../src/actionItem';
 import { AppModule } from '../../src/app.module';
 import {
@@ -280,12 +280,12 @@ export class Handler extends BaseHandler {
     await Promise.all([
       this.questionnaireModel.updateOne(
         { type: QuestionnaireType.phq9 },
-        { $set: { ...buildPHQ9Questionnaire(), active: true } },
+        { $set: { ...buildLHPQuestionnaire(), active: true } },
         { upsert: true },
       ),
       this.questionnaireModel.updateOne(
         { type: QuestionnaireType.gad7 },
-        { $set: { ...buildGAD7Questionnaire(), active: true } },
+        { $set: { ...buildDailyLogQuestionnaire(), active: true } },
         { upsert: true },
       ),
     ]);

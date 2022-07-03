@@ -1,22 +1,21 @@
 import { RelatedEntity, RelatedEntityType } from '../common';
 import { QuestionnaireType } from '../questionnaire';
+import { ActionTodoLabel } from '../todo';
 import { ActionItemLink, ActionItemLinkType } from './actionItem.dto';
 
 /**************************************************************************************************
  ******************* fetching strings, aligning with pandora: languages/en.json *******************
  *************************************************************************************************/
 export enum AutoActionAppointmentItemType {
+  scheduleWelcomeCall = 'appointment.scheduleWelcomeCall',
   introduceYourself = 'appointment.introduceYourself',
-  introduceLagunaHealth = 'appointment.introduceLagunaHealth',
-  caregivers = 'appointment.caregivers',
   downloadApp = 'appointment.downloadApp',
-  conversationalAssessment = 'appointment.conversationalAssessment',
-  questionnaire = 'appointment.questionnaire',
-  careInformation = 'appointment.careInformation',
-  homePreparation = 'appointment.homePreparation',
+  clinicalStatus = 'appointment.clinicalStatus',
+  pillarsOfRecovery = 'appointment.pillarsOfRecovery',
+  PersonaQuestionnaire = 'appointment.PersonaQuestionnaire',
+  caregivers = 'appointment.caregivers',
   poc = 'appointment.poc',
-  scheduleNextAppointment = 'appointment.scheduleNextAppointment',
-  documentation = 'appointment.documentation',
+  homePreparation = 'appointment.homePreparation',
 }
 
 export enum AutoActionBarrierFatigueItemType {
@@ -73,28 +72,31 @@ export const autoActionsMap: Map<AutoActionMainItemType, AutoActionItems> = new 
   [
     AutoActionMainItemType.firstAppointment,
     [
+      { autoActionItemType: AutoActionAppointmentItemType.scheduleWelcomeCall },
       { autoActionItemType: AutoActionAppointmentItemType.introduceYourself },
-      { autoActionItemType: AutoActionAppointmentItemType.introduceLagunaHealth },
+      { autoActionItemType: AutoActionAppointmentItemType.downloadApp },
+      { autoActionItemType: AutoActionAppointmentItemType.clinicalStatus },
+      {
+        autoActionItemType: AutoActionAppointmentItemType.pillarsOfRecovery,
+        relatedEntities: [
+          { type: RelatedEntityType.questionnaire, questionnaireType: QuestionnaireType.mdl },
+        ],
+      },
+      {
+        autoActionItemType: AutoActionAppointmentItemType.PersonaQuestionnaire,
+        relatedEntities: [
+          { type: RelatedEntityType.questionnaire, questionnaireType: QuestionnaireType.lhp },
+        ],
+      },
       {
         autoActionItemType: AutoActionAppointmentItemType.caregivers,
         link: { type: ActionItemLinkType.createCaregiver },
       },
-      { autoActionItemType: AutoActionAppointmentItemType.downloadApp },
-      { autoActionItemType: AutoActionAppointmentItemType.conversationalAssessment },
+      { autoActionItemType: AutoActionAppointmentItemType.poc },
       {
-        autoActionItemType: AutoActionAppointmentItemType.questionnaire,
-        relatedEntities: [
-          { type: RelatedEntityType.questionnaire, questionnaireType: QuestionnaireType.gad7 },
-          { type: RelatedEntityType.questionnaire, questionnaireType: QuestionnaireType.phq9 },
-        ],
+        autoActionItemType: AutoActionAppointmentItemType.homePreparation,
+        link: { type: ActionItemLinkType.createTodo, value: ActionTodoLabel.Explore },
       },
-      { autoActionItemType: AutoActionAppointmentItemType.careInformation },
-      { autoActionItemType: AutoActionAppointmentItemType.homePreparation },
-      {
-        autoActionItemType: AutoActionAppointmentItemType.poc,
-      },
-      { autoActionItemType: AutoActionAppointmentItemType.scheduleNextAppointment },
-      { autoActionItemType: AutoActionAppointmentItemType.documentation },
     ],
   ],
   [
