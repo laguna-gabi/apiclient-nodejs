@@ -72,23 +72,11 @@
                     "title": "",
                     "description": ""
                 },
-                "introduceLagunaHealth": {
-                    "title": "",
-                    "description": ""
-                },
                 "caregivers": {
                     "title": "",
                     "description": ""
                 },
                 "downloadApp": {
-                    "title": "",
-                    "description": ""
-                },
-                "conversationalAssessment": {
-                    "title": "",
-                    "description": ""
-                },
-                "careInformation": {
                     "title": "",
                     "description": ""
                 },
@@ -100,11 +88,19 @@
                     "title": "",
                     "description": ""
                 },
-                "scheduleNextAppointment": {
+                "scheduleWelcomeCall": {
                     "title": "",
                     "description": ""
                 },
-                "documentation": {
+                "clinicalStatus": {
+                    "title": "",
+                    "description": ""
+                },
+                "pillarsOfRecovery": {
+                    "title": "",
+                    "description": ""
+                },
+                "PersonaQuestionnaire": {
                     "title": "",
                     "description": ""
                 }

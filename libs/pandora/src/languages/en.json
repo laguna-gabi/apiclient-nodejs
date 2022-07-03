@@ -69,44 +69,40 @@
         "actionItems": {
             "appointment": {
                 "introduceYourself": {
-                    "title": "Introduce yourself",
-                    "description": "My name is Jeff, I'm recovery coach from Laguna Health. I've been working in Laguna Health for one year now, and I have 25 years of experience as a licensed psychologist."
-                },
-                "introduceLagunaHealth": {
-                    "title": "Introduce Laguna Health",
-                    "description": "Laguna Health partnered with Anthem inc to support you on your recovery journey. The reason for my call today is that we have information that your recently got admitted for unstable Angina."
+                    "title": "Engage and build trust through empathy",
+                    "description": "Hello, my name is Jeff. I am a Laguna Coach living in the Catskills mountains. My role is to collaborate with you in your recovery journey. I can support you in a personalized way that works best for you. This may include education about health issues, helping you to navigate a complex health system, and overcoming any barriers to you getting care."
                 },
                 "caregivers": {
-                    "title": "Ask about member's caregivers",
-                    "description": "Obtain their contact information and get consent to speak to them."
+                    "title": "Ask about member's care circle",
+                    "description": " - Tell me about the people in your life.\n - How is your family dealing with your hospitalization? Ask about family and pets. Obtain care circle contact information and ask the member for consent if you could reach out to them.\n"
                 },
                 "downloadApp": {
-                    "title": "Guide the member how to download the mobile app and register",
-                    "description": "Discuss app features and how it will help elements of their recovery."
-                },
-                "conversationalAssessment": {
-                    "title": "Begin conversational assessment",
-                    "description": "Some example questions for first call:\n - \"How are you doing today?\"\n - \"What brought you to in the hospital?\"."
-                },
-                "careInformation": {
-                    "title": "Gather care information",
-                    "description": "Are you in pain? When do you expect to be discharged? Where will you be going?"
+                    "title": "Guide the member in downloading the mobile app",
+                    "description": "The Laguna app guides you through your at-home recovery journey. It's available on Apple and Android, you can use the app to communicate with me by chat, video or call. It offers educational content, daily logs, and other tools to help you recover faster and avoid preventable readmissions."
                 },
                 "homePreparation": {
-                    "title": "Home preparation",
-                    "description": "Do you have what you need at home for your recovery? Examples: Food, medication (someone to pick it up), modifications to home- including safety?"
+                    "title": "Send home preparation explore articles",
+                    "description": "Do you have what you need at home for your recovery? Explore articles for the member to review: - After Discharge Pt. 1: Preparing your home.\n - After Discharge Pt. 2: Medication and Nutrition.\n - After Discharge Pt. 3: Support Team (Care Circle + Other Caregivers).\n"
                 },
                 "poc": {
-                    "title": "Create and implement POCs",
-                    "description": "If barriers are identified: Include \"Prepare Home\"."
+                    "title": "Create personalized POCs",
+                    "description": "Intervene and influence. If barriers are identified, create barriers and plans of care (POCs) collaboratively with the member."
                 },
-                "scheduleNextAppointment": {
-                    "title": "Schedule next appointment",
-                    "description": "Set up an appointment in no more than 2 business days."
+                "scheduleWelcomeCall": {
+                    "title": "Schedule welcome call",
+                    "description": "Set up an appointment introducing yourself within 2 days."
                 },
-                "documentation": {
-                    "title": "Documentation",
-                    "description": "Assessments, general notes, caregiver information."
+                "clinicalStatus": {
+                    "title": "Assess inpatient clinical status",
+                    "description": " - How are you doing today?\n - What brought you to in the hospital?\n - How is your treatment going?\n - Do you know when you will leave the hospital?\n"
+                },
+                "pillarsOfRecovery": {
+                    "title": "Assess the 6 pillars of recovery in the app",
+                    "description": "Evaluate the member on the six pillars (Pain, Mobility, Sleep, Appetite, Energy, Mood)."
+                },
+                "PersonaQuestionnaire": {
+                    "title": "Persona questionnaire",
+                    "description": "Assess the member's skills and motivation levels."
                 }
             },
             "barrier": {
