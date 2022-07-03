@@ -25,8 +25,8 @@ export class UserSlotSummary extends Identifier {
   @Field(() => String)
   avatar: string;
 
-  @Field(() => String)
-  description: string;
+  @Field(() => String, { nullable: true })
+  description?: string;
 }
 
 @ObjectType()
