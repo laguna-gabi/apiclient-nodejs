@@ -37,8 +37,8 @@ export class AppointmentSlotSummary extends Identifier {
   @Field(() => Date)
   start: Date;
 
-  @Field(() => AppointmentMethod)
-  method: AppointmentMethod;
+  @Field(() => AppointmentMethod, { nullable: true })
+  method?: AppointmentMethod;
 
   @Field(() => String)
   memberId: Types.ObjectId;
