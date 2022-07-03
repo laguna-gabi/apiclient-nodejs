@@ -101,14 +101,7 @@ export class CareResolver {
   ): Promise<Barrier> {
     const { id: journeyId } = await this.journeyService.getRecent(createBarrierParams.memberId);
     const barrier = await this.careService.createBarrier({ ...createBarrierParams, journeyId });
-    const barrierType = await this.careService.getBarrierType(barrier.type.toString());
-    const params: IEventOnBarrierCreated = {
-      memberId: createBarrierParams.memberId,
-      barrierId: barrier.id,
-      barrierDescription: barrierType.description,
-    };
-    this.eventEmitter.emit(EventType.onBarrierCreated, params);
-
+    await this.generateNewBarrierEvent(barrier);
     return barrier;
   }
 
@@ -209,7 +202,7 @@ export class CareResolver {
     await Promise.all(
       barriers.map(async (barrier) => {
         const { carePlans, ...barrierParams } = barrier;
-        const { id: barrierId } = await this.careService.createBarrier({
+        const barrierResult = await this.careService.createBarrier({
           ...barrierParams,
           memberId,
           journeyId,
@@ -221,13 +214,25 @@ export class CareResolver {
               ...carePlan,
               memberId,
               journeyId,
-              barrierId,
+              barrierId: barrierResult.id,
             });
             submittedCarePlans.push(carePlanId);
+            await this.generateNewBarrierEvent(barrierResult);
           }),
         );
       }),
     );
     return { ids: submittedCarePlans };
+  }
+
+  private async generateNewBarrierEvent(barrier: Barrier) {
+    const barrierType = await this.careService.getBarrierType(barrier.type.toString());
+    const params: IEventOnBarrierCreated = {
+      memberId: barrier.memberId.toString(),
+      barrierId: barrier.id,
+      barrierDescription: barrierType.description,
+    };
+
+    this.eventEmitter.emit(EventType.onBarrierCreated, params);
   }
 }

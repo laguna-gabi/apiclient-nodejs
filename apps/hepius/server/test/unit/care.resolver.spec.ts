@@ -230,19 +230,18 @@ describe('CareResolver', () => {
     let spyOnServiceCreateBarrier;
     let spyOnServiceCreateRedFlag;
     let spyOnJourneyServiceGetRecent;
+    let spyOnServiceGetBarrierType;
 
     beforeEach(() => {
       spyOnServiceCreateCarePlan = jest.spyOn(service, 'createCarePlan');
       spyOnServiceCreateRedFlag = jest.spyOn(service, 'createRedFlag');
       spyOnServiceCreateBarrier = jest.spyOn(service, 'createBarrier');
       spyOnJourneyServiceGetRecent = jest.spyOn(journeyService, 'getRecent');
+      spyOnServiceGetBarrierType = jest.spyOn(service, 'getBarrierType');
       spyOnServiceCreateRedFlag.mockImplementation(async () => {
         return { id: generateId() };
       });
       spyOnServiceCreateCarePlan.mockImplementation(async () => {
-        return { id: generateId() };
-      });
-      spyOnServiceCreateBarrier.mockImplementation(async () => {
         return { id: generateId() };
       });
     });
@@ -271,6 +270,13 @@ describe('CareResolver', () => {
       spyOnJourneyServiceGetRecent.mockReturnValueOnce({ id: journeyId });
       const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
 
+      const type = generateId();
+      spyOnServiceCreateBarrier.mockReturnValue({
+        id: generateId(),
+        ...generateCreateBarrierParams({ type }),
+      });
+      spyOnServiceGetBarrierType.mockReturnValue({ type });
+
       const result = await resolver.submitCareWizard(wizardParams);
       expect(result.ids.length).toEqual(3);
 
@@ -290,6 +296,7 @@ describe('CareResolver', () => {
           redFlagId: expect.any(String),
         });
       }
+      spyOnServiceGetBarrierType.mockReturnValue({ type: generateId() });
 
       // test care plans
       expect(spyOnServiceCreateCarePlan).toHaveBeenCalledTimes(3);
