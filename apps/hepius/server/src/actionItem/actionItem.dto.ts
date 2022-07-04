@@ -48,6 +48,7 @@ export enum ActionItemLinkType {
   externalLink = 'externalLink',
   createCaregiver = 'createCaregiver',
   sessionsTab = 'sessionsTab',
+  sendSMS = 'sendSMS',
 }
 
 registerEnumType(ActionItemLinkType, { name: 'ActionItemLinkType' });
