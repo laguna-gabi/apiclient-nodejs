@@ -1,15 +1,25 @@
 import { generateId, generateObjectId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { format, sub } from 'date-fns';
 import { lorem } from 'faker';
 import { Model, Types, model } from 'mongoose';
 import {
   buildGAD7Questionnaire,
   buildLHPQuestionnaire,
   buildReadinessToChangeQuestionnaire,
+  buildSDOHQuestionnaire,
   buildWHO5Questionnaire,
 } from '../../cmd/static';
-import { ErrorType, Errors, EventType, ItemType, LoggerService } from '../../src/common';
+import {
+  ErrorType,
+  Errors,
+  EventType,
+  ItemType,
+  LoggerService,
+  momentFormats,
+} from '../../src/common';
+import { MemberModule, MemberService } from '../../src/member';
 import {
   AlertConditionType,
   Answer,
@@ -33,6 +43,7 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  generateCreateMemberParams,
   generateCreateQuestionnaireParams,
   mockGenerateQuestionnaire,
   mockGenerateQuestionnaireItem,
@@ -41,6 +52,7 @@ import {
 describe('QuestionnaireService', () => {
   let module: TestingModule;
   let service: QuestionnaireService;
+  let memberService: MemberService;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter: jest.SpyInstance;
   let questionnaireModel: Model<QuestionnaireDocument>;
@@ -53,10 +65,11 @@ describe('QuestionnaireService', () => {
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      imports: defaultModules().concat(QuestionnaireModule),
+      imports: defaultModules().concat(QuestionnaireModule, MemberModule),
     }).compile();
-
+    await module.init();
     service = module.get<QuestionnaireService>(QuestionnaireService);
+    memberService = module.get<MemberService>(MemberService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
@@ -666,6 +679,23 @@ describe('QuestionnaireService', () => {
         `answer for 'choice' type question with invalid value code: 'q1', value: '5`,
       ],
       [
+        'invalid type multiChoice answer - some values not in option list',
+        [{ code: 'q1', value: '4,5' }],
+        mockGenerateQuestionnaire({
+          items: [
+            mockGenerateQuestionnaireItem({
+              type: ItemType.multiChoice,
+              code: 'q1',
+              options: [
+                { label: lorem.words(3), value: 3 },
+                { label: lorem.words(3), value: 4 },
+              ],
+            }),
+          ],
+        }),
+        `answer for 'multiChoice' type question with invalid value code: 'q1', value: '5`,
+      ],
+      [
         'invalid type range answer - not in range',
         [{ code: 'q1', value: '5' }],
         mockGenerateQuestionnaire({
@@ -1094,6 +1124,113 @@ describe('QuestionnaireService', () => {
       const submitResponse = {
         questionnaireId: rcqtv.id.toString(),
         memberId: generateId(),
+        journeyId: generateId(),
+        answers,
+      };
+
+      const qr = await service.submitQuestionnaireResponse(submitResponse);
+      expect(qr.result).toEqual(result);
+    });
+  });
+
+  describe(QuestionnaireType.sdoh, () => {
+    let sdoh: Questionnaire;
+    let memberUnder18Id;
+    let memberOver18Id;
+
+    beforeAll(async () => {
+      sdoh = await service.createQuestionnaire(buildSDOHQuestionnaire());
+
+      // Member with age under 18
+      ({ id: memberUnder18Id } = await memberService.insert(
+        {
+          ...generateCreateMemberParams({
+            orgId: generateId(),
+            dateOfBirth: format(sub(Date.now(), { years: 15 }), momentFormats.date),
+          }),
+          phoneType: 'mobile',
+        },
+        generateObjectId(),
+      ));
+
+      // Member with age over/equal 18
+      ({ id: memberOver18Id } = await memberService.insert(
+        {
+          ...generateCreateMemberParams({
+            orgId: generateId(),
+            dateOfBirth: format(sub(Date.now(), { years: 19 }), momentFormats.date),
+          }),
+          phoneType: 'mobile',
+        },
+        generateObjectId(),
+      ));
+    });
+
+    it.each([
+      [
+        'correct `Physical Activity` score calculation for an adult member - active (40*4 > 150)',
+        true, // <- member over 18 y.o
+        [
+          { code: 'q10', value: '4' }, // Physical Activity - Days per week
+          { code: 'q11', value: '40' }, // Physical Activity - Minutes per day
+        ] as Answer[],
+        {
+          score: 0,
+        } as QuestionnaireResponseResult,
+      ],
+      [
+        // eslint-disable-next-line max-len
+        'correct `Physical Activity` score calculation for an adult member - not active (30*4 < 150)',
+        true, // <- member over 18 y.o
+        [
+          { code: 'q10', value: '4' }, // Physical Activity - Days per week
+          { code: 'q11', value: '30' }, // Physical Activity - Minutes per day
+        ] as Answer[],
+        {
+          score: 1,
+        } as QuestionnaireResponseResult,
+      ],
+      [
+        'correct `Physical Activity` score calculation for a teenage member - not active',
+        false, // <- member NOT over 18 y.o
+        [
+          { code: 'q10', value: '4' }, // Physical Activity - Days per week
+          { code: 'q11', value: '40' }, // Physical Activity - Minutes per day
+        ] as Answer[],
+        {
+          score: 1,
+        } as QuestionnaireResponseResult,
+      ],
+      [
+        'correct `Physical Activity` score calculation for a teenage member - active',
+        false, // <- member NOT over 18 y.o
+        [
+          { code: 'q10', value: '4' }, // Physical Activity - Days per week
+          { code: 'q11', value: '60' }, // Physical Activity - Minutes per day
+        ] as Answer[],
+        {
+          score: 0,
+        } as QuestionnaireResponseResult,
+      ],
+      [
+        // eslint-disable-next-line max-len
+        'score +1 for `Physical Activity` (member over 18 y.o) + 2 flagged questions',
+        true, // <- member over 18 y.o
+        [
+          { code: 'q10', value: '4' }, // Physical Activity - Days per week
+          { code: 'q11', value: '30' }, // Physical Activity - Minutes per day (total if 4*30=120 is under threshold: +1)
+          { code: 'q2', value: '3' }, // option `3` in `q2` is flagged (+1)
+          { code: 'q3', value: '1' }, // option `1` in `q3` is NOT flagged (+0)
+          { code: 'q4', value: '3' }, // `q4` is a score-by-value (+3)
+        ] as Answer[],
+        {
+          score: 5,
+        } as QuestionnaireResponseResult,
+      ],
+    ])('%s', async (_, over18, answers, result) => {
+      const submitResponse = {
+        questionnaireId: sdoh.id.toString(),
+        memberId: over18 ? memberOver18Id : memberUnder18Id,
         journeyId: generateId(),
         answers,
       };

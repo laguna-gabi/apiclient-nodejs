@@ -36,6 +36,7 @@ export enum QuestionnaireType {
   mdl = 'mdl',
   cage = 'cage',
   rcqtv = 'rcqtv',
+  sdoh = 'sdoh',
 }
 
 export const QuestionnaireAlerts: Map<QuestionnaireType, string> = new Map([
@@ -55,6 +56,7 @@ registerEnumType(QuestionnaireType, {
     mdl: { description: 'Member Daily Log' },
     cage: { description: 'Cut, Annoyed, Guilty, and Eye' },
     rcqtv: { description: 'Readiness to Change Questionnaire - Treatment Version' },
+    sdoh: { description: 'Social Determinants of Health' },
   },
 });
 

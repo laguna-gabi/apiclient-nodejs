@@ -6,7 +6,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { queryDaysLimit } from 'config';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
-import { Alert, AlertType, DismissedAlert, DismissedAlertDocument } from '../../src/common';
+import {
+  Alert,
+  AlertType,
+  CommandType,
+  DismissedAlert,
+  DismissedAlertDocument,
+  IEventMember,
+} from '../../src/common';
 import {
   AlertService,
   DbErrors,
@@ -411,6 +418,11 @@ export class MemberService extends AlertService {
     await this.memberModel.findByIdAndUpdate(new Types.ObjectId(params.memberId), {
       $set: { healthPersona: params.healthPersona },
     });
+  }
+
+  @OnEvent(CommandType.getMember, { async: false })
+  async handleGetMember(params: IEventMember): Promise<Member> {
+    return await this.memberModel.findById(params.memberId);
   }
 
   /*************************************************************************************************

@@ -434,7 +434,10 @@ const questionnaireItemsDuplicateCodeValidation = (
 };
 
 const questionnaireItemsMissingOptionsValidation = (items: ItemInterface[]): boolean => {
-  return !items.find((item) => item.type === ItemType.choice && !item.options);
+  return !items.find(
+    (item) =>
+      (item.type === ItemType.choice || item.type === ItemType.multiChoice) && !item.options,
+  );
 };
 
 const questionnaireRangeItemsValidation = (items: ItemInterface[]): boolean => {

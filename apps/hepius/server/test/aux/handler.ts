@@ -47,6 +47,7 @@ import {
   buildNPSQuestionnaire,
   buildPHQ9Questionnaire,
   buildReadinessToChangeQuestionnaire,
+  buildSDOHQuestionnaire,
   buildWHO5Questionnaire,
 } from '../../cmd/static';
 import { ActionItem, ActionItemDocument, ActionItemDto } from '../../src/actionItem';
@@ -413,6 +414,7 @@ export class Handler extends BaseHandler {
         { type: QuestionnaireType.mdl, questionnaire: buildDailyLogQuestionnaire() },
         { type: QuestionnaireType.cage, questionnaire: buildCAGEQuestionnaire() },
         { type: QuestionnaireType.rcqtv, questionnaire: buildReadinessToChangeQuestionnaire() },
+        { type: QuestionnaireType.sdoh, questionnaire: buildSDOHQuestionnaire() },
       ].map(async ({ type, questionnaire }) => {
         return this.questionnaireModel.updateOne(
           { type },

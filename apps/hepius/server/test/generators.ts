@@ -1220,7 +1220,7 @@ export const mockGenerateQuestionnaireItem = ({
   type = ItemType[randomEnum(ItemType)],
   order = 1,
   required = true,
-  options = type === ItemType.choice
+  options = [ItemType.choice, ItemType.multiChoice].includes(type)
     ? [
         { label: lorem.words(3), value: 0 },
         { label: lorem.words(3), value: 1 },

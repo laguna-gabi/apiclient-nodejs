@@ -442,3 +442,341 @@ export const buildReadinessToChangeQuestionnaire = (): CreateQuestionnaireParams
     buildResult: true,
   };
 };
+
+export const buildSDOHQuestionnaire = (): CreateQuestionnaireParams => {
+  const safetyGroupOptions = [
+    { label: 'Never', value: 1 },
+    { label: 'Rarely', value: 2 },
+    { label: 'Sometimes', value: 3 },
+    { label: 'Fairly often', value: 4 },
+    { label: 'Frequently', value: 5 },
+  ];
+  const substanceAbuseOptions = [
+    { label: 'Never', value: 1 },
+    { label: 'Once or Twice', value: 2 },
+    { label: 'Monthly', value: 3 },
+    { label: 'Weekly', value: 4 },
+    { label: 'Daily or Almost Daily', value: 5 },
+  ];
+  const yesNoOptions = [
+    { label: 'Yes', value: 0 },
+    { label: 'No', value: 1 },
+  ];
+
+  return {
+    name: `Social Determinants of Health`,
+    shortName: upperCase(QuestionnaireType.sdoh),
+    type: QuestionnaireType.sdoh,
+    items: [
+      {
+        type: ItemType.group,
+        code: 'LivingSituation',
+        label: 'Living Situation',
+        order: 1,
+        items: [
+          {
+            type: ItemType.choice,
+            code: 'q1',
+            label: 'What is your living situation today?',
+            options: [
+              { label: 'I have a steady place to live', value: 0 },
+              {
+                label:
+                  'I have a place to live today, but I am worried about losing it in the future',
+                value: 1,
+              },
+              {
+                label:
+                  'I do not have a steady place to live (I am temporarily staying with others, ' +
+                  'in a hotel, in a shelter, living outside on the street, on a beach, in a car, ' +
+                  'abandoned building, bus or train station, or in a park',
+                value: 2,
+              },
+            ],
+            required: false,
+            order: 2,
+          },
+          {
+            type: ItemType.multiChoice,
+            code: 'q2',
+            label:
+              'Think about the place you live. Do you have problems with ' +
+              'any of the following? CHOOSE ALL THAT APPLY',
+            options: [
+              { label: 'Pests such as bugs, ants, or mice', value: 0 },
+              { label: 'Mold', value: 1 },
+              { label: 'Lead paint or pipes', value: 2 },
+              { label: 'Lack of heat', value: 3 },
+              { label: 'Oven or stove not working', value: 4 },
+              { label: 'Smoke detectors missing or not working', value: 5 },
+              { label: 'Water leaks', value: 6 },
+              { label: 'None of the above', value: 7 },
+            ],
+            required: false,
+            order: 3,
+          },
+        ],
+        required: false,
+      },
+      {
+        type: ItemType.group,
+        code: 'Transportation',
+        label: 'Transportation',
+        order: 4,
+        items: [
+          {
+            type: ItemType.choice,
+            code: 'q3',
+            label:
+              'In the past 12 months, has lack of reliable transportation kept you from medical ' +
+              'appointments, meetings, work or from getting things needed for daily living?',
+            options: yesNoOptions,
+            required: false,
+            order: 5,
+          },
+        ],
+        required: false,
+      },
+      {
+        type: ItemType.group,
+        code: 'Safety',
+        label: 'Safety',
+        order: 6,
+        items: [
+          {
+            type: ItemType.choice,
+            code: 'q4',
+            label: 'How often does anyone, including family and friends, physically hurt you?',
+            options: safetyGroupOptions,
+            required: false,
+            order: 7,
+          },
+          {
+            type: ItemType.choice,
+            code: 'q5',
+            label:
+              'How often does anyone, including family and friends, insult or talk down to you?',
+            options: safetyGroupOptions,
+            required: false,
+            order: 8,
+          },
+          {
+            type: ItemType.choice,
+            code: 'q6',
+            label: 'How often does anyone, including family and friends, threaten you with harm?',
+            options: safetyGroupOptions,
+            required: false,
+            order: 9,
+          },
+          {
+            type: ItemType.choice,
+            code: 'q7',
+            label: 'How often does anyone, including family and friends, scream or curse at you?',
+            options: safetyGroupOptions,
+            required: false,
+            order: 10,
+          },
+        ],
+        required: false,
+      },
+      {
+        type: ItemType.group,
+        code: 'FamilyAndCommunitySupport',
+        label: 'Family and Community Support',
+        order: 11,
+        items: [
+          {
+            type: ItemType.choice,
+            code: 'q8',
+            label:
+              'If for any reason you need help with day-to-day activities such as bathing, ' +
+              'preparing meals, shopping, managing finances, etc., do you get the help you need?',
+            options: [
+              { label: 'I don’t need any help', value: 0 },
+              { label: 'I get all the help I need', value: 1 },
+              { label: 'I could use a little more help', value: 2 },
+              { label: 'I need a lot more help', value: 3 },
+            ],
+            required: false,
+            order: 12,
+          },
+          {
+            type: ItemType.choice,
+            code: 'q9',
+            label: 'How often do you feel lonely or isolated from those around you?',
+            options: [
+              { label: 'Never', value: 0 },
+              { label: 'Rarely', value: 1 },
+              { label: 'Sometimes', value: 2 },
+              { label: 'Often', value: 3 },
+              { label: 'Always', value: 4 },
+            ],
+            required: false,
+            order: 13,
+          },
+        ],
+        required: false,
+      },
+      {
+        type: ItemType.group,
+        code: 'PhysicalActivity',
+        label: 'Physical Activity',
+        order: 14,
+        items: [
+          {
+            type: ItemType.choice,
+            code: 'q10',
+            label:
+              'In the last 30 days prior to your hospital stay (if applicable), other than the ' +
+              'activities you did for work, on average, how many days per week did you engage in ' +
+              'moderate exercise (like walking fast, running, jogging, dancing, swimming, biking ' +
+              ',or other similar activities)?',
+            options: [
+              { label: '0', value: 0 },
+              { label: '1', value: 1 },
+              { label: '2', value: 2 },
+              { label: '3', value: 3 },
+              { label: '4', value: 4 },
+              { label: '5', value: 5 },
+              { label: '6', value: 6 },
+              { label: '7', value: 7 },
+            ],
+            required: false,
+            order: 15,
+          },
+          {
+            type: ItemType.choice,
+            code: 'q11',
+            label:
+              'On average, how many minutes did you usually spend exercising at this level on ' +
+              'one of those days?',
+            options: [
+              { label: '0', value: 0 },
+              { label: '10', value: 10 },
+              { label: '20', value: 20 },
+              { label: '30', value: 30 },
+              { label: '40', value: 40 },
+              { label: '50', value: 50 },
+              { label: '60', value: 60 },
+              { label: '90', value: 90 },
+              { label: '120', value: 120 },
+              { label: '150 or greater', value: 150 },
+            ],
+            required: false,
+            order: 16,
+          },
+        ],
+        required: false,
+      },
+      {
+        type: ItemType.group,
+        code: 'SubstanceAbuse',
+        label: 'Substance Abuse',
+        order: 17,
+        items: [
+          {
+            type: ItemType.choice,
+            code: 'q12',
+            label:
+              'How many times in the past 12 months have you had 5 or more drinks in a day ' +
+              '(males) or 4 or more drinks in a day (females)?' +
+              '\n(One drink is 12 ounces of beer, 5 ounces of wine, ' +
+              'or 1.5 ounces of 80-proof spirits)',
+            options: substanceAbuseOptions,
+            required: false,
+            order: 18,
+          },
+          {
+            type: ItemType.choice,
+            code: 'q13',
+            label:
+              'How many times in the past 12 months have you used tobacco products ' +
+              '(like cigarettes, cigars, snuff, chew, electronic cigarettes)?',
+            options: substanceAbuseOptions,
+            required: false,
+            order: 19,
+          },
+          {
+            type: ItemType.choice,
+            code: 'q14',
+            label:
+              'How many times in the past year have you used prescription drugs ' +
+              'for non-medical reasons?',
+            options: substanceAbuseOptions,
+            required: false,
+            order: 20,
+          },
+          {
+            type: ItemType.choice,
+            code: 'q15',
+            label: 'How many times in the past year have you used marijuana?',
+            options: substanceAbuseOptions,
+            required: false,
+            order: 21,
+          },
+          {
+            type: ItemType.choice,
+            code: 'q16',
+            label: 'How many times in the past year have you used illegal drugs?',
+            options: substanceAbuseOptions,
+            required: false,
+            order: 22,
+          },
+        ],
+        required: false,
+      },
+      {
+        type: ItemType.group,
+        code: 'FunctionalStatus',
+        label: 'Functional Status',
+        order: 23,
+        items: [
+          {
+            type: ItemType.choice,
+            code: 'q17',
+            label:
+              'Because of a physical, mental, or emotional condition, do you have serious ' +
+              'difficulty concentrating, remembering, or making decisions?',
+            options: yesNoOptions,
+            required: false,
+            order: 24,
+          },
+          {
+            type: ItemType.choice,
+            code: 'q18',
+            label:
+              'Because of a physical, mental, or emotional condition, do you have difficulty ' +
+              "doing errands alone such as visiting a doctor's office or shopping?",
+            options: yesNoOptions,
+            required: false,
+            order: 25,
+          },
+        ],
+        required: false,
+      },
+      {
+        type: ItemType.group,
+        code: 'EnglishProficiency',
+        label: 'English Proficiency',
+        order: 26,
+        items: [
+          {
+            type: ItemType.choice,
+            code: 'q19',
+            label: 'What language are you most comfortable speaking?',
+            options: [
+              { label: 'English', value: 0 },
+              { label: 'Language other than English', value: 1 },
+              { label: 'I choose not to answer this question', value: 2 },
+            ],
+            required: false,
+            order: 27,
+          },
+        ],
+        required: false,
+      },
+    ],
+    isAssignableToMember: false,
+    buildResult: true,
+  };
+};

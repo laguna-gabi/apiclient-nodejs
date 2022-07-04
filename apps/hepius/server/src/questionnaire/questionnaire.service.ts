@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { differenceWith } from 'lodash';
+import { differenceWith, intersection } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
   AlertCondition,
@@ -25,6 +25,7 @@ import {
   Alert,
   AlertService,
   AlertType,
+  CommandType,
   DismissedAlert,
   DismissedAlertDocument,
   ErrorType,
@@ -40,6 +41,7 @@ import {
 import { ISoftDelete } from '../db';
 import { Internationalization } from '../providers';
 import { JourneyService } from '../journey';
+import { differenceInYears } from 'date-fns';
 
 @Injectable()
 export class QuestionnaireService extends AlertService {
@@ -118,7 +120,11 @@ export class QuestionnaireService extends AlertService {
     const questionnaireResponse: QuestionnaireResponse = {
       ...this.replaceId(qr.toObject()),
       type: questionnaire.type,
-      result: this.buildResult(submitQuestionnaireResponseParams.answers, questionnaire),
+      result: await this.buildResult(
+        submitQuestionnaireResponseParams.answers,
+        questionnaire,
+        qr.memberId.toString(),
+      ),
     };
 
     // 4. notify #escalation-support (if needed)
@@ -171,7 +177,7 @@ export class QuestionnaireService extends AlertService {
 
         return {
           ...this.replaceId(qr.toObject()),
-          result: this.buildResult(qr.answers, questionnaire),
+          result: await this.buildResult(qr.answers, questionnaire, qr.memberId.toString()),
           type: questionnaire.type,
         };
       }),
@@ -200,7 +206,7 @@ export class QuestionnaireService extends AlertService {
 
       return {
         ...this.replaceId(qr.toObject()),
-        result: this.buildResult(qr.answers, questionnaire),
+        result: await this.buildResult(qr.answers, questionnaire, qr.memberId.toString()),
         type: questionnaire.type,
       };
     }
@@ -237,7 +243,7 @@ export class QuestionnaireService extends AlertService {
 
         templates.set(qr.questionnaireId.toString(), template);
 
-        const results = this.buildResult(qr.answers, template);
+        const results = await this.buildResult(qr.answers, template, qr.memberId.toString());
 
         if (
           this.isOverThreshold(template, results?.score) ||
@@ -280,7 +286,6 @@ export class QuestionnaireService extends AlertService {
     }
 
     answers.forEach((answer) => {
-      const answerValue = parseInt(answer.value);
       // validate that the answer code exists in questionnaire
       const item = this.findItemByCode(questionnaire.items, answer.code);
 
@@ -293,7 +298,7 @@ export class QuestionnaireService extends AlertService {
       // validate that the answer value is consistent with question type and options/range
       switch (item.type) {
         case ItemType.choice:
-          if (!item.options.find((option) => option.value === answerValue)) {
+          if (!item.options.find((option) => option.value === +answer.value)) {
             throw new Error(
               formatError(
                 `answer for 'choice' type question with invalid value code: ` +
@@ -302,8 +307,21 @@ export class QuestionnaireService extends AlertService {
             );
           }
           break;
+        case ItemType.multiChoice:
+          const values = answer.value.split(',');
+          values.forEach((values) => {
+            if (!item.options.find((option) => option.value === +values)) {
+              throw new Error(
+                formatError(
+                  `answer for 'multiChoice' type question with invalid value code: ` +
+                    `'${answer.code}', value: '${values}'`,
+                ),
+              );
+            }
+          });
+          break;
         case ItemType.range:
-          if (answerValue > item.range.max.value || answerValue < item.range.min.value) {
+          if (+answer.value > item.range.max.value || +answer.value < item.range.min.value) {
             throw new Error(
               formatError(
                 `answer for 'range' type question with value out of range: ` +
@@ -316,13 +334,19 @@ export class QuestionnaireService extends AlertService {
     });
   }
 
-  buildResult(answers: Answer[], questionnaire: Questionnaire): QuestionnaireResponseResult {
+  async buildResult(
+    answers: Answer[],
+    questionnaire: Questionnaire,
+    memberId: string,
+  ): Promise<QuestionnaireResponseResult> {
     if (questionnaire.buildResult) {
       switch (questionnaire.type) {
         case QuestionnaireType.rcqtv:
           return this.rcqtvBuildResults(answers);
         case QuestionnaireType.lhp:
           return this.lhpBuildResults(answers, questionnaire);
+        case QuestionnaireType.sdoh:
+          return this.sdohBuildResults(memberId, answers);
         default:
           return this.defaultBuildResults(answers, questionnaire);
       }
@@ -555,6 +579,63 @@ export class QuestionnaireService extends AlertService {
     return {
       score: selectedGroup.totalScore * selectedGroup.factor,
       severity: selectedGroup.category,
+    };
+  }
+
+  /** Description: custom score, severity label and alert calculation for SDoH type questionnaire
+   * {@link: https://app.shortcut.com/laguna-health/story/5623/sdoh-assessment}
+   */
+  private async sdohBuildResults(
+    memberId: string,
+    answers: Answer[],
+  ): Promise<QuestionnaireResponseResult> {
+    let score = 0;
+
+    const flaggedOptions = new Map<string, number[]>([
+      ['q1', [1, 2]],
+      ['q2', [1, 2, 3, 4, 5, 6, 7]],
+      ['q3', [0]],
+      ['q8', [2, 3]],
+      ['q9', [3, 4]],
+    ]); // a selected 1 or more flagged options will count as `1` for score
+
+    const scoreByValue = ['q4', 'q5', 'q6', 'q7'];
+
+    // 1. if answer code is a `scoreByValue` type we add answer.value to score
+    // 2. if answer value(s) has an intersect with flagged options we increment the score
+    answers.forEach((answer) => {
+      if (scoreByValue.includes(answer.code)) {
+        score += +answer.value;
+      } else if (
+        intersection(
+          answer.value.split(',').map((value) => +value),
+          flaggedOptions.get(answer.code),
+        ).length
+      ) {
+        score++;
+      }
+    });
+
+    // 3. special score calculation for `Physical Activity`
+    const [member] = await this.eventEmitter.emitAsync(CommandType.getMember, {
+      memberId: memberId.toString(),
+    });
+
+    const age = differenceInYears(new Date(), Date.parse(member.dateOfBirth));
+
+    const physicalActivityDaysAnswer = answers.find((answer) => answer.code === 'q10');
+    const physicalActivityMinsAnswer = answers.find((answer) => answer.code === 'q11');
+    if (physicalActivityDaysAnswer && physicalActivityMinsAnswer) {
+      if (
+        (6 <= age && age <= 17 && +physicalActivityMinsAnswer.value < 60) ||
+        (18 <= age && +physicalActivityDaysAnswer.value * +physicalActivityMinsAnswer.value < 150)
+      ) {
+        score++;
+      }
+    }
+
+    return {
+      score,
     };
   }
 }

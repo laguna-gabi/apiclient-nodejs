@@ -194,6 +194,7 @@ registerEnumType(ChangeType, { name: 'ChangeType' });
 
 export enum ItemType {
   choice = 'choice',
+  multiChoice = 'multiChoice',
   text = 'text',
   range = 'range',
   group = 'group',
