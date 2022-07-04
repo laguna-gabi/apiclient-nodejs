@@ -72,20 +72,20 @@ export class AutoActionItem {
   }) {
     this.logger.info(params, AutoActionItem.name, methodName);
     try {
-      return Promise.all(
-        autoActionsMap.get(type).map(async ({ autoActionItemType, relatedEntities, link }) => {
-          return this.actionItemService.createOrSetActionItem({
-            ...this.internationalization.getActionItem(autoActionItemType),
-            relatedEntities: relatedEntities
-              ? await this.populateRelatedEntities(relatedEntities)
-              : undefined,
-            category,
-            link,
-            source,
-            ...params,
-          });
-        }),
-      );
+      // reverse for sorting by createdAt in harmony
+      const autoActionItems = autoActionsMap.get(type).reverse();
+      for (const { autoActionItemType, relatedEntities, link } of autoActionItems) {
+        await this.actionItemService.createOrSetActionItem({
+          ...this.internationalization.getActionItem(autoActionItemType),
+          relatedEntities: relatedEntities
+            ? await this.populateRelatedEntities(relatedEntities)
+            : undefined,
+          category,
+          link,
+          source,
+          ...params,
+        });
+      }
     } catch (ex) {
       this.logger.error(params, AutoActionItem.name, methodName, formatEx(ex));
     }
