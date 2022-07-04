@@ -145,10 +145,6 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
       .toPromise();
   }
 
-  getAppToken() {
-    return this.appToken;
-  }
-
   getMasterAppToken() {
     return this.masterApiToken;
   }

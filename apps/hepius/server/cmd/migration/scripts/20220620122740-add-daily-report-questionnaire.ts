@@ -5,7 +5,7 @@ import { Db } from 'mongodb';
 import { Model } from 'mongoose';
 import { AppModule } from '../../../src/app.module';
 import { Questionnaire, QuestionnaireService, QuestionnaireType } from '../../../src/questionnaire';
-import { buildDailyLogQuestionnaire, buildLHPQuestionnaire } from '../../static';
+import { buildDailyLogQuestionnaire } from '../../static';
 
 // ------------------------------------------------------------------------------------------------
 // Description: migrate `up`

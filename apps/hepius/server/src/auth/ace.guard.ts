@@ -14,7 +14,7 @@ import { ByUserStrategy } from './strategies/byUser.strategy';
 @Injectable()
 export class AceGuard extends BaseGuard implements CanActivate {
   private readonly defaultStrategy: IStrategy;
-  private byMemberStrategy: ByMemberStrategy;
+  private readonly byMemberStrategy: ByMemberStrategy;
   private byOrgStrategy: ByOrgStrategy;
   private byUserStrategy: ByUserStrategy;
   private byTokenStrategy: ByTokenStrategy;

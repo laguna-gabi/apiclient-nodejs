@@ -334,7 +334,7 @@ describe('MobileVersionService', () => {
     const checkMobileVersionParams = generateCheckMobileVersionParams({
       version: 'invalidVersion',
     });
-    await await expect(service.checkMobileVersion(checkMobileVersionParams)).rejects.toThrow(
+    await expect(service.checkMobileVersion(checkMobileVersionParams)).rejects.toThrow(
       Errors.get(ErrorType.configurationMobileVersionInvalidVersion),
     );
   });

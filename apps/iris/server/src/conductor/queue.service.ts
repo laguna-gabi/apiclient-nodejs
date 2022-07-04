@@ -119,7 +119,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit, OnMod
     this.consumer.start();
 
     this.logger.info(
-      { queueConsumerRunning: this.consumer.isRunning ? true : false },
+      { queueConsumerRunning: this.consumer.isRunning },
       QueueService.name,
       this.onModuleInit.name,
     );

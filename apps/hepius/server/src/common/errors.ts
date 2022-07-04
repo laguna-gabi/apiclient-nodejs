@@ -502,10 +502,3 @@ export enum HttpErrorCodes {
 export const HttpErrorMessage: Map<HttpErrorCodes, string> = new Map([
   [HttpErrorCodes.forbidden.valueOf(), `Forbidden resource`],
 ]);
-
-export const LogAsWarning = new Set([
-  ...Errors.values(),
-  HttpErrorMessage.get(HttpErrorCodes.forbidden),
-  'Unauthorized',
-  'Argument passed in must be a single String of 12 bytes or a string of 24 hex characters',
-]);

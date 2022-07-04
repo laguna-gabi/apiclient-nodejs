@@ -2,8 +2,6 @@
 import { NestFactory } from '@nestjs/core';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Command, InfoColoring } from '../.';
-import * as path from 'path';
 import { Db } from 'mongodb';
 import { AppModule } from '../../../src/app.module';
 import { Availability } from '../../../src/availability';

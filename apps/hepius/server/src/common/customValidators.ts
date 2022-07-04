@@ -342,10 +342,8 @@ export function isTodoDateParamsValidCreate(options: ValidationOptions) {
           const end = args.object['end'];
           if (!cronExpressions && !start && !end) {
             return true;
-          } else if (cronExpressions && start) {
-            return true;
           } else {
-            return false;
+            return cronExpressions && start;
           }
         },
       },
@@ -364,13 +362,7 @@ export function isTodoDateParamsValidUpdate(options: ValidationOptions) {
           const cronExpressions = args.object['cronExpressions'];
           const start = args.object['start'];
           const end = args.object['end'];
-          if (!cronExpressions && !start && !end) {
-            return true;
-          } else if (!!cronExpressions) {
-            return true;
-          } else {
-            return false;
-          }
+          return (!cronExpressions && !start && !end) || !!cronExpressions;
         },
       },
     });
@@ -394,7 +386,6 @@ export function IsIdAndChangeTypeAligned(options: ValidationOptions) {
             (isNil(id) && changeType === ChangeType.create) ||
             (!isNil(id) && (changeType === ChangeType.update || changeType === ChangeType.delete))
           );
-          return true;
         },
       },
     });

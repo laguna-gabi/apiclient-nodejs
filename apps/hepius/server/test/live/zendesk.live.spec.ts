@@ -10,7 +10,7 @@ describe('live: zendesk', () => {
 
     await zendeskProvider.onModuleInit();
     const zendDeskSecret = await configService.getConfig(ExternalConfigs.zendesk.token);
-    const result = await zendeskProvider.getAuthToken({ firstName, lastName, email });
+    const result = zendeskProvider.getAuthToken({ firstName, lastName, email });
     const decoded = jwt.verify(result, zendDeskSecret);
     expect(decoded).toEqual(
       expect.objectContaining({

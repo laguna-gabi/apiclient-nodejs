@@ -31,10 +31,6 @@ export class RolesGuard extends BaseGuard implements CanActivate {
       return this.reflector.get<boolean>(DecoratorType.isPublic, context.getHandler());
     }
 
-    if (!!intersection(user.roles, allowedRoles)?.length) {
-      return true;
-    }
-
-    return false;
+    return !!intersection(user.roles, allowedRoles)?.length;
   }
 }

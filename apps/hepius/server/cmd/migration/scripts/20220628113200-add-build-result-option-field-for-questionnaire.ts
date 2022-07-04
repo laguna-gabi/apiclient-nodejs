@@ -1,11 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from '../../../src/app.module';
 import { Db } from 'mongodb';
-import { Questionnaire, QuestionnaireService, QuestionnaireType } from '../../../src/questionnaire';
-import { buildWHO5Questionnaire } from '../../static';
-import { getModelToken } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { QuestionnaireType } from '../../../src/questionnaire';
 
 // ------------------------------------------------------------------------------------------------
 // Description: migrate `up`

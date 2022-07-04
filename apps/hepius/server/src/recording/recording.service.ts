@@ -78,27 +78,6 @@ export class RecordingService {
     }
   }
 
-  async getRecording({
-    id,
-    memberId,
-    journeyId,
-  }: {
-    id: string;
-    memberId: string;
-    journeyId: string;
-  }): Promise<Recording> {
-    const recoding = await this.recordingModel.findOne({
-      id,
-      memberId: new Types.ObjectId(memberId),
-      journeyId: new Types.ObjectId(journeyId),
-    });
-    if (!recoding) {
-      throw new Error(Errors.get(ErrorType.recordingNotFound));
-    }
-
-    return recoding;
-  }
-
   async getRecordings({
     memberId,
     journeyId,

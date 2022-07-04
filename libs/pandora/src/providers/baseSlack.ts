@@ -31,7 +31,7 @@ export interface IEventNotifySlack {
 export abstract class BaseSlack implements OnModuleInit {
   protected webhook: IncomingWebhook;
 
-  constructor(readonly logger: BaseLogger) {}
+  protected constructor(readonly logger: BaseLogger) {}
 
   abstract onModuleInit(): Promise<void>;
 

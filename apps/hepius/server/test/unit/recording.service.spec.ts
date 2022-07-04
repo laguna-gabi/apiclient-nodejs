@@ -205,7 +205,7 @@ describe('MemberService', () => {
 
   describe('deleteMemberRecording', () => {
     it('should be able to hard delete after soft delete', async () => {
-      const memberId = await generateId();
+      const memberId = generateId();
       const userId = generateId();
       const { id: recordingId } = await service.updateRecording(
         generateUpdateRecordingParams({ memberId, userId }),

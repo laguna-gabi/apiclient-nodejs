@@ -603,8 +603,7 @@ export class MemberService extends AlertService {
   }
 
   async getInsurance(memberId: string): Promise<Insurance[]> {
-    const res = await this.insuranceModel.find({ memberId: new Types.ObjectId(memberId) });
-    return res;
+    return this.insuranceModel.find({ memberId: new Types.ObjectId(memberId) });
   }
 
   /*************************************************************************************************

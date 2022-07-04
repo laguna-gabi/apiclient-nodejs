@@ -345,7 +345,7 @@ export class QuestionnaireService extends AlertService {
       return false;
     };
 
-    return item?.alertCondition?.find(isSatisfied) ? true : false;
+    return item?.alertCondition?.find(isSatisfied) !== undefined;
   }
 
   private findItemByCode(items: Item[], code: string): Item {
@@ -448,9 +448,9 @@ export class QuestionnaireService extends AlertService {
     return {
       score,
       severity,
-      alert: answers.find((answer) => this.isAlertConditionsSatisfied(answer, questionnaire))
-        ? true
-        : false,
+      alert:
+        answers.find((answer) => this.isAlertConditionsSatisfied(answer, questionnaire)) !==
+        undefined,
     };
   }
 

@@ -1157,7 +1157,7 @@ export class Mutations {
     invalidFieldsErrors?: string[];
     requestHeaders?;
   }): Promise<boolean> => {
-    const result = await this.client
+    return this.client
       .request(
         /* eslint-disable max-len */
         gql`
@@ -1178,8 +1178,6 @@ export class Mutations {
           params: deleteDischargeDocumentParams,
         });
       });
-
-    return result;
   };
 
   addCaregiver = async ({
@@ -1935,7 +1933,6 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<void> => {
-    const requestHeaders = this.defaultAdminRequestHeaders;
     await this.client
       .request(
         gql`
@@ -1944,7 +1941,7 @@ export class Mutations {
           }
         `,
         { graduateMemberParams },
-        requestHeaders,
+        this.defaultAdminRequestHeaders,
       )
       .catch((ex) => {
         return handleExceptionReceived({

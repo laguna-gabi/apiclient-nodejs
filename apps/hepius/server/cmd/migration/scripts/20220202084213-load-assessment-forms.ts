@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable max-len */
-import { Command, InfoColoring } from '../.';
-import * as path from 'path';
 import { Db } from 'mongodb';
 import { AppModule } from '../../../src/app.module';
 import { NestFactory } from '@nestjs/core';
@@ -45,5 +43,5 @@ export const down = async (dryRun: boolean, db: Db) => {
   //------------------------------------------------------------------------------------------------
   // migration (down) code here...
   //------------------------------------------------------------------------------------------------
-  db.collection('questionnaires').drop();
+  await db.collection('questionnaires').drop();
 };

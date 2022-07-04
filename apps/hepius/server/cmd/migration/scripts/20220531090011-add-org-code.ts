@@ -34,5 +34,5 @@ export const up = async (dryRun: boolean, db: Db) => {
 };
 
 export const down = async (dryRun: boolean, db: Db) => {
-  db.collection(COLLECTION_NAME).updateMany({}, { $unset: { code: '' } });
+  await db.collection(COLLECTION_NAME).updateMany({}, { $unset: { code: '' } });
 };

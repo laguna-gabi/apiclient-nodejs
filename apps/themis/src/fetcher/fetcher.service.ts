@@ -47,12 +47,6 @@ export class FetcherService {
     this.logger.info({ action: barrierAction }, FetcherService.name, this.handleBarrierAction.name);
     if (barrierAction.action == Action.create) {
       // todo: get createBarrierParams params from common
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const createBarrierParams = {
-        memberId: barrierAction.memberId,
-        type: barrierAction.entityType,
-      };
-
       // todo: send to hepius - waiting for tcp endpoints
     }
   }

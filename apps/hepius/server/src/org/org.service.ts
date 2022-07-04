@@ -26,8 +26,7 @@ export class OrgService extends BaseService {
   }
 
   async get(id: string): Promise<Org | null> {
-    const org = await this.orgModel.findById(id);
-    return org;
+    return this.orgModel.findById(id);
   }
 
   async getByCode(code: string): Promise<Org | null> {

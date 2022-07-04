@@ -5,7 +5,6 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { AppModule } from '../../../src/app.module';
 import { Journey } from '../../../src/journey';
-import { Todo, TodoDone } from '../../../src/todo';
 import { Appointment } from '@argus/hepiusClient';
 // ------------------------------------------------------------------------------------------------
 // Description: migrate `up`

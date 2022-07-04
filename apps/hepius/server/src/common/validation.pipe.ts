@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 
 @Injectable()
 export class IsValidObjectId implements PipeTransform {
-  private message: string;
+  private readonly message: string;
   private options: { nullable: boolean };
 
   constructor(message: string, options?: { nullable: boolean }) {

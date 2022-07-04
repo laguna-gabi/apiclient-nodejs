@@ -23,7 +23,7 @@ export abstract class BaseStorage implements OnModuleInit {
 
   abstract onModuleInit(): Promise<void>;
 
-  constructor(awsRegion: string) {
+  protected constructor(awsRegion: string) {
     this.s3 = new S3({
       signatureVersion: 'v4',
       apiVersion: '2006-03-01',

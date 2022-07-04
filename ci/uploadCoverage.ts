@@ -14,7 +14,7 @@ const s3 = new S3({ signatureVersion: 'v4', apiVersion: '2006-03-01', region: 'u
 const uploadCoverage = async () => {
   const [, , appName, path] = process.argv;
 
-  var params = {
+  const params = {
     Bucket: COVERAGE_BUCKET,
     Prefix: `${appName}/`,
   };

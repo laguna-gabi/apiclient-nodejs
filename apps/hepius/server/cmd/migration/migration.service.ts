@@ -49,13 +49,11 @@ export class MigrationService {
 
     const changelogEntries = await this.changelogModel.find();
 
-    const statusTable = migrationFiles.map((fileName) => {
+    return migrationFiles.map((fileName) => {
       const itemInLog = find(changelogEntries, { fileName });
       const appliedAt = itemInLog ? itemInLog.appliedAt.toJSON() : 'PENDING';
       return { fileName, appliedAt };
     });
-
-    return statusTable;
   }
 
   // Description: print out the migration status
