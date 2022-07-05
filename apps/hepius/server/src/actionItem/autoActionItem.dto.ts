@@ -7,7 +7,6 @@ import { ActionItemLink, ActionItemLinkType } from './actionItem.dto';
  ******************* fetching strings, aligning with pandora: languages/en.json *******************
  *************************************************************************************************/
 export enum AutoActionAppointmentItemType {
-  scheduleWelcomeCall = 'appointment.scheduleWelcomeCall',
   introduceYourself = 'appointment.introduceYourself',
   downloadApp = 'appointment.downloadApp',
   clinicalStatus = 'appointment.clinicalStatus',
@@ -68,7 +67,6 @@ export const autoActionsMap: Map<AutoActionMainItemType, AutoActionItems> = new 
   [
     AutoActionMainItemType.firstAppointment,
     [
-      { autoActionItemType: AutoActionAppointmentItemType.scheduleWelcomeCall },
       { autoActionItemType: AutoActionAppointmentItemType.introduceYourself },
       {
         autoActionItemType: AutoActionAppointmentItemType.downloadApp,

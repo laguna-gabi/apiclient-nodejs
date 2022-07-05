@@ -50,7 +50,7 @@ describe('Integration tests : getMembers', () => {
           adherence: 0,
           wellbeing: 0,
           createdAt: member.createdAt,
-          actionItemsCount: 9,
+          actionItemsCount: 8,
           primaryUser: expect.objectContaining({
             id: primaryUser.id,
             firstName: primaryUser.firstName,
@@ -104,7 +104,7 @@ describe('Integration tests : getMembers', () => {
         phone: memberResult.phone,
         phoneType: member.phoneType,
         createdAt: memberResult.createdAt,
-        actionItemsCount: 11,
+        actionItemsCount: 10,
         primaryUser: expect.objectContaining({
           id: primaryUser.id,
           firstName: primaryUser.firstName,
