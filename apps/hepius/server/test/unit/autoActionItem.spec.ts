@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   ActionItemCategory,
   ActionItemModule,
+  ActionItemPriority,
   ActionItemService,
   ActionItemSource,
   AutoActionItem,
@@ -100,6 +101,27 @@ describe(AutoActionItem.name, () => {
             source: ActionItemSource.poc,
             memberId,
             barrierId,
+          }),
+        );
+      }
+    });
+
+    // eslint-disable-next-line max-len
+    it(`should create action items on create barrier ${AutoActionMainItemType.highPainScore}`, async () => {
+      const actionItem = mockGenerateActionItem();
+      const memberId = generateId();
+      spyOnServiceCreateOrSetActionItem.mockImplementation(async () => actionItem);
+
+      await autoActionItem.handleHighPainScoreIndication({
+        memberId,
+      });
+
+      for (let i = 1; i < autoActionsMap.get(AutoActionMainItemType.highPainScore).length; i++) {
+        expect(spyOnServiceCreateOrSetActionItem).toHaveBeenNthCalledWith(
+          i,
+          expect.objectContaining({
+            memberId,
+            priority: ActionItemPriority.urgent,
           }),
         );
       }

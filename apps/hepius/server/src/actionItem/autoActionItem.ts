@@ -7,6 +7,7 @@ import {
   ActionItemCategory,
   ActionItemLink,
   ActionItemLinkType,
+  ActionItemPriority,
   ActionItemService,
   ActionItemSource,
   AutoActionItemRelatedEntities,
@@ -18,6 +19,7 @@ import {
   IEventBaseAutoActionItem,
   IEventOnBarrierCreated,
   IEventOnFirstAppointment,
+  IEventOnHighPainScoreIndication,
   InternalContentKey,
   LoggerService,
   RelatedEntityType,
@@ -62,18 +64,30 @@ export class AutoActionItem {
     }
   }
 
+  @OnEvent(EventType.onHighPainScoreIndication, { async: true })
+  async handleHighPainScoreIndication(params: IEventOnHighPainScoreIndication) {
+    await this.createAutoActionItem({
+      type: AutoActionMainItemType.highPainScore,
+      params,
+      methodName: this.handleHighPainScoreIndication.name,
+      priority: ActionItemPriority.urgent,
+    });
+  }
+
   private async createAutoActionItem({
     type,
     params,
     methodName,
     category,
     source,
+    priority,
   }: {
     type: AutoActionMainItemType;
     params: IEventBaseAutoActionItem;
     methodName: string;
     category?: ActionItemCategory;
     source?: ActionItemSource;
+    priority?: ActionItemPriority;
   }) {
     this.logger.info(params, AutoActionItem.name, methodName);
     try {
@@ -88,6 +102,7 @@ export class AutoActionItem {
           category,
           link: link ? await this.populateLink(link) : undefined,
           source,
+          priority,
           ...params,
         });
       }

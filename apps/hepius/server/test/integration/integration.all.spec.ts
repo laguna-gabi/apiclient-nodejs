@@ -2994,6 +2994,41 @@ describe('Integration tests: all', () => {
       });
     });
 
+    // eslint-disable-next-line max-len
+    it(`should create autoActionItems on daily log ${AutoActionMainItemType.highPainScore}`, async () => {
+      const { member } = await creators.createMemberUserAndOptionalOrg();
+
+      const { authId } = await handler.memberService.get(member.id);
+
+      await handler.mutations.setDailyReportCategories({
+        dailyReportCategoriesInput: {
+          date: format(Date.now(), momentFormats.date),
+          categories: [{ rank: 1, category: DailyReportCategoryTypes.Pain }], // High Pain score
+        },
+        requestHeaders: generateRequestHeaders(authId),
+      });
+
+      await delay(500);
+
+      const results = await handler.queries.getActionItems({ memberId: member.id });
+
+      autoActionsMap.get(AutoActionMainItemType.highPainScore).map(async (actionItem) => {
+        expect(results).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining(
+              omitBy(
+                {
+                  ...handler.internationalization.getActionItem(actionItem.autoActionItemType),
+                  memberId: member.id,
+                },
+                isNil,
+              ),
+            ),
+          ]),
+        );
+      });
+    });
+
     const getExpectedRelatedEntities = async (relatedEntities) => {
       if (!relatedEntities) return [];
       const questionnaires = await handler.queries.getActiveQuestionnaires();

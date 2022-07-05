@@ -9,6 +9,7 @@ import {
   DailyReport,
   DailyReportCategoriesInput,
   DailyReportCategory,
+  DailyReportCategoryTypes,
   DailyReportDocument,
   DailyReportQueryInput,
   DailyReportsMetadata,
@@ -17,6 +18,7 @@ import {
   BaseService,
   EventType,
   IEventDeleteMember,
+  IEventOnHighPainScoreIndication,
   IEventOnQRSubmit,
   IInternalDispatch,
   LoggerService,
@@ -122,6 +124,16 @@ export class DailyReportService extends BaseService {
       dailyReportRecord.notificationSent = true;
     }
 
+    if (
+      dailyReportRecord.statsOverThreshold.find((stat) => stat === DailyReportCategoryTypes.Pain)
+        ?.length
+    ) {
+      const params: IEventOnHighPainScoreIndication = {
+        memberId: dailyReportRecord.memberId.toString(),
+      };
+
+      this.eventEmitter.emit(EventType.onHighPainScoreIndication, params);
+    }
     this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
       dispatchId: generateDispatchId(LogInternalKey.logReminder, dailyReportCategoryEntry.memberId),
     });

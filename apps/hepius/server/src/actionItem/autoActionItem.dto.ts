@@ -30,7 +30,14 @@ export enum AutoActionBarrierFatigueItemType {
   memberTodo2 = 'barrier.fatigue.memberTodo2',
 }
 
-export type AutoActionItemType = AutoActionAppointmentItemType | AutoActionBarrierFatigueItemType;
+export enum AutoActionHighPainScoreItemType {
+  highPainScore = 'dailyLog.highPainScore',
+}
+
+export type AutoActionItemType =
+  | AutoActionAppointmentItemType
+  | AutoActionBarrierFatigueItemType
+  | AutoActionHighPainScoreItemType;
 
 /**************************************************************************************************
  ***************************************** enums by types *****************************************
@@ -48,6 +55,7 @@ export type AutoActionItems = {
 export enum AutoActionMainItemType {
   firstAppointment = 'firstAppointment',
   fatigue = 'fatigue',
+  highPainScore = 'highPainScore',
 }
 
 /**************************************************************************************************
@@ -117,5 +125,9 @@ export const autoActionsMap: Map<AutoActionMainItemType, AutoActionItems> = new 
         link: { type: ActionItemLinkType.createTodo },
       },
     ],
+  ],
+  [
+    AutoActionMainItemType.highPainScore,
+    [{ autoActionItemType: AutoActionHighPainScoreItemType.highPainScore }],
   ],
 ]);

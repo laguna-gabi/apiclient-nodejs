@@ -46,6 +46,9 @@ export enum EventType {
 
   // poc
   onBarrierCreated = 'onBarrierCreated',
+
+  // Daily Log
+  onHighPainScoreIndication = 'onHighPainScoreIndication',
 }
 
 export enum CommandType {
@@ -211,3 +214,5 @@ export interface IEventOnBarrierCreated extends IEventBaseAutoActionItem {
   barrierId: string;
   barrierDescription: string;
 }
+
+export type IEventOnHighPainScoreIndication = IEventBaseAutoActionItem;

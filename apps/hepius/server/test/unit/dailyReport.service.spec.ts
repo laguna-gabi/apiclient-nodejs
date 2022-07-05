@@ -237,6 +237,21 @@ describe('DailyReportCategoryService', () => {
           nthCallForNotifyDeleteDispatch++;
         }
 
+        if (
+          expectedDailyReport.statsOverThreshold.find(
+            (stat) => stat === DailyReportCategoryTypes.Pain,
+          )
+        ) {
+          expect(spyOnEventEmitterEmit).toHaveBeenNthCalledWith(
+            nthCallForNotifyDeleteDispatch,
+            EventType.onHighPainScoreIndication,
+            expect.objectContaining({
+              memberId,
+            }),
+          );
+          nthCallForNotifyDeleteDispatch++;
+        }
+
         expect(spyOnEventEmitterEmit).toHaveBeenNthCalledWith(
           nthCallForNotifyDeleteDispatch,
           EventType.notifyDeleteDispatch,
