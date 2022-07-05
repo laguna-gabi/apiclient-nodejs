@@ -7,7 +7,7 @@ export const generateTranscriptResponse = ({
   transcriptionId = generateId(),
   status = TranscriptStatus.done,
   // eslint-disable-next-line max-len
-  transcriptLink = 'https://d1ic17v34w4spl.cloudfront.net/public/dischargeInstructions/transcriptionMock3.json',
+  transcriptLink = 'https://s3.amazonaws.com/public.getlaguna.com/transcriptionMock3.json',
   coach = Speaker.speakerA,
   conversationPercentage = {
     speakerA: 18,
