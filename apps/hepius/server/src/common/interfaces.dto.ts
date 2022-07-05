@@ -266,3 +266,15 @@ export class AceContext {
   args: any;
   aceOptions: AceOptions;
 }
+
+/**************************************************************************************************
+ **************************************** Internationalization ************************************
+ *************************************************************************************************/
+
+export enum InternalContentKey {
+  newMemberNudgeAnonymous = 'newMemberNudgeAnonymous',
+}
+
+export class ExtraData {
+  dynamicLink?: string;
+}

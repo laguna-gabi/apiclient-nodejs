@@ -1,8 +1,12 @@
 import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { hosts } from 'config';
+
 import {
   ActionItemCategory,
+  ActionItemLink,
+  ActionItemLinkType,
   ActionItemService,
   ActionItemSource,
   AutoActionItemRelatedEntities,
@@ -14,6 +18,7 @@ import {
   IEventBaseAutoActionItem,
   IEventOnBarrierCreated,
   IEventOnFirstAppointment,
+  InternalContentKey,
   LoggerService,
   RelatedEntityType,
 } from '../common';
@@ -81,7 +86,7 @@ export class AutoActionItem {
             ? await this.populateRelatedEntities(relatedEntities)
             : undefined,
           category,
-          link,
+          link: link ? await this.populateLink(link) : undefined,
           source,
           ...params,
         });
@@ -102,5 +107,20 @@ export class AutoActionItem {
         }
       }),
     );
+  }
+
+  private async populateLink(link: ActionItemLink): Promise<ActionItemLink> {
+    const { type, value } = link;
+    if (type === ActionItemLinkType.sendSMS) {
+      return {
+        type,
+        value: this.internationalization.getContents({
+          contentKey: value as InternalContentKey,
+          extraData: { dynamicLink: hosts.get('dynamicLink') },
+        }),
+      };
+    } else {
+      return link;
+    }
   }
 }

@@ -100,6 +100,8 @@ import {
 import {
   ActionItem,
   ActionItemCategory,
+  ActionItemLink,
+  ActionItemLinkType,
   ActionItemSource,
   ActionItemStatus,
   AutoActionMainItemType,
@@ -113,6 +115,7 @@ import {
   Errors,
   EventType,
   IEventOnUpdatedUser,
+  InternalContentKey,
   ItemType,
   RelatedEntityType,
   delay,
@@ -2933,15 +2936,7 @@ describe('Integration tests: all', () => {
                   relatedEntities: await getExpectedRelatedEntities(actionItem.relatedEntities),
                   link:
                     actionItem.link &&
-                    expect.objectContaining(
-                      omitBy(
-                        {
-                          type: actionItem.link.type,
-                          value: actionItem.link.value,
-                        },
-                        isNil,
-                      ),
-                    ),
+                    expect.objectContaining(omitBy(await getExpectedLink(actionItem.link), isNil)),
                 },
                 isNil,
               ),
@@ -2989,15 +2984,7 @@ describe('Integration tests: all', () => {
                   relatedEntities: await getExpectedRelatedEntities(actionItem.relatedEntities),
                   link:
                     actionItem.link &&
-                    expect.objectContaining(
-                      omitBy(
-                        {
-                          type: actionItem.link.type,
-                          value: actionItem.link.value,
-                        },
-                        isNil,
-                      ),
-                    ),
+                    expect.objectContaining(omitBy(await getExpectedLink(actionItem.link), isNil)),
                 },
                 isNil,
               ),
@@ -3008,8 +2995,8 @@ describe('Integration tests: all', () => {
     });
 
     const getExpectedRelatedEntities = async (relatedEntities) => {
-      const questionnaires = await handler.queries.getActiveQuestionnaires();
       if (!relatedEntities) return [];
+      const questionnaires = await handler.queries.getActiveQuestionnaires();
       return relatedEntities.map((relatedEntity) => {
         if (relatedEntity.type === RelatedEntityType.questionnaire) {
           const questionnaire = questionnaires.find(
@@ -3020,6 +3007,22 @@ describe('Integration tests: all', () => {
           return { type: relatedEntity.type };
         }
       });
+    };
+
+    const getExpectedLink = async (link: ActionItemLink) => {
+      if (!link) return;
+      const { type, value } = link;
+      if (type !== ActionItemLinkType.sendSMS) {
+        return link;
+      } else {
+        return {
+          type,
+          value: handler.internationalization.getContents({
+            contentKey: value as InternalContentKey,
+            extraData: { dynamicLink: hosts.get('dynamicLink') },
+          }),
+        };
+      }
     };
   });
 

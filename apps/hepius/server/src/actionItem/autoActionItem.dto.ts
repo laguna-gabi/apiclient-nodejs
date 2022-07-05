@@ -1,4 +1,4 @@
-import { RelatedEntity, RelatedEntityType } from '../common';
+import { InternalContentKey, RelatedEntity, RelatedEntityType } from '../common';
 import { QuestionnaireType } from '../questionnaire';
 import { ActionTodoLabel } from '../todo';
 import { ActionItemLink, ActionItemLinkType } from './actionItem.dto';
@@ -62,7 +62,13 @@ export const autoActionsMap: Map<AutoActionMainItemType, AutoActionItems> = new 
     [
       { autoActionItemType: AutoActionAppointmentItemType.scheduleWelcomeCall },
       { autoActionItemType: AutoActionAppointmentItemType.introduceYourself },
-      { autoActionItemType: AutoActionAppointmentItemType.downloadApp },
+      {
+        autoActionItemType: AutoActionAppointmentItemType.downloadApp,
+        link: {
+          type: ActionItemLinkType.sendSMS,
+          value: InternalContentKey.newMemberNudgeAnonymous,
+        },
+      },
       { autoActionItemType: AutoActionAppointmentItemType.clinicalStatus },
       {
         autoActionItemType: AutoActionAppointmentItemType.pillarsOfRecovery,
