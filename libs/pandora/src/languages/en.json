@@ -38,7 +38,8 @@
                 "Meds": "Your coach, {{user.firstName}}, deleted a medication. Tap here to review",
                 "Appointment": "Your coach, {{user.firstName}}, deleted an appointment details. Tap here to review",
                 "Todo": "Your coach, {{user.firstName}}, deleted a to-do. Tap here to review"
-            }
+            },
+            "newMemberNudgeAnonymous": "Tap the link below to download and install the Laguna Health mobile app:\n{{dynamicLink}}"
         },
         "honorific": {
             "mr": "Mr.",
@@ -78,7 +79,7 @@
                 },
                 "downloadApp": {
                     "title": "Guide the member in downloading the mobile app",
-                    "description": "The Laguna app guides you through your at-home recovery journey. It's available on Apple and Android, you can use the app to communicate with me by chat, video or call. It offers educational content, daily logs, and other tools to help you recover faster and avoid preventable readmissions."
+                    "description": "The Laguna app guides you through your at-home recovery journey. It's available on Apple and Android, you can use the app to communicate with me by chat, video or call. It offers educational content, daily logs, and other tools to help you recover faster and avoid preventable readmissions.\nSend the member a text message with guidelines to install the member app.\n"
                 },
                 "homePreparation": {
                     "title": "Send home preparation explore articles",
@@ -87,10 +88,6 @@
                 "poc": {
                     "title": "Create personalized POCs",
                     "description": "Intervene and influence. If barriers are identified, create barriers and plans of care (POCs) collaboratively with the member."
-                },
-                "scheduleWelcomeCall": {
-                    "title": "Schedule welcome call",
-                    "description": "Set up an appointment introducing yourself within 2 days."
                 },
                 "clinicalStatus": {
                     "title": "Assess inpatient clinical status",
@@ -143,6 +140,12 @@
                         "title": "Member To-Do: Communicate symptoms to the healthcare team",
                         "description": "Add Member To-Do to stress urgency in contacting the healthcare team"
                     }
+                }
+            },
+            "dailyLog": {
+                "highPainScore": {
+                    "title": "High pain level reported",
+                    "description": "Red flag for the following barrier: Poor pain management"
                 }
             }
         }

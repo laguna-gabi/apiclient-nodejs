@@ -38,7 +38,8 @@
                 "Meds": "",
                 "Appointment": "",
                 "Todo": ""
-            }
+            },
+            "newMemberNudgeAnonymous": ""
         },
         "honorific": {
             "mr": "",
@@ -85,10 +86,6 @@
                     "description": ""
                 },
                 "poc": {
-                    "title": "",
-                    "description": ""
-                },
-                "scheduleWelcomeCall": {
                     "title": "",
                     "description": ""
                 },
@@ -143,6 +140,12 @@
                         "title": "",
                         "description": ""
                     }
+                }
+            },
+            "dailyLog": {
+                "highPainScore": {
+                    "title": "",
+                    "description": ""
                 }
             }
         }
