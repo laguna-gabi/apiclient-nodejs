@@ -194,12 +194,17 @@ export class DailyReportService extends BaseService {
 
   @OnEvent(EventType.onQRSubmit, { async: true })
   async handleMemberDailyReportQRSubmit(params: IEventOnQRSubmit) {
-    const member = await this.memberService.get(params.memberId);
     if (params.questionnaireType === QuestionnaireType.mdl) {
+      const member = await this.memberService.get(params.memberId);
+      const { org } = await this.journeyService.getRecent(member.id, true);
+
       await this.setDailyReportCategories({
         memberId: params.memberId,
         journeyId: params.journeyId,
-        date: format(utcToZonedTime(Date.now(), lookup(member.zipCode)), momentFormats.date),
+        date: format(
+          utcToZonedTime(Date.now(), lookup(member.zipCode || org.zipCode)),
+          momentFormats.date,
+        ),
         categories: params.questionnaireResponse.answers.map(
           (answer) =>
             ({

@@ -2822,6 +2822,11 @@ describe('Integration tests: all', () => {
     it('should create a daily log entry for a member when a `Member Daily Log` questionnaire is submitted', async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
 
+      await handler.memberService.update({
+        id: member.id,
+        zipCode: null, // make sure daily report event handler will not fail on missing zip code
+      });
+
       const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
         createQuestionnaireParams: buildDailyLogQuestionnaire(),
       });
