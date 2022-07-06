@@ -3,11 +3,14 @@ import { internet, lorem } from 'faker';
 import { sign } from 'jsonwebtoken';
 import { model } from 'mongoose';
 import {
+  buildCAGEQuestionnaire,
+  buildCSATQuestionnaire,
   buildDailyLogQuestionnaire,
   buildGAD7Questionnaire,
   buildLHPQuestionnaire,
   buildNPSQuestionnaire,
   buildPHQ9Questionnaire,
+  buildReadinessToChangeQuestionnaire,
   buildWHO5Questionnaire,
   createSeedBarriers,
   seedCarePlans,
@@ -81,6 +84,9 @@ export async function seed() {
   await base.questionnaireService.createQuestionnaire(buildNPSQuestionnaire());
   await base.questionnaireService.createQuestionnaire(buildLHPQuestionnaire());
   await base.questionnaireService.createQuestionnaire(buildDailyLogQuestionnaire());
+  await base.questionnaireService.createQuestionnaire(buildCSATQuestionnaire());
+  await base.questionnaireService.createQuestionnaire(buildReadinessToChangeQuestionnaire());
+  await base.questionnaireService.createQuestionnaire(buildCAGEQuestionnaire());
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
