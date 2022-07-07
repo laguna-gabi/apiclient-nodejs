@@ -1,0 +1,7 @@
+{
+  "slack": {
+    "support": "#staging-support",
+    "notifications": "#staging-notifications",
+    "escalation": "#staging-escalation-support"
+  }
+}

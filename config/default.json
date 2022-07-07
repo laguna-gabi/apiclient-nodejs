@@ -76,10 +76,10 @@
     "traversalServiceTokenTtl": 3
   },
   "slack": {
-    "support": "#support-dev",
+    "support": "#develop-support",
     "testingSms": "#testing-sms",
-    "notifications": "#development-notifications",
-    "escalation": "#development-escalation-support",
+    "notifications": "#develop-notifications",
+    "escalation": "#develop-escalation-support",
     "analyticsAutoLoader": "#analytics-auto-loader"
   },
   "oneSignal": {
