@@ -156,7 +156,7 @@ export class AppointmentService extends AlertService {
       });
     }
 
-    return object.value;
+    return this.get(object.value.id);
   }
 
   async validateOverlap(params: ScheduleAppointmentParams) {

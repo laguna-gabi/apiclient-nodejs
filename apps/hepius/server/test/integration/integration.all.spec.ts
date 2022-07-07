@@ -1046,6 +1046,31 @@ describe('Integration tests: all', () => {
       const result2 = await handler.queries.getRecentJourney({ memberId: member.id });
       expect(result2.generalNotes).toEqual(params2.note);
     });
+
+    it('should get data notes on schedule appointment after calling updateNotes', async () => {
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
+      const appointment = await handler.mutations.scheduleAppointment({
+        appointmentParams: generateScheduleAppointmentParams({
+          memberId: member.id,
+          userId: user.id,
+        }),
+      });
+
+      const updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id });
+      await creators.handler.mutations.updateNotes({
+        updateNotesParams,
+      });
+
+      const result = await handler.mutations.scheduleAppointment({
+        appointmentParams: generateScheduleAppointmentParams({
+          id: appointment.id,
+          memberId: member.id,
+          userId: user.id,
+        }),
+      });
+
+      expect(result.notes).toEqual(expect.objectContaining(updateNotesParams.notes));
+    });
   });
 
   describe('articlesPath', () => {
