@@ -1329,28 +1329,37 @@ describe('Integration tests: all', () => {
       notification3,
       requestHeadersUser,
       internationalization: Internationalization,
-      actionItem: ActionItem;
+      actionItem: ActionItem,
+      actionItem2: ActionItem;
 
     beforeAll(async () => {
       // Fixtures: generate 2 members with the same primary user
       const { member, user, org } = await creators.createMemberUserAndOptionalOrg();
       member1 = member;
+      requestHeadersUser = generateRequestHeaders(user.authId);
+
       // add an overdue Action Item - within range (less than 30 days since deadline)
+      const createOrSetActionItemParams = generateCreateOrSetActionItemParams({
+        memberId: member1.id,
+        status: ActionItemStatus.active,
+        deadline: sub(new Date(), { days: 29 }),
+      });
       const { id: aiId } = await handler.mutations.createOrSetActionItem({
-        createOrSetActionItemParams: generateCreateOrSetActionItemParams({
-          memberId: member1.id,
-          status: ActionItemStatus.active,
-          deadline: sub(new Date(), { days: 29 }),
-        }),
+        createOrSetActionItemParams,
+      });
+      // add another action item - this time from the current user
+      const { id: aiId2 } = await handler.mutations.createOrSetActionItem({
+        createOrSetActionItemParams: { ...createOrSetActionItemParams, title: 'duptest' },
+        requestHeaders: requestHeadersUser,
       });
       const actionItems = await handler.queries.getActionItems({ memberId: member1.id });
       actionItem = actionItems.find((actionItem) => actionItem.id === aiId);
+      actionItem2 = actionItems.find((actionItem) => actionItem.id === aiId2);
 
       const { id } = await handler.mutations.createMember({
         memberParams: generateCreateMemberParams({ orgId: org.id, userId: user.id }),
       });
       member2 = await handler.queries.getMember({ id });
-      requestHeadersUser = generateRequestHeaders(user.authId);
 
       notification1 = mockGenerateDispatch({
         dispatchId: v4(),
@@ -1389,57 +1398,82 @@ describe('Integration tests: all', () => {
     it('should get alerts', async () => {
       const alerts = await handler.queries.getAlerts({ requestHeaders: requestHeadersUser });
 
-      expect(alerts).toEqual([
-        {
-          date: member2.createdAt,
-          dismissed: false,
-          id: `${member2.id}_${AlertType.memberAssigned}`,
-          isNew: true,
-          text: internationalization.getAlerts(AlertType.memberAssigned, { member: member2 }),
-          memberId: member2.id.toString(),
-          type: AlertType.memberAssigned,
-        },
-        {
-          date: member1.createdAt,
-          dismissed: false,
-          id: `${member1.id}_${AlertType.memberAssigned}`,
-          isNew: true,
-          text: internationalization.getAlerts(AlertType.memberAssigned, { member: member1 }),
-          memberId: member1.id.toString(),
-          type: AlertType.memberAssigned,
-        },
-        {
-          date: notification1.sentAt.toISOString(),
-          dismissed: false,
-          id: notification1.dispatchId,
-          isNew: true,
-          text: internationalization.getAlerts(AlertType.appointmentScheduledUser, {
-            member: member1,
-          }),
-          memberId: member1.id.toString(),
-          type: AlertType.appointmentScheduledUser,
-        },
-        {
-          date: notification2.sentAt.toISOString(),
-          dismissed: false,
-          id: notification2.dispatchId,
-          isNew: true,
-          text: internationalization.getAlerts(AlertType.memberNotFeelingWellMessage, {
-            member: member2,
-          }),
-          memberId: member2.id.toString(),
-          type: AlertType.memberNotFeelingWellMessage,
-        },
-        {
-          date: actionItem.deadline,
-          dismissed: false,
-          id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
-          isNew: true,
-          text: internationalization.getAlerts(AlertType.actionItemOverdue, { member: member1 }),
-          memberId: member1.id.toString(),
-          type: AlertType.actionItemOverdue,
-        },
-      ]);
+      expect(alerts).toEqual(
+        expect.arrayContaining([
+          {
+            date: member2.createdAt,
+            dismissed: false,
+            id: `${member2.id}_${AlertType.memberAssigned}`,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.memberAssigned, { member: member2 }),
+            memberId: member2.id.toString(),
+            type: AlertType.memberAssigned,
+          },
+          {
+            date: member1.createdAt,
+            dismissed: false,
+            id: `${member1.id}_${AlertType.memberAssigned}`,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.memberAssigned, { member: member1 }),
+            memberId: member1.id.toString(),
+            type: AlertType.memberAssigned,
+          },
+          {
+            date: notification1.sentAt.toISOString(),
+            dismissed: false,
+            id: notification1.dispatchId,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.appointmentScheduledUser, {
+              member: member1,
+            }),
+            memberId: member1.id.toString(),
+            type: AlertType.appointmentScheduledUser,
+          },
+          {
+            date: notification2.sentAt.toISOString(),
+            dismissed: false,
+            id: notification2.dispatchId,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.memberNotFeelingWellMessage, {
+              member: member2,
+            }),
+            memberId: member2.id.toString(),
+            type: AlertType.memberNotFeelingWellMessage,
+          },
+          {
+            date: actionItem.deadline,
+            dismissed: false,
+            id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.actionItemOverdue, { member: member1 }),
+            memberId: member1.id.toString(),
+            type: AlertType.actionItemOverdue,
+          },
+          {
+            date: actionItem.createdAt,
+            id: `${actionItem.id}_${AlertType.newActionItem}`,
+            dismissed: false,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.newActionItem, { member: member1 }),
+            memberId: member1.id.toString(),
+            type: AlertType.newActionItem,
+          },
+        ]),
+      );
+
+      expect(alerts).not.toEqual(
+        expect.arrayContaining([
+          {
+            date: actionItem2.createdAt,
+            id: `${actionItem2.id}_${AlertType.newActionItem}`,
+            dismissed: false,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.newActionItem, { member: member1 }),
+            memberId: member1.id.toString(),
+            type: AlertType.newActionItem,
+          },
+        ]),
+      );
     });
 
     it('should get alerts with dismissed indication', async () => {
@@ -1451,61 +1485,72 @@ describe('Integration tests: all', () => {
 
       const alerts = await handler.queries.getAlerts({ requestHeaders: requestHeadersUser });
 
-      expect(alerts).toEqual([
-        {
-          date: member2.createdAt,
-          dismissed: false,
-          id: `${member2.id}_${AlertType.memberAssigned}`,
-          isNew: true,
-          text: internationalization.getAlerts(AlertType.memberAssigned, {
-            member: member2,
-          }),
-          memberId: member2.id.toString(),
-          type: AlertType.memberAssigned,
-        },
-        {
-          date: member1.createdAt,
-          dismissed: false,
-          id: `${member1.id}_${AlertType.memberAssigned}`,
-          isNew: true,
-          text: internationalization.getAlerts(AlertType.memberAssigned, {
-            member: member1,
-          }),
-          memberId: member1.id.toString(),
-          type: AlertType.memberAssigned,
-        },
-        {
-          date: notification1.sentAt.toISOString(),
-          dismissed: true,
-          id: notification1.dispatchId,
-          isNew: true,
-          text: internationalization.getAlerts(AlertType.appointmentScheduledUser, {
-            member: member1,
-          }),
-          memberId: member1.id.toString(),
-          type: AlertType.appointmentScheduledUser,
-        },
-        {
-          date: notification2.sentAt.toISOString(),
-          dismissed: false,
-          id: notification2.dispatchId,
-          isNew: true,
-          text: internationalization.getAlerts(AlertType.memberNotFeelingWellMessage, {
-            member: member2,
-          }),
-          memberId: member2.id.toString(),
-          type: AlertType.memberNotFeelingWellMessage,
-        },
-        {
-          date: actionItem.deadline,
-          dismissed: false,
-          id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
-          isNew: true,
-          text: internationalization.getAlerts(AlertType.actionItemOverdue, { member: member1 }),
-          memberId: member1.id.toString(),
-          type: AlertType.actionItemOverdue,
-        },
-      ]);
+      expect(alerts).toEqual(
+        expect.arrayContaining([
+          {
+            date: member2.createdAt,
+            dismissed: false,
+            id: `${member2.id}_${AlertType.memberAssigned}`,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.memberAssigned, {
+              member: member2,
+            }),
+            memberId: member2.id.toString(),
+            type: AlertType.memberAssigned,
+          },
+          {
+            date: member1.createdAt,
+            dismissed: false,
+            id: `${member1.id}_${AlertType.memberAssigned}`,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.memberAssigned, {
+              member: member1,
+            }),
+            memberId: member1.id.toString(),
+            type: AlertType.memberAssigned,
+          },
+          {
+            date: notification1.sentAt.toISOString(),
+            dismissed: true,
+            id: notification1.dispatchId,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.appointmentScheduledUser, {
+              member: member1,
+            }),
+            memberId: member1.id.toString(),
+            type: AlertType.appointmentScheduledUser,
+          },
+          {
+            date: notification2.sentAt.toISOString(),
+            dismissed: false,
+            id: notification2.dispatchId,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.memberNotFeelingWellMessage, {
+              member: member2,
+            }),
+            memberId: member2.id.toString(),
+            type: AlertType.memberNotFeelingWellMessage,
+          },
+          {
+            date: actionItem.deadline,
+            dismissed: false,
+            id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.actionItemOverdue, { member: member1 }),
+            memberId: member1.id.toString(),
+            type: AlertType.actionItemOverdue,
+          },
+          {
+            date: actionItem.createdAt,
+            id: `${actionItem.id}_${AlertType.newActionItem}`,
+            dismissed: false,
+            isNew: true,
+            text: internationalization.getAlerts(AlertType.newActionItem, { member: member1 }),
+            memberId: member1.id.toString(),
+            type: AlertType.newActionItem,
+          },
+        ]),
+      );
     });
 
     it('should get alerts with isNew set to false after setLastQueryAlert', async () => {
@@ -1516,61 +1561,72 @@ describe('Integration tests: all', () => {
       const alerts = await handler.queries // .setContextUserId(primaryUser, undefined, [UserRole.lagunaCoach], lastQueryAlert)
         .getAlerts({ requestHeaders: requestHeadersUser });
 
-      expect(alerts).toEqual([
-        {
-          date: member2.createdAt,
-          dismissed: false,
-          id: `${member2.id}_${AlertType.memberAssigned}`,
-          isNew: false,
-          text: internationalization.getAlerts(AlertType.memberAssigned, {
-            member: member2,
-          }),
-          memberId: member2.id.toString(),
-          type: AlertType.memberAssigned,
-        },
-        {
-          date: member1.createdAt,
-          dismissed: false,
-          id: `${member1.id}_${AlertType.memberAssigned}`,
-          isNew: false,
-          text: internationalization.getAlerts(AlertType.memberAssigned, {
-            member: member1,
-          }),
-          memberId: member1.id.toString(),
-          type: AlertType.memberAssigned,
-        },
-        {
-          date: notification1.sentAt.toISOString(),
-          dismissed: true,
-          id: notification1.dispatchId,
-          isNew: false,
-          text: internationalization.getAlerts(AlertType.appointmentScheduledUser, {
-            member: member1,
-          }),
-          memberId: member1.id.toString(),
-          type: AlertType.appointmentScheduledUser,
-        },
-        {
-          date: notification2.sentAt.toISOString(),
-          dismissed: false,
-          id: notification2.dispatchId,
-          isNew: false,
-          text: internationalization.getAlerts(AlertType.memberNotFeelingWellMessage, {
-            member: member2,
-          }),
-          memberId: member2.id.toString(),
-          type: AlertType.memberNotFeelingWellMessage,
-        },
-        {
-          date: actionItem.deadline,
-          dismissed: false,
-          id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
-          isNew: false,
-          text: internationalization.getAlerts(AlertType.actionItemOverdue, { member: member1 }),
-          memberId: member1.id.toString(),
-          type: AlertType.actionItemOverdue,
-        },
-      ]);
+      expect(alerts).toEqual(
+        expect.arrayContaining([
+          {
+            date: member2.createdAt,
+            dismissed: false,
+            id: `${member2.id}_${AlertType.memberAssigned}`,
+            isNew: false,
+            text: internationalization.getAlerts(AlertType.memberAssigned, {
+              member: member2,
+            }),
+            memberId: member2.id.toString(),
+            type: AlertType.memberAssigned,
+          },
+          {
+            date: member1.createdAt,
+            dismissed: false,
+            id: `${member1.id}_${AlertType.memberAssigned}`,
+            isNew: false,
+            text: internationalization.getAlerts(AlertType.memberAssigned, {
+              member: member1,
+            }),
+            memberId: member1.id.toString(),
+            type: AlertType.memberAssigned,
+          },
+          {
+            date: notification1.sentAt.toISOString(),
+            dismissed: true,
+            id: notification1.dispatchId,
+            isNew: false,
+            text: internationalization.getAlerts(AlertType.appointmentScheduledUser, {
+              member: member1,
+            }),
+            memberId: member1.id.toString(),
+            type: AlertType.appointmentScheduledUser,
+          },
+          {
+            date: notification2.sentAt.toISOString(),
+            dismissed: false,
+            id: notification2.dispatchId,
+            isNew: false,
+            text: internationalization.getAlerts(AlertType.memberNotFeelingWellMessage, {
+              member: member2,
+            }),
+            memberId: member2.id.toString(),
+            type: AlertType.memberNotFeelingWellMessage,
+          },
+          {
+            date: actionItem.deadline,
+            dismissed: false,
+            id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
+            isNew: false,
+            text: internationalization.getAlerts(AlertType.actionItemOverdue, { member: member1 }),
+            memberId: member1.id.toString(),
+            type: AlertType.actionItemOverdue,
+          },
+          {
+            date: actionItem.createdAt,
+            id: `${actionItem.id}_${AlertType.newActionItem}`,
+            dismissed: false,
+            isNew: false,
+            text: internationalization.getAlerts(AlertType.newActionItem, { member: member1 }),
+            memberId: member1.id.toString(),
+            type: AlertType.newActionItem,
+          },
+        ]),
+      );
     });
 
     it('should get alerts with todos', async () => {
@@ -1652,18 +1708,22 @@ describe('Integration tests: all', () => {
         requestHeaders: generateRequestHeaders(user.authId),
       });
 
-      expect(alerts[2]).toEqual({
-        id: `${id}_${AlertType.assessmentSubmitScoreOverThreshold}`,
-        type: AlertType.assessmentSubmitScoreOverThreshold,
-        date: expect.any(String),
-        dismissed: false,
-        isNew: true,
-        memberId: member.id,
-        text: `${translation.alerts.assessmentSubmitScoreOverThreshold
-          .replace('{{assessmentName}}', 'PHQ-9')
-          .replace('{{member.firstName}}', member.firstName)
-          .replace('{{assessmentScore}}', '18')}`,
-      });
+      expect(alerts).toEqual(
+        expect.arrayContaining([
+          {
+            id: `${id}_${AlertType.assessmentSubmitScoreOverThreshold}`,
+            type: AlertType.assessmentSubmitScoreOverThreshold,
+            date: expect.any(String),
+            dismissed: false,
+            isNew: true,
+            memberId: member.id,
+            text: `${translation.alerts.assessmentSubmitScoreOverThreshold
+              .replace('{{assessmentName}}', 'PHQ-9')
+              .replace('{{member.firstName}}', member.firstName)
+              .replace('{{assessmentScore}}', '18')}`,
+          },
+        ]),
+      );
     });
 
     it('should not get alert questionnaire (PHQ9): score is not over threshold', async () => {

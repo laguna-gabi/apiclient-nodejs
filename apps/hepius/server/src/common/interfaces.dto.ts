@@ -115,11 +115,11 @@ export abstract class AlertService extends BaseService {
     super();
   }
 
-  abstract entityToAlerts(member): Promise<Alert[]>;
+  abstract entityToAlerts(member, userId?: string): Promise<Alert[]>;
 
   async getAlerts(userId: string, members, lastQueryAlert?: Date): Promise<Alert[]> {
     const alerts = (
-      await Promise.all(members?.map(async (member) => this.entityToAlerts(member)))
+      await Promise.all(members?.map(async (member) => this.entityToAlerts(member, userId)))
     ).flat();
 
     const dismissedAlertsIds = (await this.getUserDismissedAlerts(userId)).map(

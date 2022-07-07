@@ -110,22 +110,22 @@ export class ActionItemService extends AlertService {
     });
   }
 
-  async entityToAlerts(member): Promise<Alert[]> {
+  async entityToAlerts(member, userId?: string): Promise<Alert[]> {
     let alerts: Alert[] = [];
 
     // collect actionItems alerts
-    alerts = alerts.concat(await this.actionItemsToAlerts(member));
+    alerts = alerts.concat(await this.actionItemsToAlerts(member, userId));
 
     return alerts;
   }
 
-  private async actionItemsToAlerts(member): Promise<Alert[]> {
+  private async actionItemsToAlerts(member, userId?: string): Promise<Alert[]> {
     const { id: journeyId } = await this.journeyService.getRecent(member.id);
     const actionItems = await this.actionItemModel.find({
       memberId: new Types.ObjectId(member.id),
       journeyId: new Types.ObjectId(journeyId),
     });
-    return actionItems
+    const overdueActionItems = actionItems
       .filter(
         (actionItem) =>
           actionItem.status === ActionItemStatus.active && actionItem.deadline < new Date(),
@@ -140,6 +140,26 @@ export class ActionItemService extends AlertService {
             memberId: member.id,
           } as Alert),
       );
+
+    // new action items created for the user by a different user
+    const newActionItems = actionItems
+      .filter(
+        (actionItem) =>
+          actionItem.status === ActionItemStatus.active &&
+          actionItem.createdBy.toString() !== userId.toString(),
+      )
+      .map(
+        (actionItem) =>
+          ({
+            id: `${actionItem.id}_${AlertType.newActionItem}`,
+            type: AlertType.newActionItem,
+            date: actionItem.createdAt,
+            text: this.internationalization.getAlerts(AlertType.newActionItem, { member }),
+            memberId: member.id,
+          } as Alert),
+      );
+
+    return [overdueActionItems, newActionItems].flat();
   }
 
   @OnEvent(EventType.onUpdateRelatedEntity, { async: true })
