@@ -11,6 +11,7 @@ import { CognitoService } from '../../src/providers';
 
 describe('live: cognito', () => {
   let cognitoService: CognitoService;
+  const email = 'test@lagunahealth.com';
 
   const cognito = new CognitoIdentityServiceProvider({
     region: aws.region,
@@ -28,7 +29,7 @@ describe('live: cognito', () => {
     const user = {
       firstName: `${name.firstName()}.${v4()}`,
       lastName: `${name.lastName()}.${v4()}`,
-      email: 'hadas@lagunahealth.com',
+      email,
       phone: generatePhone(),
     };
     const userName = user.firstName.toLowerCase();
@@ -90,7 +91,7 @@ describe('live: cognito', () => {
       const { authId, username } = await cognitoService.addUser({
         firstName,
         lastName,
-        email: 'test@lagunahealth.com',
+        email,
         phone: generatePhone(),
       });
       expect(authId).not.toBeUndefined();
