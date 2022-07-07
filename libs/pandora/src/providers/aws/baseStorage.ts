@@ -1,7 +1,7 @@
 import { OnModuleInit } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
 import { hosts } from 'config';
-import { Environments } from '../../interfaces';
+import { isOperationalEnv } from '../..';
 
 export enum StorageType {
   documents = 'documents',
@@ -28,7 +28,7 @@ export abstract class BaseStorage implements OnModuleInit {
       signatureVersion: 'v4',
       apiVersion: '2006-03-01',
       region: awsRegion,
-      ...(!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+      ...(!isOperationalEnv()
         ? {
             endpoint: hosts.localstack,
             s3ForcePathStyle: true,

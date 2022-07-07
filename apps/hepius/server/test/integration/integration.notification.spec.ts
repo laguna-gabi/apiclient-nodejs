@@ -181,7 +181,7 @@ describe('Integration tests: notifications', () => {
       const mockUser = generateUpdateUserSettingsMock(user);
       const objectUser = new ObjectUpdateMemberSettingsClass(mockUser);
       Object.keys(objectUser.objectUpdateMemberSettings).forEach((key) => {
-        expectStringContaining(1, key, mockUser[key]);
+        expectStringContaining(3, key, mockUser[key]);
       });
 
       //send event to queue on update member config (create)
@@ -192,7 +192,7 @@ describe('Integration tests: notifications', () => {
       const objectMember = new ObjectUpdateMemberSettingsClass(mockMember);
       Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
         if (key !== 'firstLoggedInAt') {
-          expectStringContaining(2, key, mockMember[key]);
+          expectStringContaining(6, key, mockMember[key]);
         }
       });
 
@@ -203,7 +203,7 @@ describe('Integration tests: notifications', () => {
       const object1 = new ObjectNewMemberClass(mock1);
       Object.keys(object1.objectNewMemberMock).forEach((key) => {
         expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
-          3,
+          7,
           expect.objectContaining({
             type: QueueType.notifications,
             message: expect.stringContaining(
@@ -220,7 +220,7 @@ describe('Integration tests: notifications', () => {
       const object2 = new ObjectNewMemberNudgeClass(mock2);
       Object.keys(object2.objectNewMemberNudgeMock).forEach((key) => {
         expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
-          4,
+          8,
           expect.objectContaining({
             type: QueueType.notifications,
             message: expect.stringContaining(
@@ -254,7 +254,7 @@ describe('Integration tests: notifications', () => {
       const objectMember = new ObjectUpdateMemberSettingsClass(mockMember);
       Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
         if (key !== 'firstLoggedInAt') {
-          expectStringContaining(1, key, mockMember[key]);
+          expectStringContaining(2, key, mockMember[key]);
         }
       });
     });
@@ -281,7 +281,7 @@ describe('Integration tests: notifications', () => {
       const objectMember = new ObjectUpdateMemberSettingsClass(mockMember);
       Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
         if (key !== 'firstLoggedInAt') {
-          expectStringContaining(1, key, mockMember[key]);
+          expectStringContaining(2, key, mockMember[key]);
         }
       });
     });
@@ -307,9 +307,9 @@ describe('Integration tests: notifications', () => {
         await handler.mutations.deleteMember({ deleteMemberParams });
         await delay(200);
 
-        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(6);
-        checkDeleteDispatches(member.id, true, 1);
-        checkValues(6, { type: InnerQueueTypes.deleteClientSettings, id: member.id });
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(7);
+        checkDeleteDispatches(member.id, true, 2);
+        checkValues(7, { type: InnerQueueTypes.deleteClientSettings, id: member.id });
       },
     );
 
@@ -351,11 +351,11 @@ describe('Integration tests: notifications', () => {
           requestHeaders,
         });
 
-        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(5);
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(7);
 
-        expectStringContaining(1, 'platform', params.platform);
-        expectStringContaining(1, 'isPushNotificationsEnabled', params.isPushNotificationsEnabled);
-        expectStringContaining(1, 'firstLoggedInAt', firstLoggedInAt);
+        expectStringContaining(2, 'platform', params.platform);
+        expectStringContaining(2, 'isPushNotificationsEnabled', params.isPushNotificationsEnabled);
+        expectStringContaining(2, 'firstLoggedInAt', firstLoggedInAt);
 
         const checkValues = (contentKey: ContentKey, amount: number) => {
           const mock1 = generateObjectRegisterMemberWithTriggeredMock({
@@ -384,9 +384,9 @@ describe('Integration tests: notifications', () => {
         checkValues(RegisterInternalKey.newRegisteredMemberNudge, 2);
         checkValues(LogInternalKey.logReminder, 3);
 
-        expectStringContaining(5, 'type', InnerQueueTypes.deleteDispatch);
+        expectStringContaining(6, 'type', InnerQueueTypes.deleteDispatch);
         expectStringContaining(
-          5,
+          6,
           'dispatchId',
           generateDispatchId(RegisterInternalKey.newMemberNudge, member.id),
         );
@@ -428,13 +428,13 @@ describe('Integration tests: notifications', () => {
       });
       await delay(200);
 
-      expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(2);
+      expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(3);
 
-      expectStringContaining(1, 'platform', newParams.platform);
-      expectStringContaining(1, 'isPushNotificationsEnabled', newParams.isPushNotificationsEnabled);
-      expectStringContaining(2, 'type', InnerQueueTypes.deleteDispatch);
+      expectStringContaining(2, 'platform', newParams.platform);
+      expectStringContaining(2, 'isPushNotificationsEnabled', newParams.isPushNotificationsEnabled);
+      expectStringContaining(3, 'type', InnerQueueTypes.deleteDispatch);
       expectStringContaining(
-        2,
+        3,
         'dispatchId',
         generateDispatchId(RegisterInternalKey.newMemberNudge, member.id),
       );
@@ -472,7 +472,7 @@ describe('Integration tests: notifications', () => {
       };
       const objectMember = new ObjectUpdateMemberSettingsClass(updateControlMemberSettingsMock);
       Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
-        expectStringContaining(1, key, updateControlMemberSettingsMock[key]);
+        expectStringContaining(2, key, updateControlMemberSettingsMock[key]);
       });
 
       // send newControlMember dispatch
@@ -480,7 +480,7 @@ describe('Integration tests: notifications', () => {
       const dispatchObject = new ObjectBaseClass(mockDispatch);
       Object.keys(dispatchObject.objectBaseType).forEach((key) => {
         expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
-          2,
+          3,
           expect.objectContaining({
             type: QueueType.notifications,
             message: expect.stringContaining(
@@ -816,7 +816,8 @@ describe('Integration tests: notifications', () => {
 
       const object = new ObjectUpdateSenderClientIdClass(mock);
       Object.keys(object.updateSenderClientIdType).forEach((key) => {
-        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
+          2,
           expect.objectContaining({
             type: QueueType.notifications,
             message: expect.stringContaining(
@@ -850,7 +851,7 @@ describe('Integration tests: notifications', () => {
       });
       const objectMember = new ObjectUpdateMemberOrgClass(updatedOrgMemberMock);
       Object.keys(objectMember.objectUpdateMemberOrgType).forEach((key) => {
-        expectStringContaining(1, key, updatedOrgMemberMock[key]);
+        expectStringContaining(2, key, updatedOrgMemberMock[key]);
       });
     });
   });
@@ -880,7 +881,7 @@ describe('Integration tests: notifications', () => {
         const appointment = await generateScheduleAppointment(addDays(new Date(), 5));
         await delay(500);
 
-        checkDeleteDispatches(appointment.memberId.toString());
+        checkDeleteDispatches(appointment.memberId.toString(), false, 2);
         const baseParams = { appointmentId: appointment.id, appointmentTime: appointment.start };
         const mockForUser = generateAppointmentScheduledUserMock({
           recipientClientId: appointment.userId.toString(),
@@ -899,10 +900,10 @@ describe('Integration tests: notifications', () => {
           },
         });
 
-        checkValues(4, mockForUser);
-        checkValues(5, mockForMember);
+        checkValues(5, mockForUser);
+        checkValues(6, mockForMember);
         checkValues(
-          6,
+          7,
           generateAppointmentScheduleReminderMock({
             recipientClientId: appointment.memberId.toString(),
             senderClientId: appointment.userId.toString(),
@@ -912,7 +913,7 @@ describe('Integration tests: notifications', () => {
           }),
         );
         checkValues(
-          7,
+          8,
           generateAppointmentScheduleLongReminderMock({
             recipientClientId: appointment.memberId.toString(),
             senderClientId: appointment.userId.toString(),
@@ -938,10 +939,10 @@ describe('Integration tests: notifications', () => {
         `${RegisterInternalKey.newRegisteredMemberNudge} on past appointment`,
       async () => {
         const appointment = await generateScheduleAppointment(subMinutes(new Date(), 1));
-        await delay(1000);
+        await delay(500);
 
-        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(3);
-        checkDeleteDispatches(appointment.memberId.toString());
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(4);
+        checkDeleteDispatches(appointment.memberId.toString(), false, 2);
       },
     );
 
@@ -963,8 +964,8 @@ describe('Integration tests: notifications', () => {
         await handler.mutations.endAppointment({ endAppointmentParams: { id: appointment.id } });
         await delay(500);
 
-        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(2);
-        checkValues(1, {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(3);
+        checkValues(2, {
           type: InnerQueueTypes.deleteDispatch,
           dispatchId: generateDispatchId(
             AppointmentInternalKey.appointmentReminder,
@@ -972,7 +973,7 @@ describe('Integration tests: notifications', () => {
             appointment.id,
           ),
         });
-        checkValues(2, {
+        checkValues(3, {
           type: InnerQueueTypes.deleteDispatch,
           dispatchId: generateDispatchId(
             AppointmentInternalKey.appointmentLongReminder,
@@ -995,14 +996,14 @@ describe('Integration tests: notifications', () => {
         `${AppointmentInternalKey.appointmentLongReminder}`,
       async () => {
         const appointment = await generateScheduleAppointment();
-        await delay(1000);
+        await delay(500);
         handler.queueService.spyOnQueueServiceSendMessage.mockReset();
 
         await handler.mutations.deleteAppointment({ id: appointment.id });
         await delay(500);
 
-        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(2);
-        checkValues(1, {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(3);
+        checkValues(2, {
           type: InnerQueueTypes.deleteDispatch,
           dispatchId: generateDispatchId(
             AppointmentInternalKey.appointmentReminder,
@@ -1010,7 +1011,7 @@ describe('Integration tests: notifications', () => {
             appointment.id,
           ),
         });
-        checkValues(2, {
+        checkValues(3, {
           type: InnerQueueTypes.deleteDispatch,
           dispatchId: generateDispatchId(
             AppointmentInternalKey.appointmentLongReminder,
@@ -1035,6 +1036,7 @@ describe('Integration tests: notifications', () => {
         memberId: member.id,
       });
       (v4 as jest.Mock).mockImplementationOnce(() => fakeUUID);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
       const { id: appointmentId } = await handler.mutations.requestAppointment({
         appointmentParams,
       });
@@ -1049,7 +1051,7 @@ describe('Integration tests: notifications', () => {
         scheduleLink: `${hosts.get('app')}/${appointmentId}`,
       });
 
-      expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(5, {
+      expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(2, {
         message: JSON.stringify(mock, Object.keys(mock).sort()),
         type: QueueType.notifications,
       });

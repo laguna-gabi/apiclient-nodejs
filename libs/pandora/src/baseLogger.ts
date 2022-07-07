@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { PARAMS_PROVIDER_TOKEN, Params, PinoLogger } from 'nestjs-pino';
 import { v4 } from 'uuid';
-import { AuditType, Environments, ServiceName } from '.';
+import { AuditType, ServiceName, isOperationalEnv } from '.';
 
 export const internalLogs = {
   lastCommit: 'Last commit hash on this branch is: @hash@',
@@ -175,14 +175,13 @@ export const PinoHttpConfig = {
   autoLogging: false,
   quietReqLogger: true,
   level: LogType.debug,
-  prettyPrint:
-    !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-      ? {
-          colorize: true,
-          translateTime: 'SYS:dd/mm/yyyy, H:M:ss',
-          singleLine: true,
-          messageFormat: '[{className}] [{methodName}] {failureReason.message}',
-          ignore: 'pid,hostname,className,methodName',
-        }
-      : false,
+  prettyPrint: !isOperationalEnv()
+    ? {
+        colorize: true,
+        translateTime: 'SYS:dd/mm/yyyy, H:M:ss',
+        singleLine: true,
+        messageFormat: '[{className}] [{methodName}] {failureReason.message}',
+        ignore: 'pid,hostname,className,methodName',
+      }
+    : false,
 };

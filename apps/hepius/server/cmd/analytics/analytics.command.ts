@@ -69,15 +69,14 @@ export class AnalyticsCommand implements CommandRunner {
     await this.analyticsService.init(); // loading cache data
 
     // initialize Analytics SQL db
-    const { dbUsername, dbPassword } = ExternalConfigs.analytics;
-
-    const { username, password } =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? analytics
-        : {
-            username: await this.configsService.getConfig(dbUsername),
-            password: await this.configsService.getConfig(dbPassword),
-          };
+    const username = await this.configsService.getEnvConfig({
+      external: ExternalConfigs.analytics.dbUsername,
+      local: analytics.username,
+    });
+    const password = await this.configsService.getEnvConfig({
+      external: ExternalConfigs.analytics.dbPassword,
+      local: analytics.password,
+    });
 
     const AppDataSource = new DataSource({
       type: 'mysql',

@@ -1,4 +1,4 @@
-import { BaseConfigs, BaseExternalConfigs, Environments, ServiceName } from '@argus/pandora';
+import { BaseConfigs, BaseExternalConfigs, ServiceName, isOperationalEnv } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 import { aws, db } from 'config';
@@ -25,10 +25,9 @@ export class ConfigsService extends BaseConfigs implements MongooseOptionsFactor
   }
 
   async createMongooseOptions(): Promise<MongooseModuleOptions> {
-    const uri =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? `${db.connection}/${ServiceName.poseidon}`
-        : await this.getConfig(ExternalConfigs.db.connection.poseidon);
+    const uri = isOperationalEnv()
+      ? await this.getConfig(ExternalConfigs.db.connection.poseidon)
+      : `${db.connection}/${ServiceName.poseidon}`;
     return { uri };
   }
 }

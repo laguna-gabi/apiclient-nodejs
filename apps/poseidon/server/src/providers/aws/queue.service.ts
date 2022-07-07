@@ -1,4 +1,11 @@
-import { Environments, GlobalEventType, QueueType, ServiceName, formatEx } from '@argus/pandora';
+import {
+  Environments,
+  GlobalEventType,
+  QueueType,
+  ServiceName,
+  formatEx,
+  isOperationalEnv,
+} from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { SQS } from 'aws-sdk';
@@ -13,9 +20,7 @@ export class QueueService implements OnModuleInit {
   private readonly sqs = new SQS({
     region: aws.region,
     apiVersion: '2012-11-05',
-    ...(!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-      ? { endpoint: hosts.localstack }
-      : {}),
+    ...(isOperationalEnv() ? {} : { endpoint: hosts.localstack }),
   });
   private auditQueueUrl;
   private transcriptQueueUrl;
@@ -36,10 +41,11 @@ export class QueueService implements OnModuleInit {
       this.auditQueueUrl = QueueUrl;
     }
 
-    const transcriptName =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? aws.queue.transcript
-        : await this.configsService.getConfig(queueNameTranscript);
+    const transcriptName = await this.configsService.getEnvConfig({
+      external: queueNameTranscript,
+      local: aws.queue.transcript,
+    });
+
     const { QueueUrl } = await this.sqs.getQueueUrl({ QueueName: transcriptName }).promise();
     this.transcriptQueueUrl = QueueUrl;
 

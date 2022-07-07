@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { AuditType, BaseLogger, Client, Environments, GlobalEventType, QueueType } from '.';
+import { AuditType, BaseLogger, Client, GlobalEventType, QueueType } from '.';
 
 export class BaseLoggingInterceptor implements NestInterceptor {
   constructor(
@@ -12,11 +12,6 @@ export class BaseLoggingInterceptor implements NestInterceptor {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<void> {
-    if (process.env.NODE_ENV === Environments.test) {
-      //disabling intercept log on tests, it causes a dump
-      return next.handle().pipe(tap(() => undefined));
-    }
-
     const methodName = context.getHandler().name;
     const className = context.getClass().name;
     let args;

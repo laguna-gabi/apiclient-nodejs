@@ -1,4 +1,4 @@
-import { FailureReason } from '.';
+import { Environments, FailureReason } from '.';
 import { address } from 'faker';
 import { lookup } from 'zipcode-to-timezone';
 
@@ -27,6 +27,12 @@ export const generateZipCode = (): string => {
     }
   }
 };
+
+export const isOperationalEnv = () =>
+  process.env.NODE_ENV === Environments.develop ||
+  process.env.NODE_ENV === Environments.staging ||
+  process.env.NODE_ENV === Environments.production;
+
 /*******************************************************************************
  *********************************** Logger ***********************************
  ******************************************************************************/

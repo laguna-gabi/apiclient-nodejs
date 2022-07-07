@@ -1,4 +1,4 @@
-import { BaseConfigs, BaseExternalConfigs, Environments, ServiceName } from '@argus/pandora';
+import { BaseConfigs, BaseExternalConfigs, ServiceName } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 import { aws, db } from 'config';
@@ -44,12 +44,10 @@ export class ConfigsService extends BaseConfigs implements MongooseOptionsFactor
   }
 
   async createMongooseOptions(): Promise<MongooseModuleOptions> {
-    const uri =
-      !process.env.NODE_ENV ||
-      process.env.NODE_ENV === Environments.test ||
-      process.env.NODE_ENV === Environments.localhost
-        ? `${db.connection}/${ServiceName.hepius}`
-        : await this.getConfig(ExternalConfigs.db.connection.hepius);
+    const uri = await this.getEnvConfig({
+      external: ExternalConfigs.db.connection.hepius,
+      local: `${db.connection}/${ServiceName.hepius}`,
+    });
     return { uri };
   }
 }

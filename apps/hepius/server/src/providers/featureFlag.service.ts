@@ -1,4 +1,3 @@
-import { Environments } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { SplitFactory } from '@splitsoftware/splitio';
 import { IClient, ISDK, Treatment as SplitioTreatment } from '@splitsoftware/splitio/types/splitio';
@@ -24,9 +23,10 @@ export class FeatureFlagService implements OnModuleInit {
   }
 
   private async getApiKey(): Promise<string> {
-    return !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-      ? split.apiKey
-      : await this.configsService.getConfig(ExternalConfigs.split.apiKey);
+    return this.configsService.getEnvConfig({
+      external: ExternalConfigs.split.apiKey,
+      local: split.apiKey,
+    });
   }
 
   async onModuleDestroy() {

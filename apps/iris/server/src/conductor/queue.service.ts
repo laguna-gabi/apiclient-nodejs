@@ -7,7 +7,14 @@ import {
   IUpdateSenderClientId,
   InnerQueueTypes,
 } from '@argus/irisClient';
-import { Environments, GlobalEventType, QueueType, ServiceName, formatEx } from '@argus/pandora';
+import {
+  Environments,
+  GlobalEventType,
+  QueueType,
+  ServiceName,
+  formatEx,
+  isOperationalEnv,
+} from '@argus/pandora';
 import { Injectable, NotImplementedException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
@@ -24,13 +31,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit, OnMod
   private readonly sqs = new SQS({
     region: aws.region,
     apiVersion: '2012-11-05',
-    ...(!process.env.NODE_ENV ||
-    process.env.NODE_ENV === Environments.test ||
-    process.env.NODE_ENV === Environments.localhost
-      ? {
-          endpoint: hosts.localstack,
-        }
-      : {}),
+    ...(isOperationalEnv() ? {} : { endpoint: hosts.localstack }),
   });
   private auditQueueUrl;
   private notificationsQueueUrl;
@@ -63,24 +64,20 @@ export class QueueService extends HealthIndicator implements OnModuleInit, OnMod
       this.auditQueueUrl = QueueUrl;
     }
 
-    const queueName =
-      !process.env.NODE_ENV ||
-      process.env.NODE_ENV === Environments.test ||
-      process.env.NODE_ENV === Environments.localhost
-        ? aws.queue.notification
-        : await this.configsService.getConfig(queueNameNotifications);
+    const queueName = await this.configsService.getEnvConfig({
+      external: queueNameNotifications,
+      local: aws.queue.notification,
+    });
     const { QueueUrl: queueUrl } = await this.sqs.getQueueUrl({ QueueName: queueName }).promise();
     this.notificationsQueueUrl =
       process.env.NODE_ENV === Environments.localhost
         ? queueUrl.replace('localhost', containers.aws)
         : queueUrl;
 
-    const dlQueueName =
-      !process.env.NODE_ENV ||
-      process.env.NODE_ENV === Environments.test ||
-      process.env.NODE_ENV === Environments.localhost
-        ? aws.queue.notificationDLQ
-        : await this.configsService.getConfig(queueNameNotificationsDLQ);
+    const dlQueueName = await this.configsService.getEnvConfig({
+      external: queueNameNotificationsDLQ,
+      local: aws.queue.notificationDLQ,
+    });
     const { QueueUrl: dlQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: dlQueueName })
       .promise();

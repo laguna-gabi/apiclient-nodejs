@@ -14,7 +14,7 @@ export class SlackBot extends BaseSlack implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     const url = await this.configsService.getConfig(ExternalConfigs.slack.url);
-    this.webhook = new IncomingWebhook(url);
+    this.webhook = new IncomingWebhook(url || '');
   }
 
   @OnEvent(GlobalEventType.notifySlack, { async: true })

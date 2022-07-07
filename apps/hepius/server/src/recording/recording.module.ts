@@ -1,4 +1,4 @@
-import { Environments, ServiceName } from '@argus/pandora';
+import { ServiceName } from '@argus/pandora';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -20,12 +20,10 @@ import { ConfigsService, ExternalConfigs, ProvidersModule } from '../providers';
         inject: [ConfigsService],
         imports: [ProvidersModule],
         useFactory: async (configsService: ConfigsService) => {
-          const host =
-            !process.env.NODE_ENV ||
-            process.env.NODE_ENV === Environments.test ||
-            process.env.NODE_ENV === Environments.localhost
-              ? containers.poseidon
-              : await configsService.getConfig(ExternalConfigs.host.poseidon);
+          const host = await configsService.getEnvConfig({
+            external: ExternalConfigs.host.poseidon,
+            local: containers.poseidon,
+          });
           return {
             transport: Transport.TCP,
             options: { host, port: services.poseidon.tcpPort },

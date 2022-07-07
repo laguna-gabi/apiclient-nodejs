@@ -3,6 +3,7 @@
  ******************************************************************************/
 export enum Environments {
   production = 'production',
+  staging = 'staging',
   develop = 'develop',
   test = 'test',
   localhost = 'localhost',

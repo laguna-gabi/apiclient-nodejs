@@ -3,7 +3,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonModule } from '../common';
 import { ConfigsService, ExternalConfigs, QueueService } from './aws';
 import { containers, services } from 'config';
-import { Environments, ServiceName } from '@argus/pandora';
+import { ServiceName } from '@argus/pandora';
 import { HepiusClientService } from './hepius/client.service';
 
 @Module({
@@ -15,11 +15,10 @@ import { HepiusClientService } from './hepius/client.service';
         inject: [ConfigsService],
         imports: [ProvidersModule],
         useFactory: async (configsService: ConfigsService) => {
-          const host =
-            !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-              ? containers.hepius
-              : `${await configsService.getConfig(ExternalConfigs.host.hepius)}`;
-
+          const host = await configsService.getEnvConfig({
+            external: ExternalConfigs.host.hepius,
+            local: containers.hepius,
+          });
           return {
             transport: Transport.TCP,
             options: { host, port: services.hepius.tcpPort },

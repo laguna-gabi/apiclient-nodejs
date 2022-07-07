@@ -1,4 +1,4 @@
-import { BaseStorage, Environments, StorageType, StorageUrlParams, formatEx } from '@argus/pandora';
+import { BaseStorage, StorageType, StorageUrlParams, formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { S3 } from 'aws-sdk';
@@ -21,10 +21,10 @@ export class StorageService extends BaseStorage {
   }
 
   async onModuleInit(): Promise<void> {
-    this.bucket =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? aws.storage.bucket
-        : await this.configsService.getConfig(ExternalConfigs.aws.memberBucketName);
+    this.bucket = await this.configsService.getEnvConfig({
+      external: ExternalConfigs.aws.memberBucketName,
+      local: aws.storage.bucket,
+    });
   }
 
   @OnEvent(EventType.onNewMember, { async: true })

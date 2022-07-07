@@ -1,4 +1,4 @@
-import { Environments, formatEx } from '@argus/pandora';
+import { formatEx, isOperationalEnv } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import VoximplantApiClient from '@voximplant/apiclient-nodejs';
@@ -38,10 +38,7 @@ export class Voximplant implements OnModuleInit {
   async handleNewUser(params: IEventOnNewUser) {
     this.logger.info({ userId: params.user.id }, Voximplant.name, this.handleNewUser.name);
     try {
-      if (
-        process.env.NODE_ENV === Environments.production ||
-        process.env.NODE_ENV === Environments.develop
-      ) {
+      if (isOperationalEnv()) {
         const { user } = params;
         const voximplantPassword = nanoid();
         const { userId: voximplantId } = await this.client.Users.addUser({

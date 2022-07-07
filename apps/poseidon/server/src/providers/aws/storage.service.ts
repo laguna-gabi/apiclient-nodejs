@@ -1,4 +1,4 @@
-import { BaseStorage, Environments, StorageUrlParams } from '@argus/pandora';
+import { BaseStorage, StorageUrlParams } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { Body } from 'aws-sdk/clients/s3';
 import { aws } from 'config';
@@ -15,10 +15,10 @@ export class StorageService extends BaseStorage {
   }
 
   async onModuleInit(): Promise<void> {
-    this.bucket =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? aws.storage.bucket
-        : await this.configsService.getConfig(ExternalConfigs.aws.memberBucketName);
+    this.bucket = await this.configsService.getEnvConfig({
+      external: ExternalConfigs.aws.memberBucketName,
+      local: aws.storage.bucket,
+    });
   }
 
   async uploadFile(uploadFileParams: UploadFileParams) {

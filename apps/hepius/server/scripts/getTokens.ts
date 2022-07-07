@@ -1,5 +1,5 @@
 import { User } from '@argus/hepiusClient';
-import { Environments } from '@argus/pandora';
+import { isOperationalEnv } from '@argus/pandora';
 import { sign } from 'jsonwebtoken';
 import { Model, connect, disconnect, model } from 'mongoose';
 import { v4 } from 'uuid';
@@ -19,7 +19,7 @@ export async function getTokens() {
    * we want to add the authId so we can do queries for that members.
    * This is done only for local environments.
    */
-  if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
+  if (!isOperationalEnv()) {
     const members = await memberModel.find({ authId: null });
     members.map(async (member) => {
       await memberModel.findOneAndUpdate(

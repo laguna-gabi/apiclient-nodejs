@@ -5,6 +5,7 @@ import {
   ServiceName,
   StorageType,
   formatEx,
+  isOperationalEnv,
 } from '@argus/pandora';
 import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -20,11 +21,7 @@ export class QueueService implements OnModuleInit {
   private readonly sqs = new SQS({
     region: aws.region,
     apiVersion: '2012-11-05',
-    ...(!process.env.NODE_ENV ||
-    process.env.NODE_ENV === Environments.test ||
-    process.env.NODE_ENV === Environments.localhost
-      ? { endpoint: hosts.localstack }
-      : {}),
+    ...(isOperationalEnv() ? {} : { endpoint: hosts.localstack }),
   });
   private auditQueueUrl;
   private notificationsQueueUrl;
@@ -48,12 +45,10 @@ export class QueueService implements OnModuleInit {
       this.auditQueueUrl = QueueUrl;
     }
 
-    const notificationsName =
-      !process.env.NODE_ENV ||
-      process.env.NODE_ENV === Environments.test ||
-      process.env.NODE_ENV === Environments.localhost
-        ? aws.queue.notification
-        : await this.configsService.getConfig(queueNameNotifications);
+    const notificationsName = await this.configsService.getEnvConfig({
+      external: queueNameNotifications,
+      local: aws.queue.notification,
+    });
     const { QueueUrl: notificationsQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: notificationsName })
       .promise();
@@ -62,12 +57,10 @@ export class QueueService implements OnModuleInit {
         ? notificationsQueueUrl.replace('localhost', containers.aws)
         : notificationsQueueUrl;
 
-    const imageName =
-      !process.env.NODE_ENV ||
-      process.env.NODE_ENV === Environments.test ||
-      process.env.NODE_ENV === Environments.localhost
-        ? aws.queue.image
-        : await this.configsService.getConfig(queueNameImage);
+    const imageName = await this.configsService.getEnvConfig({
+      external: queueNameImage,
+      local: aws.queue.image,
+    });
     const { QueueUrl: imageQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: imageName })
       .promise();
@@ -76,12 +69,10 @@ export class QueueService implements OnModuleInit {
         ? imageQueueUrl.replace('localhost', containers.aws)
         : imageQueueUrl;
 
-    const changeEventName =
-      !process.env.NODE_ENV ||
-      process.env.NODE_ENV === Environments.test ||
-      process.env.NODE_ENV === Environments.localhost
-        ? aws.queue.changeEvent
-        : await this.configsService.getConfig(queueNameChangeEvent);
+    const changeEventName = await this.configsService.getEnvConfig({
+      external: queueNameChangeEvent,
+      local: aws.queue.changeEvent,
+    });
     const { QueueUrl: changeEventsQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: changeEventName })
       .promise();

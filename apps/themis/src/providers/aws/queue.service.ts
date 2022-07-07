@@ -1,4 +1,4 @@
-import { Environments, IChangeEvent, formatEx } from '@argus/pandora';
+import { IChangeEvent, formatEx, isOperationalEnv } from '@argus/pandora';
 import { Injectable, NotAcceptableException, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { HealthIndicatorResult } from '@nestjs/terminus';
@@ -14,9 +14,7 @@ export class QueueService implements OnModuleInit {
   private readonly sqs = new SQS({
     region: aws.region,
     apiVersion: '2012-11-05',
-    ...(!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-      ? { endpoint: hosts.localstack }
-      : {}),
+    ...(isOperationalEnv() ? {} : { endpoint: hosts.localstack }),
   });
   private changeEventQueueUrl;
   private consumer;
@@ -28,12 +26,10 @@ export class QueueService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    const { queueNameChangeEvent } = ExternalConfigs.aws;
-
-    const changeEventName =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? aws.queue.changeEvent
-        : await this.configsService.getConfig(queueNameChangeEvent);
+    const changeEventName = await this.configsService.getEnvConfig({
+      external: ExternalConfigs.aws.queueNameChangeEvent,
+      local: aws.queue.changeEvent,
+    });
     const { QueueUrl: changeEventsQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: changeEventName })
       .promise();

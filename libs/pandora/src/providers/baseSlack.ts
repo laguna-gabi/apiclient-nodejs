@@ -1,7 +1,7 @@
 import { BaseLogger } from '../baseLogger';
 import { IncomingWebhook } from '@slack/webhook';
 import { OnModuleInit } from '@nestjs/common';
-import { Environments } from '..';
+import { isOperationalEnv } from '..';
 
 export enum SlackChannel {
   support = 'slack.support',
@@ -36,10 +36,7 @@ export abstract class BaseSlack implements OnModuleInit {
   abstract onModuleInit(): Promise<void>;
 
   async send(params: IEventNotifySlack): Promise<{ text: string }> {
-    if (
-      process.env.NODE_ENV === Environments.develop ||
-      process.env.NODE_ENV === Environments.production
-    ) {
+    if (isOperationalEnv()) {
       try {
         const orgName = `${params.orgName ? ` [${params.orgName}] ` : ''}`;
         const text = `${params.header}${orgName}\n${params.message}`;
