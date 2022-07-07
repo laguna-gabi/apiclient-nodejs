@@ -100,7 +100,7 @@ export class CreateOrSetActionItemParams {
   status?: ActionItemStatus;
 
   @Field(() => Date, { nullable: true })
-  @IsDate({ message: Errors.get(ErrorType.journeyActionItemDeadline) })
+  @IsDate({ message: Errors.get(ErrorType.actionItemDeadline) })
   @IsOptional()
   deadline?: Date;
 

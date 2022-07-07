@@ -519,6 +519,26 @@ export class Mutations {
     return createOrSetActionItem;
   };
 
+  deleteActionItem = async ({
+    id,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    id: string;
+    requestHeaders?;
+  }): Promise<boolean> => {
+    const { deleteActionItem } = await this.client.request(
+      gql`
+        mutation deleteActionItem($id: String!) {
+          deleteActionItem(id: $id)
+        }
+      `,
+      { id },
+      requestHeaders,
+    );
+
+    return deleteActionItem;
+  };
+
   createAvailabilities = async ({
     availabilities,
     missingFieldError,

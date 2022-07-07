@@ -84,7 +84,7 @@ export class ActionItemService extends AlertService {
         },
       );
       if (!result) {
-        throw new Error(Errors.get(ErrorType.journeyActionItemIdNotFound));
+        throw new Error(Errors.get(ErrorType.actionItemIdNotFound));
       }
     } else {
       // create a new action item
@@ -171,6 +171,9 @@ export class ActionItemService extends AlertService {
         // only handle action items events (this eventType can be used for other entities)
         case RelatedEntityType.actionItem:
           const actionItem = await this.actionItemModel.findById(new Types.ObjectId(destEntity.id));
+          if (!actionItem) {
+            throw new Error(Errors.get(ErrorType.actionItemIdNotFound));
+          }
           const updateParams: Partial<CreateOrSetActionItemParams> = {
             relatedEntities: actionItem.relatedEntities.concat(sourceEntity),
           };
@@ -194,16 +197,27 @@ export class ActionItemService extends AlertService {
   }
 
   @OnEvent(EventType.onDeletedMember, { async: true })
-  async deleteActionItem(params: IEventDeleteMember) {
+  async deleteActionItems(params: IEventDeleteMember) {
     const data = {
       params,
       logger: this.logger,
-      methodName: this.deleteActionItem.name,
+      methodName: this.deleteActionItems.name,
       serviceName: ActionItemService.name,
     };
     await deleteMemberObjects<Model<ActionItemDocument> & ISoftDelete<ActionItemDocument>>({
       model: this.actionItemModel,
       ...data,
     });
+  }
+
+  async delete(id: string, deletedBy: string): Promise<boolean> {
+    const result = await this.actionItemModel.findOne({
+      _id: new Types.ObjectId(id),
+    });
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.actionItemIdNotFound));
+    }
+    await result.delete(new Types.ObjectId(deletedBy));
+    return true;
   }
 }

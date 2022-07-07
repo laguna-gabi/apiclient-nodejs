@@ -4,7 +4,15 @@ import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import { ActionItem, ActionItemService, CreateOrSetActionItemParams } from '.';
-import { Ace, ErrorType, Errors, IsValidObjectId, LoggingInterceptor, Roles } from '../common';
+import {
+  Ace,
+  Client,
+  ErrorType,
+  Errors,
+  IsValidObjectId,
+  LoggingInterceptor,
+  Roles,
+} from '../common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => ActionItem)
@@ -32,5 +40,20 @@ export class ActionItemResolver {
     memberId: string,
   ) {
     return this.actionItemService.getActionItems(memberId);
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(UserRole.lagunaCoach, UserRole.lagunaNurse, UserRole.coach)
+  @Ace({ entityName: EntityName.actionitem, idLocator: `id`, entityMemberIdLocator: 'memberId' })
+  async deleteActionItem(
+    @Client('_id') userId,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.actionItemIdInvalid)),
+    )
+    id: string,
+  ) {
+    return this.actionItemService.delete(id, userId);
   }
 }

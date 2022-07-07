@@ -73,4 +73,27 @@ describe(ActionItemResolver.name, () => {
       expect(result).toEqual(actionItems);
     });
   });
+
+  describe('deleteActionItem', () => {
+    let spyOnServiceDelete;
+    beforeEach(() => {
+      spyOnServiceDelete = jest.spyOn(service, 'delete');
+    });
+
+    afterEach(() => {
+      spyOnServiceDelete.mockReset();
+    });
+
+    it('should successfully delete an action item', async () => {
+      spyOnServiceDelete.mockImplementationOnce(async () => true);
+
+      const userId = generateId();
+      const id = generateId();
+      const result = await resolver.deleteActionItem(userId, id);
+      expect(result).toBeTruthy();
+
+      expect(spyOnServiceDelete).toBeCalledTimes(1);
+      expect(spyOnServiceDelete).toBeCalledWith(id, userId);
+    });
+  });
 });

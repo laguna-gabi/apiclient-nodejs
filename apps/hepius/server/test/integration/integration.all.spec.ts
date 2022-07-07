@@ -2954,7 +2954,7 @@ describe('Integration tests: all', () => {
   });
 
   describe('Action Items', () => {
-    it('should create, update, and get action items', async () => {
+    it('should create, update, delete and get action items', async () => {
       const { member } = await creators.createMemberUserAndOptionalOrg();
 
       // create action items
@@ -3000,6 +3000,17 @@ describe('Integration tests: all', () => {
           }),
         ]),
       );
+
+      // Delete action item:
+      const result = await handler.mutations.deleteActionItem({
+        id: id1,
+      });
+
+      expect(result).toBeTruthy();
+
+      // Get (confirm record was deleted):
+      const actionsItemsAfterDelete = await handler.queries.getActionItems({ memberId: member.id });
+      expect(actionsItemsAfterDelete.find((actionItem) => actionItem.id === id1)).toBeFalsy();
     });
 
     it('should create autoActionItems on first appointment', async () => {

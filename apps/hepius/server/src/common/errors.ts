@@ -149,8 +149,6 @@ export enum ErrorType {
   journeyNotFound = 10501,
   journeyIdInvalid = 10502,
   noActiveJourney = 10503,
-  journeyActionItemIdNotFound = 10504,
-  journeyActionItemDeadline = 10505,
   journeyJournalNotFound = 10506,
   journeyJournalImageNotFound = 10507,
   journeyJournalAudioNotFound = 10508,
@@ -194,6 +192,11 @@ export enum ErrorType {
   // client
   clientIdInvalid = 11001,
   clientNotFound = 11002,
+
+  // action items
+  actionItemIdNotFound = 11101,
+  actionItemDeadline = 11102,
+  actionItemIdInvalid = 11103,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -433,8 +436,9 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.journeyNotFound.valueOf(), `journey ${notFoundPrefix}`],
   [ErrorType.journeyIdInvalid.valueOf(), `journey id ${objectIdFormat}`],
   [ErrorType.noActiveJourney.valueOf(), `no active journey`],
-  [ErrorType.journeyActionItemIdNotFound.valueOf(), `journey action item ${notFoundPrefix}`],
-  [ErrorType.journeyActionItemDeadline.valueOf(), `deadline ${dateTimeInstanceFormat}`],
+  [ErrorType.actionItemIdNotFound.valueOf(), `action item ${notFoundPrefix}`],
+  [ErrorType.actionItemIdInvalid.valueOf(), `action item id ${objectIdFormat}`],
+  [ErrorType.actionItemDeadline.valueOf(), `deadline ${dateTimeInstanceFormat}`],
   [ErrorType.journeyJournalNotFound.valueOf(), `journal ${notFoundPrefix}`],
   [ErrorType.journeyJournalImageNotFound.valueOf(), `journal image was not found`],
   [ErrorType.journeyJournalAudioNotFound.valueOf(), `journal audio was not found`],

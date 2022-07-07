@@ -28,7 +28,7 @@ describe('Validations - actionItem', () => {
       ${{ priority: 123 }}         | ${{ missingFieldError: `Enum \"ActionItemPriority\" cannot represent non-string value` }}
       ${{ category: 123 }}         | ${{ missingFieldError: `Enum \"ActionItemCategory\" cannot represent non-string value` }}
       ${{ source: 123 }}           | ${{ missingFieldError: `Enum \"ActionItemSource\" cannot represent non-string value` }}
-      ${{ deadline: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.journeyActionItemDeadline)] }}
+      ${{ deadline: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.actionItemDeadline)] }}
     `(`should fail to update actionItem since $input is not a valid type`, async (params) => {
       /* eslint-enable max-len */
       const createOrSetActionItemParams = generateCreateOrSetActionItemParams({

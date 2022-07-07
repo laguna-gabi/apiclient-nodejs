@@ -1,7 +1,10 @@
 import { generateId, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Types } from 'mongoose';
+import { Model, Types, model } from 'mongoose';
 import {
+  ActionItem,
+  ActionItemDocument,
+  ActionItemDto,
   ActionItemModule,
   ActionItemPriority,
   ActionItemService,
@@ -13,9 +16,11 @@ import {
   IEventUpdateRelatedEntity,
   LoggerService,
   RelatedEntityType,
+  defaultTimestampsDbValues,
 } from '../../src/common';
 import { JourneyService } from '../../src/journey';
 import {
+  checkDelete,
   dbConnect,
   dbDisconnect,
   defaultModules,
@@ -27,6 +32,7 @@ describe(ActionItemService.name, () => {
   let module: TestingModule;
   let service: ActionItemService;
   let journeyService: JourneyService;
+  let actionItemModel: Model<ActionItemDocument & defaultTimestampsDbValues>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -36,6 +42,10 @@ describe(ActionItemService.name, () => {
 
     service = module.get<ActionItemService>(ActionItemService);
     journeyService = module.get<JourneyService>(JourneyService);
+    actionItemModel = model<ActionItemDocument & defaultTimestampsDbValues>(
+      ActionItem.name,
+      ActionItemDto,
+    );
     mockLogger(module.get<LoggerService>(LoggerService));
 
     await dbConnect();
@@ -137,13 +147,46 @@ describe(ActionItemService.name, () => {
     it('should not be able to set for a non existing action item', async () => {
       await expect(
         service.createOrSetActionItem(generateCreateOrSetActionItemParams({ id: generateId() })),
-      ).rejects.toThrow(Errors.get(ErrorType.journeyActionItemIdNotFound));
+      ).rejects.toThrow(Errors.get(ErrorType.actionItemIdNotFound));
     });
 
     it('should not be able to create action item for a non existing member', async () => {
       await expect(
         service.createOrSetActionItem(generateCreateOrSetActionItemParams()),
       ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+    });
+  });
+
+  describe('delete', () => {
+    it('should successfully delete an action item', async () => {
+      const memberId = generateId();
+      const orgId = generateId();
+      await journeyService.create({ memberId, orgId });
+      const params = generateCreateOrSetActionItemParams({ memberId });
+      const userId = generateId();
+
+      const { id } = await service.createOrSetActionItem(params);
+
+      let result = await actionItemModel.findById(id);
+      expect(result).not.toBeNull();
+
+      await service.delete(id, userId);
+
+      result = await actionItemModel.findById(id);
+      expect(result).toBeNull();
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const deletedResult = await actionItemModel.findWithDeleted({
+        _id: new Types.ObjectId(id),
+      });
+      checkDelete(deletedResult, { _id: new Types.ObjectId(id) }, userId);
+    });
+
+    it('should throw exception when trying to delete a non existing action item', async () => {
+      await expect(service.delete(generateId(), generateId())).rejects.toThrow(
+        Errors.get(ErrorType.actionItemIdNotFound),
+      );
     });
   });
 
