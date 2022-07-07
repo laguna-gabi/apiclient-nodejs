@@ -65,7 +65,8 @@
             "appointmentReviewed": "",
             "assessmentSubmitScoreOverThreshold": "",
             "memberCreateTodo": "",
-            "appointmentSubmitOverdue": ""
+            "appointmentSubmitOverdue": "",
+            "newActionItem": ""
         },
         "actionItems": {
             "appointment": {

@@ -65,7 +65,8 @@
             "appointmentReviewed": "your session with {{member.firstName}} was reviewed by anther coach",
             "assessmentSubmitScoreOverThreshold": "alerting results on {{assessmentName}} for {{member.firstName}}. Scored a `{{assessmentScore}}`",
             "memberCreateTodo": "{{member.firstName}} created a new todo '{{todoText}}'",
-            "appointmentSubmitOverdue": "your session with {{member.firstName}} needs to be submitted"
+            "appointmentSubmitOverdue": "your session with {{member.firstName}} needs to be submitted",
+            "newActionItem": "A new action item for {{member.firstName}} was created for you"
         },
         "actionItems": {
             "appointment": {
