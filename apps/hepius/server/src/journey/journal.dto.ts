@@ -135,9 +135,6 @@ export class Journal extends Identifier {
   journalDownloadLinks?: JournalDownloadLinks;
 
   @Field(() => Date)
-  updatedAt: Date;
-
-  @Field(() => Date)
   createdAt: Date;
 }
 

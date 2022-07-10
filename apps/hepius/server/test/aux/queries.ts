@@ -838,7 +838,6 @@ export class Queries {
               memberId
               text
               published
-              updatedAt
               createdAt
             }
           }
@@ -861,7 +860,6 @@ export class Queries {
               memberId
               text
               published
-              updatedAt
               createdAt
             }
           }

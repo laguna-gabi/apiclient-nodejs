@@ -492,7 +492,6 @@ describe(JourneyService.name, () => {
         memberId: new Types.ObjectId(journal.memberId),
         published: journal.published,
         text: journal.text,
-        updatedAt: journal.updatedAt,
         createdAt: journal.createdAt,
       });
     });
@@ -533,7 +532,6 @@ describe(JourneyService.name, () => {
             memberId: new Types.ObjectId(memberId),
             published: false,
             text: updateJournalTextParams1.text,
-            updatedAt: expect.any(Date),
             createdAt: expect.any(Date),
           }),
           expect.objectContaining({
@@ -541,7 +539,6 @@ describe(JourneyService.name, () => {
             memberId: new Types.ObjectId(memberId),
             published: false,
             text: updateJournalTextParams2.text,
-            updatedAt: expect.any(Date),
             createdAt: expect.any(Date),
           }),
         ]),
@@ -564,7 +561,6 @@ describe(JourneyService.name, () => {
             memberId: new Types.ObjectId(memberId),
             published: false,
             text: expect.any(String),
-            updatedAt: expect.any(Date),
             createdAt: expect.any(Date),
           }),
         ]),
@@ -591,7 +587,6 @@ describe(JourneyService.name, () => {
             _id: new Types.ObjectId(id),
             memberId: new Types.ObjectId(memberId),
             published: false,
-            updatedAt: expect.any(Date),
             createdAt: expect.any(Date),
           }),
         ]),

@@ -674,7 +674,6 @@ export class Mutations {
               memberId
               text
               published
-              updatedAt
               createdAt
             }
           }
