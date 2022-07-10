@@ -5,11 +5,13 @@ on:
     branches:
       - poeditor
       - develop
+      - develop-temp
       - staging
       - master
   pull_request:
     branches:
       - develop
+      - develop-temp
 
 concurrency:
   group: ${{ github.ref }}
